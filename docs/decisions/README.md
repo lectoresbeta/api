@@ -28,6 +28,11 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 | `P-1` | Un esquema de PostgreSQL por contexto, o uno solo | La primera migración |
 | `V-4` | Qué se conserva al eliminar una cuenta | `FEAT-USR-013` |
 | `D-1` | Si el feedback se ancla al fragmento o a la obra | `Feedback` y el cálculo de créditos |
+| `OB-1` | De dónde sale el alias del usuario, si el registro ya no pide nombre de usuario | `FEAT-USR-001`, `FEAT-USR-022` |
+| `OB-3` | Qué puede hacer una cuenta sin activar y si recibe los créditos de bienvenida | `FEAT-USR-001`, `FEAT-USR-020`, `FEAT-CRD-002` |
+| `OB-6` | Criterio de sugerencia de autores y comportamiento con catálogo vacío | `FEAT-COM-016` |
+| `T-4` | Dónde acepta las condiciones legales quien entra por un proveedor social | `FEAT-USR-019`, `FEAT-USR-024` |
+| `OB-7` | Si hay edad mínima de registro | `FEAT-USR-022`. Tiene implicaciones legales |
 
 ## Estados
 

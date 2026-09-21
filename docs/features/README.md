@@ -17,16 +17,19 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 18 | 1 | 0 | 0 |
+| `User` (USR) | 24 | 7 | 0 | 0 |
 | `Work` (WRK) | 14 | 1 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 9 | 0 | 0 | 0 |
-| `Community` (COM) | 15 | 0 | 0 | 0 |
+| `Community` (COM) | 16 | 1 | 0 | 0 |
 | `Credits` (CRD) | 12 | 1 | 0 | 0 |
-| `Notification` (NOT) | 7 | 0 | 0 | 0 |
-| **Total** | **85** | **3** | **0** | **0** |
+| `Notification` (NOT) | 8 | 1 | 0 | 0 |
+| **Total** | **93** | **11** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
+
+Áreas cubiertas con diseño: **flujo de creación de cuenta y onboarding**
+([especificación de pantallas](../ui/account-creation.md)).
 
 ---
 
@@ -54,9 +57,20 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-016 | Personalizar página de autor (fuentes, colores, fondos) | Writer | PENDING | TODO | P3 | — |
 | FEAT-USR-017 | Buscar autores por nombre o temática | User | PENDING | TODO | P1 | — |
 | FEAT-USR-018 | Invitar a personas a la plataforma por email | User | PENDING | TODO | P2 | — |
+| FEAT-USR-019 | Registro y login con LinkedIn | Guest | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-019-linkedin-oauth.md) |
+| FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
+| FEAT-USR-021 | Reenviar el email de activación | Guest, User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
+| FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
+| FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
+| FEAT-USR-024 | Aceptar condiciones de uso y política de privacidad | Guest | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-024-accept-terms-and-privacy.md) |
 
 > `FEAT-USR-013` está `BLOCKED`: no se puede especificar sin resolver qué ocurre con obras,
 > feedback y créditos al eliminar la cuenta (`V-4`, `U-3`).
+>
+> `FEAT-USR-019` a `FEAT-USR-024` salen del diseño del flujo de creación de cuenta. LinkedIn
+> (`FEAT-USR-019`) **no aparece en el documento de casos de uso**: confirmar que entra en
+> alcance. El registro del diseño **ya no pide nombre de usuario**, lo que deja abierto de
+> dónde sale el alias con el que saluda el onboarding (`OB-1`).
 
 ---
 
@@ -151,6 +165,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-013 | Ver y filtrar el ranking de escritores | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-014 | Ver y filtrar el ranking de obras | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-015 | Ver y filtrar el ranking de lectores | User | PENDING | BLOCKED | P2 | — |
+| FEAT-COM-016 | Onboarding paso 3 — sugerencias de autores a seguir | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-016-onboarding-author-suggestions.md) |
 
 > Los tres rankings están `BLOCKED` por `CM-4`: el material de partida dice "mejor valorados"
 > pero no define la fórmula de puntuación. Sin ella no hay especificación posible.
@@ -196,6 +211,7 @@ Ficha del contexto: [`../bounded-contexts/notification.md`](../bounded-contexts/
 | FEAT-NOT-005 | Avisar de solicitudes, invitaciones y propuestas | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-NOT-006 | Avisar de feedback recibido, contestado o valorado | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-NOT-007 | Enviar el email de invitación a la plataforma | — (sistema) | PENDING | TODO | P2 | — |
+| FEAT-NOT-008 | Enviar el email de activación de cuenta | — (sistema) | DRAFT | TODO | P0 | [ficha](notification/FEAT-NOT-008-account-activation-email.md) |
 
 ---
 
@@ -213,6 +229,21 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 
 Estas cinco decisiones son el camino crítico de la especificación. `C-1` es la más urgente:
 afecta al recorrido principal del producto.
+
+### Decisiones que frenan el paso a `APPROVED`
+
+Estas funcionalidades tienen ficha y están en `DRAFT`, pero no pueden aprobarse —ni por tanto
+implementarse— sin una decisión de producto:
+
+| Funcionalidad | Pendiente de | Decisión necesaria |
+|---|---|---|
+| FEAT-USR-001, FEAT-USR-022 | `OB-1` | De dónde sale el alias del usuario, si el registro ya no pide nombre de usuario |
+| FEAT-USR-001, FEAT-USR-020, FEAT-CRD-002 | `OB-3` | Qué puede hacer una cuenta sin activar y si recibe los créditos de bienvenida |
+| FEAT-COM-016 | `OB-6` | Criterio de sugerencia de autores y qué mostrar cuando no hay ninguno |
+| FEAT-USR-019, FEAT-USR-024 | `T-4` | Dónde acepta las condiciones quien entra por un proveedor social |
+| Todo `User` | `S-1` | Mecanismo de sesión de la API |
+
+Las referencias `OB-n` están en [`../ui/account-creation.md`](../ui/account-creation.md).
 
 ---
 

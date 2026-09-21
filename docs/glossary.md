@@ -49,6 +49,10 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Preferencias literarias | `LiteraryPreferences` | Géneros y temáticas de interés declarados por el usuario. |
 | Temática / Género | `Genre` | Clasificación temática de obras y de intereses de usuario. |
 | Notificación | `Notification` | Aviso dirigido a un usuario, entregable in-app o por email. |
+| Activación de cuenta | `AccountActivation` | Confirmación del email mediante un enlace con token, que lleva la cuenta de `PENDING_ACTIVATION` a `ACTIVE`. |
+| Onboarding | `Onboarding` | Proceso de tres pasos posterior al registro: datos personales, géneros de interés y autores a seguir. |
+| Aceptación legal | `LegalAcceptance` | Registro inmutable de qué versión de las condiciones de uso y la política de privacidad aceptó un usuario, y cuándo. |
+| Catálogo de géneros | `Genre` | Lista administrable de géneros literarios, compartida por los intereses del lector y la temática de las obras. |
 
 ---
 
@@ -62,6 +66,27 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Estado de solicitud | `RequestStatus` | `PENDING`, `ACCEPTED`, `REJECTED`, `CANCELLED`, `EXPIRED` |
 | Nivel de texto | `TextTier` | `MICRO_STORY`, `SHORT_STORY`, `BRIEF_TALE`, `MEDIUM_TALE`, `LONG_TALE`, `MICRO_NOVEL`, `SHORT_NOVEL`, `MEDIUM_NOVEL` |
 | Motivo de movimiento de créditos | `CreditTransactionReason` | `ACCOUNT_CREATED`, `FEEDBACK_GIVEN`, `FEEDBACK_RATED_POSITIVELY`, `INVITED_USER_PARTICIPATED`, `FEEDBACK_RECEIVED`, `MANUAL_ADJUSTMENT` |
+| Estado de la cuenta | `AccountStatus` | `PENDING_ACTIVATION`, `ACTIVE`, `DELETED` |
+| Estado del onboarding | `OnboardingStatus` | `PROFILE_PENDING`, `GENRES_PENDING`, `SUGGESTIONS_PENDING`, `COMPLETED` |
+| Tipo de documento legal | `LegalDocumentType` | `TERMS_OF_USE`, `PRIVACY_POLICY` |
+| Proveedor de autenticación | `AuthProvider` | `LOCAL`, `GOOGLE`, `FACEBOOK`, `LINKEDIN` |
+
+### Catálogo de géneros
+
+Identificadores propuestos a partir del diseño del onboarding (`FEAT-USR-023`). **El catálogo
+no está cerrado**: el diseño incluye chips de relleno y la lista tiene scroll.
+
+| Español | `Genre` | | Español | `Genre` |
+|---|---|---|---|---|
+| Aventura | `ADVENTURE` | | Misterio | `MYSTERY` |
+| Ciencia Ficción | `SCIENCE_FICTION` | | Poesía | `POETRY` |
+| Comedia | `COMEDY` | | Policíaco | `CRIME` |
+| Drama | `DRAMA` | | Romance | `ROMANCE` |
+| Fantasía | `FANTASY` | | Terror | `HORROR` |
+| Histórico | `HISTORICAL` | | Thriller | `THRILLER` |
+| Infantil | `CHILDREN` | | | |
+
+El diseño escribe «Poeta», que se interpreta como errata de «Poesía» (`OB-5`).
 
 > Los valores concretos de `TextTier` se fijan en
 > [`features/credits/`](features/credits/) y en la ficha del contexto

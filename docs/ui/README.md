@@ -4,7 +4,13 @@ Aquí se documenta lo que cada pantalla de Figma revela sobre el comportamiento 
 plataforma. **Este backend no implementa la interfaz**, pero el diseño es la fuente más
 precisa de qué funcionalidades existen y cómo se comportan.
 
-> Estado: vacío. Se irá completando a medida que se incorporen las páginas de Figma.
+## Pantallas documentadas
+
+| Documento | Flujo | Funcionalidades | Estado |
+|---|---|---|---|
+| [account-creation.md](account-creation.md) | Registro, activación por email y onboarding de tres pasos | `FEAT-USR-001`, `019`–`024`, `FEAT-COM-016`, `FEAT-NOT-008` | `DRAFT` |
+
+El resto se irá incorporando a medida que lleguen las páginas de Figma.
 
 ## Para qué sirve esta carpeta
 

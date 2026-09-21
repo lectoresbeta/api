@@ -10,7 +10,8 @@ funcionalidades que faltan. Cada paso enlaza (o enlazará) con su ficha en
 
 ## J-1. Un escritor consigue feedback de su relato
 
-1. Se registra e inicia sesión → recibe **+20 créditos** de bienvenida (`FEAT-CRD-002`).
+1. Se registra y completa el onboarding → recibe **+20 créditos** de bienvenida
+   (`FEAT-CRD-002`). Recorrido detallado en `J-0`.
 2. Crea la obra con el editor o subiendo un fichero (`FEAT-WRK-001`, `FEAT-WRK-002`).
 3. El sistema clasifica el texto por extensión y calcula su nivel (`FEAT-WRK-013`).
 4. Define el cuestionario: tres preguntas sin coste, las adicionales encarecen cada
@@ -29,6 +30,30 @@ funcionalidades que faltan. Cada paso enlaza (o enlazará) con su ficha en
 **Punto crítico del recorrido:** el paso 9. Qué ocurre exactamente cuando el autor no tiene
 créditos suficientes es la decisión de producto más importante todavía sin resolver
 (ver `C-1` en [`../bounded-contexts/credits.md`](../bounded-contexts/credits.md)).
+
+---
+
+## J-0. Alta de una persona nueva
+
+Recorrido completamente especificado a partir del diseño:
+[`../ui/account-creation.md`](../ui/account-creation.md).
+
+1. Rellena el formulario con email y contraseña, y acepta condiciones y privacidad
+   (`FEAT-USR-001`, `FEAT-USR-024`). Alternativamente entra con Google, Facebook o LinkedIn
+   (`FEAT-USR-002`, `FEAT-USR-003`, `FEAT-USR-019`).
+2. La cuenta se crea en `PENDING_ACTIVATION` y se le envía el correo de activación
+   (`FEAT-NOT-008`).
+3. **Sin esperar a ese correo**, entra en el onboarding.
+4. Paso 1: nombre y fecha de nacimiento, ambos privados (`FEAT-USR-022`).
+5. Paso 2: elige al menos tres géneros de interés (`FEAT-USR-023`).
+6. Paso 3, opcional: sigue a autores sugeridos según esos géneros (`FEAT-COM-016`).
+7. Llega al Home.
+8. En cualquier momento puede activar la cuenta desde el correo (`FEAT-USR-020`) o pedir
+   que se lo reenvíen (`FEAT-USR-021`).
+
+**Punto crítico:** los pasos 3 y 8 transcurren en paralelo. Qué puede hacer exactamente una
+cuenta sin activar —y si recibe los créditos de bienvenida— está sin decidir (`OB-3`), y de
+ello depende lo fácil que sea explotar el crédito por invitación de `J-4`.
 
 ---
 
@@ -63,7 +88,7 @@ identificarse de algún modo, y qué protege el enlace frente a abuso. Ver `A-3`
 
 1. Un usuario invita por email a alguien a la plataforma (`FEAT-USR-017`).
 2. La persona invitada se registra usando el enlace (`FEAT-USR-001`) y recibe sus
-   +20 créditos de bienvenida.
+   +20 créditos de bienvenida, al registrarse o al activar la cuenta según `OB-3`.
 3. Cuando la persona invitada **deja su primer comentario**, el invitador recibe
    **+5 créditos** (`FEAT-CRD-005`).
 

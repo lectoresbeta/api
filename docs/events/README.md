@@ -40,13 +40,23 @@ aplicar el efecto.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `UserRegistered` | Se crea una cuenta | `Credits`, `Notification` | `userId`, `username`, `authProvider`, `invitedBy?` |
+| `UserRegistered` | Se crea una cuenta | `Credits`, `Notification` | `userId`, `authProvider`, `status`, `invitedBy?` |
+| `AccountActivated` | El usuario activa su cuenta desde el correo | `Notification`, `Credits`* | `userId`, `activatedAt` |
+| `ActivationEmailRequested` | Se pide reenviar el correo de activación | `Notification` | `userId` |
+| `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros | `Community` | `userId`, `genres` |
+| `OnboardingCompleted` | Termina el onboarding | `Notification`, read models | `userId`, `completedAt` |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` | `userId`, campos modificados |
 | `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt` |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` | `inviterId`, `invitedUserId` |
 
+\* `Credits` solo consume `AccountActivated` si se decide atar los créditos de bienvenida a
+la activación en lugar de al registro (`OB-3`).
+
 > `InvitedUserParticipated` exige correlacionar una invitación de `User` con un hecho de
 > `Feedback`. Quién lo publica está sin decidir (`U-4`).
+>
+> Ningún evento de `User` transporta la contraseña, su hash, el token de activación ni la
+> fecha de nacimiento.
 
 ## `Work`
 
@@ -108,6 +118,7 @@ entidades ni de sus repositorios.
 |---|---|---|---|
 | `PostPublished` | Se publica en el muro | `Notification` | `postId`, `authorId`, `type` |
 | `AuthorSubscribed` | Un usuario sigue a un autor | `Notification` | `subscriberId`, `authorId` |
+| `OnboardingAuthorSuggestionsShown` | *(opcional, analítica)* Se muestran sugerencias | — | `userId`, `suggestedAuthorIds` |
 | `DirectMessageSent` | Se envía un mensaje | `Notification` | `conversationId`, `senderId`, `recipientId` |
 
 `DirectMessageSent` **no transporta el contenido del mensaje**: la notificación avisa y
