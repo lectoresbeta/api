@@ -1,0 +1,114 @@
+# Bounded context: `Feedback`
+
+> Estado: `DRAFT` — Prefijo: `FBK`
+
+## Responsabilidad
+
+La crítica sobre las obras: quién la deja, sobre qué, con qué contenido, cómo responde el
+autor y cómo la valora. Es el productor de los hechos que mueven la economía de créditos.
+
+## Qué posee
+
+- Comentarios sobre obras y fragmentos.
+- Respuestas al cuestionario de la obra.
+- Respuestas del autor a los comentarios.
+- Valoración del comentario por parte del autor (útil / no útil).
+- Ocultación de comentarios.
+- Valoración de la obra por parte del lector beta.
+
+## Qué NO posee
+
+| No es suyo | Es de |
+|---|---|
+| El contenido de la obra | `Work` |
+| Las preguntas del cuestionario (posee las **respuestas**) | `Work` |
+| El derecho a comentar (lo **consume** como hecho) | `Reading` |
+| El importe en créditos de un comentario | `Credits` |
+| Los comentarios de las publicaciones del muro | `Community` |
+
+## Conceptos
+
+| Concepto | Responsabilidad |
+|---|---|
+| `Feedback` | El comentario crítico y su ciclo de vida |
+| `QuestionnaireAnswer` | Respuestas a las preguntas del autor |
+| `Reply` | Respuesta del autor al comentario |
+| `Rating` | Valoración del comentario por el autor y valoración de la obra por el lector |
+
+## Agregados
+
+| Agregado | Identidad | Invariantes |
+|---|---|---|
+| `Feedback` | `FeedbackId` | Lo deja quien tiene acceso vigente, o quien usa un enlace público. Contiene sus respuestas al cuestionario, la respuesta del autor y su valoración. |
+| `WorkRating` | `WorkRatingId` | Una valoración por lector beta y obra. |
+
+### Value objects y enums
+
+| Nombre | Reglas |
+|---|---|
+| `FeedbackContent` | Texto; longitud mínima por definir (`F-2`) |
+| `FeedbackVisibility` | `VISIBLE`, `HIDDEN_BY_AUTHOR` |
+| `FeedbackOrigin` | `BETA_READER`, `PUBLIC_LINK` |
+| `RatingValue` | Escala por definir (`F-3`) |
+
+## Eventos publicados
+
+| Evento | Cuándo | Consumidores |
+|---|---|---|
+| `FeedbackSubmitted` | Se envía un comentario | **`Credits`**, `Notification`, `Community` (rankings) |
+| `FeedbackRatedPositively` | El autor valora el comentario como útil | **`Credits`** (+5), `Notification`, `Community` |
+| `FeedbackReplied` | El autor contesta | `Notification` |
+| `FeedbackHidden` | El autor oculta un comentario | `Community` (rankings), posiblemente `Credits` (`C-9`) |
+| `WorkRated` | Un LB valora la obra | `Community` (rankings de obras y escritores) |
+
+`FeedbackSubmitted` es el evento más importante del sistema: dispara a la vez el abono al
+comentarista y el cargo al autor.
+
+Payload propuesto (pendiente de cerrar con `C-10`):
+
+```json
+{
+  "feedbackId": "...",
+  "workId": "...",
+  "chapterId": "...",
+  "authorId": "...",
+  "reviewerId": "...",
+  "textTier": "SHORT_STORY",
+  "questionCount": 5,
+  "origin": "BETA_READER"
+}
+```
+
+**El contenido del comentario nunca viaja en el evento.**
+
+## Eventos consumidos
+
+| Evento | Origen | Efecto |
+|---|---|---|
+| `BetaReaderAccessGranted` | `Reading` | Habilita a ese usuario para comentar esa obra |
+| `BetaReaderAccessRevoked` | `Reading` | Deja de poder comentar; el feedback ya emitido se conserva |
+| `WorkDeleted` | `Work` | Cierra el feedback asociado |
+| `InsufficientCredits` | `Credits` | Reacción ante impago, según lo que se decida en `C-1` |
+
+## Reglas de negocio
+
+- `RN-1` Solo puede comentar quien tiene acceso vigente o un enlace público válido.
+- `RN-2` El autor de la obra no puede dejarse feedback a sí mismo.
+- `RN-3` Un comentario, una vez enviado, no se elimina: se oculta.
+- `RN-4` Solo el autor de la obra valora, contesta y oculta comentarios.
+- `RN-5` La valoración positiva de un comentario se aplica **una sola vez**; retirarla no
+  revierte los créditos (salvo decisión contraria en `C-9`).
+- `RN-6` Ocultar un comentario no lo oculta para quien lo escribió.
+
+## Preguntas abiertas
+
+| # | Pregunta | Impacto |
+|---|---|---|
+| F-1 | ¿El feedback se ancla al fragmento, a la obra, o a una posición del texto? (`D-1`) | Define la raíz del agregado y el cálculo de créditos |
+| F-2 | ¿Hay longitud mínima para que un comentario genere créditos? | Protección frente a comentarios vacíos que farmean créditos |
+| F-3 | ¿Qué escala usa la valoración de obra: 1–5, 1–10, positiva/negativa? | Rankings |
+| F-4 | ¿Un LB puede dejar varios comentarios en la misma obra? (`D-2`, `C-4`) | Vector de abuso |
+| F-5 | ¿La valoración del comentario es binaria (útil / no útil) o graduada? | El documento habla de "valoración positiva" |
+| F-6 | ¿El comentario desde enlace público genera créditos si no hay cuenta? (`A-3`, `C-5`) | Bloquea `FEAT-FBK-008` |
+| F-7 | ¿Se puede editar un comentario ya enviado? | Afecta a la irreversibilidad de los créditos |
+| F-8 | ¿Hay mecanismo de denuncia de comentarios abusivos? (`J-9`) | Requiere moderación |

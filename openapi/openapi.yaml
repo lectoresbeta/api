@@ -1,0 +1,195 @@
+openapi: 3.1.0
+
+info:
+  title: Lectores Beta API
+  version: 0.1.0
+  description: |
+    Contrato público del backend de Lectores Beta.
+
+    La semántica de cada operación (autorización, reglas de negocio, efectos) se documenta
+    en `docs/api/endpoints/`. Este fichero define únicamente la forma de las peticiones y
+    las respuestas.
+
+    Estado: esqueleto. Las operaciones se añaden conforme su funcionalidad alcanza
+    `spec_status: APPROVED` en `docs/features/README.md`.
+
+servers:
+  - url: https://api.lectoresbeta.com/api/v1
+    description: Producción
+  - url: http://localhost:8000/api/v1
+    description: Desarrollo
+
+tags:
+  - name: Auth
+    description: Registro, login y recuperación de contraseña
+  - name: Account
+    description: Cuenta, preferencias y página de autor
+  - name: Works
+    description: Obras, fragmentos, cuestionario y enlaces
+  - name: Reading
+    description: Accesos de lector beta, grupos y writing buddies
+  - name: Feedback
+    description: Comentarios, respuestas y valoraciones
+  - name: Community
+    description: Muro, publicaciones, mensajes directos y rankings
+  - name: Credits
+    description: Saldo e historial de créditos
+  - name: Notifications
+    description: Notificaciones y preferencias
+
+security:
+  - bearerAuth: []
+
+paths: {}
+# Las rutas se incorporan aquí mediante $ref a openapi/paths/ conforme se especifican.
+# Ejemplo:
+#   /auth/register:
+#     $ref: './paths/auth.yaml#/register'
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: |
+        Pendiente de decisión S-1 (docs/architecture/06-security-and-authorization.md).
+        El esquema definitivo puede ser JWT, token opaco o sesión.
+
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Cursor opaco devuelto en `pageInfo.nextCursor`.
+      schema:
+        type: string
+
+  schemas:
+
+    Uuid:
+      type: string
+      format: uuid
+      description: UUID v7.
+      examples: ['0192f8a1-4c3b-7e2a-9f10-6b5d2c8e4a71']
+
+    Timestamp:
+      type: string
+      format: date-time
+      examples: ['2026-09-21T10:15:30Z']
+
+    PageInfo:
+      type: object
+      required: [hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
+    Problem:
+      type: object
+      description: Respuesta de error, basada en RFC 7807.
+      required: [title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        code:
+          type: string
+          description: Código estable y legible por máquina. El cliente decide por este campo.
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      required: [field, code]
+      properties:
+        field:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+
+    Visibility:
+      type: string
+      enum: [VISIBLE, HIDDEN]
+
+    BetaReaderAccessMode:
+      type: string
+      enum: [PUBLIC, ON_REQUEST, PRIVATE]
+
+    TextTier:
+      type: string
+      description: Nivel de extensión del texto. Ver docs/bounded-contexts/credits.md.
+      enum:
+        - MICRO_STORY
+        - BRIEF_TALE
+        - SHORT_STORY
+        - MEDIUM_TALE
+        - LONG_TALE
+        - MICRO_NOVEL
+        - SHORT_NOVEL
+        - MEDIUM_NOVEL
+
+    RequestStatus:
+      type: string
+      enum: [PENDING, ACCEPTED, REJECTED, CANCELLED, EXPIRED]
+
+    PostType:
+      type: string
+      enum:
+        - GENERAL
+        - LOOKING_FOR_BETA_READERS
+        - LOOKING_FOR_WRITING_BUDDY
+        - OFFERING_AS_BETA_READER
+
+  responses:
+    BadRequest:
+      description: Petición malformada
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unauthorized:
+      description: Sin autenticar
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Sin permiso
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: No existe, o no debe revelarse que existe
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: Conflicto con el estado actual
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    UnprocessableEntity:
+      description: Contenido inválido o regla de negocio incumplida
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }

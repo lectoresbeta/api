@@ -731,18 +731,40 @@ Documentation should be created or updated when a change introduces:
 - a relevant operational requirement;
 - a developer setup requirement.
 
-Suggested structure:
+Structure:
 
 ```text
 docs/
-    architecture/
-    bounded-contexts/
-    api/
-    integrations/
-    decisions/
+    README.md            entry point and index
+    conventions.md       documentation conventions (language, statuses, IDs)
+    glossary.md          ubiquitous language, Spanish product terms to English identifiers
+    product/             vision, actors, journeys, high-level domain model
+    features/            master feature registry and one spec per feature, with status
+    architecture/        contexts, layers, messaging, persistence, security, operations
+    bounded-contexts/    one sheet per bounded context
+    api/                 API conventions and endpoint semantics
+    events/              integration event catalogue
+    integrations/        external services
+    decisions/           ADRs
+    ui/                  screen specifications derived from Figma
+    _templates/          templates for new documents
+    _sources/            original source material
+    _tools/              documentation validation scripts
 ```
 
-Use only the directories that are useful.
+`docs/` is the source of truth for the product (see ADR 0001). A feature is specified there
+before it is implemented, including its API contract and its status.
+
+Rules:
+
+- documentation prose is written in Spanish; every technical identifier (bounded contexts,
+  entities, events, endpoints, JSON fields, enums, tables) is written in English, exactly as
+  it appears in the code;
+- the glossary is normative: do not invent an alternative name for a concept it defines;
+- a feature is never implemented while its `spec_status` is not `APPROVED`;
+- `docs/api/` documents the semantics of each operation, `openapi/` defines its schemas.
+  Do not duplicate information between them;
+- run `python3 docs/_tools/check-docs.py` before considering a documentation change complete.
 
 ## Architecture Decision Records
 
