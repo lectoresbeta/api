@@ -39,21 +39,24 @@ Recorrido completamente especificado a partir del diseño:
 [`../ui/account-creation.md`](../ui/account-creation.md).
 
 1. Rellena el formulario con email y contraseña, y acepta condiciones y privacidad
-   (`FEAT-USR-001`, `FEAT-USR-024`). Alternativamente entra con Google, Facebook o LinkedIn
-   (`FEAT-USR-002`, `FEAT-USR-003`, `FEAT-USR-019`).
-2. La cuenta se crea en `PENDING_ACTIVATION` y se le envía el correo de activación
-   (`FEAT-NOT-008`).
+   (`FEAT-USR-001`, `FEAT-USR-024`). Alternativamente entra con **Google** (`FEAT-USR-002`);
+   Facebook y LinkedIn están diferidos.
+2. La cuenta se crea en `PENDING_ACTIVATION`, **sin créditos y sin poder escribir**, y se le
+   envía el correo de activación (`FEAT-NOT-008`).
 3. **Sin esperar a ese correo**, entra en el onboarding.
 4. Paso 1: nombre y fecha de nacimiento, ambos privados (`FEAT-USR-022`).
 5. Paso 2: elige al menos tres géneros de interés (`FEAT-USR-023`).
-6. Paso 3, opcional: sigue a autores sugeridos según esos géneros (`FEAT-COM-016`).
-7. Llega al Home.
-8. En cualquier momento puede activar la cuenta desde el correo (`FEAT-USR-020`) o pedir
-   que se lo reenvíen (`FEAT-USR-021`).
+6. Paso 3, opcional: sigue a autores sugeridos según esos géneros (`FEAT-COM-016`). **Si la
+   plataforma no tiene autores suficientes, este paso se omite** y el onboarding termina en
+   dos pasos.
+7. Llega al Home, en modo vacío si no sigue a nadie.
+8. Activa la cuenta desde el correo (`FEAT-USR-020`), o pide que se lo reenvíen
+   (`FEAT-USR-021`). **Hasta ese momento no tiene créditos ni puede escribir nada.**
+9. Al activar se abonan los **+20 créditos** y se desbloquea la plataforma entera.
 
-**Punto crítico:** los pasos 3 y 8 transcurren en paralelo. Qué puede hacer exactamente una
-cuenta sin activar —y si recibe los créditos de bienvenida— está sin decidir (`OB-3`), y de
-ello depende lo fácil que sea explotar el crédito por invitación de `J-4`.
+**Punto crítico:** los pasos 3 a 7 y el paso 8 transcurren en paralelo. La activación es la
+frontera real del producto: sin ella el usuario ve la plataforma pero no participa en ella.
+Ver [`decision:0003`](../decisions/0003-write-operations-require-activated-account.md).
 
 ---
 
@@ -87,13 +90,14 @@ identificarse de algún modo, y qué protege el enlace frente a abuso. Ver `A-3`
 ## J-4. Crecimiento por invitación
 
 1. Un usuario invita por email a alguien a la plataforma (`FEAT-USR-017`).
-2. La persona invitada se registra usando el enlace (`FEAT-USR-001`) y recibe sus
-   +20 créditos de bienvenida, al registrarse o al activar la cuenta según `OB-3`.
+2. La persona invitada se registra usando el enlace (`FEAT-USR-001`) y, **al activar su
+   cuenta**, recibe sus +20 créditos de bienvenida.
 3. Cuando la persona invitada **deja su primer comentario**, el invitador recibe
    **+5 créditos** (`FEAT-CRD-005`).
 
 El crédito se otorga por participación efectiva, no por registro: es una protección
-deliberada contra el registro masivo de cuentas falsas.
+deliberada contra el registro masivo de cuentas falsas. La segunda protección es que sin
+activar la cuenta no se puede comentar, así que la cadena entera exige un correo real.
 
 ---
 

@@ -49,7 +49,8 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Preferencias literarias | `LiteraryPreferences` | Géneros y temáticas de interés declarados por el usuario. |
 | Temática / Género | `Genre` | Clasificación temática de obras y de intereses de usuario. |
 | Notificación | `Notification` | Aviso dirigido a un usuario, entregable in-app o por email. |
-| Activación de cuenta | `AccountActivation` | Confirmación del email mediante un enlace con token, que lleva la cuenta de `PENDING_ACTIVATION` a `ACTIVE`. |
+| Activación de cuenta | `AccountActivation` | Confirmación del email mediante un enlace con token, que lleva la cuenta de `PENDING_ACTIVATION` a `ACTIVE`. Desbloquea los créditos de bienvenida y todas las operaciones de escritura. |
+| Alias | — | Texto de presentación derivado del email (la parte anterior a la `@`), usado en el saludo del onboarding. **No se almacena, no es único y no identifica a nadie.** No es un nombre de usuario. |
 | Onboarding | `Onboarding` | Proceso de tres pasos posterior al registro: datos personales, géneros de interés y autores a seguir. |
 | Aceptación legal | `LegalAcceptance` | Registro inmutable de qué versión de las condiciones de uso y la política de privacidad aceptó un usuario, y cuándo. |
 | Catálogo de géneros | `Genre` | Lista administrable de géneros literarios, compartida por los intereses del lector y la temática de las obras. |
@@ -65,11 +66,11 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Tipo de publicación | `PostType` | `GENERAL`, `LOOKING_FOR_BETA_READERS`, `LOOKING_FOR_WRITING_BUDDY`, `OFFERING_AS_BETA_READER` |
 | Estado de solicitud | `RequestStatus` | `PENDING`, `ACCEPTED`, `REJECTED`, `CANCELLED`, `EXPIRED` |
 | Nivel de texto | `TextTier` | `MICRO_STORY`, `SHORT_STORY`, `BRIEF_TALE`, `MEDIUM_TALE`, `LONG_TALE`, `MICRO_NOVEL`, `SHORT_NOVEL`, `MEDIUM_NOVEL` |
-| Motivo de movimiento de créditos | `CreditTransactionReason` | `ACCOUNT_CREATED`, `FEEDBACK_GIVEN`, `FEEDBACK_RATED_POSITIVELY`, `INVITED_USER_PARTICIPATED`, `FEEDBACK_RECEIVED`, `MANUAL_ADJUSTMENT` |
-| Estado de la cuenta | `AccountStatus` | `PENDING_ACTIVATION`, `ACTIVE`, `DELETED` |
+| Motivo de movimiento de créditos | `CreditTransactionReason` | `ACCOUNT_ACTIVATED`, `FEEDBACK_GIVEN`, `FEEDBACK_RATED_POSITIVELY`, `INVITED_USER_PARTICIPATED`, `FEEDBACK_RECEIVED`, `MANUAL_ADJUSTMENT` |
+| Estado de la cuenta | `AccountStatus` | `PENDING_ACTIVATION` (solo lectura y onboarding), `ACTIVE`, `DELETED` |
 | Estado del onboarding | `OnboardingStatus` | `PROFILE_PENDING`, `GENRES_PENDING`, `SUGGESTIONS_PENDING`, `COMPLETED` |
 | Tipo de documento legal | `LegalDocumentType` | `TERMS_OF_USE`, `PRIVACY_POLICY` |
-| Proveedor de autenticación | `AuthProvider` | `LOCAL`, `GOOGLE`, `FACEBOOK`, `LINKEDIN` |
+| Proveedor de autenticación | `AuthProvider` | `LOCAL`, `GOOGLE`. `FACEBOOK` y `LINKEDIN` están previstos pero **diferidos** |
 
 ### Catálogo de géneros
 
@@ -86,7 +87,7 @@ no está cerrado**: el diseño incluye chips de relleno y la lista tiene scroll.
 | Histórico | `HISTORICAL` | | Thriller | `THRILLER` |
 | Infantil | `CHILDREN` | | | |
 
-El diseño escribe «Poeta», que se interpreta como errata de «Poesía» (`OB-5`).
+El diseño escribe «Poeta»; se corrige a «Poesía» (`POETRY`), que es el género.
 
 > Los valores concretos de `TextTier` se fijan en
 > [`features/credits/`](features/credits/) y en la ficha del contexto
@@ -117,4 +118,5 @@ El diseño escribe «Poeta», que se interpreta como errata de «Poesía» (`OB-
 | `Review` | `Feedback` | Evita confusión con las revisiones de código y con reseñas públicas. |
 | `Page`, `Section`, `Part` | `Chapter` | Un único nombre para la subdivisión de la obra. |
 | `Points`, `Tokens`, `Coins` | `Credit` | El documento de producto habla de créditos. |
+| `Username`, `Nickname`, `Handle` | — | **No existe el nombre de usuario en la plataforma.** No se pide, no se almacena y no se valida. El alias del saludo se deriva del email y no es un identificador. |
 | `Helper`, `Manager`, `Utils` | Un nombre que describa la responsabilidad | Regla explícita de `AGENTS.md`. |

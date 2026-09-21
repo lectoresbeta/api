@@ -40,8 +40,8 @@ aplicar el efecto.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `UserRegistered` | Se crea una cuenta | `Credits`, `Notification` | `userId`, `authProvider`, `status`, `invitedBy?` |
-| `AccountActivated` | El usuario activa su cuenta desde el correo | `Notification`, `Credits`* | `userId`, `activatedAt` |
+| `UserRegistered` | Se crea una cuenta | `Credits` (crea cuenta con saldo 0), `Notification` | `userId`, `authProvider`, `status`, `invitedBy?` |
+| `AccountActivated` | El usuario activa su cuenta desde el correo | **`Credits`** (+20), `Notification`, `Feedback` | `userId`, `activatedAt` |
 | `ActivationEmailRequested` | Se pide reenviar el correo de activación | `Notification` | `userId` |
 | `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros | `Community` | `userId`, `genres` |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models | `userId`, `completedAt` |
@@ -49,8 +49,9 @@ aplicar el efecto.
 | `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt` |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` | `inviterId`, `invitedUserId` |
 
-\* `Credits` solo consume `AccountActivated` si se decide atar los créditos de bienvenida a
-la activación en lugar de al registro (`OB-3`).
+`AccountActivated` es el hecho que abona los créditos de bienvenida, no `UserRegistered`.
+`Feedback` también lo consume, para saber qué autores pueden recibir comentarios
+([`decision:0003`](../decisions/0003-write-operations-require-activated-account.md)).
 
 > `InvitedUserParticipated` exige correlacionar una invitación de `User` con un hecho de
 > `Feedback`. Quién lo publica está sin decidir (`U-4`).

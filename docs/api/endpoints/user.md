@@ -8,8 +8,8 @@
 | Método y ruta | `operationId` | Propósito | Funcionalidad | Estado |
 |---|---|---|---|---|
 | `POST /auth/register` | `registerUser` | Registro con email y contraseña | FEAT-USR-001 | DRAFT |
-| `GET /auth/oauth/{provider}` | `startOAuth` | Iniciar autenticación externa | FEAT-USR-002/003/005/006 | PENDING |
-| `POST /auth/oauth/{provider}/callback` | `completeOAuth` | Completar autenticación externa | FEAT-USR-002/003/005/006 | PENDING |
+| `GET /auth/oauth/{provider}` | `startOAuth` | Iniciar autenticación externa. **Solo `google` en esta fase** | FEAT-USR-002/005 | PENDING |
+| `POST /auth/oauth/{provider}/callback` | `completeOAuth` | Completar autenticación externa | FEAT-USR-002/005 | PENDING |
 | `POST /auth/activate` | `activateAccount` | Activar la cuenta con el token del correo | FEAT-USR-020 | DRAFT |
 | `POST /auth/activation/resend` | `resendActivationEmail` | Reenviar el correo de activación | FEAT-USR-021 | DRAFT |
 | `POST /auth/login` | `login` | Login con email y contraseña | FEAT-USR-004 | PENDING |
@@ -77,10 +77,11 @@ decisiones del servidor.
 
 ### Efectos
 
-Publica `UserRegistered`, que provoca de forma asíncrona el abono de 20 créditos
-(`FEAT-CRD-002`) y el envío del correo de activación (`FEAT-NOT-008`).
+Publica `UserRegistered`, que provoca de forma asíncrona la creación de la cuenta de créditos
+**con saldo 0** y el envío del correo de activación (`FEAT-NOT-008`).
 
-La cuenta se crea en `PENDING_ACTIVATION`, pero el usuario entra directamente al onboarding.
+La cuenta se crea en `PENDING_ACTIVATION`: el usuario entra directamente al onboarding, pero
+no puede ejecutar ninguna operación de escritura hasta activarla (`FEAT-USR-025`).
 
 ---
 
@@ -116,7 +117,19 @@ extrae y lo envía.
 
 ### Efectos
 
-Publica `AccountActivated`.
+Publica `AccountActivated`, que desencadena el abono de los **20 créditos de bienvenida**
+(`FEAT-CRD-002`) y habilita todas las operaciones de escritura (`FEAT-USR-025`).
+
+---
+
+## Nota sobre el estado de la cuenta
+
+**Toda operación de escritura de la API exige `AccountStatus: ACTIVE`.** Una cuenta en
+`PENDING_ACTIVATION` recibe `403` con `code: ACCOUNT_NOT_ACTIVATED`, que la interfaz
+distingue de un `403` genérico para poder ofrecer el reenvío del correo.
+
+Las únicas excepciones son los pasos del onboarding y la gestión de la propia cuenta. Ver
+[`FEAT-USR-025`](../../features/user/FEAT-USR-025-block-writes-until-activation.md).
 
 ---
 

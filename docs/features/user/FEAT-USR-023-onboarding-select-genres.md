@@ -46,6 +46,7 @@ seleccionado 3 o más temáticas»*.
 - `RN-6` La selección es la misma información que las preferencias literarias editables
   después (`FEAT-USR-009`): se guarda en un único sitio, no se duplica.
 - `RN-7` El paso es obligatorio para completar el onboarding.
+- `RN-8` Este paso funciona con la cuenta en `PENDING_ACTIVATION` (`FEAT-USR-025`, `RN-5`).
 
 ## Catálogo de géneros
 
@@ -61,11 +62,14 @@ Visibles en el diseño, con el identificador propuesto:
 | Histórico | `HISTORICAL` |
 | Infantil | `CHILDREN` |
 | Misterio | `MYSTERY` |
-| Poesía *(el diseño dice «Poeta», ver `OB-5`)* | `POETRY` |
+| Poesía | `POETRY` |
 | Policíaco | `CRIME` |
 | Romance | `ROMANCE` |
 | Terror | `HORROR` |
 | Thriller | `THRILLER` |
+
+El diseño escribe «Poeta»; se corrige a **«Poesía»**, que es el género. Era el único chip
+que nombraba a la persona y no a la obra.
 
 El diseño muestra además cuatro chips `Sample`, lo que confirma que la lista está
 incompleta. El catálogo debe servirse desde el backend con su nombre presentable, no
@@ -138,9 +142,9 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| OB-5 | ¿«Poeta» es «Poesía»? | Nombre del género en el catálogo |
+| OB-5 | ¿«Poeta» es «Poesía»? | **Resuelto:** sí, se corrige a «Poesía» / `POETRY` |
 | OB-14 | ¿Cuál es el catálogo completo? ¿Es administrable o fijo? ¿Hay máximo de géneros por usuario? | Los chips `Sample` indican que está sin cerrar |
-| OB-13 | ¿El botón se llama «Siguiente» o «Continuar»? | El diseño y la nota no coinciden |
+| OB-13 | ¿El botón se llama «Siguiente» o «Continuar»? | **Resuelto:** «Siguiente» en todo el onboarding |
 | G-1 | ¿Los géneros del interés del lector son el mismo catálogo que la temática de una obra? | Si no, hay dos catálogos y las recomendaciones no cruzan |
 
 `G-1` es más importante de lo que parece: si un lector elige «Terror» y las obras se

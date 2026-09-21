@@ -7,11 +7,14 @@
 
 | Método | Estado |
 |---|---|
-| Email y contraseña | Por especificar |
-| Google (OAuth) | Por especificar |
-| Facebook (OAuth) | Por especificar |
-| Recuperación de contraseña | Por especificar |
+| Email y contraseña | `FEAT-USR-001`, `FEAT-USR-004` |
+| Google (OAuth) | `FEAT-USR-002`, `FEAT-USR-005` — **único proveedor externo de esta fase** |
+| Facebook (OAuth) | `DEFERRED` |
+| LinkedIn (OAuth) | `DEFERRED` |
+| Recuperación de contraseña | `FEAT-USR-007` |
 | Enlace público sin sesión | Por especificar — acceso limitado a una obra concreta |
+
+La plataforma **no usa nombre de usuario**: la identidad se establece por email.
 
 **Decisión pendiente** (`S-1`): mecanismo de sesión de la API. Opciones: JWT de vida corta
 con refresh token, tokens opacos en servidor, o sesión de Symfony. Debe cerrarse en un ADR
@@ -37,6 +40,29 @@ Los roles de Lectores Beta **son relativos a un recurso**, no globales. La pregu
 Cada contexto responde a lo suyo. La autorización no se concentra en un servicio central que
 lo sepa todo, porque eso reintroduce el acoplamiento que la arquitectura evita.
 
+### Estado de la cuenta: la primera barrera
+
+Antes de cualquier regla de autorización por recurso se comprueba el estado de la cuenta.
+
+| Estado | Lectura | Onboarding | Escritura |
+|---|---|---|---|
+| `PENDING_ACTIVATION` | Sí | Sí | **No** |
+| `ACTIVE` | Sí | Sí | Sí |
+| `DELETED` | No | No | No |
+
+Una cuenta sin activar no puede crear obras, comentar, publicar en el muro, enviar mensajes
+directos ni **recibir comentarios en sus obras**. Tampoco tiene créditos: los 20 de
+bienvenida se abonan al activar.
+
+Es una política **única y centralizada**, aplicada en el borde HTTP, no una comprobación
+repetida endpoint por endpoint. Detalle en
+[`FEAT-USR-025`](../features/user/FEAT-USR-025-block-writes-until-activation.md) y motivación
+en [`decision:0003`](../decisions/0003-write-operations-require-activated-account.md).
+
+El caso que no encaja en ese borde es «recibir comentarios»: no depende de quién llama, sino
+del estado del autor de la obra. `Feedback` lo resuelve con una proyección alimentada por
+`AccountActivated`, nunca consultando las tablas de `User`.
+
 ### Dónde vive
 
 - La **regla de negocio** vive en `Domain` o en una política de `Application`.
@@ -57,6 +83,7 @@ lo sepa todo, porque eso reintroduce el acoplamiento que la arquitectura evita.
 | Propuesta de LB o writing buddy | Solo si el destinatario las tiene habilitadas |
 | Saldo e historial de créditos | Solo su titular |
 | Datos de perfil no públicos | Solo su titular |
+| Fecha de nacimiento y email | **Solo su titular.** Nunca en perfiles, listados, búsquedas ni sugerencias |
 
 ### Errores de autorización
 
@@ -108,7 +135,8 @@ Nunca se registran en logs ni se exponen en respuestas:
 |---|---|---|
 | S-1 | ¿Qué mecanismo de sesión usa la API? | Bloquea el diseño de autenticación |
 | S-2 | ¿El enlace público expira o se revoca? ¿Tiene límite de usos? | Riesgo de difusión no controlada del contenido |
-| S-3 | ¿Se requiere verificación del email al registrarse? | Afecta al registro y al fraude con invitaciones |
+| S-3 | ¿Se requiere verificación del email al registrarse? | **Resuelto:** sí. Es la barrera de escritura y de créditos (`decision:0003`) |
+| S-7 | ¿El registro con Google crea la cuenta ya activada? Google ya verifica el correo | Evitaría una verificación redundante (`OB-11`) |
 | S-4 | ¿Hay límite de peticiones (rate limiting) y dónde? | Protección frente a scraping del catálogo |
 | S-5 | ¿Cómo se previene el scraping masivo de obras por parte de lectores beta legítimos? | Riesgo real dado el valor del contenido |
 | S-6 | ¿Algoritmo y sellado temporal del registro de autoría? ¿Sello externo? | Valor probatorio del registro |

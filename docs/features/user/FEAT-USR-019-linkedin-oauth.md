@@ -5,8 +5,8 @@ context: User
 concept: Authentication
 actors: [Guest]
 spec_status: DRAFT
-impl_status: TODO
-priority: P2
+impl_status: DEFERRED
+priority: P3
 sources:
   - figma:1800-13778 (1470:9482, bloque «o continúa»)
   - docs/ui/account-creation.md
@@ -22,9 +22,12 @@ updated: 2026-09-21
 
 El formulario de registro ofrece tres accesos sociales: Google, Facebook y **LinkedIn**.
 
+> **Diferido.** En esta fase **solo se implementa Google** (`FEAT-USR-002`, `FEAT-USR-005`).
+> Facebook y LinkedIn quedan para más adelante. La ficha se conserva porque el diseño ya
+> contempla los tres botones y conviene no volver a razonarlo desde cero.
+
 LinkedIn **no aparece en el documento de casos de uso**, que solo contempla Google y
-Facebook. Se documenta aquí porque el diseño es posterior y más concreto, pero conviene
-confirmar que entra en alcance antes de implementarlo.
+Facebook. Aparece únicamente en el diseño del formulario de registro.
 
 ## Actores y autorización
 
@@ -89,14 +92,15 @@ cuál está en uso.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| L-1 | ¿LinkedIn entra realmente en alcance o es exploración de diseño? | No está en el documento de casos de uso |
+| L-1 | ¿LinkedIn entra realmente en alcance? | **Aplazado:** fuera de esta fase |
 | U-2 | ¿Se pueden vincular varios proveedores a la misma cuenta? ¿Qué pasa si el email ya existe? | Afecta a los tres proveedores |
 | OB-11 | ¿El email del proveedor se da por verificado? | Evitaría el paso de activación |
 | T-4 | ¿Dónde acepta las condiciones quien entra por un proveedor social? | **Hueco en el diseño actual** |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Antes de `APPROVED` hay que confirmar `L-1` y resolver `U-2`,
-que afecta por igual a Google y Facebook.
+**Especificación:** `DRAFT`. Suficiente para retomarla cuando llegue el momento.
 
-**Implementación:** `TODO`.
+**Implementación:** `DEFERRED`. Fuera del alcance de esta fase: solo se implementa Google.
+Se retomará junto con Facebook (`FEAT-USR-003`, `FEAT-USR-006`), y entonces habrá que
+resolver `U-2`, que les afecta a los tres.

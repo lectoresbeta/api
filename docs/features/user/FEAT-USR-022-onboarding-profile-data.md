@@ -52,6 +52,11 @@ aparecer en ninguna respuesta de la API dirigida a terceros.
 - `RN-6` El paso 1 es obligatorio: no se puede avanzar sin completarlo.
 - `RN-7` La validación del servidor es independiente de la del cliente. Un cliente
   manipulado no puede guardar una fecha inválida.
+- `RN-8` El saludo usa un alias **derivado del email** (la parte anterior a la `@`). No se
+  almacena, no es único y no identifica al usuario: es solo presentación. La API puede
+  devolverlo calculado o dejar que lo derive el cliente.
+- `RN-9` Este paso funciona con la cuenta en `PENDING_ACTIVATION`: es una de las excepciones
+  al bloqueo de escritura (`FEAT-USR-025`, `RN-5`).
 
 ## Estado del onboarding
 
@@ -67,7 +72,7 @@ Se expone en `GET /me/onboarding` para que el frontend sepa en qué paso retomar
 ## Flujo principal
 
 1. El usuario llega al paso 1 tras registrarse.
-2. La pantalla le saluda por su alias (ver `OB-1`).
+2. La pantalla le saluda por el alias derivado de su email: la parte anterior a la `@`.
 3. Introduce nombre y fecha de nacimiento.
 4. El sistema valida ambos campos.
 5. Los guarda y avanza el estado a `GENRES_PENDING`.
@@ -122,14 +127,14 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **OB-1** | ¿De dónde sale el alias con el que saluda la pantalla? | **Bloqueante.** Define si existe `username` y cuándo se fija |
-| **OB-2** | ¿«Nombre» es el nombre real (privado) o el nombre público de autor? El tooltip dice privado, pero entonces falta definir qué nombre se ve en el perfil | Determina qué se expone en `GET /users/{userId}` |
+| **OB-2** | **Si «Nombre» es privado y no existe nombre de usuario, ¿qué nombre ve el resto de la plataforma?** | **Bloqueante.** Afecta al perfil público, al catálogo, al muro, a los rankings y a las sugerencias de autores |
+| OB-1 | ¿De dónde sale el alias del saludo? | **Resuelto:** de la parte del email anterior a la `@` |
 | **OB-7** | ¿Hay edad mínima? ¿Se rechaza el registro por debajo de ella? | **Legal.** Si se pide la fecha de nacimiento, debe haber un motivo declarado |
 | OB-10 | ¿Se persiste el paso a paso o el onboarding completo al final? | Asumido paso a paso en `RN-5`; confirmar |
 
 ## Estado
 
-**Especificación:** `DRAFT`. `OB-1` y `OB-2` deben resolverse antes de `APPROVED`: afectan a
-qué campos existen y cuáles son públicos.
+**Especificación:** `DRAFT`. `OB-2` debe resolverse antes de `APPROVED`: sin nombre de
+usuario y con el «Nombre» declarado privado, la plataforma se queda sin nombre público.
 
 **Implementación:** `TODO`.

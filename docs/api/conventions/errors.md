@@ -53,6 +53,14 @@ es una fuga de información.
 
 Criterio: **si el usuario no debería saber siquiera que el recurso existe, `404`.**
 
+## `ACCOUNT_NOT_ACTIVATED` frente a `FORBIDDEN`
+
+Ambos son `403`, pero se distinguen deliberadamente por su `code`.
+
+`ACCOUNT_NOT_ACTIVATED` significa «esto se arregla activando la cuenta», y la interfaz debe
+poder ofrecer el reenvío del correo (`FEAT-USR-021`). Un `403` genérico dejaría al usuario
+sin saber qué hacer, y el problema tiene solución inmediata.
+
 ## Nunca se expone
 
 `AGENTS.md` lo exige y aquí se concreta. Una respuesta de error jamás contiene:
@@ -75,6 +83,15 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `code` | HTTP | Significado |
 |---|---|---|
 | `VALIDATION_FAILED` | 422 | Uno o varios campos no son válidos |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | La cuenta está en `PENDING_ACTIVATION` y la operación es de escritura |
+| `INVALID_ACTIVATION_TOKEN` | 404 | Token de activación inexistente, usado o manipulado |
+| `ACTIVATION_TOKEN_EXPIRED` | 410 | El token de activación caducó |
+| `RESEND_TOO_SOON` | 429 | Reenvío de activación antes del intervalo mínimo |
+| `TERMS_NOT_ACCEPTED` | 422 | Falta aceptar condiciones de uso o política de privacidad |
+| `WEAK_PASSWORD` | 422 | La contraseña no cumple la política |
+| `NOT_ENOUGH_GENRES` | 422 | Menos de tres géneros en el onboarding |
+| `UNKNOWN_GENRE` | 422 | Género no presente en el catálogo |
+| `ONBOARDING_STEP_OUT_OF_ORDER` | 409 | Se intenta un paso del onboarding sin completar el anterior |
 | `EMAIL_ALREADY_REGISTERED` | 409 | El email ya tiene cuenta (ver `RN-8` de `FEAT-USR-001`) |
 | `USERNAME_TAKEN` | 422 | Nombre de usuario ocupado |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |

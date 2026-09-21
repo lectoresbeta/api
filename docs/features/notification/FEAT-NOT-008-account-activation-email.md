@@ -20,9 +20,12 @@ updated: 2026-09-21
 
 ## Resumen
 
-Correo transaccional que se envía al registrarse, con el botón «ACTIVAR MI CUENTA». Es el
-único camino para que una cuenta pase a `ACTIVE`, así que su entrega es crítica: un correo
-que no llega es un usuario que no entra.
+Correo transaccional que se envía al registrarse, con el botón «ACTIVAR MI CUENTA».
+
+Es el único camino para que una cuenta pase a `ACTIVE`, y de la activación dependen los
+créditos de bienvenida y **todas las operaciones de escritura** ([`decision:0003`](../../decisions/0003-write-operations-require-activated-account.md)).
+Su entrega no es importante: es crítica. Un correo que no llega es un usuario que no puede
+usar la plataforma.
 
 ## Contenido
 
@@ -36,7 +39,7 @@ Según el diseño (`1470:9560`):
 | CTA | «ACTIVAR MI CUENTA», con el token de activación |
 | Soporte | Enlace a la página de soporte |
 | Firma | «El equipo de lectoresbeta» y cita de George R. R. Martin |
-| Pie | «Ver en navegador», «Cancelar suscripción», redes sociales |
+| Pie | «Ver en navegador» y redes sociales. **Sin «Cancelar suscripción»**, ver `RN-7` |
 
 El asunto no está definido en el diseño.
 
@@ -55,7 +58,14 @@ El asunto no está definido en el diseño.
 - `RN-6` El fallo de envío se reintenta. Agotados los reintentos, el mensaje va a la cola de
   fallos y se alerta: un usuario bloqueado sin correo es un alta perdida.
 
-`RN-4` choca de frente con el «Cancelar suscripción» del pie: ver `OB-8`.
+- `RN-7` El pie **no incluye baja de suscripción**. El diseño original la llevaba y se
+  retira: es un correo transaccional, y un usuario que se diera de baja ahí no podría recibir
+  el correo que necesita para activar su cuenta ni, por tanto, usar la plataforma.
+- `RN-8` La baja de suscripción sigue existiendo en los correos de aviso y novedades, que sí
+  son opcionales (`FEAT-NOT-002`, `FEAT-NOT-003`).
+
+`RN-7` y `RN-8` trazan la línea: transaccional frente a informativo. Un correo sin el cual la
+cuenta no funciona no es una suscripción.
 
 ## Eventos consumidos
 
@@ -77,13 +87,13 @@ El asunto no está definido en el diseño.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| OB-8 | ¿Por qué lleva «Cancelar suscripción» un correo transaccional? | Contradice `RN-4` y puede dejar cuentas inactivables |
+| OB-8 | ¿Por qué lleva «Cancelar suscripción» un correo transaccional? | **Resuelto:** se retira del pie |
 | N-3 | ¿Qué proveedor de email se usa? | Sin decidir |
 | N-6 | ¿Cuál es el asunto del correo? | Sin definir en el diseño |
 | N-7 | ¿Hay versión en texto plano además de HTML? | Entregabilidad y accesibilidad |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Falta el asunto, el proveedor y resolver `OB-8`.
+**Especificación:** `DRAFT`. Falta el asunto del correo y elegir proveedor.
 
 **Implementación:** `TODO`.

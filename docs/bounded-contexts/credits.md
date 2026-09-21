@@ -81,7 +81,7 @@ movimientos y debe poder recalcularse desde cero.
 
 | Hecho de negocio | Efecto | Motivo (`reason`) |
 |---|---|---|
-| Crear una cuenta | **+20** | `ACCOUNT_CREATED` |
+| **Activar** la cuenta (no crearla) | **+20** | `ACCOUNT_ACTIVATED` |
 | Dar feedback de un texto | **+** según nivel del texto | `FEEDBACK_GIVEN` |
 | Que tu feedback reciba una valoración positiva | **+5** | `FEEDBACK_RATED_POSITIVELY` |
 | Invitar a un usuario y que participe | **+5** | `INVITED_USER_PARTICIPATED` |
@@ -134,7 +134,8 @@ coste = créditos(TextTier) + max(0, númeroDePreguntas − 3)
 
 | Evento | Origen | Efecto |
 |---|---|---|
-| `UserRegistered` | `User` | Crea `CreditAccount` y abona +20 |
+| `UserRegistered` | `User` | Crea `CreditAccount` **con saldo 0**. No abona nada |
+| `AccountActivated` | `User` | Abona los **+20** créditos de bienvenida |
 | `FeedbackSubmitted` | `Feedback` | Abona al autor del comentario según `TextTier`; carga al autor de la obra el coste correspondiente |
 | `FeedbackRatedPositively` | `Feedback` | Abona +5 a quien escribió el comentario |
 | `InvitedUserParticipated` | `User` | Abona +5 al invitador |
@@ -178,6 +179,9 @@ existe, el evento se descarta sin efecto.
 - `RN-5` Todo movimiento registra el hecho de negocio que lo originó y es auditable.
 - `RN-6` El coste de recibir un comentario se calcula con el nivel del texto y el número de
   preguntas del cuestionario **en el momento en que se envía el comentario**.
+- `RN-7` Los créditos de bienvenida se abonan al **activar** la cuenta, no al crearla. Una
+  cuenta sin verificar nunca tiene saldo. Ver
+  [`decision:0003`](../decisions/0003-write-operations-require-activated-account.md).
 
 ## Preguntas abiertas
 
@@ -191,5 +195,6 @@ existe, el evento se descarta sin efecto.
 | C-6 | ¿Qué coste tiene un texto de más de 75.000 palabras? | Tramo no cubierto por la tabla |
 | C-7 | ¿Cuándo se fija el `TextTier`: al crear la obra, al recibir cada comentario, o se congela al conceder el acceso? | Un autor podría ampliar el texto tras recibir accesos |
 | C-8 | ¿Existe ajuste manual por parte de la plataforma? | Requiere `MANUAL_ADJUSTMENT` y un actor `Admin` (`V-1`) |
+| C-11 | ¿Qué ocurre con el saldo de una cuenta que nunca se activa? | Hoy no tiene: no se abona nada hasta activar |
 | C-9 | ¿Se retiran créditos si el autor oculta un comentario por abusivo? | Protección frente a feedback de baja calidad |
 | C-10 | ¿El nivel se calcula sobre la obra completa o sobre el fragmento comentado? | Con novelas por fragmentos cambia radicalmente el coste (`D-1`) |

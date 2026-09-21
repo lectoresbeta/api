@@ -44,7 +44,7 @@ preferencias y presencia pública como autor.
 
 | Agregado | Identidad | Invariantes |
 |---|---|---|
-| `User` | `UserId` | Email único. Una cuenta eliminada no autentica. El estado sigue `PENDING_ACTIVATION → ACTIVE → DELETED`. |
+| `User` | `UserId` | Email único. Una cuenta eliminada no autentica. El estado sigue `PENDING_ACTIVATION → ACTIVE → DELETED`. Solo `ACTIVE` puede escribir. |
 | `AuthorPage` | `UserId` | Pertenece a un único usuario |
 | `PlatformInvitation` | `PlatformInvitationId` | Token único. Se consume una sola vez. |
 | `AccountActivationToken` | `UserId` | Un único token vigente por cuenta. Se almacena con hash, nunca en claro. |
@@ -55,20 +55,20 @@ preferencias y presencia pública como autor.
 | Nombre | Reglas |
 |---|---|
 | `Email` | Formato válido, único, normalizado en minúsculas |
-| `Username` | Existencia sin confirmar: el registro del diseño no lo pide (`OB-1`) |
+| ~~`Username`~~ | **No existe.** La plataforma no maneja nombre de usuario. El alias del saludo se deriva del email y no se persiste |
 | `HashedPassword` | ≥8 caracteres, una mayúscula, un número y un carácter especial. Nunca se expone ni se registra en logs |
 | `BirthDate` | Fecha real y pasada. **Dato privado**: no se expone en la API pública |
 | `LiteraryPreferences` | Conjunto de `Genre`, mínimo tres al completar el onboarding |
 | `AccountStatus` | `PENDING_ACTIVATION`, `ACTIVE`, `DELETED` |
 | `OnboardingStatus` | `PROFILE_PENDING`, `GENRES_PENDING`, `SUGGESTIONS_PENDING`, `COMPLETED` |
-| `AuthProvider` | `LOCAL`, `GOOGLE`, `FACEBOOK`, `LINKEDIN` |
+| `AuthProvider` | `LOCAL`, `GOOGLE`. `FACEBOOK` y `LINKEDIN` diferidos |
 
 ## Eventos publicados
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `UserRegistered` | Se crea una cuenta | `Credits` (+20), `Notification` (correo de activación) |
-| `AccountActivated` | El usuario activa su cuenta desde el correo | `Notification`, y `Credits` si los créditos se atan a la activación (`OB-3`) |
+| `UserRegistered` | Se crea una cuenta | `Credits` (crea la cuenta con **saldo 0**), `Notification` (correo de activación) |
+| `AccountActivated` | El usuario activa su cuenta desde el correo | **`Credits`** (abona +20), `Notification`, `Feedback` (habilita recibir comentarios) |
 | `ActivationEmailRequested` | Se pide reenviar el correo de activación | `Notification` |
 | `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros de interés | `Community` (sugerencias y recomendaciones) |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models |
@@ -88,9 +88,9 @@ preferencias y presencia pública como autor.
 | U-3 | ¿Qué ocurre con obras, feedback y créditos al eliminar la cuenta? (`V-4`, `J-7`) | Bloquea `FEAT-USR-012` |
 | U-4 | ¿Quién detecta que un invitado "ha participado": `User` escuchando a `Feedback`, o `Feedback` publicándolo? | Define el productor de `InvitedUserParticipated` |
 | U-5 | ¿La personalización de la página de autor tiene límites (temas cerrados o CSS libre)? | Riesgo de seguridad si es libre |
-| U-6 | ¿Existe `Username`? El registro del diseño no lo pide, pero el onboarding saluda con un alias (`OB-1`) | **Bloqueante** para `FEAT-USR-001` y `FEAT-USR-022` |
-| U-7 | ¿Qué puede hacer una cuenta `PENDING_ACTIVATION`? (`OB-3`) | Superficie de abuso, y dónde se abonan los créditos |
-| U-8 | ¿Es «Nombre» el nombre real privado o el nombre público de autor? (`OB-2`) | Determina qué devuelve el perfil público |
+| **U-8** | **Sin nombre de usuario y con el «Nombre» declarado privado, ¿qué nombre se muestra públicamente?** (`OB-2`) | **Bloqueante.** Afecta al perfil, al catálogo, al muro, a los rankings y a las sugerencias |
+| U-6 | ¿Existe `Username`? | **Resuelto:** no. No se usa el concepto |
+| U-7 | ¿Qué puede hacer una cuenta `PENDING_ACTIVATION`? | **Resuelto:** leer y completar el onboarding. Ver `decision:0003` |
 | U-9 | ¿Hay edad mínima para registrarse? (`OB-7`) | Legal: se recoge la fecha de nacimiento sin motivo declarado |
 
 ### Datos privados
@@ -100,6 +100,9 @@ Nunca se exponen en el perfil público ni en ningún listado, búsqueda o sugere
 - fecha de nacimiento;
 - email;
 - el «Nombre» del paso 1 del onboarding, mientras `OB-2` no aclare lo contrario.
+
+Como tampoco existe nombre de usuario, hoy **no hay ningún nombre que se pueda mostrar
+públicamente**. Es el hueco que `OB-2` tiene que cerrar.
 
 El diseño lo dice de forma explícita en el tooltip de ambos campos: *«Esta información solo
 será visible para ti y el equipo de LectoresBeta.»*

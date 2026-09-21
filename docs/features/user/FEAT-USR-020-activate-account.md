@@ -12,7 +12,7 @@ sources:
   - docs/ui/account-creation.md
 endpoints: [POST /auth/activate]
 events: [AccountActivated]
-depends_on: [FEAT-USR-001, FEAT-NOT-008]
+depends_on: [FEAT-USR-001, FEAT-NOT-008, FEAT-USR-025]
 updated: 2026-09-21
 ---
 
@@ -23,10 +23,12 @@ updated: 2026-09-21
 Al registrarse, el usuario recibe un correo con el botón «ACTIVAR MI CUENTA». Al seguir ese
 enlace, su cuenta pasa de `PENDING_ACTIVATION` a `ACTIVE`.
 
-La particularidad de este flujo es que **la activación no bloquea el onboarding**: el
-diseño muestra el aviso de verificación como panel informativo en los tres pasos, mientras
-el usuario sigue rellenando su perfil. Esto reduce la fricción del alta, pero abre un hueco
-de seguridad que hay que cerrar de forma explícita (`OB-3`).
+La activación es la frontera real de la plataforma. **No bloquea el onboarding** —el aviso
+aparece como panel informativo mientras el usuario rellena su perfil— pero sí todo lo demás:
+hasta que se activa, la cuenta no puede escribir nada (`FEAT-USR-025`) y no tiene créditos.
+
+Al activarse se abonan los **20 créditos de bienvenida** y se desbloquea la plataforma
+entera. Ver [`decision:0003`](../../decisions/0003-write-operations-require-activated-account.md).
 
 ## Actores y autorización
 
@@ -55,13 +57,16 @@ dispositivo o navegador.
 - `RN-6` La activación no forma parte del onboarding: son dos procesos independientes que
   transcurren en paralelo y pueden completarse en cualquier orden.
 - `RN-7` Al activarse la cuenta se publica `AccountActivated`.
+- `RN-8` `AccountActivated` es el hecho que dispara el abono de los 20 créditos de bienvenida
+  (`FEAT-CRD-002`). `User` no conoce la cantidad.
+- `RN-9` Al activarse, todas las operaciones de escritura quedan habilitadas de inmediato.
 
 ## Estados de la cuenta
 
 | Estado | Cuándo | Qué permite |
 |---|---|---|
-| `PENDING_ACTIVATION` | Tras el registro | Onboarding completo. **El resto está sin decidir** (`OB-3`) |
-| `ACTIVE` | Tras seguir el enlace | Todo |
+| `PENDING_ACTIVATION` | Tras el registro | Onboarding completo y lectura. **Ninguna operación de escritura** y **sin créditos** (`FEAT-USR-025`) |
+| `ACTIVE` | Tras seguir el enlace | Todo. Se abonan los 20 créditos de bienvenida |
 | `DELETED` | Tras eliminar la cuenta | Nada |
 
 ## Flujo principal
@@ -72,7 +77,11 @@ dispositivo o navegador.
 4. La cuenta pasa a `ACTIVE`.
 5. El token se invalida.
 6. Se publica `AccountActivated`.
-7. El usuario continúa donde estuviera: en el onboarding si no lo ha terminado, o en el Home.
+7. `Credits` abona los 20 créditos de bienvenida.
+8. Las operaciones de escritura quedan habilitadas.
+9. El usuario continúa donde estuviera: en el onboarding si no lo ha terminado, o en el Home.
+
+Los pasos 7 y 8 son consecuencia del evento; la respuesta no los espera.
 
 ## Flujos alternativos y errores
 
@@ -100,22 +109,18 @@ extrae y lo envía.
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `AccountActivated` | La cuenta pasa a `ACTIVE` | `Notification`, y `Credits` si se decide que los créditos de bienvenida dependan de la activación (`OB-3`) |
+| `AccountActivated` | La cuenta pasa a `ACTIVE` | **`Credits`** (abona los 20 de bienvenida), `Notification`, `Feedback` (para aplicar `RN-4` de `FEAT-USR-025`) |
 
 ## Efectos en créditos
 
-Depende de `OB-3`. Hay dos posturas:
+**`AccountActivated` es el hecho que abona los 20 créditos de bienvenida** (`FEAT-CRD-002`).
+`UserRegistered` solo crea la cuenta de créditos, con saldo cero.
 
-| Opción | Consecuencia |
-|---|---|
-| Los +20 créditos se abonan al registrarse (`UserRegistered`) | Más simple. Una cuenta sin verificar tiene saldo |
-| Se abonan al activarse (`AccountActivated`) | Ata el saldo a un email real y encarece el registro masivo de cuentas falsas |
+Esto ata el saldo a una dirección de correo real y encarece el registro masivo de cuentas
+falsas, que el crédito por invitación (`FEAT-CRD-005`) incentiva a intentar.
 
-**Recomendación: abonar al activar.** Los créditos son el valor económico de la plataforma y
-el registro sin verificar es gratis; separar ambos convierte la verificación en la barrera
-natural contra el abuso, sin coste para el usuario legítimo.
-
-Esto afecta a `FEAT-CRD-002` y debe decidirse junto con `OB-3`.
+Como cualquier otro consumidor, `Credits` deduplica por `eventId`: activar dos veces no
+abona dos veces.
 
 ## Modelo de datos afectado
 
@@ -142,6 +147,11 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 - [ ] El token se almacena con hash, nunca en claro.
 - [ ] La activación funciona sin sesión iniciada.
 - [ ] Se publica `AccountActivated` exactamente una vez por activación.
+- [ ] Tras procesarse el evento, el saldo del usuario es 20.
+- [ ] Reprocesar el mismo `AccountActivated` no abona 20 créditos por segunda vez.
+- [ ] Antes de activar, el saldo es 0.
+- [ ] Antes de activar, una operación de escritura devuelve `403 ACCOUNT_NOT_ACTIVATED`.
+- [ ] Justo después de activar, esa misma operación funciona.
 - [ ] El usuario puede completar todo el onboarding sin haber activado la cuenta.
 - [ ] Ningún log registra el token.
 
@@ -149,14 +159,16 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| OB-3 | ¿Qué puede hacer exactamente una cuenta `PENDING_ACTIVATION`? ¿Recibe créditos? ¿Puede comentar? | **Bloqueante.** Define la superficie de abuso |
-| OB-9 | ¿Cuánto dura el token? | Propuesta: 24 horas |
-| OB-11 | ¿El registro por Google, Facebook o LinkedIn da el email por verificado? | Evitaría un paso innecesario, pero depende de la confianza en cada proveedor |
-| OB-8 | «Cancelar suscripción» en el correo de activación | Podría impedir la activación |
+| OB-3 | ¿Qué puede hacer una cuenta `PENDING_ACTIVATION`? | **Resuelto:** leer y completar el onboarding, nada más. Ver `decision:0003` y `FEAT-USR-025` |
+| OB-8 | «Cancelar suscripción» en el correo de activación | **Resuelto:** se retira. Es un correo transaccional (`FEAT-NOT-008`) |
+| OB-9 | ¿Cuánto dura el token? | Propuesta: 24 horas. Sin confirmar |
+| **OB-11** | **¿El registro con Google da el email por verificado y crea la cuenta ya activa?** | Google verifica el correo antes de emitir el token, así que exigir una segunda verificación sería redundante. **Propuesta: crear la cuenta ya `ACTIVE`.** Pendiente de confirmar |
+| A-1 | ¿Caduca una cuenta que nunca se activa? | Cuentas muertas con datos de onboarding |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Para llegar a `APPROVED` hace falta resolver `OB-3`, que decide
-además dónde se abonan los créditos de bienvenida.
+**Especificación:** `DRAFT`. Resuelto lo esencial: qué desbloquea la activación y cuándo se
+abonan los créditos. Para llegar a `APPROVED` falta confirmar `OB-11` (si Google entra ya
+activo) y la caducidad del token (`OB-9`).
 
 **Implementación:** `TODO`.

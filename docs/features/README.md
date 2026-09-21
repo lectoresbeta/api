@@ -17,14 +17,14 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 24 | 7 | 0 | 0 |
+| `User` (USR) | 25 | 8 | 0 | 0 |
 | `Work` (WRK) | 14 | 1 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 9 | 0 | 0 | 0 |
 | `Community` (COM) | 16 | 1 | 0 | 0 |
 | `Credits` (CRD) | 12 | 1 | 0 | 0 |
 | `Notification` (NOT) | 8 | 1 | 0 | 0 |
-| **Total** | **93** | **11** | **0** | **0** |
+| **Total** | **94** | **12** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -40,11 +40,11 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-USR-001 | Registro con email y contraseña | Guest | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-001-register-with-email.md) |
-| FEAT-USR-002 | Registro con cuenta de Google | Guest | PENDING | TODO | P1 | — |
-| FEAT-USR-003 | Registro con cuenta de Facebook | Guest | PENDING | TODO | P2 | — |
+| FEAT-USR-002 | Registro con cuenta de Google | Guest | PENDING | TODO | P0 | — |
+| FEAT-USR-003 | Registro con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-004 | Login con email y contraseña | Guest | PENDING | TODO | P0 | — |
-| FEAT-USR-005 | Login con cuenta de Google | Guest | PENDING | TODO | P1 | — |
-| FEAT-USR-006 | Login con cuenta de Facebook | Guest | PENDING | TODO | P2 | — |
+| FEAT-USR-005 | Login con cuenta de Google | Guest | PENDING | TODO | P0 | — |
+| FEAT-USR-006 | Login con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-007 | Recuperar contraseña | Guest | PENDING | TODO | P0 | — |
 | FEAT-USR-008 | Editar datos de usuario (email, nombre, contraseña, datos personales) | User | PENDING | TODO | P1 | — |
 | FEAT-USR-009 | Editar preferencias literarias | User | PENDING | TODO | P2 | — |
@@ -57,20 +57,26 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-016 | Personalizar página de autor (fuentes, colores, fondos) | Writer | PENDING | TODO | P3 | — |
 | FEAT-USR-017 | Buscar autores por nombre o temática | User | PENDING | TODO | P1 | — |
 | FEAT-USR-018 | Invitar a personas a la plataforma por email | User | PENDING | TODO | P2 | — |
-| FEAT-USR-019 | Registro y login con LinkedIn | Guest | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-019-linkedin-oauth.md) |
+| FEAT-USR-019 | Registro y login con LinkedIn | Guest | DRAFT | DEFERRED | P3 | [ficha](user/FEAT-USR-019-linkedin-oauth.md) |
 | FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
 | FEAT-USR-021 | Reenviar el email de activación | Guest, User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
 | FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
 | FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
 | FEAT-USR-024 | Aceptar condiciones de uso y política de privacidad | Guest | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-024-accept-terms-and-privacy.md) |
+| FEAT-USR-025 | Bloquear las operaciones de escritura hasta activar la cuenta | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-025-block-writes-until-activation.md) |
 
 > `FEAT-USR-013` está `BLOCKED`: no se puede especificar sin resolver qué ocurre con obras,
 > feedback y créditos al eliminar la cuenta (`V-4`, `U-3`).
 >
-> `FEAT-USR-019` a `FEAT-USR-024` salen del diseño del flujo de creación de cuenta. LinkedIn
-> (`FEAT-USR-019`) **no aparece en el documento de casos de uso**: confirmar que entra en
-> alcance. El registro del diseño **ya no pide nombre de usuario**, lo que deja abierto de
-> dónde sale el alias con el que saluda el onboarding (`OB-1`).
+> `FEAT-USR-019` a `FEAT-USR-025` salen del diseño del flujo de creación de cuenta.
+>
+> **Solo Google en esta fase.** Facebook (`FEAT-USR-003`, `FEAT-USR-006`) y LinkedIn
+> (`FEAT-USR-019`) quedan `DEFERRED`; el diseño muestra los tres botones, pero solo se
+> implementa Google.
+>
+> **No existe el nombre de usuario.** La plataforma no lo pide ni lo almacena; el saludo del
+> onboarding usa un alias derivado del email. Queda abierto `OB-2`: qué nombre se muestra
+> públicamente, dado que el «Nombre» del onboarding es privado.
 
 ---
 
@@ -179,7 +185,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-CRD-001 | Consultar saldo de créditos | User | PENDING | TODO | P0 | — |
-| FEAT-CRD-002 | Abonar créditos de bienvenida al crear cuenta (+20) | — (sistema) | PENDING | TODO | P0 | — |
+| FEAT-CRD-002 | Abonar créditos de bienvenida al **activar** la cuenta (+20) | — (sistema) | PENDING | TODO | P0 | — |
 | FEAT-CRD-003 | Abonar créditos por dar feedback, según nivel del texto | — (sistema) | PENDING | TODO | P0 | — |
 | FEAT-CRD-004 | Abonar +5 créditos por feedback valorado positivamente | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-CRD-005 | Abonar +5 créditos por invitación que participa | — (sistema) | PENDING | TODO | P2 | — |
@@ -237,11 +243,15 @@ implementarse— sin una decisión de producto:
 
 | Funcionalidad | Pendiente de | Decisión necesaria |
 |---|---|---|
-| FEAT-USR-001, FEAT-USR-022 | `OB-1` | De dónde sale el alias del usuario, si el registro ya no pide nombre de usuario |
-| FEAT-USR-001, FEAT-USR-020, FEAT-CRD-002 | `OB-3` | Qué puede hacer una cuenta sin activar y si recibe los créditos de bienvenida |
-| FEAT-COM-016 | `OB-6` | Criterio de sugerencia de autores y qué mostrar cuando no hay ninguno |
-| FEAT-USR-019, FEAT-USR-024 | `T-4` | Dónde acepta las condiciones quien entra por un proveedor social |
+| FEAT-USR-001, FEAT-USR-022, FEAT-COM-016, FEAT-USR-014 | **`OB-2`** | **Qué nombre se muestra públicamente.** No hay nombre de usuario y el «Nombre» del onboarding es privado: hoy la plataforma no tiene con qué identificar a un autor |
+| FEAT-USR-002, FEAT-USR-024 | `T-4` | Dónde acepta las condiciones legales quien entra con Google |
+| FEAT-USR-002, FEAT-USR-020 | `OB-11` | Si el registro con Google crea la cuenta ya activada, dado que Google ya verifica el correo |
+| FEAT-USR-022 | `OB-7` | Si hay edad mínima de registro. Tiene implicaciones legales |
 | Todo `User` | `S-1` | Mecanismo de sesión de la API |
+
+Resueltas en esta revisión: `OB-1` (alias derivado del email), `OB-3` (ver
+[`decision:0003`](../decisions/0003-write-operations-require-activated-account.md)),
+`OB-4`, `OB-5`, `OB-6`, `OB-8` y `OB-13`.
 
 Las referencias `OB-n` están en [`../ui/account-creation.md`](../ui/account-creation.md).
 
