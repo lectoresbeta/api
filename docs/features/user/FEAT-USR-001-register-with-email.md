@@ -199,7 +199,7 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 | # | Pregunta | Impacto |
 |---|---|---|
 | Q-1 | ¿El registro devuelve además una sesión iniciada? | El diseño sugiere que sí; depende de `S-1` |
-| **OB-2** | **Si no hay nombre de usuario y el «Nombre» del onboarding es privado, ¿qué nombre se muestra públicamente?** | **Bloqueante.** Sin resolverlo, la plataforma no tiene con qué identificar a un autor en el catálogo, el muro o los rankings |
+| OB-2 | ¿Qué nombre se muestra públicamente? | **Resuelto:** el «Nombre» que se pide en el paso 1 del onboarding (`FEAT-USR-022`). Es público y es el referente para identificar a un usuario |
 | OB-1 | ¿De dónde sale el alias del saludo? | **Resuelto:** de la parte del email anterior a la `@`. Solo para presentación |
 | OB-3 | ¿Qué puede hacer una cuenta sin activar? ¿Recibe créditos? | **Resuelto:** nada de escritura, y los créditos llegan al activar. Ver `decision:0003` |
 | Q-5 | ¿Qué reglas sigue el nombre de usuario? | **Resuelto:** no existe el concepto |
@@ -211,8 +211,8 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resueltos el alias, el nombre de usuario, la política de
-contraseña, la aceptación de términos y el momento del abono de créditos. Para llegar a
-`APPROVED` faltan **`OB-2`** (qué nombre es público) y `S-1` (mecanismo de sesión).
+**Especificación:** `DRAFT`. Resueltos el alias, el nombre de usuario, el nombre público, la
+política de contraseña, la aceptación de términos y el momento del abono de créditos. Para
+llegar a `APPROVED` falta `S-1` (mecanismo de sesión).
 
 **Implementación:** `TODO`.

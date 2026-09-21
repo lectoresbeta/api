@@ -133,11 +133,31 @@ Las únicas excepciones son los pasos del onboarding y la gestión de la propia 
 
 ---
 
-## Nota sobre datos privados
+## Nota sobre datos públicos y privados
 
-El onboarding recoge nombre y fecha de nacimiento con el aviso explícito de que *«solo será
-visible para ti y el equipo de LectoresBeta»*.
+El paso 1 del onboarding recoge dos datos con visibilidad opuesta:
 
-En consecuencia, **ningún endpoint accesible por terceros** —`GET /users/{userId}`,
-`GET /users`, `GET /authors/{userId}/page`, las sugerencias de autores o cualquier listado—
-devuelve `birthDate` ni el email. Es una regla de contrato, no una recomendación.
+| Campo | Visibilidad | Dónde aparece |
+|---|---|---|
+| `name` | **Público** | Perfiles, catálogo, muro, comentarios, rankings, sugerencias de autores |
+| `birthDate` | **Privado** | Solo en `GET /me` |
+
+`name` es el referente con el que se identifica a un usuario: al no existir nombre de
+usuario, es el único nombre visible de una persona.
+
+**Ningún endpoint accesible por terceros** —`GET /users/{userId}`, `GET /users`,
+`GET /authors/{userId}/page`, las sugerencias de autores o cualquier listado— devuelve
+`birthDate` ni el email. Es una regla de contrato, no una recomendación.
+
+Las rutas y los enlaces de perfil usan siempre el `UserId`, nunca el nombre.
+
+---
+
+## Nota sobre el alta con proveedores externos
+
+`POST /auth/oauth/{provider}/callback` **no crea una cuenta** si la petición no incluye la
+aceptación de la versión vigente de las condiciones de uso y la política de privacidad:
+responde `422` con `code: TERMS_NOT_ACCEPTED` y no persiste nada.
+
+Iniciar sesión en una cuenta ya existente no lo exige. Ver
+[`FEAT-USR-002`](../../features/user/FEAT-USR-002-register-with-google.md).

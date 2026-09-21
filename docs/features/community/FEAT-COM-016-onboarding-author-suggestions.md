@@ -63,7 +63,7 @@ El diseño muestra por tarjeta:
 | Dato | Origen | Nota |
 |---|---|---|
 | Avatar | `User` | |
-| Nombre visible | `User` | El nombre **público**, no el privado del paso 1 (`OB-2`) |
+| Nombre visible | `User` | El `name` del paso 1 del onboarding, que es público (`FEAT-USR-022`) |
 | Número de seguidores | `Community` | Agregado |
 | Número de publicaciones | `Community` | Agregado |
 | Estado de seguimiento | `Community` | Para pintar «Seguir» o «Siguiendo» |
@@ -228,15 +228,15 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 |---|---|---|
 | OB-6 | ¿Qué se muestra si no hay autores suficientes? | **Resuelto:** cadena de relleno y omisión del paso. Ver arriba |
 | OB-4 | ¿Falta un botón explícito de «Saltar»? | **Resuelto:** se añade |
-| **OB-2** | **¿Qué nombre se muestra en la tarjeta?** El del paso 1 del onboarding es privado y no existe nombre de usuario | **Bloqueante.** Sin nombre público no se puede pintar la tarjeta |
+| OB-2 | ¿Qué nombre se muestra en la tarjeta? | **Resuelto:** el `name` del onboarding, que es público |
 | C-1 | ¿Cuántas sugerencias se devuelven como máximo? | Propuesta: 10, con scroll. Sin confirmar |
 | OB-12 | ¿A dónde lleva «Siguiente»: al Home o a un segundo onboarding de perfil? | La nota del propio Figma lo deja abierto |
 | S-1 | ¿Qué es una «publicación» en el contador: posts del muro, obras publicadas, o ambos? | Cambia el significado del dato |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resuelto el criterio de sugerencia y el comportamiento con
-catálogo insuficiente. Para llegar a `APPROVED` falta `OB-2`: qué nombre se muestra en la
-tarjeta, que es transversal a toda la plataforma.
+**Especificación:** `DRAFT`. Resueltos el criterio de sugerencia, el comportamiento con
+catálogo insuficiente y qué nombre se muestra. Para llegar a `APPROVED` falta confirmar el
+número máximo de sugerencias (`C-1`) y qué cuenta como «publicación» (`S-1`).
 
 **Implementación:** `TODO`.

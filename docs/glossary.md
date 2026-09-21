@@ -51,6 +51,7 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Notificación | `Notification` | Aviso dirigido a un usuario, entregable in-app o por email. |
 | Activación de cuenta | `AccountActivation` | Confirmación del email mediante un enlace con token, que lleva la cuenta de `PENDING_ACTIVATION` a `ACTIVE`. Desbloquea los créditos de bienvenida y todas las operaciones de escritura. |
 | Alias | — | Texto de presentación derivado del email (la parte anterior a la `@`), usado en el saludo del onboarding. **No se almacena, no es único y no identifica a nadie.** No es un nombre de usuario. |
+| Nombre | `Name` | Nombre **público** de un usuario, recogido en el paso 1 del onboarding. Es el referente con el que se le identifica en perfiles, catálogo, muro, comentarios, rankings y sugerencias. No es el identificador técnico: ese es `UserId`. |
 | Onboarding | `Onboarding` | Proceso de tres pasos posterior al registro: datos personales, géneros de interés y autores a seguir. |
 | Aceptación legal | `LegalAcceptance` | Registro inmutable de qué versión de las condiciones de uso y la política de privacidad aceptó un usuario, y cuándo. |
 | Catálogo de géneros | `Genre` | Lista administrable de géneros literarios, compartida por los intereses del lector y la temática de las obras. |

@@ -57,6 +57,7 @@ preferencias y presencia pública como autor.
 | `Email` | Formato válido, único, normalizado en minúsculas |
 | ~~`Username`~~ | **No existe.** La plataforma no maneja nombre de usuario. El alias del saludo se deriva del email y no se persiste |
 | `HashedPassword` | ≥8 caracteres, una mayúscula, un número y un carácter especial. Nunca se expone ni se registra en logs |
+| `Name` | **Dato público.** Referente para identificar a un usuario en toda la plataforma. No es el identificador técnico: ese sigue siendo `UserId` |
 | `BirthDate` | Fecha real y pasada. **Dato privado**: no se expone en la API pública |
 | `LiteraryPreferences` | Conjunto de `Genre`, mínimo tres al completar el onboarding |
 | `AccountStatus` | `PENDING_ACTIVATION`, `ACTIVE`, `DELETED` |
@@ -88,8 +89,9 @@ preferencias y presencia pública como autor.
 | U-3 | ¿Qué ocurre con obras, feedback y créditos al eliminar la cuenta? (`V-4`, `J-7`) | Bloquea `FEAT-USR-012` |
 | U-4 | ¿Quién detecta que un invitado "ha participado": `User` escuchando a `Feedback`, o `Feedback` publicándolo? | Define el productor de `InvitedUserParticipated` |
 | U-5 | ¿La personalización de la página de autor tiene límites (temas cerrados o CSS libre)? | Riesgo de seguridad si es libre |
-| **U-8** | **Sin nombre de usuario y con el «Nombre» declarado privado, ¿qué nombre se muestra públicamente?** (`OB-2`) | **Bloqueante.** Afecta al perfil, al catálogo, al muro, a los rankings y a las sugerencias |
+| U-8 | ¿Qué nombre se muestra públicamente? (`OB-2`) | **Resuelto:** el `Name` del onboarding. El aviso de privacidad solo afecta a la fecha de nacimiento |
 | U-6 | ¿Existe `Username`? | **Resuelto:** no. No se usa el concepto |
+| U-10 | ¿El `Name` debe ser único? | Sin unicidad, dos homónimos son indistinguibles. Recomendación: no exigirla y desambiguar con avatar y enlace al perfil |
 | U-7 | ¿Qué puede hacer una cuenta `PENDING_ACTIVATION`? | **Resuelto:** leer y completar el onboarding. Ver `decision:0003` |
 | U-9 | ¿Hay edad mínima para registrarse? (`OB-7`) | Legal: se recoge la fecha de nacimiento sin motivo declarado |
 

@@ -23,6 +23,9 @@ updated: 2026-09-21
 El formulario de registro incluye una casilla: «Aceptas nuestras **condiciones de uso** y
 nuestra **política de privacidad**», con ambos textos enlazados.
 
+**La exigencia no depende del método de alta**: quien se registra con Google también tiene
+que aceptarlos.
+
 Parece un detalle de interfaz y no lo es: la aceptación hay que **poder demostrarla después**,
 y eso solo se consigue si el backend registra qué versión concreta se aceptó y cuándo.
 
@@ -42,6 +45,10 @@ y eso solo se consigue si el backend registra qué versión concreta se aceptó 
 - `RN-4` El registro de aceptación es inmutable: una aceptación nueva es un registro nuevo.
 - `RN-5` Las condiciones de uso y la política de privacidad son documentos independientes y
   se versionan por separado, aunque la casilla sea una sola.
+- `RN-7` **La exigencia es la misma sea cual sea el método de alta.** Registrarse con Google
+  (`FEAT-USR-002`) también requiere aceptar ambos documentos: el proveedor externo acredita
+  quién es la persona, no qué ha aceptado. Sin aceptación no se crea la cuenta.
+- `RN-8` Iniciar sesión en una cuenta ya existente no exige volver a aceptar nada.
 - `RN-6` El usuario debe poder consultar qué aceptó y cuándo.
 
 `RN-5` importa porque los dos documentos cambian por motivos distintos y con frecuencias
@@ -60,12 +67,15 @@ distintas.
 | Caso | Comportamiento | Respuesta |
 |---|---|---|
 | Registro sin aceptación | Se rechaza | `422` con `code: TERMS_NOT_ACCEPTED` |
+| Alta con Google sin aceptación | **No se crea la cuenta** (`RN-7`) | `422` con `code: TERMS_NOT_ACCEPTED` |
 | Se acepta una versión que ya no es la vigente | **Por definir.** Probablemente se rechaza y se pide releer | Pendiente |
 | Cambio de términos con usuarios ya registrados | **Fuera de alcance de esta ficha.** Requiere un flujo de reaceptación | Ver `T-2` |
 
 ## Contrato de API
 
-Forma parte de `POST /auth/register` (`FEAT-USR-001`). No tiene endpoint propio en el alta.
+Forma parte de `POST /auth/register` (`FEAT-USR-001`) y de
+`POST /auth/oauth/google/callback` cuando esa llamada implica **crear** una cuenta
+(`FEAT-USR-002`). No tiene endpoint propio en el alta.
 
 Sí necesita, al menos:
 
@@ -93,6 +103,9 @@ Sí necesita, al menos:
 - [ ] Condiciones de uso y política de privacidad se registran por separado.
 - [ ] Un registro de aceptación no se puede modificar ni borrar.
 - [ ] El usuario puede consultar qué versiones aceptó y cuándo.
+- [ ] Un alta con Google sin aceptación no crea la cuenta y devuelve `422`.
+- [ ] La aceptación registrada por la vía de Google guarda versión y fecha igual que la de email.
+- [ ] Iniciar sesión con Google en una cuenta existente no exige volver a aceptar.
 
 ## Preguntas abiertas
 
@@ -101,13 +114,12 @@ Sí necesita, al menos:
 | T-1 | ¿Dónde viven los textos legales: en el backend, en el CMS del frontend, o en ficheros estáticos? | Determina si `GET /legal/documents` existe |
 | T-2 | ¿Qué ocurre cuando cambian los términos con usuarios ya registrados? ¿Hay reaceptación obligatoria? | Flujo completo sin diseñar |
 | T-3 | ¿Hace falta consentimiento separado para comunicaciones comerciales? El pie del correo incluye «Cancelar suscripción» | Requisito probable de protección de datos |
-| T-4 | ¿El registro por Google, Facebook o LinkedIn también exige aceptación? El diseño no lo muestra | **Hueco real**: esos botones no llevan casilla |
-
-`T-4` es el más urgente: tal como está el diseño, quien entre por un proveedor social **no
-acepta nada**.
+| T-4 | ¿El alta con Google también exige aceptación? | **Resuelto:** sí. Sin aceptación no se crea la cuenta (`RN-7`, `FEAT-USR-002`) |
+| T-5 | ¿Cómo se recoge la aceptación en la interfaz de Google: casilla previa o pantalla intermedia? | La regla de backend ya cierra el hueco; falta la decisión de diseño. Ver `FEAT-USR-002` |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Falta resolver `T-4` y decidir dónde viven los textos legales.
+**Especificación:** `DRAFT`. Resuelto `T-4`. Falta decidir dónde viven los textos legales
+(`T-1`) y cómo se recoge la aceptación en el alta con Google (`T-5`).
 
 **Implementación:** `TODO`.

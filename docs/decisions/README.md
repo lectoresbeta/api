@@ -29,10 +29,10 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 | `P-1` | Un esquema de PostgreSQL por contexto, o uno solo | La primera migración |
 | `V-4` | Qué se conserva al eliminar una cuenta | `FEAT-USR-013` |
 | `D-1` | Si el feedback se ancla al fragmento o a la obra | `Feedback` y el cálculo de créditos |
-| `OB-2` | Qué nombre se muestra públicamente, si no hay nombre de usuario y el «Nombre» del onboarding es privado | `FEAT-USR-001`, `FEAT-USR-014`, `FEAT-USR-022`, `FEAT-COM-016` |
-| `OB-11` | Si el registro con Google crea la cuenta ya activada | `FEAT-USR-002`, `FEAT-USR-020` |
-| `T-4` | Dónde acepta las condiciones legales quien entra con Google | `FEAT-USR-002`, `FEAT-USR-024` |
+| `OB-11` | Si el alta con Google crea la cuenta ya activada, dado que Google ya verifica el correo | `FEAT-USR-002`, `FEAT-USR-020` |
+| `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia | `FEAT-USR-002`, `FEAT-USR-024` |
 | `OB-7` | Si hay edad mínima de registro | `FEAT-USR-022`. Tiene implicaciones legales |
+| `N-2` | Si el nombre público debe ser único | `FEAT-USR-022`. Sin unicidad, dos homónimos son indistinguibles |
 
 ## Estados
 

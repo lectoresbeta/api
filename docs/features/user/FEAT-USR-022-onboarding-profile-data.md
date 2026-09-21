@@ -20,12 +20,20 @@ updated: 2026-09-21
 
 ## Resumen
 
-Primer paso del onboarding. Recoge el nombre y la fecha de nacimiento del usuario recién
-registrado. Ambos campos llevan un tooltip que dice: *«Esta información solo será visible
-para ti y el equipo de LectoresBeta.»*
+Primer paso del onboarding. Recoge dos datos con visibilidad **opuesta**:
 
-Ese tooltip es el requisito más importante de la ficha: **son datos privados** y no pueden
-aparecer en ninguna respuesta de la API dirigida a terceros.
+| Campo | Visibilidad |
+|---|---|
+| **Nombre** | **Público.** Es el referente con el que se identifica a un usuario en toda la plataforma |
+| **Fecha de nacimiento** | **Privada.** Solo el titular y el equipo de LectoresBeta |
+
+El diseño muestra el tooltip *«Esta información solo será visible para ti y el equipo de
+LectoresBeta»* en ambos campos. **Solo corresponde a la fecha de nacimiento**; en el campo
+Nombre hay que retirarlo, porque dice justo lo contrario de lo que ocurre.
+
+Al no existir nombre de usuario, el Nombre es el **único** identificador visible de una
+persona: aparece en el perfil, el catálogo, el muro, los rankings, los comentarios y las
+tarjetas de sugerencia de autores.
 
 ## Actores y autorización
 
@@ -45,8 +53,10 @@ aparecer en ninguna respuesta de la API dirigida a terceros.
   (la interfaz la presenta como `XX/XX/XXXX`).
 - `RN-3` La fecha debe ser una fecha real y pasada. No se aceptan fechas futuras ni
   imposibles.
-- `RN-4` **Nombre y fecha de nacimiento son datos privados.** No se devuelven en el perfil
-  público (`FEAT-USR-014`) ni en ningún listado, sugerencia o resultado de búsqueda.
+- `RN-4` **El nombre es público.** Es el dato con el que se identifica a un usuario en toda
+  la plataforma y se devuelve en perfiles, listados, búsquedas, comentarios y sugerencias.
+- `RN-4b` **La fecha de nacimiento es privada.** No se devuelve en ninguna respuesta dirigida
+  a terceros, ni en perfiles, ni en listados, ni en búsquedas, ni en sugerencias.
 - `RN-5` El estado del onboarding se persiste al completar cada paso, de modo que el usuario
   pueda abandonarlo y retomarlo donde lo dejó.
 - `RN-6` El paso 1 es obligatorio: no se puede avanzar sin completarlo.
@@ -57,6 +67,11 @@ aparecer en ninguna respuesta de la API dirigida a terceros.
   devolverlo calculado o dejar que lo derive el cliente.
 - `RN-9` Este paso funciona con la cuenta en `PENDING_ACTIVATION`: es una de las excepciones
   al bloqueo de escritura (`FEAT-USR-025`, `RN-5`).
+- `RN-10` El nombre es editable después del onboarding (`FEAT-USR-008`). Al ser público,
+  cambiarlo cambia cómo se ve a esa persona en todo el histórico: comentarios antiguos,
+  publicaciones y rankings pasan a mostrar el nombre nuevo.
+- `RN-11` El nombre **no es el identificador técnico**. La identidad sigue siendo `UserId`
+  (UUID): las rutas de la API y los enlaces de perfil usan el UUID, nunca el nombre.
 
 ## Estado del onboarding
 
@@ -84,6 +99,7 @@ Se expone en `GET /me/onboarding` para que el frontend sepa en qué paso retomar
 | Fecha con formato inválido | Se rechaza. El diseño muestra «Formato incorrecto de fecha» | `422` con `code: INVALID_DATE_FORMAT` |
 | Fecha futura o inexistente (30/02) | Se rechaza | `422` |
 | Nombre vacío | Se rechaza | `422` |
+| Nombre con caracteres o longitud no admitidos | Se rechaza | `422`. Reglas por definir (`N-1`) |
 | Edad por debajo del mínimo legal | **Sin definir** (`OB-7`) | Pendiente |
 | Onboarding ya completado | Se rechaza; para cambiar los datos se usa `FEAT-USR-008` | `409` |
 
@@ -104,6 +120,9 @@ Se expone en `GET /me/onboarding` para que el frontend sepa en qué paso retomar
 
 `birth_date` es dato personal: no se registra en logs y no se expone en la API pública.
 
+`name` se consulta en cada listado que muestre personas, así que necesita índice si se busca
+por él (`FEAT-USR-017`).
+
 ## Diseño (Figma)
 
 `1470:9456` (estado normal), `1679:8998` (error de fecha y tooltip).
@@ -117,8 +136,10 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 - [ ] Una fecha futura devuelve `422`.
 - [ ] Una fecha inexistente como `2000-02-30` devuelve `422`.
 - [ ] Un nombre vacío devuelve `422`.
-- [ ] `GET /users/{userId}` de otro usuario **no** devuelve `name` privado ni `birthDate`.
+- [ ] `GET /users/{userId}` de otro usuario **sí** devuelve `name`.
+- [ ] `GET /users/{userId}` de otro usuario **no** devuelve `birthDate` ni el email.
 - [ ] Ningún endpoint accesible por terceros expone la fecha de nacimiento.
+- [ ] Las rutas y los enlaces de perfil usan el `UserId`, no el nombre.
 - [ ] El usuario puede completar este paso sin haber activado su cuenta.
 - [ ] Tras cerrar sesión y volver, el onboarding se retoma en el paso 2.
 - [ ] Un cliente que envíe una fecha inválida saltándose la validación de cliente recibe `422`.
@@ -127,14 +148,20 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **OB-2** | **Si «Nombre» es privado y no existe nombre de usuario, ¿qué nombre ve el resto de la plataforma?** | **Bloqueante.** Afecta al perfil público, al catálogo, al muro, a los rankings y a las sugerencias de autores |
+| OB-2 | ¿Qué nombre ve el resto de la plataforma? | **Resuelto:** el «Nombre» del paso 1, que es público. El tooltip de privacidad solo corresponde a la fecha de nacimiento |
 | OB-1 | ¿De dónde sale el alias del saludo? | **Resuelto:** de la parte del email anterior a la `@` |
+| N-1 | ¿Qué reglas sigue el nombre: longitud, caracteres admitidos, nombres reservados? | Validación |
+| **N-2** | **¿El nombre debe ser único?** | Sin unicidad, dos personas homónimas son indistinguibles en comentarios y rankings. Con unicidad, se rechazan nombres reales legítimos. **Recomendación: no exigir unicidad**, y desambiguar en la interfaz con avatar y enlace al perfil |
+| N-3 | ¿Se puede cambiar el nombre libremente y con qué frecuencia? | Cambiarlo reescribe cómo se ve a esa persona en todo el histórico (`RN-10`) |
 | **OB-7** | ¿Hay edad mínima? ¿Se rechaza el registro por debajo de ella? | **Legal.** Si se pide la fecha de nacimiento, debe haber un motivo declarado |
 | OB-10 | ¿Se persiste el paso a paso o el onboarding completo al final? | Asumido paso a paso en `RN-5`; confirmar |
 
 ## Estado
 
-**Especificación:** `DRAFT`. `OB-2` debe resolverse antes de `APPROVED`: sin nombre de
-usuario y con el «Nombre» declarado privado, la plataforma se queda sin nombre público.
+**Especificación:** `DRAFT`. Resuelto `OB-2`: el nombre es público y la privacidad solo
+afecta a la fecha de nacimiento. Para llegar a `APPROVED` faltan las reglas de validación del
+nombre (`N-1`), si debe ser único (`N-2`) y la edad mínima (`OB-7`).
+
+**Corrección de diseño pendiente:** retirar el tooltip de privacidad del campo Nombre.
 
 **Implementación:** `TODO`.

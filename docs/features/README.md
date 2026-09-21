@@ -17,14 +17,14 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 25 | 8 | 0 | 0 |
+| `User` (USR) | 25 | 9 | 0 | 0 |
 | `Work` (WRK) | 14 | 1 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 9 | 0 | 0 | 0 |
 | `Community` (COM) | 16 | 1 | 0 | 0 |
 | `Credits` (CRD) | 12 | 1 | 0 | 0 |
 | `Notification` (NOT) | 8 | 1 | 0 | 0 |
-| **Total** | **94** | **12** | **0** | **0** |
+| **Total** | **94** | **13** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -40,7 +40,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-USR-001 | Registro con email y contraseña | Guest | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-001-register-with-email.md) |
-| FEAT-USR-002 | Registro con cuenta de Google | Guest | PENDING | TODO | P0 | — |
+| FEAT-USR-002 | Registro con cuenta de Google | Guest | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-002-register-with-google.md) |
 | FEAT-USR-003 | Registro con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-004 | Login con email y contraseña | Guest | PENDING | TODO | P0 | — |
 | FEAT-USR-005 | Login con cuenta de Google | Guest | PENDING | TODO | P0 | — |
@@ -75,8 +75,11 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 > implementa Google.
 >
 > **No existe el nombre de usuario.** La plataforma no lo pide ni lo almacena; el saludo del
-> onboarding usa un alias derivado del email. Queda abierto `OB-2`: qué nombre se muestra
-> públicamente, dado que el «Nombre» del onboarding es privado.
+> onboarding usa un alias derivado del email.
+>
+> **El nombre público es el «Nombre» del paso 1 del onboarding** (`FEAT-USR-022`). Es el
+> referente para identificar a un usuario en toda la plataforma. El aviso de privacidad del
+> diseño corresponde **solo** a la fecha de nacimiento.
 
 ---
 
@@ -243,15 +246,16 @@ implementarse— sin una decisión de producto:
 
 | Funcionalidad | Pendiente de | Decisión necesaria |
 |---|---|---|
-| FEAT-USR-001, FEAT-USR-022, FEAT-COM-016, FEAT-USR-014 | **`OB-2`** | **Qué nombre se muestra públicamente.** No hay nombre de usuario y el «Nombre» del onboarding es privado: hoy la plataforma no tiene con qué identificar a un autor |
-| FEAT-USR-002, FEAT-USR-024 | `T-4` | Dónde acepta las condiciones legales quien entra con Google |
-| FEAT-USR-002, FEAT-USR-020 | `OB-11` | Si el registro con Google crea la cuenta ya activada, dado que Google ya verifica el correo |
+| FEAT-USR-002, FEAT-USR-020 | `OB-11` | Si el alta con Google crea la cuenta ya activada, dado que Google ya verifica el correo |
+| FEAT-USR-002, FEAT-USR-024 | `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia |
 | FEAT-USR-022 | `OB-7` | Si hay edad mínima de registro. Tiene implicaciones legales |
+| FEAT-USR-022 | `N-1`, `N-2` | Reglas de validación del nombre y si debe ser único |
 | Todo `User` | `S-1` | Mecanismo de sesión de la API |
 
-Resueltas en esta revisión: `OB-1` (alias derivado del email), `OB-3` (ver
-[`decision:0003`](../decisions/0003-write-operations-require-activated-account.md)),
-`OB-4`, `OB-5`, `OB-6`, `OB-8` y `OB-13`.
+Resueltas hasta ahora: `OB-1` (alias derivado del email), `OB-2` (el nombre es público),
+`OB-3` (ver [`decision:0003`](../decisions/0003-write-operations-require-activated-account.md)),
+`OB-4`, `OB-5`, `OB-6`, `OB-8`, `OB-13` y `T-4` (sin aceptación legal no hay cuenta, tampoco
+con Google).
 
 Las referencias `OB-n` están en [`../ui/account-creation.md`](../ui/account-creation.md).
 

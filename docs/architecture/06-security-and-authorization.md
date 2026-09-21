@@ -14,7 +14,12 @@
 | Recuperación de contraseña | `FEAT-USR-007` |
 | Enlace público sin sesión | Por especificar — acceso limitado a una obra concreta |
 
-La plataforma **no usa nombre de usuario**: la identidad se establece por email.
+La plataforma **no usa nombre de usuario**: la identidad se establece por email, y el
+nombre público (`Name`) es solo de presentación.
+
+**Cualquier alta exige aceptar las condiciones de uso y la política de privacidad**, incluida
+la que llega por Google: el proveedor externo acredita quién es la persona, no qué ha
+aceptado.
 
 **Decisión pendiente** (`S-1`): mecanismo de sesión de la API. Opciones: JWT de vida corta
 con refresh token, tokens opacos en servidor, o sesión de Symfony. Debe cerrarse en un ADR
@@ -84,6 +89,7 @@ del estado del autor de la obra. `Feedback` lo resuelve con una proyección alim
 | Saldo e historial de créditos | Solo su titular |
 | Datos de perfil no públicos | Solo su titular |
 | Fecha de nacimiento y email | **Solo su titular.** Nunca en perfiles, listados, búsquedas ni sugerencias |
+| Nombre (`Name`) | **Público.** Es el referente con el que se identifica a un usuario |
 
 ### Errores de autorización
 

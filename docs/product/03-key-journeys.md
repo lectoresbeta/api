@@ -39,12 +39,13 @@ Recorrido completamente especificado a partir del diseño:
 [`../ui/account-creation.md`](../ui/account-creation.md).
 
 1. Rellena el formulario con email y contraseña, y acepta condiciones y privacidad
-   (`FEAT-USR-001`, `FEAT-USR-024`). Alternativamente entra con **Google** (`FEAT-USR-002`);
-   Facebook y LinkedIn están diferidos.
+   (`FEAT-USR-001`, `FEAT-USR-024`). Alternativamente entra con **Google** (`FEAT-USR-002`),
+   que exige la misma aceptación legal; Facebook y LinkedIn están diferidos.
 2. La cuenta se crea en `PENDING_ACTIVATION`, **sin créditos y sin poder escribir**, y se le
    envía el correo de activación (`FEAT-NOT-008`).
 3. **Sin esperar a ese correo**, entra en el onboarding.
-4. Paso 1: nombre y fecha de nacimiento, ambos privados (`FEAT-USR-022`).
+4. Paso 1: nombre —**público**, y el referente con el que se le identificará en toda la
+   plataforma— y fecha de nacimiento, que es privada (`FEAT-USR-022`).
 5. Paso 2: elige al menos tres géneros de interés (`FEAT-USR-023`).
 6. Paso 3, opcional: sigue a autores sugeridos según esos géneros (`FEAT-COM-016`). **Si la
    plataforma no tiene autores suficientes, este paso se omite** y el onboarding termina en

@@ -67,6 +67,15 @@ importante y tiene consecuencias de seguridad: ver `OB-3`.
 | Botón primario | «Registrarse» |
 | Separador | «o continúa» |
 | Acceso social | El diseño muestra Google, Facebook y LinkedIn. **En esta fase solo se implementa Google**; los otros dos botones no se muestran todavía |
+
+> **Hueco de diseño:** la casilla de condiciones y privacidad está bajo el formulario de
+> email, y el botón de Google queda fuera de su alcance. Tal como está, quien entra con
+> Google no acepta nada.
+>
+> **Regla aplicada:** el alta con Google exige la misma aceptación (`FEAT-USR-002`). El
+> backend no crea la cuenta sin ella. Falta decidir cómo se recoge en la interfaz: casilla
+> previa que gobierne también los botones sociales, o pantalla intermedia al volver de Google
+> (recomendada, porque no depende de conservar estado durante la redirección). Ver `T-5`.
 | Pie | «Ya eres usuario **inicia sesion**» |
 
 **Lo que no hay, y es significativo:**
@@ -114,16 +123,22 @@ bienvenida y todas las operaciones de escritura.
 | Stepper | 3 pasos, primero activo |
 | Título | «Casi lo tienes, **{alias}**!» — en el diseño, «beatrizalonso» |
 | Subtítulo | «Vamos a comenzar a crear tu perfil, necesitamos saber tus datos y tu intereses» |
-| Campo | «Nombre» con tooltip informativo |
+| Campo | «Nombre». **Dato público.** El diseño le pone tooltip de privacidad: hay que retirarlo |
 | Campo | «Fecha de nacimiento», formato `XX/XX/XXXX`, con tooltip |
-| Tooltip (ambos) | «Esta información solo será visible para ti y el equipo de LectoresBeta.» |
+| Tooltip | «Esta información solo será visible para ti y el equipo de LectoresBeta.» **Solo corresponde a la fecha de nacimiento** |
 | Error | «Formato incorrecto de fecha» bajo el campo, en rojo |
 | Panel lateral | Aviso de verificación de email con «Reenviar enlace» |
 
 **Dos consecuencias directas para el backend:**
 
-1. **El tooltip es una regla de privacidad, no un texto decorativo.** Nombre y fecha de
-   nacimiento **no son datos públicos**. `GET /users/{userId}` no debe devolverlos nunca.
+1. **Los dos campos tienen visibilidad opuesta.** El **Nombre es público**: al no existir
+   nombre de usuario, es el referente con el que se identifica a una persona en perfiles,
+   catálogo, muro, comentarios, rankings y sugerencias. La **fecha de nacimiento es
+   privada** y no se devuelve en ninguna respuesta dirigida a terceros.
+
+   > **Corrección de diseño:** el tooltip de privacidad aparece en ambos campos y solo
+   > corresponde a la fecha de nacimiento. En el campo Nombre dice lo contrario de lo que
+   > ocurre y debe retirarse.
 2. **El saludo usa un alias derivado del email**: la parte anterior a la `@`. No se
    almacena, no es único y no identifica al usuario. Es solo presentación.
 
@@ -214,12 +229,12 @@ alcance de este documento.
 | 1 | Registro con email y contraseña, sin nombre de usuario | `FEAT-USR-001` |
 | 2 | Política de contraseña: ≥8 caracteres, una mayúscula, un número y un carácter especial | `FEAT-USR-001` |
 | 3 | Registro y login con LinkedIn, además de Google y Facebook | `FEAT-USR-019` |
-| 4 | Registrar la aceptación de condiciones de uso y política de privacidad, con versión y fecha | `FEAT-USR-024` |
+| 4 | Registrar la aceptación de condiciones de uso y política de privacidad, con versión y fecha, **sea cual sea el método de alta** | `FEAT-USR-024`, `FEAT-USR-002` |
 | 5 | Estado de cuenta `PENDING_ACTIVATION` que no bloquea el onboarding | `FEAT-USR-020` |
 | 6 | Email de activación con token de un solo uso | `FEAT-NOT-008` |
 | 7 | Activación de la cuenta mediante el token | `FEAT-USR-020` |
 | 8 | Reenvío del email de activación, con límite de frecuencia | `FEAT-USR-021` |
-| 9 | Guardar nombre y fecha de nacimiento como **datos privados** | `FEAT-USR-022` |
+| 9 | Guardar el nombre como **dato público** y la fecha de nacimiento como **dato privado** | `FEAT-USR-022` |
 | 10 | Validar el formato y la coherencia de la fecha de nacimiento | `FEAT-USR-022` |
 | 11 | Catálogo de géneros consultable, no cerrado en código | `FEAT-USR-023` |
 | 12 | Guardar los géneros de interés, mínimo tres, validado en servidor | `FEAT-USR-023` |
@@ -247,7 +262,7 @@ Queda abierta `C-3`; el resto se han resuelto.
 |---|---|---|
 | FEAT-USR-001 | Ficha ampliada: política de contraseña, términos, sin nombre de usuario, créditos al activar | `DRAFT` |
 | FEAT-USR-025 | **Nueva** — bloquear escritura hasta activar la cuenta | `DRAFT` |
-| FEAT-USR-002 | Registro con Google: único proveedor externo de esta fase | `PENDING` |
+| FEAT-USR-002 | **Ficha nueva** — registro con Google, con aceptación legal obligatoria | `DRAFT` |
 | FEAT-USR-003, FEAT-USR-006 | Facebook | `DEFERRED` |
 | FEAT-USR-019 | **Nueva** — registro y login con LinkedIn | `DEFERRED` |
 | FEAT-USR-020 | **Nueva** — activar la cuenta desde el email | `DRAFT` |
@@ -264,9 +279,9 @@ Queda abierta `C-3`; el resto se han resuelto.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **OB-2** | **Si no hay nombre de usuario y el «Nombre» del paso 1 es privado, ¿qué nombre se muestra públicamente?** | **Bloqueante.** Hoy la plataforma no tiene con qué identificar a un autor en el catálogo, el muro, los rankings o las tarjetas de sugerencia |
-| **OB-11** | **¿El registro con Google crea la cuenta ya activada?** Google verifica el correo antes de emitir el token, así que pedir una segunda verificación sería redundante | Si no, un usuario de Google tendría que activar un correo ya verificado para poder escribir |
-| **T-4** | **¿Dónde acepta las condiciones y la privacidad quien entra con Google?** El botón no lleva casilla | **Legal.** Hueco real en el diseño actual |
+| **OB-11** | **¿El alta con Google crea la cuenta ya activada?** Google verifica el correo antes de emitir el token, así que pedir una segunda verificación sería redundante | Si no, un usuario de Google tendría que activar un correo ya verificado para poder escribir |
+| **T-5** | **¿Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia?** | La regla de backend ya impide crear la cuenta sin ella; falta la pieza de interfaz |
+| N-1, N-2 | ¿Qué reglas sigue el nombre y debe ser único? | Sin unicidad, dos homónimos son indistinguibles en comentarios y rankings |
 | OB-7 | ¿Hay edad mínima para registrarse? Se pide la fecha de nacimiento pero no se dice para qué | **Legal.** En España el consentimiento digital del menor tiene un umbral de edad |
 | OB-9 | ¿Caduca el enlace de activación? ¿Cada cuánto se puede reenviar? | `FEAT-USR-020`, `FEAT-USR-021`. Propuesta: 24 h y 60 s |
 | OB-10 | ¿El onboarding se puede abandonar y retomar? | Asumido que sí, con estado persistido paso a paso |
@@ -275,6 +290,20 @@ Queda abierta `C-3`; el resto se han resuelto.
 | A-2 | ¿Qué ve una cuenta sin activar al intentar escribir: aviso persistente o error al enviar? | `FEAT-USR-025` necesita diseño |
 | C-3 | ¿La nota «01 → email, 02 → contraseña» describe el login y no el registro? | Coherencia |
 
-**Resueltas:** `OB-1` (alias del email), `OB-3` (ver `decision:0003`), `OB-4` («Saltar»),
-`OB-5` («Poesía»), `OB-6` (autores insuficientes), `OB-8` (sin baja de suscripción) y
-`OB-13` («Siguiente»).
+**Resueltas:** `OB-1` (alias del email), `OB-2` (el nombre es público), `OB-3` (ver
+`decision:0003`), `OB-4` («Saltar»), `OB-5` («Poesía»), `OB-6` (autores insuficientes),
+`OB-8` (sin baja de suscripción), `OB-13` («Siguiente») y `T-4` (sin aceptación legal no hay
+cuenta, tampoco con Google).
+
+## Correcciones de diseño pendientes
+
+| # | Qué corregir | Motivo |
+|---|---|---|
+| 1 | Retirar el tooltip de privacidad del campo «Nombre» | El nombre es público; el tooltip dice lo contrario |
+| 2 | Recoger la aceptación legal en el alta con Google | Hoy quien entra por ahí no acepta nada |
+| 3 | Ocultar los botones de Facebook y LinkedIn | Diferidos en esta fase |
+| 4 | Corregir el chip «Poeta» por «Poesía» | Es el género, no la persona |
+| 5 | Retirar «Cancelar suscripción» del correo de activación | Es transaccional: sin él no se puede usar la cuenta |
+| 6 | Añadir el botón «Saltar» al paso 3 | El paso es opcional y la nota del flujo ya lo pedía |
+| 7 | Etiquetar el botón del onboarding como «Siguiente» | La nota lo llamaba «Continuar» |
+| 8 | Prever el stepper de dos pasos | El paso 3 se omite si no hay autores suficientes |
