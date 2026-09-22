@@ -33,9 +33,11 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Enlace público | `PublicLink` | URL que permite leer una obra y dejar un comentario sin iniciar sesión. |
 | Muro principal | `Feed` | Espacio común donde los usuarios publican y descubren contenido de la comunidad. |
 | Publicación | `Post` | Mensaje publicado en el muro principal. Tiene un tipo según su intención. |
-| Comentario de publicación | `PostComment` | Comentario sobre una publicación del muro. No confundir con `Feedback`. |
+| Comentario de publicación | `PostComment` | Comentario sobre una publicación del muro. Puede ser de primer nivel o una **respuesta** a otro. No confundir con `Feedback`. |
+| Respuesta a comentario | `PostComment` con `parentCommentId` | Comentario anidado bajo otro. Un solo nivel de profundidad. |
+| Mención | `Mention` | Referencia a un usuario dentro de un comentario. Se guarda como `UserId`, **nunca como texto**: los nombres de usuario se reciclan y una mención en texto acabaría señalando a otra persona. |
 | Reacción | `Reaction` | Respuesta emocional con emoji a una publicación. |
-| Apoyo / Me gusta | `Like` | Apoyo simple a una publicación. Se distingue de `Reaction`. |
+| Apoyo / Me gusta | `Like` | Apoyo simple a una publicación, **a un comentario o a una respuesta**. Se distingue de `Reaction` y, sobre todo, de `FeedbackRating`, que sí mueve créditos. |
 | Suscripción a autor | `AuthorSubscription` | Seguimiento de un autor para recibir avisos de sus publicaciones y obras nuevas. |
 | Mensaje directo (MD) | `DirectMessage` | Mensaje privado entre dos usuarios. Requiere que el destinatario los tenga habilitados. |
 | Ranking | `Ranking` | Clasificación de escritores, obras o lectores, filtrable por temática y periodo. |

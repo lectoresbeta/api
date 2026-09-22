@@ -21,10 +21,10 @@ verdad sobre el alcance.**
 | `Work` (WRK) | 14 | 1 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 10 | 0 | 0 | 0 |
-| `Community` (COM) | 29 | 5 | 0 | 0 |
+| `Community` (COM) | 32 | 8 | 0 | 0 |
 | `Credits` (CRD) | 15 | 4 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **121** | **29** | **0** | **0** |
+| **Total** | **124** | **32** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -35,7 +35,8 @@ Estado global: **especificación inicial**. No hay código en `src/`.
 - **Home**, con tour, estado vacío y modal de créditos — [pantallas](../ui/home.md);
 - **Mi perfil**, estados vacíos — [pantallas](../ui/my-profile.md);
 - **Gestión de la foto de perfil** — [pantallas](../ui/profile-photo.md);
-- **Crear una publicación** — [pantallas](../ui/create-post.md).
+- **Crear una publicación** — [pantallas](../ui/create-post.md);
+- **Interacciones con una publicación** — [pantallas](../ui/post-interactions.md).
 
 ---
 
@@ -200,7 +201,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-003 | Publicar buscando lectores beta para una obra | Writer | PENDING | TODO | P1 | — |
 | FEAT-COM-004 | Publicar buscando writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | PENDING | TODO | P2 | — |
-| FEAT-COM-006 | Comentar una publicación | User | PENDING | TODO | P2 | — |
+| FEAT-COM-006 | Comentar una publicación | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-006-comment-on-post.md) |
 | FEAT-COM-007 | Reaccionar con emoji a una publicación | User | PENDING | TODO | P2 | — |
 | FEAT-COM-008 | Apoyar una publicación con un "me gusta" | User | PENDING | TODO | P2 | — |
 | FEAT-COM-009 | Filtrar y buscar publicaciones (tipo, texto, usuario, fecha) | User | PENDING | TODO | P2 | — |
@@ -224,6 +225,9 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-027 | Mis Amigos — seguidos y seguidores | User | PENDING | TODO | P2 | — |
 | FEAT-COM-028 | Incluir un relato de la plataforma en una publicación | User | PENDING | TODO | P2 | — |
 | FEAT-COM-029 | Audiencia de una publicación | User | PENDING | BLOCKED | P1 | — |
+| FEAT-COM-030 | Me gusta en un comentario o respuesta | User | PENDING | TODO | P2 | — |
+| FEAT-COM-031 | Responder a un comentario | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-031-reply-to-comment.md) |
+| FEAT-COM-032 | Menciones a usuarios | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-032-mentions.md) |
 
 > Los tres rankings están `BLOCKED` por `CM-4`: el material de partida dice "mejor valorados"
 > pero no define la fórmula de puntuación. Sin ella no hay especificación posible.
@@ -233,6 +237,12 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 > («Publicar para cualquiera») y **no se conocen las demás opciones**. Sin ellas no hay
 > modelo ni filtrado del muro. El mismo modal revela que se puede **adjuntar vídeo**, que no
 > estaba contemplado y arrastra transcodificación y coste de almacenamiento (`C-2`).
+>
+> `FEAT-COM-030` a `FEAT-COM-032` salen de la secuencia de interacciones: los comentarios se
+> pueden valorar, admiten respuestas anidadas y llevan **menciones**. Una mención se guarda
+> como referencia al usuario y nunca como texto: los nombres de usuario se reciclan pasados
+> 30 días (`decision:0005`), así que una mención guardada como cadena podría acabar señalando
+> a otra persona.
 >
 > `FEAT-COM-017` a `FEAT-COM-025` salen del diseño de la Home. **Repostear, compartir,
 > guardar y denunciar son interacciones nuevas** que el documento de casos de uso no
@@ -308,6 +318,7 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-COM-029, FEAT-COM-002 | `C-1` | Qué opciones tiene el selector de audiencia de una publicación |
 | FEAT-COM-002 | `C-2` | Si se admite vídeo, con qué límites y si se transcodifica |
 | FEAT-COM-019 | `C-3` | Si un repost es un puntero o una publicación con entidad propia |
+| FEAT-COM-006, FEAT-COM-024, rankings | `CM-4` | Una única fórmula de relevancia para el muro, los comentarios y los rankings |
 | FEAT-CRD-009 | `R-1` | Si la reserva es por lector o por obra. Conviene cerrarlo **antes de implementar** |
 
 Estas cinco decisiones son el camino crítico de la especificación. `C-1` es la más urgente:

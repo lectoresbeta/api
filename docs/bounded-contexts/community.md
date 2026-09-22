@@ -30,7 +30,7 @@ seguimiento de autores, los mensajes directos y los rankings.
 | Concepto | Responsabilidad |
 |---|---|
 | `Post` | Publicaciones del muro, su intención y su formato |
-| `Interaction` | Comentarios, apoyos, reacciones, reposts y compartidos |
+| `Interaction` | Comentarios y respuestas, apoyos, reacciones, reposts, compartidos y menciones |
 | `Subscription` | Seguimiento de autores, sus sugerencias y los listados de seguidos y seguidores |
 | `Recommendation` | Read models que alimentan la Home: obras recomendadas y autores sugeridos |
 | `Messaging` | Mensajes directos y conversaciones |
@@ -40,7 +40,8 @@ seguimiento de autores, los mensajes directos y los rankings.
 
 | Agregado | Identidad | Invariantes |
 |---|---|---|
-| `Post` | `PostId` | Tiene autor y tipo. Contiene sus comentarios, reacciones y apoyos. |
+| `Post` | `PostId` | Tiene autor, tipo, formato y audiencia. Contiene sus comentarios, reacciones y apoyos. |
+| `PostComment` | `PostCommentId` | De primer nivel o respuesta (`parentCommentId`). **Una respuesta nunca cuelga de otra respuesta**: se aplana al comentario raíz. |
 | `Conversation` | `ConversationId` | Entre dos usuarios. Requiere que el destinatario acepte mensajes directos. |
 | `AuthorSubscription` | `AuthorSubscriptionId` | Una por par (suscriptor, autor). Un usuario no se suscribe a sí mismo. |
 
@@ -97,6 +98,10 @@ periodo.
   lector no debe ver confiando en que el cliente la oculte.
 - `RN-8` Un repost **no amplía la audiencia** del original: quien no podía verlo sigue sin
   poder.
+- `RN-9` **Mencionar a alguien no le da acceso a nada** y no se le avisa de contenido que no
+  puede ver.
+- `RN-10` Las menciones se guardan como `UserId`. Guardarlas como texto rompería al cambiar
+  el nombre y, con el reciclado de nombres de usuario, podría señalar a otra persona.
 - `RN-6` Este contexto **no consulta** las tablas de `Work`, `User` ni `Credits` para pintar
   la Home: mantiene proyecciones alimentadas por eventos de integración.
 
@@ -118,6 +123,9 @@ periodo.
 | CM-16 | ¿Qué opciones tiene el selector de audiencia? | **Bloqueante** para `FEAT-COM-029` |
 | CM-17 | ¿Se admite vídeo en las publicaciones? | Transcodificación y coste de almacenamiento (`C-2`) |
 | CM-18 | ¿Quién genera la previsualización de un enlace externo? | Si es el backend, hace peticiones a URLs que aporta el usuario |
+| CM-19 | ¿Se confirma el anidamiento de comentarios a un solo nivel? | `I-2` |
+| CM-20 | ¿Se puede mencionar escribiendo «@», o solo al responder? | `I-5`; si es lo primero, hace falta buscador de usuarios |
+| CM-21 | ¿Se pueden editar o eliminar comentarios propios? | El menú «···» no tiene diseño (`I-3`) |
 | CM-12 | ¿«Ocultar post» oculta ese post concreto o todos los de ese autor? | `FEAT-COM-022` |
 | CM-13 | ¿Las publicaciones guardadas son privadas y dónde se consultan? | `FEAT-COM-021`, pantalla sin diseñar |
 | CM-14 | ¿La lista de seguidores de un usuario es pública o solo la ve él? | `FEAT-COM-027` |

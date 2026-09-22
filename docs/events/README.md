@@ -127,13 +127,20 @@ entidades ni de sus repositorios.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `PostPublished` | Se publica en el muro | `Notification` | `postId`, `authorId`, `type` |
+| `PostPublished` | Se publica en el muro | `Notification` | `postId`, `authorId`, `type`, `format`, `audience` |
+| `PostCommented` | Se comenta una publicación | `Notification` | `postId`, `commentId`, `postAuthorId`, `commentAuthorId` |
+| `PostReposted` | Se repostea una publicación | `Notification` | `postId`, `originalAuthorId`, `repostedBy` |
+| `UserMentioned` | Se menciona a alguien en un comentario | `Notification` | `mentionedUserId`, `byUserId`, `postId`, `commentId` |
 | `AuthorSubscribed` | Un usuario sigue a un autor | `Notification` | `subscriberId`, `authorId` |
 | `OnboardingAuthorSuggestionsShown` | *(opcional, analítica)* Se muestran sugerencias | — | `userId`, `suggestedAuthorIds` |
 | `DirectMessageSent` | Se envía un mensaje | `Notification` | `conversationId`, `senderId`, `recipientId` |
 
 `DirectMessageSent` **no transporta el contenido del mensaje**: la notificación avisa y
 enlaza, no reproduce.
+
+`PostPublished` y `UserMentioned` llevan la audiencia o dependen de ella: `Notification`
+comprueba que el destinatario puede ver el contenido **antes** de avisarle. Un aviso sobre
+algo que no se puede abrir es, además de inútil, una filtración.
 
 ## `Notification`
 

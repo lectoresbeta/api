@@ -11,6 +11,23 @@ updated: 2026-09-22
 Estructura común a todas las pantallas de la aplicación autenticada. Se documenta aparte
 porque condiciona qué datos necesita **cualquier** página, no solo la Home.
 
+> ## ⚠ Hay una segunda iteración del layout
+>
+> Las capturas de [post-interactions.md](post-interactions.md) muestran un layout distinto
+> del que describe este documento: menú lateral **estrecho** con icono sobre etiqueta,
+> **«Avisos» en el menú** en lugar de la campana de la cabecera, **créditos y buscador en la
+> cabecera**, y el nombre del usuario junto al avatar.
+>
+> **No consta cuál de las dos es la vigente** (`I-6`), así que este documento conserva la
+> primera y registra la segunda sin reescribirse.
+>
+> Lo que **no** cambia con ninguna de las dos es lo importante para el backend: los mismos
+> cinco datos por carga y el mismo `GET /me/context` (`FEAT-USR-027`). Solo cambia dónde se
+> pintan.
+>
+> La segunda iteración **resuelve `L-1`** a favor de la nota de diseño: «Avisos» va en el
+> menú lateral.
+
 ## Anatomía
 
 ```text
@@ -146,7 +163,8 @@ comporta el menú lateral por debajo de cierto ancho está sin definir (`L-3`).
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| L-1 | ¿«Avisos» va en el menú lateral, en la campana, o en ambos? El diseño y su nota no coinciden | Navegación y `FEAT-NOT-009` |
+| L-1 | ¿«Avisos» va en el menú lateral o en la cabecera? | **Resuelta en la segunda iteración:** en el menú lateral, como decía la nota de diseño |
+| **I-6** | **¿Cuál de las dos iteraciones del layout es la vigente?** | Afecta a la navegación entera, aunque no al contrato de `GET /me/context` |
 | L-2 | ¿Qué datos exactos devuelve el contexto de sesión y cada cuánto se refresca el saldo? | Rendimiento; el saldo cambia por eventos asíncronos |
 | L-3 | ¿Cómo se comporta el layout en móvil? | Sin diseño |
 | L-4 | ¿«Recursos» y «Ayuda» son contenido de la plataforma o enlaces externos? | Si son internos, hacen falta funcionalidades de backend que hoy no existen |
