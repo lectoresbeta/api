@@ -69,7 +69,7 @@ suplantación, no solo de enlaces rotos.
 
 12. Un **comando de consola** borra los alias caducados, programado para ejecutarse **a
     diario**. Es housekeeping: libera filas, no libera nombres, porque eso ya lo hace la
-    caducidad.
+    caducidad. El borrado es **real**: se elimina la fila, sin histórico ni archivo.
 
 ## Por qué la recuperación renueva el plazo
 
@@ -139,6 +139,9 @@ acumular alias**, y con ellos nombres bloqueados.
   punto donde es fácil equivocarse.
 - Un alias caducado sigue ocupando fila hasta que pase el comando. La comprobación de
   disponibilidad **no puede depender de que el comando haya corrido**.
+- Al ser un borrado real, pasados 30 días **no queda constancia** de qué nombre tuvo antes una
+  cuenta. Si más adelante hiciera falta para moderación o para investigar suplantaciones,
+  habría que registrarlo por separado.
 - La generación del nombre por defecto depende del email, que puede contener caracteres no
   admitidos o quedarse demasiado corto al normalizarlo.
 - Dos peticiones simultáneas pueden intentar el mismo nombre. La unicidad tiene que estar

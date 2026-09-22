@@ -257,7 +257,7 @@ resolución y para el comando de purga.
 | N-9 | ¿Qué ocurre con el nombre al eliminar la cuenta? | **Resuelta:** se conserva bloqueado 30 días como alias (`RN-13`) |
 | N-17 | ¿Los enlaces antiguos pueden acabar apuntando a otra persona? | **Resuelta:** no durante el mes siguiente al borrado. Pasado ese plazo, sí |
 | N-19 | ¿Los alias que ya tuviera una cuenta eliminada deberían extenderse a 30 días desde el borrado? | Hoy conservan su caducidad original, así que pueden liberarse antes que el nombre principal |
-| N-10 | ¿Hay histórico de cambios más allá del alias vigente? | Útil para moderación y para investigar suplantaciones |
+| N-10 | ¿Hay histórico de cambios más allá del alias vigente? | **No.** La purga borra la fila de verdad (`FEAT-USR-036` `RN-4c`), así que pasados 30 días no queda constancia de qué nombre tuvo antes una cuenta. Si alguna vez hiciera falta para moderación, habría que añadirlo aparte |
 
 `N-19` es menor pero real: si alguien cambió de nombre hace 25 días y borra su cuenta hoy, su
 alias antiguo queda libre en 5 días mientras el principal tarda 30. Uniformarlo sería más

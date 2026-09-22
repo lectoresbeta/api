@@ -30,6 +30,9 @@ Atiende a los dos orígenes de alias —cambio de nombre y borrado de cuenta— 
 Que no necesite saber de dónde viene cada uno es señal de que el mecanismo de caducidad está
 bien colocado.
 
+El borrado es **real**: se elimina la fila y no queda rastro. Sin marca de borrado, sin tabla
+de archivo y sin histórico.
+
 ## Por qué el comando no es una precondición
 
 Es el punto que más fácil se malinterpreta, así que conviene dejarlo explícito:
@@ -55,6 +58,7 @@ Nombre propuesto: `app:user:purge-expired-username-aliases`.
 | Aspecto | Comportamiento |
 |---|---|
 | Qué borra | Alias cuyo `expires_at` es anterior al momento actual |
+| Cómo borra | **Borrado real**: se elimina la fila. Ni marca de borrado, ni tabla de archivo, ni histórico |
 | Idempotencia | Ejecutarlo dos veces seguidas no tiene efecto adicional |
 | Concurrencia | Dos ejecuciones simultáneas no se corrompen; el borrado es por condición, no por lectura previa |
 | Por lotes | Borra en lotes acotados para no bloquear la tabla si hay acumulación |
@@ -91,6 +95,8 @@ convierte este proceso en uno que no hay que vigilar de cerca.
 - `RN-2` No toca ningún nombre de usuario en uso.
 - `RN-3` Es idempotente y seguro de ejecutar varias veces.
 - `RN-4` No modifica ninguna cuenta: solo elimina filas de `username_alias`.
+- `RN-4c` El borrado es **real**: `DELETE` de la fila. No hay borrado lógico, ni copia a una
+  tabla de histórico, ni rastro posterior. Un alias purgado deja de existir.
 - `RN-4b` **Trata igual todos los alias, cualquiera que sea su origen.** Da lo mismo que
   vengan de un cambio de nombre (`USERNAME_CHANGED`) o del borrado de una cuenta
   (`ACCOUNT_DELETED`): lo único que mira es `expires_at`.
@@ -103,6 +109,7 @@ convierte este proceso en uno que no hay que vigilar de cerca.
 - [ ] Borra los alias caducados y deja intactos los vigentes.
 - [ ] Borra por igual los de cambio de nombre y los de cuenta eliminada.
 - [ ] Borra un alias de cuenta eliminada aunque no quede fila de usuario asociada.
+- [ ] La fila desaparece de la tabla: no queda marcada como borrada ni copiada a otro sitio.
 - [ ] Ejecutarlo dos veces seguidas no produce error ni efecto adicional.
 - [ ] No modifica ningún `username` en uso.
 - [ ] Con `--dry-run` informa de cuántos borraría y no borra ninguno.
@@ -118,7 +125,7 @@ comportamiento correcto.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| N-14 | ¿Se conserva algún registro histórico de los alias borrados? | Útil para investigar suplantaciones (`N-10`) |
+| N-14 | ¿Se conserva algún registro histórico de los alias borrados? | **Resuelta:** no. El borrado es real y no deja rastro (`RN-4c`) |
 | N-18 | ¿Conviene una métrica de alias vigentes y caducados sin purgar? | Detectaría que la tarea dejó de ejecutarse |
 | N-15 | ¿Cómo se programa realmente: cron del sistema, Symfony Scheduler o el programador de la plataforma de despliegue? | Depende de `O-1`, aún sin decidir |
 | N-16 | ¿Hay alerta si el comando falla varios días seguidos? | No es urgente, pero la acumulación silenciosa acaba notándose |
