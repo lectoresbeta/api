@@ -26,6 +26,10 @@ el cron para ejecutarse **una vez al día**.
 Es **housekeeping, no lógica de negocio**: un alias caducado ya ha dejado de resolver y ya ha
 dejado de ocupar el nombre. El comando solo retira filas que no sirven para nada.
 
+Atiende a los dos orígenes de alias —cambio de nombre y borrado de cuenta— sin distinguirlos.
+Que no necesite saber de dónde viene cada uno es señal de que el mecanismo de caducidad está
+bien colocado.
+
 ## Por qué el comando no es una precondición
 
 Es el punto que más fácil se malinterpreta, así que conviene dejarlo explícito:
@@ -87,9 +91,9 @@ convierte este proceso en uno que no hay que vigilar de cerca.
 - `RN-2` No toca ningún nombre de usuario en uso.
 - `RN-3` Es idempotente y seguro de ejecutar varias veces.
 - `RN-4` No modifica ninguna cuenta: solo elimina filas de `username_alias`.
-- `RN-4b` **No se ocupa de las cuentas eliminadas.** Borrar los alias de una cuenta que
-  desaparece es efecto de `UserDeleted` y ocurre al instante (`FEAT-USR-034` `RN-13`); este
-  comando solo atiende a la caducidad.
+- `RN-4b` **Trata igual todos los alias, cualquiera que sea su origen.** Da lo mismo que
+  vengan de un cambio de nombre (`USERNAME_CHANGED`) o del borrado de una cuenta
+  (`ACCOUNT_DELETED`): lo único que mira es `expires_at`.
 - `RN-5` Registra el número de filas borradas.
 - `RN-6` Un fallo no deja la tabla en estado inconsistente: el borrado por lotes se confirma
   por lote.
@@ -97,6 +101,8 @@ convierte este proceso en uno que no hay que vigilar de cerca.
 ## Criterios de aceptación
 
 - [ ] Borra los alias caducados y deja intactos los vigentes.
+- [ ] Borra por igual los de cambio de nombre y los de cuenta eliminada.
+- [ ] Borra un alias de cuenta eliminada aunque no quede fila de usuario asociada.
 - [ ] Ejecutarlo dos veces seguidas no produce error ni efecto adicional.
 - [ ] No modifica ningún `username` en uso.
 - [ ] Con `--dry-run` informa de cuántos borraría y no borra ninguno.

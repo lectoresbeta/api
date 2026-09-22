@@ -40,6 +40,10 @@ preferencias y presencia pública como autor.
 | `Invitation` | Invitaciones por email y su seguimiento |
 | `Legal` | Documentos legales vigentes y el registro de aceptaciones |
 
+> El nombre de usuario y sus alias sobreviven al borrado de la cuenta durante 30 días, así
+> que `username_alias` no puede depender de que la fila de `user` siga existiendo: lleva
+> `user_id` anulable y un `reason`.
+
 ## Agregados
 
 | Agregado | Identidad | Invariantes |
@@ -49,7 +53,7 @@ preferencias y presencia pública como autor.
 | `PublishedBook` | `PublishedBookId` | Libro editado **fuera** de la plataforma. Sin contenido, sin lectores beta y sin créditos. No confundir con `Work` |
 | `PlatformInvitation` | `PlatformInvitationId` | Token único. Se consume una sola vez. |
 | `AccountActivationToken` | `UserId` | Un único token vigente por cuenta. Se almacena con hash, nunca en claro. |
-| `UsernameAlias` | `username` | Nombre de usuario anterior, vigente 30 días. Un alias vigente **ocupa el nombre**; uno caducado no resuelve ni ocupa, aunque su fila siga existiendo. El titular puede **recuperarlo** mientras siga vigente. Se borra al eliminarse la cuenta. |
+| `UsernameAlias` | `username` | Nombre de usuario reservado 30 días, por un cambio de nombre o por el borrado de la cuenta. Un alias vigente **ocupa el nombre**; uno caducado no resuelve ni ocupa, aunque su fila siga existiendo. El de un cambio de nombre resuelve al perfil y su titular puede **recuperarlo**; el de una cuenta eliminada solo bloquea. |
 | `LegalAcceptance` | `LegalAcceptanceId` | Inmutable. Registra documento, versión y fecha. |
 
 ### Value objects y enums
@@ -78,7 +82,7 @@ preferencias y presencia pública como autor.
 | `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros de interés | `Community` (sugerencias y recomendaciones) |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` (+5 al invitador) |
-| `UserDeleted` | Se elimina la cuenta | Todos (limpieza y anonimización). En `User` borra además el nombre de usuario y sus alias, que quedan libres |
+| `UserDeleted` | Se elimina la cuenta | Todos (limpieza y anonimización). En `User` convierte su nombre de usuario en alias bloqueado durante 30 días |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` (read models) |
 | `UsernameChanged` | El usuario cambia su nombre de usuario | `Community` (read models que muestran el `@`) |
 
@@ -102,8 +106,8 @@ preferencias y presencia pública como autor.
 | U-11 | ¿Existe un `@identificador` público? | **Resuelta:** sí. Ver [`decision:0005`](../decisions/0005-username-with-temporary-aliases.md) |
 | U-12 | ¿Qué es la insignia «0 Level»? | **Resuelta:** error del diseño. No hay sistema de niveles |
 | U-14 | ¿Puede el usuario recuperar su propio alias sin esperar 30 días? | **Resuelta:** sí, mientras siga vigente. Renueva el plazo (`FEAT-USR-034` `RN-1b`) |
-| U-15 | ¿Qué ocurre con el nombre y sus alias al eliminar la cuenta? | **Resuelta:** se borran y quedan libres de inmediato (`RN-13`) |
-| U-16 | Al reciclarse el nombre de una cuenta eliminada, un enlace antiguo puede llevar a otra persona | Contrapartida asumida (`N-17`). Valorar un periodo de gracia |
+| U-15 | ¿Qué ocurre con el nombre al eliminar la cuenta? | **Resuelta:** queda bloqueado 30 días como alias que no resuelve (`RN-13`) |
+| U-16 | ¿Los alias previos de una cuenta eliminada se extienden a 30 días desde el borrado? | Hoy conservan su caducidad original (`N-19`) |
 | U-13 | ¿«Mi perfil» y la «página de autor» son la misma pantalla? | Si no, hay dos perfiles que mantener (`P-5`) |
 
 ### Datos privados

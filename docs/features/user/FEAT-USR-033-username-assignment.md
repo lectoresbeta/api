@@ -61,8 +61,8 @@ pabloblanco@ejemplo.com  →  pabloblanco
   previa. Dos registros simultáneos con el mismo email local deben producir nombres distintos.
 - `RN-7` Ante colisión en la escritura, se reintenta con el siguiente sufijo. El bucle tiene
   un límite; superado, el alta falla con error interno en lugar de girar indefinidamente.
-- `RN-8b` Un nombre queda disponible de inmediato al eliminarse la cuenta que lo tenía, junto
-  con sus alias (`FEAT-USR-034` `RN-13`).
+- `RN-8b` Un nombre **no** queda disponible al eliminarse la cuenta que lo tenía: se bloquea
+  30 días como alias (`FEAT-USR-034` `RN-13`). Pasado ese plazo sí.
 - `RN-8` Un nombre cuyo **alias ha caducado está disponible**, aunque la fila del alias siga
   existiendo porque el comando de purga (`FEAT-USR-036`) aún no ha pasado. La disponibilidad
   depende de la caducidad, **nunca** de que la limpieza haya corrido.
@@ -118,6 +118,7 @@ models de tarjetas de autor.
 - [ ] Dos altas simultáneas con el mismo email local producen nombres distintos.
 - [ ] Un nombre ocupado por un **alias vigente** no está disponible.
 - [ ] Un nombre cuyo **alias ha caducado** está disponible, aunque la fila no se haya borrado.
+- [ ] El nombre de una cuenta eliminada hace menos de 30 días **no** está disponible.
 - [ ] `UserRegistered` incluye el nombre asignado.
 
 ## Preguntas abiertas
@@ -128,11 +129,11 @@ models de tarjetas de autor.
 | N-2 | ¿Se le ofrece al usuario elegir el nombre durante el registro, o siempre se genera? | El diseño actual no lo pide |
 | N-3 | ¿Cuál es la lista completa de nombres reservados? | Debe cubrir rutas de la aplicación y marcas propias |
 | N-4 | ¿Qué límite de peticiones tiene el endpoint de disponibilidad? | Sin él permite enumerar nombres |
-| N-5 | ¿Qué ocurre si dos personas con el mismo email local se registran y una elimina su cuenta? | **Resuelta:** eliminar la cuenta borra su nombre y sus alias, que quedan libres de inmediato (`FEAT-USR-034` `RN-13`) |
+| N-5 | ¿Qué ocurre si dos personas con el mismo email local se registran y una elimina su cuenta? | **Resuelta:** el nombre queda bloqueado 30 días y solo después vuelve a estar libre (`FEAT-USR-034` `RN-13`) |
 
-El borrado de cuenta libera el nombre de inmediato, así que `pabloblanco_1` podría volver a
-asignarse como `pabloblanco` si el titular original desaparece. Es coherente con reciclar el
-espacio de nombres, pero conviene tenerlo presente al especificar `FEAT-USR-013`.
+El borrado de cuenta no libera el nombre hasta pasados 30 días, así que `pabloblanco_1`
+seguiría siendo `pabloblanco_1` durante ese mes aunque el titular de `pabloblanco` se diera
+de baja. Conviene tenerlo presente al especificar `FEAT-USR-013`.
 
 ## Estado
 

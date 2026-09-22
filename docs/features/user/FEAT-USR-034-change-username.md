@@ -105,8 +105,8 @@ Con esta regla el arrepentimiento está cubierto y el vaivén no.
   nombre de la cuenta y no puede ser las dos cosas a la vez.
 - `RN-12` La recuperación solo vale sobre **alias propios y vigentes**. Un alias de otra
   persona, o uno caducado, se tratan como cualquier otro nombre.
-- `RN-13` Al eliminar una cuenta se eliminan **también sus alias**, y tanto su nombre de
-  usuario como ellos quedan disponibles de inmediato (`FEAT-USR-013`).
+- `RN-13` Al eliminar una cuenta, su nombre de usuario **no queda libre**: se convierte en
+  alias durante 30 días, igual que en un cambio de nombre. Ver la sección siguiente.
 
 `RN-8` es lo que hace que todo esto sea seguro: el nombre de usuario es **presentación y
 enrutado**, nunca identidad. Cualquier tabla que lo use como clave foránea rompería con el
@@ -147,6 +147,49 @@ funcionalidad existe para proteger.
 El caso del alias devuelve el mismo código que el de un nombre en uso **a propósito**:
 distinguirlos revelaría que alguien tuvo ese nombre y lo cambió hace menos de un mes.
 
+## Al eliminar la cuenta
+
+Eliminar una cuenta **no libera su nombre de inmediato**. Si lo hiciera, cualquiera podría
+registrarlo al día siguiente y heredar todos los enlaces que apuntaban a esa persona, que es
+el mismo riesgo de suplantación que el mes de alias evita en un cambio de nombre.
+
+| Qué pasa | Cuándo |
+|---|---|
+| El nombre de usuario de la cuenta pasa a ser alias | Al eliminarse la cuenta |
+| Ese alias caduca | 30 días después |
+| Los alias que ya tuviera | Conservan **su propia** caducidad, que nunca está a más de 30 días |
+| El nombre queda disponible | Al caducar el alias correspondiente |
+
+### Estos alias bloquean pero no resuelven
+
+Es la diferencia con los de un cambio de nombre:
+
+| | Alias de una cuenta viva | Alias de una cuenta eliminada |
+|---|---|---|
+| Ocupa el nombre | Sí | Sí |
+| Resuelve al perfil | Sí | **No**: la cuenta ya no existe, devuelve `404` |
+| Se puede recuperar | Sí, por su titular | No hay titular |
+| Caduca a los 30 días | Sí | Sí |
+| Lo borra la purga diaria | Sí | Sí |
+
+Un enlace antiguo a una cuenta eliminada da `404` durante ese mes, y solo después puede
+llevar a otra persona. El mes no evita el `404` —eso es inevitable— sino que evita el
+**cambio silencioso de titular**.
+
+### Cómo se modela sin depender del borrado
+
+Qué se conserva al eliminar una cuenta sigue sin decidirse (`V-4`, `U-3`): puede ser un
+borrado real, un borrado lógico o una anonimización. El alias **no debe depender de esa
+decisión**.
+
+Por eso `username_alias` lleva:
+
+- `user_id` **anulable**, porque puede no quedar cuenta a la que apuntar;
+- `reason` con los valores `USERNAME_CHANGED` y `ACCOUNT_DELETED`.
+
+Un alias con `reason = ACCOUNT_DELETED` bloquea el nombre y nunca resuelve, exista o no la
+fila del usuario.
+
 ## Contrato de API
 
 | Operación | Método y ruta | `operationId` |
@@ -167,10 +210,11 @@ formulario pueda desactivarse sin tener que fallar primero.
 | Tabla | Contenido |
 |---|---|
 | `user` | `username`, `username_changed_at` |
-| `username_alias` | `username`, `user_id`, `created_at`, `expires_at` |
+| `username_alias` | `username`, `user_id` (anulable), `reason`, `created_at`, `expires_at` |
 
-Al eliminar una cuenta se borran sus filas de `username_alias` (`RN-13`). Es un efecto de
-`UserDeleted`, no del comando de purga: la purga solo se ocupa de la caducidad.
+Al eliminar una cuenta se **crea** un alias con su nombre y `reason = ACCOUNT_DELETED`. Es un
+efecto de `UserDeleted`. El comando de purga (`FEAT-USR-036`) los retira igual que a los
+demás cuando caducan: para él no hay diferencia.
 
 Índices: único sobre `username_alias(username)`, e índice sobre `expires_at` para la
 resolución y para el comando de purga.
@@ -195,7 +239,13 @@ resolución y para el comando de purga.
 - [ ] Alternar entre dos nombres de forma repetida queda bloqueado por el criterio anterior.
 - [ ] Intentar recuperar el alias de otra persona devuelve `409`.
 - [ ] Un alias propio ya caducado no da derecho a saltarse el límite.
-- [ ] Al eliminar la cuenta desaparecen sus alias y su nombre queda disponible.
+- [ ] Al eliminar la cuenta, su nombre de usuario pasa a ser alias y **no queda disponible**.
+- [ ] Ese alias caduca 30 días después y solo entonces el nombre vuelve a estar libre.
+- [ ] Durante ese mes, resolver ese nombre devuelve `404`, no el perfil de la cuenta borrada.
+- [ ] Durante ese mes, nadie puede registrar ese nombre.
+- [ ] Los alias que la cuenta ya tuviera conservan su propia caducidad.
+- [ ] El alias de una cuenta eliminada funciona aunque no quede fila de usuario.
+- [ ] El comando de purga retira estos alias igual que los demás.
 
 ## Preguntas abiertas
 
@@ -204,18 +254,18 @@ resolución y para el comando de purga.
 | N-6 | ¿Puede el usuario recuperar su propio alias sin esperar los 30 días? | **Resuelta:** sí, mientras el alias siga vigente. Ver `RN-1b` |
 | N-7 | ¿«Una vez al mes» son 30 días corridos o mes natural? | Se asume **30 días**; confirmar |
 | N-8 | ¿Se avisa al usuario de que su nombre antiguo caducará? | Podría querer recuperarlo |
-| N-9 | ¿Qué ocurre con los alias al eliminar la cuenta? | **Resuelta:** se eliminan. Nombre y alias quedan libres de inmediato (`RN-13`) |
-| **N-17** | Al liberarse el nombre de una cuenta eliminada, los enlaces antiguos pueden acabar apuntando a otra persona que lo registre | Consecuencia asumida de `RN-13`. Valorar si merece un periodo de gracia |
+| N-9 | ¿Qué ocurre con el nombre al eliminar la cuenta? | **Resuelta:** se conserva bloqueado 30 días como alias (`RN-13`) |
+| N-17 | ¿Los enlaces antiguos pueden acabar apuntando a otra persona? | **Resuelta:** no durante el mes siguiente al borrado. Pasado ese plazo, sí |
+| N-19 | ¿Los alias que ya tuviera una cuenta eliminada deberían extenderse a 30 días desde el borrado? | Hoy conservan su caducidad original, así que pueden liberarse antes que el nombre principal |
 | N-10 | ¿Hay histórico de cambios más allá del alias vigente? | Útil para moderación y para investigar suplantaciones |
 
-`N-17` es la contrapartida de eliminar los alias con la cuenta: el nombre se recicla de
-inmediato y un enlace antiguo podría llevar a otra persona. Es exactamente el riesgo que el
-mes de alias evita en un cambio de nombre, aceptado aquí a cambio de no bloquear nombres de
-cuentas que ya no existen.
+`N-19` es menor pero real: si alguien cambió de nombre hace 25 días y borra su cuenta hoy, su
+alias antiguo queda libre en 5 días mientras el principal tarda 30. Uniformarlo sería más
+predecible, a costa de bloquear nombres algo más de tiempo.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resueltas `N-6` y `N-9`. Para llegar a `APPROVED` falta
+**Especificación:** `DRAFT`. Resueltas `N-6`, `N-9` y `N-17`. Para llegar a `APPROVED` falta
 confirmar si el plazo es de 30 días corridos o de mes natural (`N-7`).
 
 **Implementación:** `TODO`.

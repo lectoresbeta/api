@@ -57,6 +57,8 @@ GET /profiles/pabloblanco1
 - `RN-7` Devuelve **solo datos públicos**: nunca email ni fecha de nacimiento
   (`FEAT-USR-022`).
 - `RN-8` Un perfil de una cuenta eliminada devuelve `404`.
+- `RN-9` Los alias con `reason = ACCOUNT_DELETED` **bloquean el nombre pero nunca resuelven**:
+  siempre devuelven `404`. No hay perfil al que llevar (`FEAT-USR-034` `RN-13`).
 
 `RN-2` es la regla crítica de toda esta funcionalidad: si se comprueba la existencia de la
 fila en lugar de su vigencia, un enlace caducado seguiría funcionando durante días, que es
@@ -106,11 +108,14 @@ nombres (`N-4`).
 - [ ] Funciona sin sesión iniciada.
 - [ ] No devuelve email ni fecha de nacimiento.
 - [ ] Un perfil de cuenta eliminada devuelve `404`.
-- [ ] Si un usuario recupera un nombre que fue alias de otro, el enlace resuelve al nuevo titular.
+- [ ] El nombre de una cuenta eliminada devuelve `404` durante los 30 días en que sigue bloqueado.
+- [ ] Ese mismo nombre sigue sin estar disponible para registrarse durante ese mes.
+- [ ] Si un usuario registra un nombre que fue alias de otro **ya caducado**, el enlace resuelve al nuevo titular.
 
 El último criterio describe el comportamiento correcto y a la vez el riesgo que el mes de
-alias mitiga: pasado ese plazo, un enlace antiguo puede llevar a otra persona. Es el motivo
-de que el plazo exista y de que no se pueda acortar sin más.
+alias acota: pasado ese plazo, un enlace antiguo puede llevar a otra persona. Es el motivo de
+que el plazo exista —en los cambios de nombre y también al borrar la cuenta— y de que no se
+pueda acortar sin más.
 
 ## Preguntas abiertas
 

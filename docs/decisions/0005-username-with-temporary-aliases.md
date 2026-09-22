@@ -54,8 +54,9 @@ suplantación, no solo de enlaces rotos.
 
 ### Al eliminar la cuenta
 
-8c. Eliminar una cuenta **borra también sus alias**. Su nombre de usuario y sus alias quedan
-    disponibles de inmediato.
+8c. Eliminar una cuenta **no libera su nombre**: pasa a ser alias durante 30 días, igual que
+    en un cambio de nombre. Esos alias **bloquean pero no resuelven**: la cuenta ya no existe,
+    así que devuelven `404`. Los alias que la cuenta ya tuviera conservan su propia caducidad.
 
 ### La resolución
 
@@ -79,14 +80,25 @@ el límite de 30 días existe para proteger, y el límite dejaría de servir par
 Renovando el plazo, el arrepentimiento queda cubierto —que es lo que se quería— y el vaivén
 no.
 
-## Qué se acepta al borrar los alias con la cuenta
+## Por qué el borrado de cuenta también reserva el nombre
 
-Liberar el nombre de inmediato tiene una contrapartida: un enlace antiguo a
-`/profile/pabloblanco1` podría acabar apuntando a otra persona que registre ese nombre. Es el
-mismo riesgo de suplantación que el mes de alias evita en un cambio de nombre.
+Liberar el nombre al instante tendría la misma consecuencia que liberarlo tras un cambio:
+cualquiera podría registrarlo al día siguiente y **heredar todos los enlaces** que apuntaban
+a esa persona. La suplantación no depende de que la cuenta siga viva.
 
-Se acepta a cambio de no mantener bloqueados los nombres de cuentas que ya no existen. Queda
-anotado como `N-17` por si conviene añadir un periodo de gracia.
+Durante ese mes un enlace antiguo devuelve `404`. El plazo no evita el `404` —eso es
+inevitable cuando la cuenta desaparece— sino el **cambio silencioso de titular**, que es el
+problema serio.
+
+Estos alias se distinguen de los demás en que **no resuelven**: solo ocupan el nombre. Para
+el comando de purga son idénticos, lo que confirma que el mecanismo de caducidad es genérico
+y no una pieza del cambio de nombre.
+
+### No pueden depender de cómo se borre la cuenta
+
+Qué se conserva al eliminar una cuenta sigue sin decidirse (`V-4`): borrado real, borrado
+lógico o anonimización. Para que el alias funcione en los tres casos, `username_alias` lleva
+`user_id` **anulable** y un `reason` con los valores `USERNAME_CHANGED` y `ACCOUNT_DELETED`.
 
 ## Por qué los dos plazos coinciden
 
@@ -108,6 +120,7 @@ acumular alias**, y con ellos nombres bloqueados.
 | Cambio libre, nombre liberado al instante | Simple | Rompe enlaces y permite heredar el tráfico de otra persona | **Suplantación**: el problema real, no los enlaces |
 | URL de perfil por `UserId` | Inmutable y sin colisiones | Un UUID no se comparte ni se recuerda | El perfil es material de promoción del autor |
 | Alias permanentes | Ningún enlace se rompe jamás | Cada cambio bloquea un nombre para siempre | El espacio de nombres se agota con el uso |
+| Liberar el nombre al borrar la cuenta | Recicla antes el espacio de nombres | Permite heredar los enlaces de alguien que se marchó | La suplantación no depende de que la cuenta siga viva |
 
 ## Consecuencias
 
@@ -146,5 +159,8 @@ todos los enlaces de perfil existentes.
 - Test: cambiar de nombre dos veces en 30 días se rechaza.
 - Test: recuperar un alias propio vigente se permite antes de los 30 días, y renueva el plazo.
 - Test: alternar repetidamente entre dos nombres queda bloqueado tras la primera recuperación.
-- Test: eliminar una cuenta libera su nombre y sus alias de inmediato.
+- Test: eliminar una cuenta **no** libera su nombre: queda bloqueado 30 días.
+- Test: durante ese mes, resolver el nombre de una cuenta eliminada devuelve `404`.
+- Test: durante ese mes, nadie puede registrar ese nombre.
+- Test: el alias de una cuenta eliminada funciona sin fila de usuario asociada.
 - El comando de purga es idempotente y se puede ejecutar varias veces sin efecto adicional.

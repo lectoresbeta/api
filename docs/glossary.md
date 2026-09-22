@@ -63,7 +63,8 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | ~~Alias de presentación~~ | — | Concepto retirado. El saludo del onboarding muestra el **nombre de usuario** (`Username`), que sí se almacena y sí es único. «Alias» designa ahora únicamente el nombre de usuario anterior conservado tras un cambio. |
 | Nombre | `Name` | Nombre **público** de un usuario, recogido en el paso 1 del onboarding. Es el referente con el que se le identifica en perfiles, catálogo, muro, comentarios, rankings y sugerencias. No es el identificador técnico: ese es `UserId`. |
 | Nombre de usuario | `Username` | Identificador público, único y corto que se muestra como `@bealonso` y forma la URL del perfil. Se asigna solo a partir del email y es editable una vez cada 30 días. **No es la identidad**: esa sigue siendo `UserId`. |
-| Alias de nombre de usuario | `UsernameAlias` | Nombre de usuario anterior, conservado 30 días tras un cambio. Mantiene vivos los enlaces de perfil y evita que otra persona ocupe el nombre. Caduca solo. |
+| Alias de nombre de usuario | `UsernameAlias` | Nombre de usuario reservado durante 30 días, tras un cambio de nombre o tras el borrado de la cuenta. Evita que otra persona lo ocupe y herede los enlaces. El de un cambio **resuelve** al perfil; el de una cuenta eliminada solo bloquea. Caduca solo. |
+| Motivo del alias | `UsernameAliasReason` | `USERNAME_CHANGED`, `ACCOUNT_DELETED` |
 | Onboarding | `Onboarding` | Proceso de tres pasos posterior al registro: datos personales, géneros de interés y autores a seguir. |
 | Aceptación legal | `LegalAcceptance` | Registro inmutable de qué versión de las condiciones de uso y la política de privacidad aceptó un usuario, y cuándo. |
 | Catálogo de géneros | `Genre` | Lista administrable de géneros literarios, compartida por los intereses del lector y la temática de las obras. |
