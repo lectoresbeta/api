@@ -25,7 +25,6 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 | Ref | Decisión | Bloquea |
 |---|---|---|
 | `R-1` | Si la reserva de créditos es por lector o por obra | `FEAT-CRD-009`. Variante de `decision:0004`, conviene cerrarla **antes de implementar** |
-| `N-6` | Si el usuario puede recuperar **su propio** alias sin esperar los 30 días | `FEAT-USR-034`. Es el caso más previsible tras un cambio del que se arrepiente |
 | `P-3` | Si «obra en corrección» es un estado del ciclo de vida de `Work` | `Work`, `Credits` |
 | `S-1` | Mecanismo de sesión de la API | Todo `User` y toda la autorización |
 | `CM-4` | Fórmula de puntuación de los rankings | `FEAT-COM-013/014/015` |

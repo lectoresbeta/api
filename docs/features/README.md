@@ -91,6 +91,11 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 > días** que mantiene vivos los enlaces de perfil e impide que otro ocupe el nombre. Un
 > comando diario purga los alias caducados (`FEAT-USR-036`).
 >
+> El usuario puede **recuperar su nombre anterior** mientras el alias siga vigente, sin
+> esperar los 30 días; la recuperación renueva el plazo, lo que cubre el arrepentimiento sin
+> permitir alternar entre dos nombres. Eliminar la cuenta borra el nombre y sus alias, que
+> quedan libres de inmediato.
+>
 > `FEAT-USR-031` queda `DEPRECATED`: la insignia «0 Level» era **un error del diseño**, no un
 > sistema de niveles.
 >
@@ -287,7 +292,7 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-COM-013/014/015 | `CM-4` | Fórmula de puntuación de cada ranking |
 | FEAT-WRK-009 | `W-1` | Cuándo se genera el registro de autoría |
 | FEAT-FBK-008 | `A-3`, `C-5` | Identificación y créditos del comentarista anónimo |
-| FEAT-USR-013 | `V-4`, `U-3` | Qué se conserva al eliminar la cuenta |
+| FEAT-USR-013 | `V-4`, `U-3` | Qué se conserva al eliminar la cuenta. El nombre de usuario y sus alias **sí** están decididos: se borran |
 | FEAT-COM-024 | `CM-4` | Fórmula de relevancia para ordenar el muro |
 | FEAT-CRD-009 | `R-1` | Si la reserva es por lector o por obra. Conviene cerrarlo **antes de implementar** |
 
@@ -302,7 +307,6 @@ implementarse— sin una decisión de producto:
 | Funcionalidad | Pendiente de | Decisión necesaria |
 |---|---|---|
 | FEAT-USR-029 | `P-2` | Confirmar que una «obra publicada» es un concepto aparte de `Work` |
-| FEAT-USR-034 | `N-6` | Si el usuario puede recuperar **su propio** alias sin esperar 30 días |
 | FEAT-USR-035 | `N-11` | Forma de la URL de perfil: `/profile/{username}` o `/@{username}` |
 | FEAT-USR-002, FEAT-USR-020 | `OB-11` | Si el alta con Google crea la cuenta ya activada, dado que Google ya verifica el correo |
 | FEAT-USR-002, FEAT-USR-024 | `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia |

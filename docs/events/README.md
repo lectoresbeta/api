@@ -47,7 +47,7 @@ aplicar el efecto.
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models | `userId`, `completedAt` |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` | `userId`, campos modificados |
 | `UsernameChanged` | El usuario cambia su nombre de usuario | `Community` (read models con el `@`) | `userId`, `previousUsername`, `newUsername`, `aliasExpiresAt` |
-| `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt` |
+| `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt`. En `User` desencadena el borrado del nombre de usuario y de sus alias |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` | `inviterId`, `invitedUserId` |
 
 `AccountActivated` es el hecho que abona los créditos de bienvenida, no `UserRegistered`.

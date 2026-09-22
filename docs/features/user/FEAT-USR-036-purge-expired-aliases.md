@@ -87,6 +87,9 @@ convierte este proceso en uno que no hay que vigilar de cerca.
 - `RN-2` No toca ningún nombre de usuario en uso.
 - `RN-3` Es idempotente y seguro de ejecutar varias veces.
 - `RN-4` No modifica ninguna cuenta: solo elimina filas de `username_alias`.
+- `RN-4b` **No se ocupa de las cuentas eliminadas.** Borrar los alias de una cuenta que
+  desaparece es efecto de `UserDeleted` y ocurre al instante (`FEAT-USR-034` `RN-13`); este
+  comando solo atiende a la caducidad.
 - `RN-5` Registra el número de filas borradas.
 - `RN-6` Un fallo no deja la tabla en estado inconsistente: el borrado por lotes se confirma
   por lote.
@@ -110,6 +113,7 @@ comportamiento correcto.
 | # | Pregunta | Impacto |
 |---|---|---|
 | N-14 | ¿Se conserva algún registro histórico de los alias borrados? | Útil para investigar suplantaciones (`N-10`) |
+| N-18 | ¿Conviene una métrica de alias vigentes y caducados sin purgar? | Detectaría que la tarea dejó de ejecutarse |
 | N-15 | ¿Cómo se programa realmente: cron del sistema, Symfony Scheduler o el programador de la plataforma de despliegue? | Depende de `O-1`, aún sin decidir |
 | N-16 | ¿Hay alerta si el comando falla varios días seguidos? | No es urgente, pero la acumulación silenciosa acaba notándose |
 

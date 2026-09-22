@@ -60,9 +60,9 @@ edición, sin cajas de «Añadir».
 > compartidos siguen funcionando y nadie puede ocupar ese nombre mientras tanto. Ver
 > `FEAT-USR-033` a `FEAT-USR-036`.
 >
-> Queda una discrepancia menor de maqueta: el onboarding saluda con «beatrizalonso» y aquí
-> el identificador es «bealonso». Con la regla actual, ambos deberían coincidir salvo que el
-> usuario lo haya cambiado.
+> El onboarding saluda con «beatrizalonso» y aquí el identificador es «bealonso»:
+> **inconsistencia de maqueta confirmada**. Con la regla de asignación, ambos deben coincidir
+> salvo que el usuario haya cambiado su nombre.
 
 ## Pestañas
 
@@ -254,5 +254,5 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 - «Añade descripcion» → «descripción».
 - «Mis Amigos» con mayúscula, frente a «Mis relatos» y «Mis correcciones».
 - «0 Level» se retira: no hay sistema de niveles.
-- El onboarding saluda con «beatrizalonso» y el perfil muestra «@bealonso». Con la regla de
-  asignación actual deberían coincidir.
+- El onboarding saluda con «beatrizalonso» y el perfil muestra «@bealonso»: inconsistencia
+  de maqueta, no un comportamiento real.

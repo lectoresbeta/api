@@ -49,7 +49,7 @@ preferencias y presencia pública como autor.
 | `PublishedBook` | `PublishedBookId` | Libro editado **fuera** de la plataforma. Sin contenido, sin lectores beta y sin créditos. No confundir con `Work` |
 | `PlatformInvitation` | `PlatformInvitationId` | Token único. Se consume una sola vez. |
 | `AccountActivationToken` | `UserId` | Un único token vigente por cuenta. Se almacena con hash, nunca en claro. |
-| `UsernameAlias` | `username` | Nombre de usuario anterior, vigente 30 días. Un alias vigente **ocupa el nombre**; uno caducado no resuelve ni ocupa, aunque su fila siga existiendo. |
+| `UsernameAlias` | `username` | Nombre de usuario anterior, vigente 30 días. Un alias vigente **ocupa el nombre**; uno caducado no resuelve ni ocupa, aunque su fila siga existiendo. El titular puede **recuperarlo** mientras siga vigente. Se borra al eliminarse la cuenta. |
 | `LegalAcceptance` | `LegalAcceptanceId` | Inmutable. Registra documento, versión y fecha. |
 
 ### Value objects y enums
@@ -78,7 +78,7 @@ preferencias y presencia pública como autor.
 | `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros de interés | `Community` (sugerencias y recomendaciones) |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` (+5 al invitador) |
-| `UserDeleted` | Se elimina la cuenta | Todos (limpieza y anonimización) |
+| `UserDeleted` | Se elimina la cuenta | Todos (limpieza y anonimización). En `User` borra además el nombre de usuario y sus alias, que quedan libres |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` (read models) |
 | `UsernameChanged` | El usuario cambia su nombre de usuario | `Community` (read models que muestran el `@`) |
 
@@ -101,8 +101,9 @@ preferencias y presencia pública como autor.
 | U-9 | ¿Hay edad mínima para registrarse? (`OB-7`) | Legal: se recoge la fecha de nacimiento sin motivo declarado |
 | U-11 | ¿Existe un `@identificador` público? | **Resuelta:** sí. Ver [`decision:0005`](../decisions/0005-username-with-temporary-aliases.md) |
 | U-12 | ¿Qué es la insignia «0 Level»? | **Resuelta:** error del diseño. No hay sistema de niveles |
-| U-14 | ¿Puede el usuario recuperar su propio alias sin esperar 30 días? | `N-6`. Es el caso más previsible tras un cambio del que se arrepiente |
-| U-15 | ¿Qué ocurre con el nombre y sus alias al eliminar la cuenta? | `N-9`, ligado a `FEAT-USR-013` |
+| U-14 | ¿Puede el usuario recuperar su propio alias sin esperar 30 días? | **Resuelta:** sí, mientras siga vigente. Renueva el plazo (`FEAT-USR-034` `RN-1b`) |
+| U-15 | ¿Qué ocurre con el nombre y sus alias al eliminar la cuenta? | **Resuelta:** se borran y quedan libres de inmediato (`RN-13`) |
+| U-16 | Al reciclarse el nombre de una cuenta eliminada, un enlace antiguo puede llevar a otra persona | Contrapartida asumida (`N-17`). Valorar un periodo de gracia |
 | U-13 | ¿«Mi perfil» y la «página de autor» son la misma pantalla? | Si no, hay dos perfiles que mantener (`P-5`) |
 
 ### Datos privados

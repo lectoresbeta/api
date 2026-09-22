@@ -45,6 +45,18 @@ suplantación, no solo de enlaces rotos.
 8. Un alias vigente **ocupa el nombre**: nadie más puede registrarlo.
 9. Un alias caducado no resuelve y no ocupa nada, **aunque todavía no se haya borrado**.
 
+### Recuperar el nombre anterior
+
+8b. El usuario puede **recuperar un alias propio vigente sin esperar los 30 días**. Es una
+    permuta: el alias recuperado vuelve a ser su nombre y el que abandona ocupa su lugar.
+    La recuperación **esquiva** el límite pero **lo renueva**, de modo que después habrá que
+    esperar otros 30 días.
+
+### Al eliminar la cuenta
+
+8c. Eliminar una cuenta **borra también sus alias**. Su nombre de usuario y sus alias quedan
+    disponibles de inmediato.
+
 ### La resolución
 
 10. Un perfil se busca primero por `username`. Si no aparece, se busca entre los **alias
@@ -57,6 +69,24 @@ suplantación, no solo de enlaces rotos.
 12. Un **comando de consola** borra los alias caducados, programado para ejecutarse **a
     diario**. Es housekeeping: libera filas, no libera nombres, porque eso ya lo hace la
     caducidad.
+
+## Por qué la recuperación renueva el plazo
+
+Si además restaurase el plazo anterior, un usuario podría alternar entre dos nombres
+indefinidamente: cambiar, recuperar, cambiar, recuperar. Cada vuelta rompería los enlaces que
+el límite de 30 días existe para proteger, y el límite dejaría de servir para nada.
+
+Renovando el plazo, el arrepentimiento queda cubierto —que es lo que se quería— y el vaivén
+no.
+
+## Qué se acepta al borrar los alias con la cuenta
+
+Liberar el nombre de inmediato tiene una contrapartida: un enlace antiguo a
+`/profile/pabloblanco1` podría acabar apuntando a otra persona que registre ese nombre. Es el
+mismo riesgo de suplantación que el mes de alias evita en un cambio de nombre.
+
+Se acepta a cambio de no mantener bloqueados los nombres de cuentas que ya no existen. Queda
+anotado como `N-17` por si conviene añadir un periodo de gracia.
 
 ## Por qué los dos plazos coinciden
 
@@ -114,4 +144,7 @@ todos los enlaces de perfil existentes.
 - Test: un nombre cuyo alias sigue vigente no está disponible.
 - Test: dos altas simultáneas con el mismo email local no producen nombres duplicados.
 - Test: cambiar de nombre dos veces en 30 días se rechaza.
+- Test: recuperar un alias propio vigente se permite antes de los 30 días, y renueva el plazo.
+- Test: alternar repetidamente entre dos nombres queda bloqueado tras la primera recuperación.
+- Test: eliminar una cuenta libera su nombre y sus alias de inmediato.
 - El comando de purga es idempotente y se puede ejecutar varias veces sin efecto adicional.
