@@ -16,6 +16,7 @@ precisa de qué funcionalidades existen y cómo se comportan.
 | [create-post.md](create-post.md) | Modal de publicación, audiencia, adjuntos y renderizado de un repost | `FEAT-COM-002`, `019`, `028`, `029` | `DRAFT` |
 | [post-interactions.md](post-interactions.md) | Comentar, valorar un comentario, responder y mencionar | `FEAT-COM-006`, `030`–`032` | `DRAFT` |
 | [my-works.md](my-works.md) | «Mis relatos»: filtros por estado, ordenación y estados de una obra | `FEAT-WRK-015`, `FEAT-WRK-016` | `DRAFT` |
+| [profile-more-info.md](profile-more-info.md) | «Más info»: obras publicadas y premios | `FEAT-USR-029`, `FEAT-USR-030` | `DRAFT` |
 
 El resto se irá incorporando a medida que lleguen las páginas de Figma.
 

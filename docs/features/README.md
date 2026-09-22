@@ -36,7 +36,8 @@ Estado global: **especificación inicial**. No hay código en `src/`.
 - **Mi perfil**, estados vacíos — [pantallas](../ui/my-profile.md);
 - **Gestión de la foto de perfil** — [pantallas](../ui/profile-photo.md);
 - **Crear una publicación** — [pantallas](../ui/create-post.md);
-- **Interacciones con una publicación** — [pantallas](../ui/post-interactions.md).
+- **Interacciones con una publicación** — [pantallas](../ui/post-interactions.md);
+- **Mis relatos** y **Más info** — [pantallas](../ui/my-works.md) y [pantallas](../ui/profile-more-info.md).
 
 ---
 
@@ -75,7 +76,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-027 | Contexto de sesión para el layout | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-027-session-context.md) |
 | FEAT-USR-028 | Mi perfil — cabecera, datos y contadores | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-028-own-profile-header.md) |
 | FEAT-USR-029 | Obras publicadas del autor (bibliografía externa) | Writer | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-029-published-books.md) |
-| FEAT-USR-030 | Premios y reconocimientos del autor | Writer | PENDING | TODO | P3 | — |
+| FEAT-USR-030 | Premios y reconocimientos del autor | Writer | PENDING | TODO | P3 | — *(sin diseño)* |
 | FEAT-USR-031 | ~~Nivel del usuario~~ | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-USR-032 | Compartir el perfil | User | PENDING | TODO | P3 | — |
 | FEAT-USR-033 | Nombre de usuario — formato, asignación automática y unicidad | Guest, User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-033-username-assignment.md) |

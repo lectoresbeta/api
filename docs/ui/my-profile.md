@@ -72,7 +72,7 @@ edición, sin cajas de «Añadir».
 | **Mis relatos** | Obras propias, con filtros por estado y ordenación. Ver [my-works.md](my-works.md) | `FEAT-WRK-015` |
 | **Mis correcciones** | Feedback que el usuario ha dado | `FEAT-FBK-010` |
 | **Mis Amigos** | Seguidos y seguidores | `FEAT-COM-027` |
-| **Más info** | Obras publicadas y premios | `FEAT-USR-029`, `FEAT-USR-030` |
+| **Más info** | Obras publicadas y premios. Ver [profile-more-info.md](profile-more-info.md) | `FEAT-USR-029`, `FEAT-USR-030` |
 
 > «Mis Amigos» usa mayúscula donde las demás no («Mis relatos», «Mis correcciones»).
 > Además **«amigos» no describe lo que contiene**: seguir es una relación asimétrica, no una

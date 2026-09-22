@@ -9,6 +9,7 @@
 | Manuscrito | `.doc`, `.pdf`, `.txt` (¿y `.docx`?, ver `W-3`) | `FEAT-WRK-002` |
 | Foto de perfil (avatar) | `.jpg`, `.png`, `.webp`. ¿HEIC? ver `F-3` | `FEAT-USR-037` |
 | Portada del perfil | `.jpg`, `.png`, `.webp` | `FEAT-USR-028` |
+| Portada de una obra publicada | `.jpg`, `.png`, `.webp`. Formato **vertical**, proporción de libro | `FEAT-USR-029` |
 | Fondos de la página de autor | `.jpg`, `.png`, `.webp` | `FEAT-USR-016` |
 
 El documento de origen dice `.doc`; conviene confirmar si incluye `.docx`, que es lo que
@@ -36,6 +37,7 @@ devuelve `202 Accepted` y el cliente consulta el estado del procesamiento.
 |---|---|---|
 | Foto de perfil | **2 MB** | Anunciado en el propio modal (`FEAT-USR-037`) |
 | Portada del perfil | Por definir | — |
+| Portada de obra publicada | Por definir | — |
 | Manuscrito | Por definir. Referencia: una novela media de 75.000 palabras en `.docx` con imágenes puede superar varios megabytes | — |
 
 El límite lo aplica **el servidor**. Que el cliente lo anuncie es una cortesía, no un control.
