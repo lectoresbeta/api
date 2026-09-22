@@ -36,7 +36,11 @@ Todas las respuestas de error usan la misma estructura, basada en RFC 7807:
 | `500` | Error inesperado |
 
 Pendiente: si `402 Payment Required` es el código adecuado para saldo de créditos
-insuficiente. Depende de `C-1`.
+insuficiente, o si encaja mejor un `409`. Los créditos no son dinero real.
+
+Con la reserva previa ([`decision:0004`](../../decisions/0004-credit-reservation-on-access-grant.md))
+este error aparece **al solicitar o conceder un acceso de lector beta**, no al enviar
+feedback: cuando el comentario llega, el coste ya estaba retenido.
 
 ## `403` frente a `404`
 
@@ -100,7 +104,7 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `ACCESS_REQUEST_ALREADY_EXISTS` | 409 | Ya hay una solicitud pendiente |
 | `READER_ALREADY_HAS_ACCESS` | 409 | El usuario ya es lector beta de la obra |
 | `WORK_IS_PRIVATE` | 403 | La obra no admite solicitudes de acceso |
-| `INSUFFICIENT_CREDITS` | 402 | Saldo insuficiente (pendiente de `C-1`) |
+| `INSUFFICIENT_CREDITS` | 402 | El autor de la obra no tiene **saldo disponible** para respaldar un acceso nuevo |
 | `DIRECT_MESSAGES_DISABLED` | 403 | El destinatario no acepta mensajes directos |
 | `PROPOSALS_DISABLED` | 403 | El destinatario no acepta propuestas |
 | `INVALID_PUBLIC_LINK` | 404 | Enlace público inexistente o revocado |

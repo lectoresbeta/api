@@ -62,7 +62,10 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 | `WorkRated` | Un LB valora la obra | `Community` (rankings de obras y escritores) |
 
 `FeedbackSubmitted` es el evento más importante del sistema: dispara a la vez el abono al
-comentarista y el cargo al autor.
+comentarista y la **confirmación de la retención** del autor.
+
+Lleva `betaReaderAccessId` porque `Credits` necesita localizar la retención que se creó al
+conceder ese acceso ([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)).
 
 Payload propuesto (pendiente de cerrar con `C-10`):
 
@@ -88,7 +91,7 @@ Payload propuesto (pendiente de cerrar con `C-10`):
 | `BetaReaderAccessGranted` | `Reading` | Habilita a ese usuario para comentar esa obra |
 | `BetaReaderAccessRevoked` | `Reading` | Deja de poder comentar; el feedback ya emitido se conserva |
 | `WorkDeleted` | `Work` | Cierra el feedback asociado |
-| `InsufficientCredits` | `Credits` | Reacción ante impago, según lo que se decida en `C-1` |
+| `InsufficientCredits` | `Credits` | Llegó un feedback sin retención que lo respalde. Indica un fallo de integración, no un caso normal: con la reserva previa el saldo se comprometió al conceder el acceso |
 
 ## Reglas de negocio
 
@@ -99,6 +102,9 @@ Payload propuesto (pendiente de cerrar con `C-10`):
 - `RN-5` La valoración positiva de un comentario se aplica **una sola vez**; retirarla no
   revierte los créditos (salvo decisión contraria en `C-9`).
 - `RN-6` Ocultar un comentario no lo oculta para quien lo escribió.
+- `RN-7` `Feedback` **no comprueba el saldo del autor**. Que exista un acceso vigente ya
+  implica que sus créditos están retenidos (`decision:0004`). Consultar el saldo aquí sería
+  la validación síncrona que esa decisión descartó.
 
 ## Preguntas abiertas
 
@@ -107,7 +113,7 @@ Payload propuesto (pendiente de cerrar con `C-10`):
 | F-1 | ¿El feedback se ancla al fragmento, a la obra, o a una posición del texto? (`D-1`) | Define la raíz del agregado y el cálculo de créditos |
 | F-2 | ¿Hay longitud mínima para que un comentario genere créditos? | Protección frente a comentarios vacíos que farmean créditos |
 | F-3 | ¿Qué escala usa la valoración de obra: 1–5, 1–10, positiva/negativa? | Rankings |
-| F-4 | ¿Un LB puede dejar varios comentarios en la misma obra? (`D-2`, `C-4`) | Vector de abuso |
+| F-4 | ¿Un LB puede dejar varios comentarios en la misma obra? (`D-2`, `C-4`) | **Gana importancia con la reserva previa**: una retención cubre un comentario, así que el segundo se quedaría sin respaldo |
 | F-5 | ¿La valoración del comentario es binaria (útil / no útil) o graduada? | El documento habla de "valoración positiva" |
 | F-6 | ¿El comentario desde enlace público genera créditos si no hay cuenta? (`A-3`, `C-5`) | Bloquea `FEAT-FBK-008` |
 | F-7 | ¿Se puede editar un comentario ya enviado? | Afecta a la irreversibilidad de los créditos |

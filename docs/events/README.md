@@ -78,19 +78,21 @@ aplicar el efecto.
 |---|---|---|---|
 | `AccessRequested` | Un usuario solicita ser LB | `Notification` | `accessRequestId`, `workId`, `authorId`, `readerId` |
 | `AccessRequestRejected` | El autor rechaza | `Notification` | `accessRequestId`, `readerId` |
-| `BetaReaderAccessGranted` | Se concede acceso | `Feedback`, `Notification`, `Credits`* | `accessId`, `workId`, `authorId`, `readerId`, `grantedVia` |
+| `BetaReaderAccessGranted` | Se concede acceso | `Feedback`, `Notification`, **`Credits`** | `accessId`, `workId`, `authorId`, `readerId`, `grantedVia`, `textTier`, `questionCount` |
 | `BetaReaderAccessRevoked` | Se retira el acceso | `Feedback`, `Notification` | `accessId`, `workId`, `readerId` |
 | `BetaReaderInvited` | El autor invita | `Notification` | `invitationId`, `workId`, `readerId` |
 | `WritingBuddyProposed` | Se propone el vínculo | `Notification` | `proposalId`, `proposerId`, `targetUserId` |
 | `WritingBuddyLinked` | Se acepta | `Notification`, `Community` | `linkId`, `userIds` |
 
-\* `Credits` solo consume `BetaReaderAccessGranted` si se adopta la reserva previa (`C-2`).
+`BetaReaderAccessGranted` lleva `textTier` y `questionCount` porque `Credits` los necesita
+para calcular la retención sin consultar a `Work`
+([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)).
 
 ## `Feedback`
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `FeedbackSubmitted` | Se envía un comentario | **`Credits`**, `Notification`, `Community` | `feedbackId`, `workId`, `chapterId?`, `authorId`, `reviewerId`, `textTier`, `questionCount`, `origin` |
+| `FeedbackSubmitted` | Se envía un comentario | **`Credits`**, `Notification`, `Community` | `feedbackId`, `workId`, `chapterId?`, `authorId`, `reviewerId`, `betaReaderAccessId`, `textTier`, `questionCount`, `origin` |
 | `FeedbackRatedPositively` | El autor lo valora como útil | **`Credits`**, `Notification`, `Community` | `feedbackId`, `reviewerId`, `authorId` |
 | `FeedbackReplied` | El autor contesta | `Notification` | `feedbackId`, `reviewerId` |
 | `FeedbackHidden` | El autor lo oculta | `Community`, `Credits`* | `feedbackId`, `workId` |
@@ -106,9 +108,16 @@ comentarista y el cargo al autor. **Nunca transporta el texto del comentario.**
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
 | `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance` |
-| `CreditsSpent` | Se consumen créditos | `Notification`, `Feedback` | `userId`, `amount`, `reason`, `balance` |
-| `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` | `userId`, `balance` |
-| `InsufficientCredits` | Un cargo no se pudo aplicar | `Feedback`, `Notification` | `userId`, `required`, `available`, `sourceEventId` |
+| `CreditsSpent` | Se confirma una retención | `Notification` | `userId`, `amount`, `reason`, `balance` |
+| `CreditsReserved` | Se retiene el coste de un feedback | `Notification` | `reservationId`, `userId`, `workId`, `amount`, `availableBalance` |
+| `CreditReservationRejected` | No hay saldo disponible | **`Reading`**, `Notification` | `userId`, `workId`, `betaReaderAccessId`, `required`, `available` |
+| `CreditReservationReleased` | Se libera una retención | `Notification` | `reservationId`, `userId`, `amount`, `reason` |
+| `CreditBalanceChanged` | Cambia el saldo o el retenido | **`Reading`**, read models, `Notification` | `userId`, `balance`, `held`, `available` |
+| `InsufficientCredits` | Llega un hecho sin retención que lo respalde | `Feedback`, `Notification` | `userId`, `required`, `available`, `sourceEventId` |
+
+`CreditReservationRejected` es el único evento del catálogo del que **otro contexto depende
+para deshacer algo**: `Reading` revoca con él un acceso ya concedido. Perderlo deja el
+sistema en un estado incorrecto, así que su publicación exige **Outbox Pattern**.
 
 `Credits` publica hechos de su propio modelo. Los consumidores **nunca** dependen de sus
 entidades ni de sus repositorios.

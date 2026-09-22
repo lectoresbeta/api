@@ -20,16 +20,19 @@ funcionalidades que faltan. Cada paso enlaza (o enlazará) con su ficha en
 6. Al crear la obra se genera el registro de autoría (`FEAT-WRK-009`).
 7. Promociona la obra: publicación en el muro (`FEAT-COM-003`) o enlace para redes
    sociales (`FEAT-WRK-011`).
-8. Recibe solicitudes de lectores beta y las acepta (`FEAT-RDG-003`).
-9. Los lectores beta comentan. **Cada comentario recibido le descuenta créditos**
-   (`FEAT-CRD-006`). Si no tiene saldo suficiente, el comentario no puede entregarse.
+8. Recibe solicitudes de lectores beta y las acepta (`FEAT-RDG-003`). **Al conceder cada
+   acceso se retienen los créditos** que costará ese feedback (`FEAT-CRD-009`). Si no tiene
+   saldo disponible, el acceso no se concede.
+9. Los lectores beta comentan. Cada comentario **confirma** la retención correspondiente
+   (`FEAT-CRD-006`): el autor ya sabía cuánto iba a costarle.
 10. Lee, contesta y valora los comentarios (`FEAT-FBK-004`, `FEAT-FBK-005`, `FEAT-FBK-006`).
 11. Valorar positivamente un comentario otorga **+5 créditos** a quien lo escribió
     (`FEAT-CRD-004`).
 
-**Punto crítico del recorrido:** el paso 9. Qué ocurre exactamente cuando el autor no tiene
-créditos suficientes es la decisión de producto más importante todavía sin resolver
-(ver `C-1` en [`../bounded-contexts/credits.md`](../bounded-contexts/credits.md)).
+**Punto crítico del recorrido:** el paso 8, no el 9. El compromiso económico se adquiere al
+**conceder el acceso**, no al recibir el comentario. Un autor sin saldo disponible no puede
+sumar lectores beta, y esa es la señal de que le toca comentar obras ajenas para ganar
+créditos. Ver [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md).
 
 ---
 
@@ -66,7 +69,8 @@ Ver [`decision:0003`](../decisions/0003-write-operations-require-activated-accou
 1. Busca obras por tipo, temática o valoración (`FEAT-WRK-012`), o responde a una
    publicación de búsqueda de LB en el muro (`FEAT-COM-003`).
 2. Obtiene acceso según la modalidad de la obra: automático, solicitando o por invitación
-   (`FEAT-RDG-001`, `FEAT-RDG-002`, `FEAT-RDG-005`).
+   (`FEAT-RDG-001`, `FEAT-RDG-002`, `FEAT-RDG-005`). Tener acceso **garantiza que su trabajo
+   se podrá pagar**: los créditos del autor quedaron retenidos al concedérselo.
 3. Lee la obra (`FEAT-WRK-004`).
 4. Deja su feedback y responde al cuestionario (`FEAT-FBK-001`, `FEAT-FBK-003`).
 5. Recibe créditos según el nivel de extensión del texto comentado (`FEAT-CRD-003`).
@@ -135,6 +139,6 @@ Estos recorridos existen implícitamente pero el material de partida no los deta
 | # | Recorrido | Pendiente de |
 |---|---|---|
 | J-7 | Eliminación de cuenta y qué ocurre con obras, comentarios y créditos | Decisión de producto (`V-4`) |
-| J-8 | Un autor se queda sin créditos y necesita conseguir más | Decisión de producto (`C-1`) |
+| J-8 | Un autor se queda sin saldo disponible y no puede admitir más lectores beta | Parcialmente resuelto por `decision:0004`; falta el diseño del aviso (`R-6`) |
 | J-9 | Moderación de contenido o comentarios abusivos | Decisión de producto (`V-1`) |
 | J-10 | Publicación de una obra en varios fragmentos con lecturas parciales | Figma |

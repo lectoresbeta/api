@@ -92,22 +92,46 @@ Solo si el caso de uso **no puede completarse sin el dato en ese instante**. Ent
 
 Compartir un repositorio de Doctrine no es una opción en ningún caso.
 
-## Caso delicado: el coste del feedback
+## El coste del feedback: reserva previa
 
-Cuando un lector beta envía feedback, el autor de la obra **paga créditos**. Es un flujo
-entre `Feedback` y `Credits` que están deliberadamente desacoplados.
+Cuando un lector beta envía feedback, el autor de la obra paga créditos. Es un flujo entre
+`Feedback`, `Reading` y `Credits`, tres contextos deliberadamente desacoplados.
 
-Opciones sobre la mesa:
+**Resuelto en [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md):** el
+coste se **retiene al conceder el acceso** y se **confirma al recibir el comentario**.
 
-| Opción | Cómo funciona | Coste |
-|---|---|---|
-| **A. Post-pago asíncrono** | `Feedback` publica `FeedbackSubmitted`; `Credits` descuenta al recibirlo | Simple y desacoplado. El saldo puede quedar en negativo |
-| **B. Reserva previa** | Al conceder acceso a un LB, `Credits` reserva el coste; al enviar el feedback se confirma | Evita el negativo. Añade un ciclo de vida de reserva y un flujo de compensación |
-| **C. Consulta síncrona de saldo** | `Feedback` consulta el saldo antes de aceptar el comentario | Rompe el desacoplo. Sigue habiendo carrera entre la consulta y el gasto |
+```text
+Reading: concede acceso
+     │ BetaReaderAccessGranted
+     ▼
+Credits: ¿saldo disponible?
+     │
+     ├── sí ──▶ retención HELD ──▶ CreditsReserved
+     │                                   │
+     │                          Feedback: se envía el comentario
+     │                                   │ FeedbackSubmitted
+     │                                   ▼
+     │                          Credits: retención CONFIRMED
+     │                                   └──▶ CreditsSpent
+     │
+     └── no ──▶ CreditReservationRejected ──▶ Reading: revoca el acceso
+```
 
-**No decidido.** Es la decisión arquitectónica más importante pendiente y debe cerrarse en
-un ADR antes de implementar `Feedback` o `Credits`. Ver `C-1` en
-[`../bounded-contexts/credits.md`](../bounded-contexts/credits.md).
+Consecuencias para la comunicación entre contextos:
+
+- **Aparece una compensación.** `Reading` actúa antes de saber si `Credits` puede respaldarlo,
+  y debe poder deshacerlo. Es el primer saga del sistema.
+- **`Reading` mantiene una proyección** del saldo disponible de cada autor, alimentada por
+  `CreditBalanceChanged`, para no conceder accesos condenados al fracaso. Es una optimización,
+  **no una garantía**: la compensación sigue siendo obligatoria.
+- **`CreditReservationRejected` exige Outbox Pattern.** Es el único evento del que depende
+  otro contexto para deshacer algo; perderlo deja un acceso sin respaldo.
+- **`Feedback` no consulta saldos.** Que exista un acceso vigente ya implica que los créditos
+  están retenidos.
+
+Este flujo es el ejemplo de referencia del proyecto para cualquier operación que deba
+comprometer recursos de otro contexto: **reservar, confirmar, liberar**, con compensación
+ante el rechazo.
 
 ## Nomenclatura de colas
 

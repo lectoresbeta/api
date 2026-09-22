@@ -5,8 +5,8 @@ context: Credits
 concept: Rule
 actors: [User]
 spec_status: DRAFT
-impl_status: BLOCKED
-priority: P1
+impl_status: DEFERRED
+priority: P3
 sources:
   - figma:1800-14717 (tarjeta de obra del carrusel)
   - _sources/credit-system.pdf#p2
@@ -23,6 +23,9 @@ updated: 2026-09-22
 
 Cada tarjeta de obra del carrusel de la Home muestra una insignia con una cifra de créditos:
 «6 Créditos», «8 Créditos».
+
+> **Diferida.** Las cifras concretas y su significado se fijarán al documentar el sistema de
+> créditos en detalle. Esta ficha conserva el análisis para no repetirlo entonces.
 
 La insignia plantea dos problemas, y ninguno es de maquetación.
 
@@ -111,6 +114,7 @@ cada carga de la Home.
 
 **Especificación:** `DRAFT`.
 
-**Implementación:** `BLOCKED` por `H-1` y `H-1b`. Implementar la insignia sin saber qué
-representa produciría una cifra plausible y equivocada, que es el peor resultado posible en
-una pantalla sobre dinero interno.
+**Implementación:** `DEFERRED`. Se retomará con la documentación detallada del sistema de
+créditos, que fijará las cifras y su significado. Implementarla antes produciría una cifra
+plausible y equivocada, que es el peor resultado posible en una pantalla sobre dinero
+interno.

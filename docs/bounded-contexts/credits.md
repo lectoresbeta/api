@@ -56,7 +56,8 @@ Work      ──▶ Credits\Application\...             PROHIBIDO
 
 | Concepto | Responsabilidad |
 |---|---|
-| `Account` | Saldo y movimientos de un usuario |
+| `Account` | Saldo, saldo disponible y movimientos de un usuario |
+| `Reservation` | Retenciones: ciclo de vida de los créditos comprometidos y aún no gastados |
 | `Rule` | Reglas de valoración: cuánto vale cada hecho de negocio |
 | `EventProcessing` | Deduplicación e idempotencia de los eventos recibidos |
 
@@ -65,7 +66,20 @@ Work      ──▶ Credits\Application\...             PROHIBIDO
 | Agregado | Identidad | Invariantes |
 |---|---|---|
 | `CreditAccount` | `UserId` | El saldo es siempre la suma de sus movimientos. Un movimiento nunca se modifica ni se borra. |
+| `CreditReservation` | `CreditReservationId` | Transiciones `HELD → CONFIRMED` o `HELD → RELEASED`, y ninguna otra. Solo se crea si el saldo disponible la cubre por completo. |
 | `ProcessedEvent` | `eventId` | Un `eventId` se aplica como máximo una vez. |
+
+### Saldo y saldo disponible
+
+```text
+saldo            = suma de los movimientos
+retenido         = suma de las retenciones en estado HELD
+saldo disponible = saldo − retenido
+```
+
+**El saldo disponible es el que gobierna lo que el autor puede hacer** y el que se muestra en
+la interfaz. El total permanece para la auditoría. Toda respuesta que devuelva un saldo debe
+decir cuál de los dos es: un campo llamado `balance` a secas es una invitación a equivocarse.
 
 ### `CreditTransaction`
 
@@ -141,7 +155,9 @@ coste = créditos(TextTier) + max(0, númeroDePreguntas − 3)
 |---|---|---|
 | `UserRegistered` | `User` | Crea `CreditAccount` **con saldo 0**. No abona nada |
 | `AccountActivated` | `User` | Abona los **+20** créditos de bienvenida |
-| `FeedbackSubmitted` | `Feedback` | Abona al autor del comentario según `TextTier`; carga al autor de la obra el coste correspondiente |
+| `BetaReaderAccessGranted` | `Reading` | **Retiene** el coste de un feedback (`FEAT-CRD-009`) |
+| `BetaReaderAccessRevoked` | `Reading` | **Libera** la retención |
+| `FeedbackSubmitted` | `Feedback` | Abona al autor del comentario según `TextTier`; **confirma** la retención del autor de la obra |
 | `FeedbackRatedPositively` | `Feedback` | Abona +5 a quien escribió el comentario |
 | `InvitedUserParticipated` | `User` | Abona +5 al invitador |
 | `UserDeleted` | `User` | Cierra la cuenta de créditos según la política de retención (`V-4`) |
@@ -153,9 +169,16 @@ coste = créditos(TextTier) + max(0, númeroDePreguntas − 3)
 | Evento | Cuándo | Posibles consumidores |
 |---|---|---|
 | `CreditsAdded` | Se abonan créditos | `Notification` |
-| `CreditsSpent` | Se consumen créditos | `Notification`, `Feedback` |
-| `CreditBalanceChanged` | Cualquier variación del saldo | Read models, `Notification` |
-| `InsufficientCredits` | Un hecho no se pudo cobrar por falta de saldo | `Feedback`, `Notification` |
+| `CreditsSpent` | Se confirma una retención | `Notification` |
+| `CreditsReserved` | Se retiene el coste de un feedback | `Notification` |
+| `CreditReservationRejected` | No hay saldo disponible para retener | **`Reading`**, `Notification` |
+| `CreditReservationReleased` | Se libera una retención | `Notification` |
+| `CreditBalanceChanged` | Cambia el saldo o el retenido | **`Reading`** (proyección), read models, `Notification` |
+| `InsufficientCredits` | Llega un hecho sin retención que lo respalde | `Feedback`, `Notification` |
+
+`CreditReservationRejected` es el único evento de `Credits` del que depende otro contexto para
+**deshacer** algo. Perderlo deja un acceso concedido sin respaldo, así que su publicación
+exige Outbox Pattern.
 
 ## Idempotencia
 
@@ -173,6 +196,7 @@ existe, el evento se descarta sin efecto.
 | `credit_account` | Un registro por usuario: saldo actual y metadatos |
 | `credit_transaction` | Movimientos inmutables, indexados por `user_id` y fecha |
 | `processed_event` | `event_id` procesados, con marca temporal y política de purga |
+| `credit_reservation` | Retenciones con su estado, importe y caducidad |
 | `credit_rule` | Reglas vigentes, si se decide hacerlas configurables (`C-3`) |
 
 ## Reglas de negocio
@@ -187,13 +211,21 @@ existe, el evento se descarta sin efecto.
 - `RN-7` Los créditos de bienvenida se abonan al **activar** la cuenta, no al crearla. Una
   cuenta sin verificar nunca tiene saldo. Ver
   [`decision:0003`](../decisions/0003-write-operations-require-activated-account.md).
+- `RN-8` El coste de un feedback se **retiene al conceder el acceso** y se confirma al
+  recibir el comentario. Sin saldo disponible no se concede el acceso, así que el saldo
+  nunca queda negativo. Ver
+  [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md).
+- `RN-9` El importe se fija en el momento de la retención y no se recalcula al confirmarla.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **C-1** | **¿Qué ocurre si el autor no tiene saldo para recibir un comentario?** ¿Se bloquea el envío del feedback, se entrega y el saldo queda negativo, o se retiene el comentario hasta que haya saldo? **El modal de créditos del diseño apunta a otra mecánica**: pagar al «poner la obra en corrección», es decir, por adelantado (`M-1`) | **Bloqueante.** Define el flujo entre `Feedback` y `Credits` y el recorrido J-1 completo |
-| C-2 | ¿Se reservan créditos al conceder acceso a un lector beta? | Opción B de [04-cross-context-communication.md](../architecture/04-cross-context-communication.md) |
+| ~~C-1~~ | ¿Qué ocurre si el autor no tiene saldo? | **Resuelta:** reserva previa. Sin saldo disponible no hay acceso. Ver [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md) |
+| ~~C-2~~ | ¿Se reservan créditos al conceder acceso? | **Resuelta:** sí |
+| **R-1** | **¿La reserva es por lector o por obra?** El modal dice «poner tus obras en corrección», que sugiere reservar por un número de plazas | Variante de `decision:0004`. Cerrar **antes de implementar** |
+| R-2 | ¿Cuánto dura una retención antes de caducar? | Sin caducidad los créditos quedan inmovilizados |
+| C-15 | ¿Qué se hace con un `FeedbackSubmitted` sin retención asociada? | `FEAT-CRD-006` `RN-7` |
 | C-3 | ¿Las cantidades son configurables en caliente o van en el código? | Afecta a la auditoría: hay que saber qué regla se aplicó en cada movimiento |
 | C-4 | ¿Se puede comentar la misma obra varias veces y cobrar cada vez? | Vector de abuso directo (`D-2`) |
 | C-5 | ¿El feedback desde enlace público (sin sesión) genera o consume créditos? | Falta una cuenta de créditos del comentarista (`A-3`) |
@@ -201,7 +233,7 @@ existe, el evento se descarta sin efecto.
 | C-7 | ¿Cuándo se fija el `TextTier`: al crear la obra, al recibir cada comentario, o se congela al conceder el acceso? | Un autor podría ampliar el texto tras recibir accesos |
 | C-8 | ¿Existe ajuste manual por parte de la plataforma? | Requiere `MANUAL_ADJUSTMENT` y un actor `Admin` (`V-1`) |
 | C-11 | ¿Qué ocurre con el saldo de una cuenta que nunca se activa? | Hoy no tiene: no se abona nada hasta activar |
-| **C-12** | **¿La insignia de créditos de una obra es lo que gana el lector o lo que cuesta al autor?** Y las cifras del diseño no coinciden con la tabla: dos obras del mismo tramo muestran 6 y 8 | `FEAT-CRD-013`, hoy `BLOCKED`. Si es cálculo continuo, `FEAT-CRD-010` deja de estar diferido |
+| C-12 | ¿La insignia de créditos de una obra es lo que gana el lector o lo que cuesta al autor? Las cifras del diseño no coinciden con la tabla | **Aplazado** a la documentación detallada del sistema de créditos (`FEAT-CRD-013`, `DEFERRED`) |
 | C-13 | ¿Qué es una obra «en corrección»? | Vocabulario del modal de créditos sin equivalente en el modelo (`M-2`) |
 | C-14 | ¿Dónde se consulta la tabla de puntuación de créditos? | `FEAT-CRD-015`: el modal enlaza a una pantalla que no existe |
 | C-9 | ¿Se retiran créditos si el autor oculta un comentario por abusivo? | Protección frente a feedback de baja calidad |

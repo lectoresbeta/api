@@ -23,6 +23,7 @@
 | `GET /genres` | `listGenres` | Catálogo de géneros | FEAT-USR-023 | DRAFT |
 | `GET /legal/documents` | `getLegalDocuments` | Documentos legales vigentes | FEAT-USR-024 | DRAFT |
 | `GET /me/legal-acceptances` | `getMyLegalAcceptances` | Qué aceptó el usuario y cuándo | FEAT-USR-024 | DRAFT |
+| `GET /me/context` | `getSessionContext` | Contexto de sesión para el layout | FEAT-USR-027 | DRAFT |
 | `GET /me` | `getCurrentUser` | Datos de la cuenta propia | FEAT-USR-008 | PENDING |
 | `PATCH /me` | `updateCurrentUser` | Editar datos personales | FEAT-USR-008 | PENDING |
 | `PUT /me/password` | `changePassword` | Cambiar contraseña | FEAT-USR-008 | PENDING |

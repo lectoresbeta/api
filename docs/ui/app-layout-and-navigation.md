@@ -70,6 +70,10 @@ barata y mantenerse fresco tras una operación que lo cambie.
 
 > El «12» del diseño es dato de maqueta. Una cuenta recién activada tiene **20**
 > (`FEAT-CRD-002`), y una sin activar tiene **0** (`FEAT-USR-025`).
+>
+> **El número que se muestra es el saldo disponible**, no el total: es el que determina si el
+> autor puede admitir más lectores beta. Con retenciones vigentes ambos difieren, y el diseño
+> no contempla todavía cómo explicarlo (`R-5`).
 
 ### Enlace legal
 
@@ -110,12 +114,20 @@ llamada de contexto de sesión en lugar de tres peticiones por navegación:
 |---|---|---|
 | Nombre y avatar | Cabecera y saludo | `FEAT-USR-022` |
 | Saldo de créditos | Bloque del menú lateral | `FEAT-CRD-001` |
+| Créditos retenidos | Explicar por qué el disponible es menor | `FEAT-CRD-009` |
 | Notificaciones sin leer | Punto de la campana | `FEAT-NOT-009` |
 | Estado de la cuenta | Avisar si está sin activar (`FEAT-USR-025`) | `FEAT-USR-020` |
 | Estado del tour | Mostrarlo o no (`FEAT-USR-026`) | `FEAT-USR-026` |
 
-Propuesta: `GET /me/context`, con una respuesta pequeña y cacheable por sesión que agrupe
-los cinco. Evita que cada pantalla tenga que pedirlos por su cuenta.
+**Decidido:** se resuelven en una única llamada, `GET /me/context`, especificada en
+[`FEAT-USR-027`](../features/user/FEAT-USR-027-session-context.md).
+
+Compone los datos de cuatro bounded contexts mediante contratos de consulta explícitos, sin
+que ninguno conozca a los demás, y **degrada en lugar de fallar**: si `Credits` no responde,
+el resto del layout se pinta igual.
+
+El saldo se devuelve con sus **tres** números —total, retenido y disponible— porque desde
+[`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md) no son lo mismo.
 
 ## Estado sin activar
 
@@ -140,3 +152,4 @@ comporta el menú lateral por debajo de cierto ancho está sin definir (`L-3`).
 | L-4 | ¿«Recursos» y «Ayuda» son contenido de la plataforma o enlaces externos? | Si son internos, hacen falta funcionalidades de backend que hoy no existen |
 | L-5 | ¿«Terms & Conditions» se traduce? | Es el único texto en inglés de la interfaz |
 | L-6 | ¿Hay estado de carga o de error para el saldo si el servicio de créditos no responde? | El saldo llega de un contexto desacoplado y puede fallar de forma independiente |
+| R-5 | ¿Cómo se muestra la diferencia entre saldo total y disponible? | Un autor con créditos retenidos verá menos de lo que tiene y hay que explicárselo |

@@ -17,14 +17,14 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 26 | 10 | 0 | 0 |
+| `User` (USR) | 27 | 11 | 0 | 0 |
 | `Work` (WRK) | 14 | 1 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 9 | 0 | 0 | 0 |
 | `Community` (COM) | 25 | 3 | 0 | 0 |
-| `Credits` (CRD) | 15 | 3 | 0 | 0 |
+| `Credits` (CRD) | 15 | 4 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **105** | **18** | **0** | **0** |
+| **Total** | **106** | **20** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -68,6 +68,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-024 | Aceptar condiciones de uso y política de privacidad | Guest | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-024-accept-terms-and-privacy.md) |
 | FEAT-USR-025 | Bloquear las operaciones de escritura hasta activar la cuenta | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-025-block-writes-until-activation.md) |
 | FEAT-USR-026 | Tour de bienvenida de la Home | User | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-026-welcome-tour.md) |
+| FEAT-USR-027 | Contexto de sesión para el layout | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-027-session-context.md) |
 
 > `FEAT-USR-013` está `BLOCKED`: no se puede especificar sin resolver qué ocurre con obras,
 > feedback y créditos al eliminar la cuenta (`V-4`, `U-3`).
@@ -210,24 +211,26 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-003 | Abonar créditos por dar feedback, según nivel del texto | — (sistema) | PENDING | TODO | P0 | — |
 | FEAT-CRD-004 | Abonar +5 créditos por feedback valorado positivamente | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-CRD-005 | Abonar +5 créditos por invitación que participa | — (sistema) | PENDING | TODO | P2 | — |
-| FEAT-CRD-006 | Cargar créditos al autor por comentario recibido | — (sistema) | DRAFT | BLOCKED | P0 | [ficha](credits/FEAT-CRD-006-charge-author-for-received-feedback.md) |
+| FEAT-CRD-006 | Confirmar el cargo al autor cuando recibe un comentario | — (sistema) | DRAFT | TODO | P0 | [ficha](credits/FEAT-CRD-006-charge-author-for-received-feedback.md) |
 | FEAT-CRD-007 | Aplicar el coste adicional por preguntas extra del cuestionario | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-CRD-008 | Consultar el historial de movimientos de créditos | User | PENDING | TODO | P1 | — |
-| FEAT-CRD-009 | Reservar créditos al conceder acceso a un LB | — (sistema) | PENDING | DEFERRED | P2 | — |
+| FEAT-CRD-009 | Reservar créditos al conceder acceso a un lector beta | — (sistema) | DRAFT | TODO | P0 | [ficha](credits/FEAT-CRD-009-reserve-credits-on-access-grant.md) |
 | FEAT-CRD-010 | Calcular el coste con fórmula continua en vez de tramos | — (sistema) | PENDING | DEFERRED | P3 | — |
 | FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | PENDING | TODO | P0 | — |
 | FEAT-CRD-012 | Monitorizar la salud de la economía de créditos | Admin | PENDING | DEFERRED | P3 | — |
-| FEAT-CRD-013 | Créditos asociados a una obra (insignia de la tarjeta) | User | DRAFT | BLOCKED | P1 | [ficha](credits/FEAT-CRD-013-work-credit-badge.md) |
+| FEAT-CRD-013 | Créditos asociados a una obra (insignia de la tarjeta) | User | DRAFT | DEFERRED | P3 | [ficha](credits/FEAT-CRD-013-work-credit-badge.md) |
 | FEAT-CRD-014 | Modal informativo del sistema de créditos | User | DRAFT | TODO | P2 | [ficha](credits/FEAT-CRD-014-credits-info-modal.md) |
 | FEAT-CRD-015 | Pantalla con la tabla de puntuación de créditos | User | PENDING | TODO | P2 | — |
 
-> `FEAT-CRD-006` es el núcleo del producto y está `BLOCKED` por `C-1`: no está decidido qué
-> ocurre cuando el autor no tiene saldo. Su ficha documenta las tres opciones. **El modal de
-> créditos del diseño apunta al pago por adelantado** («poner tus obras en corrección»), que
-> es la opción de reserva previa: ver `M-1` en `FEAT-CRD-014`.
+> **`C-1` está resuelta.** Se adopta la **reserva previa**
+> ([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)): al conceder
+> acceso a un lector beta se retienen los créditos del autor (`FEAT-CRD-009`) y al recibir el
+> comentario se confirman (`FEAT-CRD-006`). Sin saldo disponible no se concede el acceso, así
+> que el saldo nunca queda negativo. Ambas fichas pasan de `BLOCKED`/`DEFERRED` a `TODO` y
+> son el camino crítico del contexto.
 >
-> `FEAT-CRD-013` está `BLOCKED`: no se sabe si la insignia de una obra es lo que gana el
-> lector o lo que cuesta al autor, y las cifras del diseño no coinciden con la tabla.
+> `FEAT-CRD-013` queda `DEFERRED`: las cifras concretas de la insignia se definirán al
+> documentar el sistema de créditos en detalle.
 > `FEAT-CRD-009` depende de que se elija la opción de reserva (`C-2`).
 > `FEAT-CRD-010` es la alternativa que el propio documento de origen plantea.
 
@@ -257,13 +260,12 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 
 | Funcionalidad | Bloqueada por | Decisión necesaria |
 |---|---|---|
-| FEAT-CRD-006 | `C-1` | Qué ocurre si el autor no tiene saldo suficiente |
 | FEAT-COM-013/014/015 | `CM-4` | Fórmula de puntuación de cada ranking |
 | FEAT-WRK-009 | `W-1` | Cuándo se genera el registro de autoría |
 | FEAT-FBK-008 | `A-3`, `C-5` | Identificación y créditos del comentarista anónimo |
 | FEAT-USR-013 | `V-4`, `U-3` | Qué se conserva al eliminar la cuenta |
-| FEAT-CRD-013 | `H-1`, `H-1b` | Qué significa la insignia de créditos de una obra, y por qué dos obras del mismo tramo muestran cifras distintas |
 | FEAT-COM-024 | `CM-4` | Fórmula de relevancia para ordenar el muro |
+| FEAT-CRD-009 | `R-1` | Si la reserva es por lector o por obra. Conviene cerrarlo **antes de implementar** |
 
 Estas cinco decisiones son el camino crítico de la especificación. `C-1` es la más urgente:
 afecta al recorrido principal del producto.

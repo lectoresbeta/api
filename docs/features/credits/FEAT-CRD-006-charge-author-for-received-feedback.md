@@ -1,64 +1,81 @@
 ---
 id: FEAT-CRD-006
-title: Cargar créditos al autor por comentario recibido
+title: Confirmar el cargo al autor cuando recibe un comentario
 context: Credits
 concept: Account
 actors: []
 spec_status: DRAFT
-impl_status: BLOCKED
+impl_status: TODO
 priority: P0
 sources:
   - _sources/credit-system.pdf#p1
   - _sources/credit-system.pdf#p2
   - _sources/credit-system.pdf#p4
+  - decision:0004
 endpoints: []
-events: [FeedbackSubmitted, CreditsSpent, InsufficientCredits]
-depends_on: [FEAT-FBK-001, FEAT-WRK-013, FEAT-CRD-011]
-updated: 2026-09-21
+events: [FeedbackSubmitted, CreditsSpent]
+depends_on: [FEAT-CRD-009, FEAT-FBK-001, FEAT-WRK-013, FEAT-CRD-011]
+updated: 2026-09-22
 ---
 
-# FEAT-CRD-006 — Cargar créditos al autor por comentario recibido
+# FEAT-CRD-006 — Confirmar el cargo al autor cuando recibe un comentario
 
 ## Resumen
 
-Cuando un lector beta envía feedback sobre una obra, su autor **paga créditos**. Es el
+Cuando un lector beta envía su feedback, el autor de la obra **paga créditos**. Es el
 mecanismo que hace que recibir crítica exija haberla dado antes, y por tanto el núcleo
 económico del producto.
 
-`Credits` aplica el cargo al recibir el evento `FeedbackSubmitted`. Ningún otro contexto
-calcula el importe ni ordena el cargo.
+Desde [`decision:0004`](../../decisions/0004-credit-reservation-on-access-grant.md), el cargo
+**no se decide aquí**: el importe ya se retuvo al conceder el acceso (`FEAT-CRD-009`). Lo que
+ocurre al recibir el comentario es **confirmar esa retención**, convirtiéndola en un
+movimiento real.
 
-## Actores y autorización
-
-No hay actor humano. Es una reacción del sistema a un hecho de negocio.
+Ese cambio hace desaparecer el problema que bloqueaba esta ficha: cuando llega el comentario,
+el dinero ya estaba apartado.
 
 ## Precondiciones
 
-- Existe una `CreditAccount` para el autor de la obra.
-- Se ha recibido `FeedbackSubmitted` con `authorId`, `textTier` y `questionCount`.
-- El `eventId` no ha sido procesado antes (`FEAT-CRD-011`).
+- Existe una retención en `HELD` para ese acceso.
+- Se ha recibido `FeedbackSubmitted` con su `eventId` sin procesar.
 
 ## Reglas de negocio
 
-- `RN-1` El coste se calcula así:
+- `RN-1` El importe **ya está fijado** por la retención. No se recalcula al confirmar.
+- `RN-2` Confirmar convierte la retención en un `CreditTransaction` con motivo
+  `FEEDBACK_RECEIVED`, importe negativo y referencia al `eventId` de origen.
+- `RN-3` El saldo total baja; el saldo disponible **no cambia**, porque ese importe ya estaba
+  retenido.
+- `RN-4` El mismo `eventId` nunca produce dos confirmaciones (`FEAT-CRD-011`).
+- `RN-5` Una retención `CONFIRMED` no se puede liberar ni confirmar de nuevo.
+- `RN-6` El movimiento es inmutable. Una corrección es un movimiento nuevo.
+- `RN-7` Si llega un `FeedbackSubmitted` **sin retención asociada**, no se inventa el cargo:
+  se registra como incidencia y se publica `InsufficientCredits`. Ver `C-15`.
 
-  ```text
-  coste = créditos(textTier) + max(0, questionCount − 3)
-  ```
+`RN-3` es la consecuencia más útil del nuevo modelo: el autor no se lleva ninguna sorpresa
+al recibir un comentario, porque su saldo disponible ya lo reflejaba.
 
-- `RN-2` Los créditos por nivel de texto son los de la tabla de
+`RN-7` cubre un estado que no debería darse: acceso concedido sin retención. Puede ocurrir
+por un evento perdido o por una retención caducada antes de tiempo. **Cobrar a posteriori
+reintroduciría el saldo negativo**, así que no se hace.
+
+## Cómo se calcula el importe
+
+El cálculo ocurre en `FEAT-CRD-009`, al retener. Se documenta aquí porque es la regla de
+negocio central del sistema.
+
+```text
+coste = créditos(textTier) + max(0, questionCount − 3)
+```
+
+- Los créditos por nivel de texto son los de la tabla de
   [`credits.md`](../../bounded-contexts/credits.md#clasificación-por-extensión-texttier).
-- `RN-3` Las tres primeras preguntas del cuestionario no tienen coste. Cada pregunta
-  adicional suma 1 crédito **por cada comentario recibido**, no una sola vez.
-- `RN-4` El cargo genera un `CreditTransaction` con motivo `FEEDBACK_RECEIVED`, importe
-  negativo y referencia al `eventId` de origen.
-- `RN-5` El mismo `eventId` nunca produce dos cargos.
-- `RN-6` `textTier` y `questionCount` se toman **del evento**, que refleja el estado en el
-  momento del envío del comentario. `Credits` no consulta a `Work`.
-- `RN-7` El movimiento es inmutable. Una corrección es un movimiento nuevo, nunca una
-  modificación del anterior.
+- Las tres primeras preguntas del cuestionario no tienen coste; cada pregunta adicional suma
+  1 crédito.
+- `textTier` y `questionCount` se toman del estado de la obra **en el momento de conceder el
+  acceso**, que es cuando se retiene.
 
-## Ejemplos de cálculo
+### Ejemplos
 
 | Texto | Palabras | `TextTier` | Preguntas | Coste |
 |---|---|---|---|---|
@@ -68,52 +85,25 @@ No hay actor humano. Es una reacción del sistema a un hecho de negocio.
 | Relato medio | 3.004 | `MEDIUM_TALE` (40) | 3 | **40** |
 | Relato corto | 2.999 | `SHORT_STORY` (15) | 3 | **15** |
 
-Las dos últimas filas ilustran el salto entre tramos que motiva la alternativa de cálculo
-continuo (`FEAT-CRD-010`): cinco palabras de diferencia multiplican el coste por más de dos.
+Las dos últimas filas ilustran el salto entre tramos que motiva el cálculo continuo
+(`FEAT-CRD-010`): cinco palabras de diferencia multiplican el coste por más de dos.
 
 ## Flujo principal
 
 1. `Feedback` publica `FeedbackSubmitted`.
-2. `Credits` recibe el evento.
-3. Comprueba si el `eventId` ya fue procesado. Si lo fue, descarta sin efecto.
-4. Calcula el coste según `RN-1`.
-5. Aplica el cargo a la cuenta del autor y registra el `eventId` en la misma transacción.
-6. Publica `CreditsSpent` y `CreditBalanceChanged`.
+2. `Credits` comprueba si el `eventId` ya se procesó; si sí, descarta.
+3. Localiza la retención `HELD` del acceso correspondiente.
+4. La marca `CONFIRMED` y registra el `CreditTransaction` en la misma transacción.
+5. Publica `CreditsSpent` y `CreditBalanceChanged`.
 
-## El problema sin resolver
+## Flujos alternativos
 
-**El paso 5 no está definido cuando el autor no tiene saldo suficiente.**
-
-El documento de origen establece que recibir un comentario descuenta créditos, pero no dice
-qué ocurre si no los hay. Es la decisión de producto más importante pendiente, porque
-condiciona el diseño de dos bounded contexts y el recorrido principal del producto.
-
-### Opciones
-
-| | Opción A — Post-pago | Opción B — Reserva previa | Opción C — Validación previa |
-|---|---|---|---|
-| **Cómo funciona** | El comentario se entrega siempre; el saldo puede quedar negativo | Al conceder acceso a un LB se reservan créditos; al enviar el comentario se confirma | `Feedback` consulta el saldo antes de aceptar el comentario |
-| **Experiencia del lector** | Nunca pierde su trabajo | Nunca pierde su trabajo: si no hay reserva, no hay acceso | Puede escribir un comentario y que se rechace al enviarlo |
-| **Experiencia del autor** | Puede quedar en negativo y bloqueado | No recibe accesos que no puede pagar | Recibe accesos que luego no puede pagar |
-| **Acoplamiento** | Ninguno | Ninguno, pero añade ciclo de vida de reserva | Rompe el desacoplo entre `Feedback` y `Credits` |
-| **Complejidad** | Baja | Alta: reservas, expiración, compensación | Media, y con carrera entre consulta y gasto |
-| **Riesgo** | Saldo negativo sin límite | Créditos inmovilizados en accesos que no comentan | Sigue sin garantizar el cobro |
-
-> **El diseño ya se inclina por B.** El modal informativo de créditos dice que los créditos
-> se usan para «poner tus obras en corrección», es decir, **al abrir la obra a feedback y no
-> al recibir cada comentario**. Ver `M-1` en
-> [`FEAT-CRD-014`](FEAT-CRD-014-credits-info-modal.md). No se ha cambiado el modelo por
-> cuenta propia, pero es un argumento fuerte a favor de la reserva previa.
-
-**Recomendación:** opción **B**, con la opción **A** como paso intermedio para una primera
-versión. B es la única que protege a la vez el trabajo del lector y el saldo del autor, y
-lo hace **en el momento correcto**: el acceso es el compromiso, no el comentario. A es
-aceptable al principio si se acota el saldo negativo.
-
-La opción C debe descartarse: rompe el aislamiento de `Credits` y ni siquiera resuelve el
-problema, porque entre consultar el saldo y gastarlo puede llegar otro cargo.
-
-Esta decisión debe cerrarse en un ADR antes de implementar `Feedback` o `Credits`.
+| Caso | Comportamiento |
+|---|---|
+| `eventId` repetido | Se descarta sin efecto |
+| Retención ya confirmada | Idempotente: no se cobra dos veces |
+| Retención caducada o liberada | No se cobra. Se publica `InsufficientCredits` y se registra la incidencia (`RN-7`) |
+| No existe retención | Igual que el caso anterior. Indica un fallo de integración que hay que investigar |
 
 ## Eventos
 
@@ -121,54 +111,64 @@ Esta decisión debe cerrarse en un ADR antes de implementar `Feedback` o `Credit
 
 | Evento | Origen | Efecto |
 |---|---|---|
-| `FeedbackSubmitted` | `Feedback` | Calcula y aplica el cargo |
+| `FeedbackSubmitted` | `Feedback` | Confirma la retención asociada |
 
 **Publica**
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `CreditsSpent` | Cargo aplicado | `Notification` |
-| `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` |
-| `InsufficientCredits` | El cargo no se puede aplicar (según lo que se decida) | `Feedback`, `Notification` |
+| `CreditsSpent` | Cargo confirmado | `Notification` |
+| `CreditBalanceChanged` | Cambia el saldo | `Reading` (proyección), read models, `Notification` |
+| `InsufficientCredits` | Llega feedback sin retención válida | `Feedback`, `Notification` |
 
 ## Modelo de datos afectado
 
 | Tabla | Cambio |
 |---|---|
+| `credit_reservation` | `status` pasa a `CONFIRMED` |
 | `credit_transaction` | Nuevo movimiento negativo con `reason = FEEDBACK_RECEIVED` |
 | `credit_account` | Actualización del saldo |
 | `processed_event` | Registro del `eventId` |
 
-Los tres cambios ocurren en **una única transacción**. Si no, una entrega duplicada puede
+Los cuatro cambios ocurren en **una única transacción**. Si no, una entrega duplicada puede
 cobrar dos veces.
 
 ## Criterios de aceptación
 
-- [ ] Recibir `FeedbackSubmitted` con `textTier: SHORT_STORY` y `questionCount: 3` carga 15 créditos al autor.
-- [ ] Con `questionCount: 6` carga 18 créditos.
-- [ ] Con `questionCount: 1` carga 15 créditos: menos de tres preguntas no abarata.
-- [ ] Procesar dos veces el mismo `eventId` produce un único cargo.
-- [ ] El movimiento registra el `eventId` de origen y es auditable.
-- [ ] El saldo resultante coincide con la suma de todos los movimientos de la cuenta.
-- [ ] El cargo y el registro del `eventId` son atómicos.
-- [ ] `Credits` no realiza ninguna llamada a `Work` ni a `Feedback` durante el proceso.
-- [ ] *(Pendiente de `C-1`)* Comportamiento definido cuando el saldo es insuficiente.
+- [ ] Recibir `FeedbackSubmitted` confirma la retención y genera el movimiento.
+- [ ] El importe del movimiento coincide exactamente con el de la retención.
+- [ ] El saldo total baja; el saldo disponible no cambia.
+- [ ] Procesar dos veces el mismo `eventId` produce un único movimiento.
+- [ ] Una retención ya confirmada no se cobra por segunda vez.
+- [ ] Un `FeedbackSubmitted` sin retención no genera cargo ni deja el saldo negativo.
+- [ ] Confirmación y registro del `eventId` son atómicos.
+- [ ] El saldo resultante coincide con la suma de todos los movimientos.
+- [ ] `Credits` no llama a `Work` ni a `Feedback` en todo el proceso.
+- [ ] Una retención de 15 créditos sigue cobrando 15 aunque la obra haya crecido entretanto.
+
+El último criterio es el que da sentido a la reserva: el precio se fija cuando se adquiere el
+compromiso, no cuando se cumple.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| C-1 | **¿Qué ocurre si el autor no tiene saldo suficiente?** | **Bloqueante** |
-| C-4 | ¿Un mismo lector beta puede comentar varias veces y cobrar cada vez? | Vector de abuso |
-| C-6 | ¿Cuánto cuesta un texto de más de 75.000 palabras? | Tramo no cubierto |
-| C-7 | ¿El `textTier` se congela al conceder el acceso o se toma al enviar el comentario? | Un autor podría ampliar el texto tras conceder accesos |
+| ~~C-1~~ | ¿Qué ocurre si el autor no tiene saldo? | **Resuelto** por [`decision:0004`](../../decisions/0004-credit-reservation-on-access-grant.md): sin saldo no hay acceso, así que no llega a haber comentario |
+| ~~C-2~~ | ¿Se reservan créditos al conceder acceso? | **Resuelto:** sí (`FEAT-CRD-009`) |
+| ~~M-1~~ | ¿Se paga por adelantado? | **Resuelto:** sí, con retención |
+| R-1 | ¿La reserva es por lector o por obra? | Variante pendiente en `FEAT-CRD-009` |
+| C-4 | ¿Un mismo lector beta puede comentar varias veces y cobrar cada vez? | Con una retención por acceso, el segundo comentario no tendría respaldo |
+| C-6 | ¿Cuánto cuesta un texto de más de 75.000 palabras? | Tramo no cubierto por la tabla |
 | C-9 | ¿Se devuelven créditos si el autor oculta el comentario por abusivo? | Protección frente a feedback malicioso |
 | C-10 | ¿El nivel se calcula sobre la obra completa o sobre el fragmento comentado? | Con novelas cambia radicalmente el coste |
-| M-1 | ¿Se paga al poner la obra en corrección en vez de por comentario recibido? | El modal de créditos lo sugiere. Es la misma decisión que `C-1`, vista desde el diseño |
+| **C-15** | ¿Qué se hace con un `FeedbackSubmitted` sin retención asociada? | `RN-7` propone no cobrar y registrar la incidencia. Confirmar |
+
+`C-4` gana importancia con este modelo: si una retención cubre un comentario, un segundo
+comentario del mismo lector quedaría sin respaldo y caería en `RN-7`.
 
 ## Estado
 
-**Especificación:** `DRAFT`. El cálculo está definido; el caso de saldo insuficiente no.
+**Especificación:** `DRAFT`. Desbloqueada: el cálculo y el momento del cobro están definidos.
+Para llegar a `APPROVED` faltan `R-1`, `C-4` y `C-15`.
 
-**Implementación:** `BLOCKED` por `C-1`. No se empieza a implementar hasta que exista el
-ADR correspondiente: elegir mal aquí obliga a rehacer dos bounded contexts.
+**Implementación:** `TODO`. Depende de `FEAT-CRD-009`.

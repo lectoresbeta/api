@@ -47,6 +47,8 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Crédito | `Credit` | Unidad de la economía interna que equilibra dar y recibir feedback. |
 | Saldo de créditos | `CreditBalance` | Créditos disponibles de un usuario. |
 | Movimiento de créditos | `CreditTransaction` | Registro inmutable de una variación del saldo, con su motivo y su origen. |
+| Retención de créditos | `CreditReservation` | Créditos comprometidos al conceder un acceso de lector beta y aún no gastados. Se confirma al recibir el feedback o se libera si el acceso termina sin él. |
+| Saldo disponible | `availableBalance` | Saldo menos retenciones vigentes. **Es el que gobierna lo que el autor puede hacer** y el que se muestra en la interfaz. |
 | Regla de créditos | `CreditRule` | Norma que traduce un hecho de negocio en una variación de créditos. |
 | Clasificación del texto | `TextTier` | Nivel de extensión de un texto (micro cuento, relato corto, novela media…) que determina su coste y recompensa en créditos. |
 | Invitación a la plataforma | `PlatformInvitation` | Invitación por email para que alguien se registre. Otorga créditos al invitador si el invitado participa. |
@@ -76,6 +78,7 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Motivo de movimiento de créditos | `CreditTransactionReason` | `ACCOUNT_ACTIVATED`, `FEEDBACK_GIVEN`, `FEEDBACK_RATED_POSITIVELY`, `INVITED_USER_PARTICIPATED`, `FEEDBACK_RECEIVED`, `MANUAL_ADJUSTMENT` |
 | Estado de la cuenta | `AccountStatus` | `PENDING_ACTIVATION` (solo lectura y onboarding), `ACTIVE`, `DELETED` |
 | Estado del onboarding | `OnboardingStatus` | `PROFILE_PENDING`, `GENRES_PENDING`, `SUGGESTIONS_PENDING`, `COMPLETED` |
+| Estado de la retención | `CreditReservationStatus` | `HELD`, `CONFIRMED`, `RELEASED` |
 | Tipo de documento legal | `LegalDocumentType` | `TERMS_OF_USE`, `PRIVACY_POLICY` |
 | Proveedor de autenticación | `AuthProvider` | `LOCAL`, `GOOGLE`. `FACEBOOK` y `LINKEDIN` están previstos pero **diferidos** |
 
