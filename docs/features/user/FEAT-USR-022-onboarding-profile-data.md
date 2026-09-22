@@ -62,9 +62,9 @@ tarjetas de sugerencia de autores.
 - `RN-6` El paso 1 es obligatorio: no se puede avanzar sin completarlo.
 - `RN-7` La validación del servidor es independiente de la del cliente. Un cliente
   manipulado no puede guardar una fecha inválida.
-- `RN-8` El saludo usa un alias **derivado del email** (la parte anterior a la `@`). No se
-  almacena, no es único y no identifica al usuario: es solo presentación. La API puede
-  devolverlo calculado o dejar que lo derive el cliente.
+- `RN-8` El saludo usa el **nombre de usuario** del usuario (`FEAT-USR-033`), que por defecto
+  es la parte del email anterior a la `@`. Es un dato almacenado y único, no un texto
+  calculado.
 - `RN-9` Este paso funciona con la cuenta en `PENDING_ACTIVATION`: es una de las excepciones
   al bloqueo de escritura (`FEAT-USR-025`, `RN-5`).
 - `RN-10` El nombre es editable después del onboarding (`FEAT-USR-008`). Al ser público,
@@ -87,7 +87,8 @@ Se expone en `GET /me/onboarding` para que el frontend sepa en qué paso retomar
 ## Flujo principal
 
 1. El usuario llega al paso 1 tras registrarse.
-2. La pantalla le saluda por el alias derivado de su email: la parte anterior a la `@`.
+2. La pantalla le saluda por su **nombre de usuario**, asignado al registrarse a partir del
+   email (`FEAT-USR-033`).
 3. Introduce nombre y fecha de nacimiento.
 4. El sistema valida ambos campos.
 5. Los guarda y avanza el estado a `GENRES_PENDING`.
@@ -149,7 +150,7 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 | # | Pregunta | Impacto |
 |---|---|---|
 | OB-2 | ¿Qué nombre ve el resto de la plataforma? | **Resuelto:** el «Nombre» del paso 1, que es público. El tooltip de privacidad solo corresponde a la fecha de nacimiento |
-| OB-1 | ¿De dónde sale el alias del saludo? | **Resuelto:** de la parte del email anterior a la `@` |
+| OB-1 | ¿De dónde sale el alias del saludo? | **Resuelto:** es el nombre de usuario, asignado desde el email (`FEAT-USR-033`) |
 | N-1 | ¿Qué reglas sigue el nombre: longitud, caracteres admitidos, nombres reservados? | Validación |
 | **N-2** | **¿El nombre debe ser único?** | Sin unicidad, dos personas homónimas son indistinguibles en comentarios y rankings. Con unicidad, se rechazan nombres reales legítimos. **Recomendación: no exigir unicidad**, y desambiguar en la interfaz con avatar y enlace al perfil |
 | N-3 | ¿Se puede cambiar el nombre libremente y con qué frecuencia? | Cambiarlo reescribe cómo se ve a esa persona en todo el histórico (`RN-10`) |

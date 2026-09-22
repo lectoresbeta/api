@@ -45,6 +45,35 @@ sostenible— el propio documento de partida exige monitorización constante:
 | Porcentaje de feedback valorado positivamente | Mide la calidad, no solo el volumen |
 | Mensajes en la cola de fallos | Salud de la mensajería |
 | Eventos deduplicados | Frecuencia real de entregas duplicadas |
+| Alias de nombre de usuario caducados sin purgar | Indica que la tarea diaria dejó de ejecutarse |
+
+## Tareas programadas
+
+Procesos que se ejecutan por calendario, no por petición ni por evento.
+
+| Tarea | Comando | Frecuencia | Qué pasa si falla |
+|---|---|---|---|
+| Purga de alias de nombre de usuario caducados | `app:user:purge-expired-username-aliases` | **Diaria** | Nada funcional: los alias caducados ya no resuelven ni ocupan nombre. Solo se acumulan filas. Ver [`FEAT-USR-036`](../features/user/FEAT-USR-036-purge-expired-aliases.md) |
+
+```cron
+# Purga de alias de nombre de usuario caducados — a diario a las 04:15 UTC
+15 4 * * *  php /app/bin/console app:user:purge-expired-username-aliases --no-interaction
+```
+
+Reglas para cualquier tarea programada del proyecto:
+
+- **Idempotente.** Ejecutarla dos veces no debe producir efectos distintos de ejecutarla una.
+- **Saltarse una ejecución no debe cambiar el comportamiento del sistema.** Si una regla de
+  negocio depende de que la tarea haya corrido, la regla está mal colocada: debe derivarse del
+  dato, no de la limpieza. La caducidad de los alias es el ejemplo: gobierna el
+  comportamiento por sí sola y el comando solo retira filas.
+- **Por lotes**, para no bloquear tablas si hay acumulación.
+- **Registra cuánto ha hecho**, para poder detectar que dejó de hacerlo.
+- **Código de salida distinto de `0` al fallar**, para que el programador pueda alertar.
+- Vive en `Infrastructure/Console`; la regla de negocio que aplica es de `Domain`.
+
+Cómo se programan realmente —cron del sistema, Symfony Scheduler o el programador de la
+plataforma de despliegue— depende de `O-1`, todavía sin decidir.
 
 ## Salud del sistema
 
@@ -60,3 +89,4 @@ sostenible— el propio documento de partida exige monitorización constante:
 | O-2 | ¿Hay entorno de staging además de los tres anteriores? |
 | O-3 | ¿Qué herramienta de agregación de logs y métricas? |
 | O-4 | ¿Política de copias de seguridad y de recuperación, dada la criticidad del contenido? |
+| O-5 | ¿Cómo se programan las tareas periódicas y quién avisa si dejan de ejecutarse? |

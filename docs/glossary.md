@@ -55,13 +55,15 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Página de autor / Mi perfil | `AuthorPage` | Perfil público de un escritor: portada, avatar, descripción, obras publicadas y premios. Si son dos pantallas distintas está sin decidir (`P-5`). |
 | Obra publicada | `PublishedBook` | Libro ya editado **fuera de Lectores Beta**, con editorial, año y enlace de compra, que el autor añade a su perfil como mérito. **No es una `Work`**: no tiene contenido en la plataforma, no se lee, no se comenta y no mueve créditos. |
 | Premio o reconocimiento | `AuthorAward` | Mérito que el autor declara en su perfil. |
-| Nivel | *(por definir)* | Insignia «0 Level» del perfil. **No hay ningún sistema de niveles documentado** (`P-4`). |
+| ~~Nivel~~ | — | La insignia «0 Level» del perfil era **un error del diseño**. No existe sistema de niveles. |
 | Preferencias literarias | `LiteraryPreferences` | Géneros y temáticas de interés declarados por el usuario. |
 | Temática / Género | `Genre` | Clasificación temática de obras y de intereses de usuario. |
 | Notificación | `Notification` | Aviso dirigido a un usuario, entregable in-app o por email. |
 | Activación de cuenta | `AccountActivation` | Confirmación del email mediante un enlace con token, que lleva la cuenta de `PENDING_ACTIVATION` a `ACTIVE`. Desbloquea los créditos de bienvenida y todas las operaciones de escritura. |
-| Alias | — | Texto de presentación derivado del email (la parte anterior a la `@`), usado en el saludo del onboarding. **No se almacena, no es único y no identifica a nadie.** No es un nombre de usuario. |
+| ~~Alias de presentación~~ | — | Concepto retirado. El saludo del onboarding muestra el **nombre de usuario** (`Username`), que sí se almacena y sí es único. «Alias» designa ahora únicamente el nombre de usuario anterior conservado tras un cambio. |
 | Nombre | `Name` | Nombre **público** de un usuario, recogido en el paso 1 del onboarding. Es el referente con el que se le identifica en perfiles, catálogo, muro, comentarios, rankings y sugerencias. No es el identificador técnico: ese es `UserId`. |
+| Nombre de usuario | `Username` | Identificador público, único y corto que se muestra como `@bealonso` y forma la URL del perfil. Se asigna solo a partir del email y es editable una vez cada 30 días. **No es la identidad**: esa sigue siendo `UserId`. |
+| Alias de nombre de usuario | `UsernameAlias` | Nombre de usuario anterior, conservado 30 días tras un cambio. Mantiene vivos los enlaces de perfil y evita que otra persona ocupe el nombre. Caduca solo. |
 | Onboarding | `Onboarding` | Proceso de tres pasos posterior al registro: datos personales, géneros de interés y autores a seguir. |
 | Aceptación legal | `LegalAcceptance` | Registro inmutable de qué versión de las condiciones de uso y la política de privacidad aceptó un usuario, y cuándo. |
 | Catálogo de géneros | `Genre` | Lista administrable de géneros literarios, compartida por los intereses del lector y la temática de las obras. |
@@ -131,6 +133,6 @@ El diseño escribe «Poeta»; se corrige a «Poesía» (`POETRY`), que es el gé
 | `Review` | `Feedback` | Evita confusión con las revisiones de código y con reseñas públicas. |
 | `Page`, `Section`, `Part` | `Chapter` | Un único nombre para la subdivisión de la obra. |
 | `Points`, `Tokens`, `Coins` | `Credit` | El documento de producto habla de créditos. |
-| `Username`, `Nickname`, `Handle` | — | **Decidido que no existe**, pero el diseño de «Mi perfil» muestra `@bealonso`. Contradicción sin resolver: ver `P-1` en [ui/my-profile.md](ui/my-profile.md). **No usar ninguno de estos nombres hasta que se cierre.** |
+| `Nickname`, `Handle` | `Username` | Un único nombre para el concepto. |
 | `Book`, `PublishedWork` para el manuscrito | `Work` | `PublishedBook` es otra cosa: el libro editado fuera de la plataforma. |
 | `Helper`, `Manager`, `Utils` | Un nombre que describa la responsabilidad | Regla explícita de `AGENTS.md`. |

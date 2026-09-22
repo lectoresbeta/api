@@ -33,9 +33,8 @@ agregados de tres bounded contexts distintos.
 | Imagen de portada | Sí, lápiz | `User`. **Concepto nuevo** |
 | Avatar | Sí, lápiz | `User` |
 | Nombre | No desde aquí (`FEAT-USR-008`) | `User` |
-| `@identificador` | — | **Sin definir**, ver `P-1` |
+| `@identificador` | Sí, una vez cada 30 días (`FEAT-USR-034`) | `User` — es el `Username` |
 | Descripción | Sí, en línea | `User` |
-| Insignia de nivel | No | `FEAT-USR-031` |
 | Compartir | — | `FEAT-USR-032` |
 
 ## Contadores
@@ -118,7 +117,7 @@ Las imágenes se guardan con el puerto `FileStorage`, nunca en la base de datos.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **P-1** | ¿Existe `@identificador`? El diseño muestra `@bealonso` | **Bloqueante.** Ver [`../../ui/my-profile.md`](../../ui/my-profile.md) |
+| P-1 | ¿Existe `@identificador`? | **Resuelta:** es el `Username` (`FEAT-USR-033`) |
 | P-5 | ¿Es esta la «página de autor» de `FEAT-USR-015`? | Si no, hay dos perfiles que mantener |
 | P-12 | ¿Los contadores se componen en cada petición o viven en un read model? | Rendimiento del perfil |
 | P-13 | ¿Hay límites de tamaño y proporción para portada y avatar? | Validación de subida |
@@ -127,7 +126,7 @@ Las imágenes se guardan con el puerto `FileStorage`, nunca en la base de datos.
 
 ## Estado
 
-**Especificación:** `DRAFT`. `P-1` debe resolverse antes de `APPROVED`: si existe un
-identificador único, cambia el modelo y probablemente las URLs de perfil.
+**Especificación:** `DRAFT`. Resuelta `P-1`. Para llegar a `APPROVED` falta decidir si los
+contadores se componen por petición o viven en un read model (`P-12`).
 
 **Implementación:** `TODO`.

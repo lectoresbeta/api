@@ -35,7 +35,7 @@ preferencias y presencia pública como autor.
 | `Account` | Ciclo de vida de la cuenta: alta, activación, modificación, baja |
 | `Authentication` | Credenciales, sesión, proveedores externos, recuperación |
 | `Onboarding` | Los tres pasos posteriores al registro y su estado |
-| `Profile` | Datos públicos y preferencias literarias |
+| `Profile` | Datos públicos, nombre de usuario y sus alias, preferencias literarias |
 | `AuthorPage` | Perfil público: portada, descripción, obras publicadas y premios |
 | `Invitation` | Invitaciones por email y su seguimiento |
 | `Legal` | Documentos legales vigentes y el registro de aceptaciones |
@@ -49,6 +49,7 @@ preferencias y presencia pública como autor.
 | `PublishedBook` | `PublishedBookId` | Libro editado **fuera** de la plataforma. Sin contenido, sin lectores beta y sin créditos. No confundir con `Work` |
 | `PlatformInvitation` | `PlatformInvitationId` | Token único. Se consume una sola vez. |
 | `AccountActivationToken` | `UserId` | Un único token vigente por cuenta. Se almacena con hash, nunca en claro. |
+| `UsernameAlias` | `username` | Nombre de usuario anterior, vigente 30 días. Un alias vigente **ocupa el nombre**; uno caducado no resuelve ni ocupa, aunque su fila siga existiendo. |
 | `LegalAcceptance` | `LegalAcceptanceId` | Inmutable. Registra documento, versión y fecha. |
 
 ### Value objects y enums
@@ -56,9 +57,9 @@ preferencias y presencia pública como autor.
 | Nombre | Reglas |
 |---|---|
 | `Email` | Formato válido, único, normalizado en minúsculas |
-| ~~`Username`~~ | Decidido que **no existe**. Pero el diseño de «Mi perfil» muestra `@bealonso`, que no coincide con el alias derivado del email. **Contradicción sin resolver** (`P-1`) |
+| `Username` | **Único** en toda la plataforma. `a–z`, `0–9` y `_`, de 3 a 30 caracteres, en minúsculas. Se asigna solo desde el email; editable una vez cada 30 días. **No es identidad**: esa es `UserId` |
 | `HashedPassword` | ≥8 caracteres, una mayúscula, un número y un carácter especial. Nunca se expone ni se registra en logs |
-| `Name` | **Dato público.** Referente para identificar a un usuario en toda la plataforma. No es el identificador técnico: ese sigue siendo `UserId` |
+| `Name` | **Dato público.** Nombre visible de la persona. No es el identificador técnico: ese sigue siendo `UserId` |
 | `Description` | Dato público. Texto libre saneado |
 | `AvatarUrl`, `CoverUrl` | Datos públicos. Imágenes sin metadatos EXIF |
 | `BirthDate` | Fecha real y pasada. **Dato privado**: no se expone en la API pública |
@@ -79,6 +80,7 @@ preferencias y presencia pública como autor.
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` (+5 al invitador) |
 | `UserDeleted` | Se elimina la cuenta | Todos (limpieza y anonimización) |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` (read models) |
+| `UsernameChanged` | El usuario cambia su nombre de usuario | `Community` (read models que muestran el `@`) |
 
 > `InvitedUserParticipated` requiere correlacionar la invitación con el primer comentario del
 > invitado, que ocurre en `Feedback`. Diseño pendiente: ver `U-4`.
@@ -97,8 +99,10 @@ preferencias y presencia pública como autor.
 | U-10 | ¿El `Name` debe ser único? | Sin unicidad, dos homónimos son indistinguibles. Recomendación: no exigirla y desambiguar con avatar y enlace al perfil |
 | U-7 | ¿Qué puede hacer una cuenta `PENDING_ACTIVATION`? | **Resuelto:** leer y completar el onboarding. Ver `decision:0003` |
 | U-9 | ¿Hay edad mínima para registrarse? (`OB-7`) | Legal: se recoge la fecha de nacimiento sin motivo declarado |
-| **U-11** | **¿Existe un `@identificador` público?** El perfil muestra `@bealonso` pese a la decisión de no usar nombre de usuario | **Bloqueante** (`P-1`). Arrastra unicidad, formato, reserva y URLs de perfil |
-| U-12 | ¿Qué es la insignia «0 Level»? | Sistema de niveles sin documentar (`P-4`) |
+| U-11 | ¿Existe un `@identificador` público? | **Resuelta:** sí. Ver [`decision:0005`](../decisions/0005-username-with-temporary-aliases.md) |
+| U-12 | ¿Qué es la insignia «0 Level»? | **Resuelta:** error del diseño. No hay sistema de niveles |
+| U-14 | ¿Puede el usuario recuperar su propio alias sin esperar 30 días? | `N-6`. Es el caso más previsible tras un cambio del que se arrepiente |
+| U-15 | ¿Qué ocurre con el nombre y sus alias al eliminar la cuenta? | `N-9`, ligado a `FEAT-USR-013` |
 | U-13 | ¿«Mi perfil» y la «página de autor» son la misma pantalla? | Si no, hay dos perfiles que mantener (`P-5`) |
 
 ### Datos privados

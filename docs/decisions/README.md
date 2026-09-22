@@ -16,6 +16,7 @@ Plantilla: [`../_templates/adr.md`](../_templates/adr.md).
 | [0002](0002-credits-as-isolated-bounded-context.md) | `Credits` es un bounded context aislado y solo accesible por eventos | Aceptada | 2026-09-21 |
 | [0003](0003-write-operations-require-activated-account.md) | Las operaciones de escritura exigen tener la cuenta activada | Aceptada | 2026-09-21 |
 | [0004](0004-credit-reservation-on-access-grant.md) | Los créditos se reservan al conceder acceso y se confirman al recibir el feedback | Aceptada | 2026-09-22 |
+| [0005](0005-username-with-temporary-aliases.md) | El nombre de usuario existe, es editable y deja un alias temporal al cambiarlo | Aceptada | 2026-09-22 |
 
 ## Decisiones pendientes
 
@@ -24,8 +25,7 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 | Ref | Decisión | Bloquea |
 |---|---|---|
 | `R-1` | Si la reserva de créditos es por lector o por obra | `FEAT-CRD-009`. Variante de `decision:0004`, conviene cerrarla **antes de implementar** |
-| `P-1` | Si existe un `@identificador` público de usuario. El perfil muestra `@bealonso` pese a haberse decidido que el nombre de usuario no existe | `FEAT-USR-028`, `FEAT-USR-014`, `FEAT-USR-001`. **Contradice una decisión ya tomada** |
-| `P-4` | Qué es el nivel del usuario («0 Level»), cómo se sube y para qué sirve | `FEAT-USR-031`. Sistema sin documentar en ningún sitio |
+| `N-6` | Si el usuario puede recuperar **su propio** alias sin esperar los 30 días | `FEAT-USR-034`. Es el caso más previsible tras un cambio del que se arrepiente |
 | `P-3` | Si «obra en corrección» es un estado del ciclo de vida de `Work` | `Work`, `Credits` |
 | `S-1` | Mecanismo de sesión de la API | Todo `User` y toda la autorización |
 | `CM-4` | Fórmula de puntuación de los rankings | `FEAT-COM-013/014/015` |

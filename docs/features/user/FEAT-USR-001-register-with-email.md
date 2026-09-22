@@ -36,14 +36,14 @@ con quien invitó para recompensarle cuando la persona invitada participe (`FEAT
 
 | Antes (según `use-cases.pdf`) | Ahora (según Figma `1470:9482`) |
 |---|---|
-| El registro pedía email, contraseña y nombre de usuario | **No hay nombre de usuario en la plataforma.** Solo email y contraseña |
+| El registro pedía email, contraseña y nombre de usuario | El formulario solo pide email y contraseña. **El nombre de usuario existe, pero se asigna solo** desde el email |
 | Sin política de contraseña definida | Política visible y explícita, ver `RN-3` |
 | Sin aceptación de términos | Casilla obligatoria de condiciones y privacidad (`FEAT-USR-024`) |
 | Verificación de email sin decidir | Se envía correo de activación, **pero no bloquea el onboarding** |
 | Google y Facebook | El diseño muestra Google, Facebook y LinkedIn, pero **en esta fase solo se implementa Google** |
 
-El saludo del onboarding —«Casi lo tienes, **beatrizalonso**!»— usa un alias **derivado del
-email**: la parte anterior a la `@`. No es un dato almacenado ni un identificador.
+El saludo del onboarding —«Casi lo tienes, **beatrizalonso**!»— muestra el **nombre de
+usuario** recién asignado, que por defecto es la parte del email anterior a la `@`.
 
 ## Actores y autorización
 
@@ -59,10 +59,10 @@ email**: la parte anterior a la `@`. No es un dato almacenado ni un identificado
 ## Reglas de negocio
 
 - `RN-1` El email es único en la plataforma y se normaliza a minúsculas.
-- `RN-2` **No existe el concepto de nombre de usuario.** La plataforma no lo pide, no lo
-  almacena y no lo valida. El alias con el que el onboarding saluda al usuario se deriva del
-  email tomando la parte anterior a la `@`, y es puramente de presentación: no es único, no
-  es un identificador y no se persiste.
+- `RN-2` El registro **no pide nombre de usuario, pero sí lo asigna**: se genera a partir de
+  la parte del email anterior a la `@`, normalizada, añadiendo `_1`, `_2`… si ya está
+  ocupado. Es único y el usuario podrá cambiarlo después (`FEAT-USR-033`,
+  [`decision:0005`](../../decisions/0005-username-with-temporary-aliases.md)).
 - `RN-3` La contraseña debe cumplir, tal como anuncia el formulario:
   - al menos 8 caracteres;
   - al menos una mayúscula, un número y un carácter especial (`!@#$%^&*`).
@@ -139,7 +139,7 @@ sesión entre el registro y el paso 1, que no es lo que muestran las pantallas.
 
 | Evento | Cuándo | Payload relevante |
 |---|---|---|
-| `UserRegistered` | Tras persistir la cuenta | `userId`, `email`, `registeredAt`, `invitedBy?`, `authProvider: LOCAL`, `status: PENDING_ACTIVATION` |
+| `UserRegistered` | Tras persistir la cuenta | `userId`, `email`, `username`, `registeredAt`, `invitedBy?`, `authProvider: LOCAL`, `status: PENDING_ACTIVATION` |
 
 **Consume**: ninguno.
 
@@ -158,7 +158,7 @@ es justo lo que el crédito por invitación (`FEAT-CRD-005`) incentiva a intenta
 
 | Tabla | Cambio |
 |---|---|
-| `user` | Nuevo registro con `status = PENDING_ACTIVATION` |
+| `user` | Nuevo registro con `status = PENDING_ACTIVATION` y `username` asignado |
 | `legal_acceptance` | Aceptación de condiciones y privacidad, con versión y fecha |
 | `account_activation_token` | Token de activación |
 | `platform_invitation` | Marcado como consumido, si aplica |
@@ -183,6 +183,8 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 - [ ] Un email ya registrado no permite crear una segunda cuenta.
 - [ ] La respuesta de error no permite averiguar si un email concreto está registrado.
 - [ ] El email se normaliza: `Usuario@Ejemplo.com` y `usuario@ejemplo.com` son la misma cuenta.
+- [ ] Se asigna un nombre de usuario único derivado del email (`FEAT-USR-033`).
+- [ ] Dos altas con el mismo email local producen nombres de usuario distintos.
 - [ ] Se publica `UserRegistered` exactamente una vez por registro correcto.
 - [ ] El payload de `UserRegistered` no contiene la contraseña ni su hash.
 - [ ] Tras procesarse el evento, el usuario tiene una cuenta de créditos con **saldo 0**.
@@ -202,7 +204,7 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 | OB-2 | ¿Qué nombre se muestra públicamente? | **Resuelto:** el «Nombre» que se pide en el paso 1 del onboarding (`FEAT-USR-022`). Es público y es el referente para identificar a un usuario |
 | OB-1 | ¿De dónde sale el alias del saludo? | **Resuelto:** de la parte del email anterior a la `@`. Solo para presentación |
 | OB-3 | ¿Qué puede hacer una cuenta sin activar? ¿Recibe créditos? | **Resuelto:** nada de escritura, y los créditos llegan al activar. Ver `decision:0003` |
-| Q-5 | ¿Qué reglas sigue el nombre de usuario? | **Resuelto:** no existe el concepto |
+| Q-5 | ¿Qué reglas sigue el nombre de usuario? | **Resuelto:** existe y se especifica en `FEAT-USR-033` |
 | Q-2 | ¿Cómo se concilia no revelar emails registrados (`RN-14`) con una experiencia usable? | Compromiso entre seguridad y usabilidad |
 | Q-6 | ¿Se piden las preferencias literarias en el registro? | **Resuelto:** no. Van en el onboarding (`FEAT-USR-023`) |
 | Q-7 | ¿Hay aceptación de términos? | **Resuelto:** sí, casilla obligatoria (`FEAT-USR-024`) |

@@ -40,12 +40,13 @@ aplicar el efecto.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `UserRegistered` | Se crea una cuenta | `Credits` (crea cuenta con saldo 0), `Notification` | `userId`, `authProvider`, `status`, `invitedBy?` |
+| `UserRegistered` | Se crea una cuenta | `Credits` (crea cuenta con saldo 0), `Notification` | `userId`, `username`, `authProvider`, `status`, `invitedBy?` |
 | `AccountActivated` | El usuario activa su cuenta desde el correo | **`Credits`** (+20), `Notification`, `Feedback` | `userId`, `activatedAt` |
 | `ActivationEmailRequested` | Se pide reenviar el correo de activación | `Notification` | `userId` |
 | `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros | `Community` | `userId`, `genres` |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models | `userId`, `completedAt` |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` | `userId`, campos modificados |
+| `UsernameChanged` | El usuario cambia su nombre de usuario | `Community` (read models con el `@`) | `userId`, `previousUsername`, `newUsername`, `aliasExpiresAt` |
 | `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt` |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` | `inviterId`, `invitedUserId` |
 

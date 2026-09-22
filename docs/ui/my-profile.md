@@ -41,29 +41,28 @@ edición, sin cajas de «Añadir».
 |---|---|
 | Portada | Imagen de fondo con lápiz de edición arriba a la derecha. **Concepto nuevo** |
 | Avatar | Círculo superpuesto, con su propio lápiz de edición |
-| Insignia | **«0 Level»** abajo a la derecha de la portada. **Concepto nuevo sin documentar** |
+| Insignia | ~~«0 Level»~~ — **error del diseño**, no hay sistema de niveles. No se implementa |
 | Nombre | «Beatriz Alonso» — el nombre público (`FEAT-USR-022`) |
-| Identificador | **«@bealonso»** — ver el aviso de abajo |
+| Identificador | **«@bealonso»** — el nombre de usuario (`FEAT-USR-033`) |
 | Compartir | Icono de compartir junto al nombre |
 | Descripción | Campo editable en línea con marcador «Añade descripcion» |
 
-> ### Aviso: aparece un `@identificador`
+> ### El `@identificador` es el nombre de usuario
 >
-> El perfil muestra **`@bealonso`**, que es la forma canónica de un nombre de usuario:
-> único, corto, precedido de arroba y pensado para compartirse y mencionarse.
+> **Resuelto** en [`decision:0005`](../decisions/0005-username-with-temporary-aliases.md),
+> que revierte la decisión previa de no usar nombre de usuario.
 >
-> Contradice dos cosas decididas:
+> `@bealonso` es el `Username`: único, asignado automáticamente desde el email al
+> registrarse, editable **una vez cada 30 días** y parte de la URL del perfil
+> (`lectoresbeta.com/profile/bealonso`).
 >
-> 1. **«No usaremos el campo nombre de usuario»** (decisión de 2026-09-21). Hoy la
->    documentación dice que el concepto no existe, no se pide y no se almacena.
-> 2. **El alias se deriva del email.** El onboarding saluda con «beatrizalonso»; aquí el
->    identificador es «bealonso». **No son el mismo valor**, así que no puede derivarse del
->    email de la misma manera.
+> Al cambiarlo, el nombre anterior queda como **alias durante 30 días**: los enlaces
+> compartidos siguen funcionando y nadie puede ocupar ese nombre mientras tanto. Ver
+> `FEAT-USR-033` a `FEAT-USR-036`.
 >
-> Un `@identificador` visible acarrea unicidad, reglas de formato, reserva de nombres y,
-> casi seguro, URLs de perfil. Nada de eso está documentado.
->
-> No se ha resuelto por cuenta propia: queda como `P-1`, **bloqueante**.
+> Queda una discrepancia menor de maqueta: el onboarding saluda con «beatrizalonso» y aquí
+> el identificador es «bealonso». Con la regla actual, ambos deberían coincidir salvo que el
+> usuario lo haya cambiado.
 
 ## Pestañas
 
@@ -198,8 +197,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | 1 | Imagen de portada del perfil, editable | `FEAT-USR-028` |
 | 2 | Avatar editable | `FEAT-USR-028` |
 | 3 | Descripción editable en línea | `FEAT-USR-028` |
-| 4 | Enlace público de perfil para compartir | `FEAT-USR-032` |
-| 5 | Nivel del usuario | `FEAT-USR-031` |
+| 4 | Enlace público de perfil para compartir, basado en el nombre de usuario | `FEAT-USR-032`, `FEAT-USR-035` |
 | 6 | Contadores de seguidos, seguidores, relatos y correcciones | `FEAT-USR-028` |
 | 7 | Publicaciones propias paginadas | `FEAT-COM-026` |
 | 8 | Obras propias paginadas | `FEAT-WRK-004` |
@@ -212,8 +210,8 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 
 | # | Qué dice el diseño | Qué dice la documentación | Resolución |
 |---|---|---|---|
-| C-1 | Muestra `@bealonso` | «No usaremos el campo nombre de usuario»; el alias se deriva del email | **Sin resolver.** `P-1`, bloqueante |
-| C-2 | Insignia «0 Level» | No existe ningún sistema de niveles | **Sin resolver.** `P-4` |
+| C-1 | Muestra `@bealonso` | «No usaremos el campo nombre de usuario» | **Resuelta:** el nombre de usuario existe (`decision:0005`) |
+| C-2 | Insignia «0 Level» | No existe ningún sistema de niveles | **Resuelta:** es un error del diseño. Se retira |
 | C-3 | Perfil con portada, avatar y descripción | `FEAT-USR-015` describe una «página de autor» con bio, foto y referencias | ¿Son la misma pantalla? `P-5` |
 | C-4 | Sin personalización visual | `FEAT-USR-016` permite elegir fuentes, colores y fondos | Puede estar fuera de estas capturas, o haberse descartado. `P-6` |
 | C-5 | Botón «Enviar» | En la Home la misma caja decía «Publicar» | Unificar. `P-7` |
@@ -225,7 +223,8 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | FEAT-USR-028 | **Nueva** — cabecera y datos del perfil propio | `DRAFT` |
 | FEAT-USR-029 | **Nueva** — obras publicadas (bibliografía externa) | `DRAFT` |
 | FEAT-USR-030 | **Nueva** — premios y reconocimientos | `PENDING` |
-| FEAT-USR-031 | **Nueva** — nivel del usuario | `PENDING` |
+| FEAT-USR-031 | ~~Nivel del usuario~~ — error del diseño | `DEPRECATED` |
+| FEAT-USR-033 a 036 | **Nuevas** — nombre de usuario, cambio con alias, resolución y purga | `DRAFT` |
 | FEAT-USR-032 | **Nueva** — compartir el perfil | `PENDING` |
 | FEAT-COM-026 | **Nueva** — muro propio | `PENDING` |
 | FEAT-COM-027 | **Nueva** — seguidos y seguidores | `PENDING` |
@@ -238,10 +237,10 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **P-1** | **¿Existe `@identificador` o no?** El perfil muestra `@bealonso`, que no coincide con el alias del onboarding ni con la decisión de no usar nombre de usuario | **Bloqueante.** Arrastra unicidad, formato, reserva de nombres y URLs de perfil |
+| P-1 | ¿Existe `@identificador`? | **Resuelta:** sí, es el `Username`. Ver `decision:0005` |
 | **P-2** | ¿Se confirma que una «obra publicada» es un concepto aparte de `Work`? | Modelo de datos. Mezclarlos sería un error caro |
 | P-3 | ¿«Obra en corrección» es un estado del ciclo de vida de `Work`? | `M-2`, `W-5` |
-| **P-4** | **¿Qué es «0 Level»?** ¿Cómo se sube de nivel y para qué sirve? | Sistema de gamificación sin documentar en ningún sitio |
+| P-4 | ¿Qué es «0 Level»? | **Resuelta:** error del diseño. Se retira de la pantalla |
 | P-5 | ¿«Mi perfil» y la «página de autor» de `FEAT-USR-015` son la misma pantalla? | Si no, hay dos perfiles que mantener |
 | P-6 | ¿Sigue en alcance la personalización visual de `FEAT-USR-016`? | No aparece en estas capturas |
 | P-7 | Textos por unificar: «Enviar» frente a «Publicar»; el vacío de «Seguidos» describe también a los seguidores | Coherencia |
@@ -254,4 +253,6 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 
 - «Añade descripcion» → «descripción».
 - «Mis Amigos» con mayúscula, frente a «Mis relatos» y «Mis correcciones».
-- «0 Level» mezcla castellano e inglés en una interfaz por lo demás en castellano.
+- «0 Level» se retira: no hay sistema de niveles.
+- El onboarding saluda con «beatrizalonso» y el perfil muestra «@bealonso». Con la regla de
+  asignación actual deberían coincidir.

@@ -31,7 +31,16 @@
 | `GET /me/settings` | `getAccountSettings` | Ajustes de cuenta | FEAT-USR-010/011/012 | PENDING |
 | `PATCH /me/settings` | `updateAccountSettings` | MD, propuestas y notificaciones | FEAT-USR-010/011/012 | PENDING |
 | `DELETE /me` | `deleteAccount` | Eliminar cuenta | FEAT-USR-013 | BLOCKED |
-| `GET /users/{userId}` | `getUserProfile` | Perfil público | FEAT-USR-014 | PENDING |
+| `GET /users/{userId}` | `getUserProfile` | Perfil público por identificador | FEAT-USR-014 | PENDING |
+| `GET /profiles/{username}` | `getProfileByUsername` | Perfil por nombre de usuario o alias | FEAT-USR-035 | DRAFT |
+| `PUT /me/username` | `changeUsername` | Cambiar el nombre de usuario | FEAT-USR-034 | DRAFT |
+| `GET /usernames/{username}/availability` | `checkUsernameAvailability` | Comprobar si un nombre está libre | FEAT-USR-033 | DRAFT |
+| `GET /me/profile` | `getMyProfile` | Cabecera del perfil propio | FEAT-USR-028 | DRAFT |
+| `PATCH /me/profile` | `updateMyProfile` | Editar descripción y datos | FEAT-USR-028 | DRAFT |
+| `PUT /me/profile/avatar` | `updateAvatar` | Cambiar avatar | FEAT-USR-028 | DRAFT |
+| `PUT /me/profile/cover` | `updateCover` | Cambiar portada | FEAT-USR-028 | DRAFT |
+| `GET /users/{userId}/published-books` | `listPublishedBooks` | Obras publicadas de un autor | FEAT-USR-029 | DRAFT |
+| `POST /me/published-books` | `addPublishedBook` | Añadir obra publicada | FEAT-USR-029 | DRAFT |
 | `GET /users` | `searchUsers` | Buscar autores | FEAT-USR-017 | PENDING |
 | `GET /authors/{userId}/page` | `getAuthorPage` | Página pública de autor | FEAT-USR-015 | PENDING |
 | `PUT /me/author-page` | `updateAuthorPage` | Información de la página de autor | FEAT-USR-015 | PENDING |
@@ -151,6 +160,20 @@ usuario, es el único nombre visible de una persona.
 `birthDate` ni el email. Es una regla de contrato, no una recomendación.
 
 Las rutas y los enlaces de perfil usan siempre el `UserId`, nunca el nombre.
+
+---
+
+## Nota sobre el nombre de usuario en las rutas
+
+`GET /profiles/{username}` es la **única** ruta que acepta un nombre de usuario. Todas las
+demás referencias entre recursos de la API usan `UserId`.
+
+El motivo es simple: el nombre de usuario **cambia** y el identificador no. Una relación
+guardada por nombre se rompería en el primer cambio.
+
+`GET /profiles/{username}` resuelve primero entre nombres en uso y después entre **alias
+vigentes**, y devuelve siempre el nombre canónico actual para que el cliente pueda corregir
+la URL. Ver [`FEAT-USR-035`](../../features/user/FEAT-USR-035-resolve-profile-by-username.md).
 
 ---
 

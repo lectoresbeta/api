@@ -17,14 +17,14 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 32 | 13 | 0 | 0 |
+| `User` (USR) | 36 | 17 | 0 | 0 |
 | `Work` (WRK) | 14 | 1 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 10 | 0 | 0 | 0 |
 | `Community` (COM) | 27 | 3 | 0 | 0 |
 | `Credits` (CRD) | 15 | 4 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **114** | **22** | **0** | **0** |
+| **Total** | **118** | **26** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -73,17 +73,26 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-028 | Mi perfil — cabecera, datos y contadores | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-028-own-profile-header.md) |
 | FEAT-USR-029 | Obras publicadas del autor (bibliografía externa) | Writer | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-029-published-books.md) |
 | FEAT-USR-030 | Premios y reconocimientos del autor | Writer | PENDING | TODO | P3 | — |
-| FEAT-USR-031 | Nivel del usuario | User | PENDING | BLOCKED | P3 | — |
+| FEAT-USR-031 | ~~Nivel del usuario~~ | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-USR-032 | Compartir el perfil | User | PENDING | TODO | P3 | — |
+| FEAT-USR-033 | Nombre de usuario — formato, asignación automática y unicidad | Guest, User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-033-username-assignment.md) |
+| FEAT-USR-034 | Cambiar el nombre de usuario y alias temporal | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-034-change-username.md) |
+| FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |
+| FEAT-USR-036 | Purga programada de alias caducados | — (sistema) | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-036-purge-expired-aliases.md) |
 
 > `FEAT-USR-013` está `BLOCKED`: no se puede especificar sin resolver qué ocurre con obras,
 > feedback y créditos al eliminar la cuenta (`V-4`, `U-3`).
 >
-> `FEAT-USR-028` a `FEAT-USR-032` salen del diseño de «Mi perfil». **El perfil muestra un
-> `@identificador`** (`@bealonso`), que contradice la decisión de no usar nombre de usuario y
-> no coincide con el alias derivado del email: ver `P-1`, **bloqueante**.
-> `FEAT-USR-031` está `BLOCKED`: aparece una insignia «0 Level» y **no existe ningún sistema
-> de niveles documentado**.
+> `FEAT-USR-028` a `FEAT-USR-036` salen del diseño de «Mi perfil».
+>
+> **`P-1` está resuelta: el nombre de usuario existe.**
+> ([`decision:0005`](../decisions/0005-username-with-temporary-aliases.md)) Se asigna solo a
+> partir del email, es único y editable una vez al mes, y al cambiarlo deja un **alias de 30
+> días** que mantiene vivos los enlaces de perfil e impide que otro ocupe el nombre. Un
+> comando diario purga los alias caducados (`FEAT-USR-036`).
+>
+> `FEAT-USR-031` queda `DEPRECATED`: la insignia «0 Level» era **un error del diseño**, no un
+> sistema de niveles.
 >
 > `FEAT-USR-019` a `FEAT-USR-025` salen del diseño del flujo de creación de cuenta.
 >
@@ -292,9 +301,9 @@ implementarse— sin una decisión de producto:
 
 | Funcionalidad | Pendiente de | Decisión necesaria |
 |---|---|---|
-| FEAT-USR-028, FEAT-USR-014 | **`P-1`** | **Si existe un `@identificador` de usuario.** El perfil lo muestra, pero se decidió que el nombre de usuario no existe |
-| FEAT-USR-031 | `P-4` | Qué es el nivel del usuario, cómo se sube y para qué sirve |
 | FEAT-USR-029 | `P-2` | Confirmar que una «obra publicada» es un concepto aparte de `Work` |
+| FEAT-USR-034 | `N-6` | Si el usuario puede recuperar **su propio** alias sin esperar 30 días |
+| FEAT-USR-035 | `N-11` | Forma de la URL de perfil: `/profile/{username}` o `/@{username}` |
 | FEAT-USR-002, FEAT-USR-020 | `OB-11` | Si el alta con Google crea la cuenta ya activada, dado que Google ya verifica el correo |
 | FEAT-USR-002, FEAT-USR-024 | `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia |
 | FEAT-USR-022 | `OB-7` | Si hay edad mínima de registro. Tiene implicaciones legales |
