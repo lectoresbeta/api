@@ -18,13 +18,13 @@ verdad sobre el alcance.**
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
 | `User` (USR) | 37 | 19 | 0 | 0 |
-| `Work` (WRK) | 16 | 3 | 0 | 0 |
+| `Work` (WRK) | 16 | 5 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
-| `Feedback` (FBK) | 10 | 0 | 0 | 0 |
-| `Community` (COM) | 35 | 9 | 0 | 0 |
-| `Credits` (CRD) | 15 | 4 | 0 | 0 |
+| `Feedback` (FBK) | 11 | 2 | 0 | 0 |
+| `Community` (COM) | 36 | 9 | 0 | 0 |
+| `Credits` (CRD) | 16 | 5 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **129** | **36** | **0** | **0** |
+| **Total** | **132** | **41** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -38,7 +38,9 @@ Estado global: **especificación inicial**. No hay código en `src/`.
 - **Crear una publicación** — [pantallas](../ui/create-post.md);
 - **Interacciones con una publicación** — [pantallas](../ui/post-interactions.md);
 - **Mis relatos** y **Más info** — [pantallas](../ui/my-works.md) y [pantallas](../ui/profile-more-info.md);
-- **Perfil de otro usuario** — [pantallas](../ui/user-profile.md).
+- **Perfil de otro usuario** — [pantallas](../ui/user-profile.md);
+- **Sección «Leer»**, catálogo con filtros — [pantallas](../ui/read-section.md);
+- **Lectura de un capítulo y formulario de corrección** — [pantallas](../ui/read-chapter.md).
 
 ---
 
@@ -138,9 +140,9 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-009 | Generar el registro de autoría | Writer | PENDING | BLOCKED | P1 | — |
 | FEAT-WRK-010 | Crear enlace público para leer y comentar sin sesión | Writer | PENDING | TODO | P2 | — |
 | FEAT-WRK-011 | Generar enlace para compartir en redes sociales y captar LB | Writer | PENDING | TODO | P2 | — |
-| FEAT-WRK-012 | Buscar obras por tipo, temática y valoración | Reader | PENDING | TODO | P1 | — |
+| FEAT-WRK-012 | Sección «Leer» — catálogo con filtros y ordenación | User | DRAFT | TODO | P1 | [ficha](work/FEAT-WRK-012-browse-catalogue.md) |
 | FEAT-WRK-013 | Calcular el número de palabras y el nivel de extensión | — (sistema) | PENDING | TODO | P0 | — |
-| FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | PENDING | TODO | P1 | — |
+| FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | DRAFT | TODO | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
 | FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | DRAFT | TODO | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
 | FEAT-WRK-016 | Estado de una obra — borrador, visible y en corrección | Writer | DRAFT | TODO | P0 | [ficha](work/FEAT-WRK-016-work-status.md) |
 
@@ -152,6 +154,14 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 > feedback. Eso sustituye a `Visibility` (`W-9`) y **reabre `R-1`**: si entrar en corrección
 > es una acción explícita del autor, es el sitio natural para reservar los créditos, y la
 > compensación entre contextos de `decision:0004` dejaría de hacer falta.
+>
+> **`FEAT-WRK-014` sube a `P0`.** El cuestionario parecía un accesorio de la obra y resulta
+> ser el instrumento con el que el autor **fija el precio de su propia corrección**: su
+> configuración determina a la vez lo que paga el autor y lo que gana el lector
+> (`FEAT-CRD-016`). Ninguna corrección puede existir sin él.
+>
+> `FEAT-WRK-012` se reformula: no es «buscar obras por tipo, temática y valoración» sino la
+> **sección «Leer»** completa, con filtro por estado, recuento total y paginación numerada.
 
 ---
 
@@ -185,7 +195,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 |---|---|---|---|---|---|---|
 | FEAT-FBK-001 | Dejar feedback sobre una obra o fragmento | BetaReader | PENDING | TODO | P0 | — |
 | FEAT-FBK-002 | Valorar una obra | BetaReader | PENDING | TODO | P1 | — |
-| FEAT-FBK-003 | Responder al cuestionario de la obra | BetaReader | PENDING | TODO | P1 | — |
+| FEAT-FBK-003 | Responder y enviar el cuestionario de corrección | BetaReader | DRAFT | TODO | P0 | [ficha](feedback/FEAT-FBK-003-answer-correction-questionnaire.md) |
 | FEAT-FBK-004 | Ver los comentarios recibidos | Writer | PENDING | TODO | P0 | — |
 | FEAT-FBK-005 | Contestar a un comentario recibido | Writer | PENDING | TODO | P1 | — |
 | FEAT-FBK-006 | Valorar positivamente un comentario recibido | Writer | PENDING | TODO | P1 | — |
@@ -193,7 +203,18 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-008 | Comentar mediante enlace público sin iniciar sesión | Guest | PENDING | BLOCKED | P2 | — |
 | FEAT-FBK-009 | Denunciar un comentario abusivo | User | PENDING | DEFERRED | P3 | — |
 | FEAT-FBK-010 | Mis correcciones — listado del feedback que he dado | User | PENDING | TODO | P2 | — |
+| FEAT-FBK-011 | Guardar un borrador de corrección | BetaReader | DRAFT | TODO | P1 | [ficha](feedback/FEAT-FBK-011-save-correction-draft.md) |
 
+> **Una corrección no es un comentario.** La pantalla de lectura tiene las dos cosas a la
+> vez: comentarios libres bajo el texto, que no mueven créditos y pertenecen a `Community`
+> (`FEAT-COM-036`), y el **cuestionario del autor**, que sí los mueve y pertenece a
+> `Feedback` (`FEAT-FBK-003`). Hasta ahora la documentación las confundía. Esto aclara `D-1`
+> y `F-1`: **lo que el sistema paga es el cuestionario respondido.**
+>
+> `FEAT-FBK-011` sale del botón «Guardar» del panel de corrección: un borrador **no publica
+> ningún evento ni mueve créditos**. Es el mismo agregado que la corrección, en estado
+> `DRAFT`.
+>
 > `FEAT-FBK-008` está `BLOCKED` por `A-3`, `C-5` y `F-6`: sin resolver si el comentarista
 > anónimo se identifica y si la operación mueve créditos, no se puede especificar.
 > `FEAT-FBK-009` no está en el material de partida; depende de que exista moderación (`V-1`).
@@ -241,6 +262,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-033 | Silenciar a un usuario | User | PENDING | TODO | P3 | — |
 | FEAT-COM-034 | Bloquear a un usuario | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-034-block-user.md) |
 | FEAT-COM-035 | Denunciar a un usuario | User | PENDING | DEFERRED | P3 | — |
+| FEAT-COM-036 | Interacciones sociales sobre un capítulo (like, comentario, compartir) | User | PENDING | TODO | P1 | — |
 
 > Los tres rankings están `BLOCKED` por `CM-4`: el material de partida dice "mejor valorados"
 > pero no define la fórmula de puntuación. Sin ella no hay especificación posible.
@@ -289,6 +311,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-013 | Créditos asociados a una obra (insignia de la tarjeta) | User | DRAFT | DEFERRED | P3 | [ficha](credits/FEAT-CRD-013-work-credit-badge.md) |
 | FEAT-CRD-014 | Modal informativo del sistema de créditos | User | DRAFT | TODO | P2 | [ficha](credits/FEAT-CRD-014-credits-info-modal.md) |
 | FEAT-CRD-015 | Pantalla con la tabla de puntuación de créditos | User | PENDING | TODO | P2 | — |
+| FEAT-CRD-016 | Coste y recompensa determinados por el cuestionario | — (sistema) | DRAFT | BLOCKED | P0 | [ficha](credits/FEAT-CRD-016-questionnaire-based-pricing.md) |
 
 > **`C-1` está resuelta.** Se adopta la **reserva previa**
 > ([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)): al conceder
@@ -341,9 +364,17 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-WRK-016 | `W-9` | Si `WorkStatus` sustituye a `Visibility` |
 | FEAT-COM-034 | `B-2`, `B-3` | Si bloquear revoca el acceso de lector beta y libera su retención, y qué pasa con el feedback que el autor **ya pagó** |
 | FEAT-USR-014 | `U-17` | Si el contador de correcciones es público y la lista no, de forma deliberada |
+| **FEAT-CRD-016** | **`P-1`, `P-2`, `P-3`** | **Cómo se traduce el cuestionario en coste y recompensa. Es el corazón económico del producto y ahora mismo no hay fórmula** |
+| FEAT-FBK-003, FEAT-WRK-014, FEAT-CRD-016 | **`R-2`** | Si la corrección es **por capítulo o por obra**. Cambia el modelo de datos y sobre qué se calcula el precio |
+| FEAT-WRK-012 | `L-9` | Cómo llega la insignia de créditos al catálogo sin acoplar `Work` con `Credits` |
+| FEAT-FBK-003 | `Q-3`, `Q-4` | Qué impide cobrar por correcciones vacías de contenido, y si el autor puede rechazarlas |
 
-Estas cinco decisiones son el camino crítico de la especificación. `C-1` es la más urgente:
-afecta al recorrido principal del producto.
+Estas decisiones son el camino crítico de la especificación. **`P-1`/`P-2`/`P-3` son ahora
+las más urgentes**: sin fórmula de precios no hay economía, y sin economía no hay producto.
+Implementarla con valores provisionales produciría saldos que después habría que corregir a
+mano.
+
+`R-2` es la segunda: afecta al modelo de datos de tres contextos a la vez.
 
 ### Decisiones que frenan el paso a `APPROVED`
 

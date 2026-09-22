@@ -69,7 +69,7 @@ aplicar el efecto.
 | `WorkContentUpdated` | Cambia el contenido | `Feedback`, `Credits` | `workId`, `wordCount`, `textTier` |
 | `WorkAccessModeChanged` | Cambia la modalidad | `Reading` | `workId`, `accessMode` |
 | `WorkDeleted` | Se elimina | `Reading`, `Feedback`, `Community` | `workId`, `authorId` |
-| `QuestionnaireUpdated` | Cambia el cuestionario | `Credits` | `workId`, `questionCount` |
+| `QuestionnaireUpdated` | Cambia el cuestionario | **`Credits`** | `workId`, `version`, `questionCount`, atributos que influyen en el precio (`P-1`) |
 
 **Ningún evento de `Work` transporta el contenido de la obra.**
 
@@ -93,7 +93,7 @@ para calcular la retención sin consultar a `Work`
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `FeedbackSubmitted` | Se envía un comentario | **`Credits`**, `Notification`, `Community` | `feedbackId`, `workId`, `chapterId?`, `authorId`, `reviewerId`, `betaReaderAccessId`, `textTier`, `questionCount`, `origin` |
+| `FeedbackSubmitted` | Un LB **envía una corrección**: el cuestionario del autor respondido | **`Credits`**, `Notification`, `Community` | `correctionId`, `workId`, `chapterId?`, `authorId`, `readerId`, `betaReaderAccessId`, `questionnaireVersion`, `submittedAt` |
 | `FeedbackRatedPositively` | El autor lo valora como útil | **`Credits`**, `Notification`, `Community` | `feedbackId`, `reviewerId`, `authorId` |
 | `FeedbackReplied` | El autor contesta | `Notification` | `feedbackId`, `reviewerId` |
 | `FeedbackHidden` | El autor lo oculta | `Community`, `Credits`* | `feedbackId`, `workId` |
@@ -102,7 +102,17 @@ para calcular la retención sin consultar a `Work`
 \* Solo si se decide revertir créditos al ocultar (`C-9`).
 
 `FeedbackSubmitted` es el evento más importante del sistema: provoca a la vez el abono al
-comentarista y el cargo al autor. **Nunca transporta el texto del comentario.**
+lector y la confirmación del cargo al autor. **Nunca transporta el texto de las respuestas.**
+
+Ese texto es material privado entre lector y autor, y una cola con reintentos y colas de
+fallos no es sitio para él. El evento dice **qué ha pasado**; quien necesite el contenido lo
+pide a `Feedback` con autorización.
+
+**Se publica al enviar, nunca al guardar un borrador** ([`FEAT-FBK-011`](../features/feedback/FEAT-FBK-011-save-correction-draft.md)).
+Un borrador no es un hecho de negocio.
+
+Tampoco lo es **comentar un capítulo**: eso es `ChapterCommented`, vive en `Community` y no
+mueve créditos. Confundir ambos haría que cada comentario suelto cobrase al autor.
 
 ## `Credits`
 
@@ -136,6 +146,8 @@ entidades ni de sus repositorios.
 | `UserUnblocked` | Se deshace el bloqueo | Los mismos | `blockerId`, `blockedId` |
 | `OnboardingAuthorSuggestionsShown` | *(opcional, analítica)* Se muestran sugerencias | — | `userId`, `suggestedAuthorIds` |
 | `DirectMessageSent` | Se envía un mensaje | `Notification` | `conversationId`, `senderId`, `recipientId` |
+| `ChapterCommented` | Se comenta un capítulo | `Notification` | `chapterId`, `workId`, `commentId`, `authorId`, `commentAuthorId` |
+| `ChapterLiked` | Se da «me gusta» a un capítulo | `Notification` | `chapterId`, `workId`, `authorId`, `byUserId` |
 
 `DirectMessageSent` **no transporta el contenido del mensaje**: la notificación avisa y
 enlaza, no reproduce.

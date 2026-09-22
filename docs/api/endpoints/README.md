@@ -9,9 +9,9 @@ duplica aquí.
 | Contexto | Documento | Estado |
 |---|---|---|
 | `User` | [user.md](user.md) | Esqueleto |
-| `Work` | [work.md](work.md) | Esqueleto |
+| `Work` | [work.md](work.md) | Catálogo y cuestionario especificados |
 | `Reading` | reading.md | Por crear |
-| `Feedback` | feedback.md | Por crear |
+| `Feedback` | [feedback.md](feedback.md) | Correcciones especificadas |
 | `Community` | community.md | Por crear |
 | `Credits` | credits.md | Por crear |
 | `Notification` | notification.md | Por crear |

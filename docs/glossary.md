@@ -13,7 +13,7 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Español (producto) | Inglés (código) | Definición |
 |---|---|---|
 | Obra / **Relato** | `Work` | Unidad literaria inédita publicada por un autor en la plataforma. Puede ser un relato breve o una novela. Contiene uno o varios fragmentos. **La interfaz la llama «relato»** («Mis relatos», «Explorar más relatos»). |
-| Fragmento | `Chapter` | Parte de una obra. Una obra corta tiene un único fragmento; una novela, muchos. Es la unidad sobre la que se lee y se comenta. |
+| Fragmento / **Parte** / Capítulo | `Chapter` | Parte de una obra. Una obra corta tiene un único fragmento; una novela, muchos. Es la unidad sobre la que se lee y se comenta. **La interfaz lo llama «Partes»** («1/3 Partes» en la tarjeta de obra) y «capítulo» en la pantalla de lectura («Siguiente capítulo»). El identificador sigue siendo `Chapter`. |
 | Autor / Escritor | `Writer` | Usuario en su rol de creador de obras. |
 | Lector | `Reader` | Usuario en su rol de consumidor de obras del catálogo. |
 | Lector beta (LB) | `BetaReader` | Lector con acceso concedido a una obra para darle feedback estructurado. Es el rol central de la plataforma. |
@@ -22,11 +22,13 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Invitación de LB | `AccessInvitation` | Propuesta del autor a un usuario concreto para que sea lector beta de su obra. |
 | Grupo de lectores beta | `BetaReaderGroup` | Conjunto de lectores beta gestionado por el autor para asignarlos a obras en bloque. |
 | Compañero de escritura | `WritingBuddy` | Vínculo recíproco entre dos usuarios que intercambian feedback de forma continuada. |
-| Comentario / Crítica / **Corrección** | `Feedback` | Aportación crítica de un lector beta sobre un fragmento u obra. Genera créditos a quien la hace y los consume al autor de la obra. **La interfaz lo llama «corrección»** cuando se mira desde quien lo aporta: «Mis correcciones», «corregir una obra». Es el mismo concepto. |
+| **Corrección** / Crítica | `Correction` (agregado de `Feedback`) | **El cuestionario del autor respondido y enviado por un lector beta.** Es lo que mueve los créditos: los consume al autor y los abona al lector. La interfaz la llama «corrección» («Mis correcciones», «Empezar corrección»). |
+| Comentario de un capítulo | `ChapterComment` | Reacción social libre bajo el texto de un capítulo, con respuestas y menciones. **No es una corrección**: no cuesta ni recompensa créditos y pertenece a `Community`, no a `Feedback`. |
+| Borrador de corrección | `Correction` con `status: DRAFT` | Corrección empezada y no enviada. Privada del lector; el autor no sabe que existe. No mueve créditos. |
 | Respuesta a comentario | `FeedbackReply` | Contestación del autor de la obra a un comentario recibido. |
 | Valoración del comentario | `FeedbackRating` | Marca del autor indicando que un comentario le ha resultado útil. Otorga créditos adicionales a quien comentó. |
 | Valoración de obra | `WorkRating` | Puntuación que un lector beta otorga a una obra. Alimenta los rankings. |
-| Cuestionario | `Questionnaire` | Conjunto de preguntas que el autor adjunta a una obra para dirigir el feedback. Tres preguntas sin coste; cada pregunta adicional encarece el comentario recibido. |
+| Cuestionario | `Questionnaire` | Conjunto de preguntas que el autor adjunta a una obra para dirigir el feedback. Puede ir desde un único campo de texto libre hasta varias preguntas concretas. **Su configuración determina a la vez lo que paga el autor y lo que gana el lector** (`FEAT-CRD-016`); la fórmula está pendiente. Se versiona: una corrección responde siempre a la versión con la que empezó. |
 | Pregunta del cuestionario | `QuestionnaireQuestion` | Pregunta individual del cuestionario. |
 | Respuesta del cuestionario | `QuestionnaireAnswer` | Respuesta de un lector beta a una pregunta del cuestionario. |
 | Registro de autoría | `AuthorshipRecord` | Prueba de autoría: huella criptográfica del contenido más marca temporal, generada en momentos definidos del ciclo de vida de la obra. |
@@ -136,7 +138,7 @@ El diseño escribe «Poeta»; se corrige a «Poesía» (`POETRY`), que es el gé
 | No usar | Usar en su lugar | Motivo |
 |---|---|---|
 | `Book`, `Novel`, `Story` | `Work` | Una obra puede ser cualquiera de las tres cosas. |
-| `Comment` a secas para la crítica de una obra | `Feedback` | `PostComment` y `Feedback` son conceptos distintos en contextos distintos. |
+| `Comment` a secas para la crítica de una obra | `Correction` | Tres conceptos distintos conviven: `PostComment` (muro), `ChapterComment` (bajo un capítulo) y `Correction` (el cuestionario respondido). Solo el tercero mueve créditos. |
 | `Review` | `Feedback` | Evita confusión con las revisiones de código y con reseñas públicas. |
 | `Page`, `Section`, `Part` | `Chapter` | Un único nombre para la subdivisión de la obra. |
 | `Points`, `Tokens`, `Coins` | `Credit` | El documento de producto habla de créditos. |

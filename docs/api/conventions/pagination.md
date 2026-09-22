@@ -7,7 +7,7 @@ Toda colección que pueda crecer se pagina. No hay endpoints que devuelvan lista
 **Propuesta: paginación por cursor**, salvo donde se justifique otra cosa.
 
 ```text
-GET /works?limit=20&cursor=<opaco>
+GET /posts?limit=20&cursor=<opaco>
 ```
 
 ```json
@@ -28,12 +28,37 @@ GET /works?limit=20&cursor=<opaco>
 Motivo: el muro principal, los comentarios y los mensajes directos son flujos donde se
 insertan elementos constantemente. Con `offset` se repiten o se saltan elementos al paginar.
 
-**Excepción**: los rankings usan paginación por página, porque la posición es parte del
-significado del dato.
+**Excepciones.** Dos tipos de colección se paginan **por página numerada**:
 
-```text
-GET /rankings/writers?page=1&perPage=20&period=MONTH&genre=...
-```
+1. **Los rankings**, porque la posición es parte del significado del dato.
+
+   ```text
+   GET /rankings/writers?page=1&perPage=20&period=MONTH&genre=...
+   ```
+
+2. **El catálogo de obras** (`GET /works`), porque la sección «Leer» muestra el total de
+   resultados —«948 historias»— y permite saltar a una página concreta
+   ([`FEAT-WRK-012`](../../features/work/FEAT-WRK-012-browse-catalogue.md)).
+
+   ```text
+   GET /works?page=1&perPage=20&genres[]=fiction&status=IN_CORRECTION&sort=relevance
+   ```
+
+   ```json
+   {
+     "data": [ ],
+     "pageInfo": { "page": 1, "perPage": 20, "total": 948, "totalPages": 48 }
+   }
+   ```
+
+El criterio que separa los dos casos: **un flujo cronológico se pagina por cursor; un
+catálogo estable sobre el que se salta, por página.** El cursor evita repetir o perder
+elementos cuando se insertan constantemente por arriba, que es lo que le pasa a un muro y no
+a un catálogo.
+
+El precio de la página numerada es el recuento total: `COUNT(*)` con filtros combinados es la
+consulta cara de esa pantalla. Si el volumen lo exige, un total aproximado es preferible a
+una pantalla lenta.
 
 El cursor es **opaco**: el cliente no lo interpreta ni lo construye.
 

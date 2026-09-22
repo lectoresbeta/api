@@ -149,6 +149,32 @@ Coste de recibir un comentario:
 coste = créditos(TextTier) + max(0, númeroDePreguntas − 3)
 ```
 
+> ### Esta fórmula está superada (`FEAT-CRD-016`)
+>
+> Producto ha confirmado que **la configuración del cuestionario determina a la vez el coste
+> del autor y la recompensa del lector**. El cuestionario deja de ser un **recargo** sobre el
+> precio del texto y pasa a ser **el principal determinante** del precio, en las dos
+> direcciones.
+>
+> | | Fórmula de arriba | Modelo confirmado |
+> |---|---|---|
+> | Coste al autor | `créditos(TextTier) + max(0, preguntas − 3)` | Lo determina el cuestionario |
+> | Recompensa al lector | `créditos(TextTier)` | También lo determina el cuestionario |
+> | Relación entre ambas | Independientes | **Salen de la misma configuración** |
+>
+> La fórmula nueva **no existe todavía**. `FEAT-CRD-016` está `BLOCKED` por tres preguntas:
+> qué atributos del cuestionario pesan (`P-1`), si el `TextTier` sigue interviniendo (`P-2`)
+> y si el autor paga exactamente lo que el lector recibe (`P-3`).
+>
+> `P-2` es la crítica: si el precio dependiera **solo** del cuestionario, corregir una novela
+> de 50.000 palabras costaría lo mismo que un microcuento con la misma pregunta, y nadie
+> leería novelas. El esfuerzo del lector es **leer**, no solo responder.
+>
+> `P-3` decide si el sistema conserva, crea o destruye crédito. No es un detalle.
+>
+> Hasta que existan esas respuestas, la fórmula de arriba se mantiene documentada como punto
+> de partida, **no como especificación vigente**.
+
 ## Eventos consumidos
 
 | Evento | Origen | Efecto |
@@ -157,7 +183,8 @@ coste = créditos(TextTier) + max(0, númeroDePreguntas − 3)
 | `AccountActivated` | `User` | Abona los **+20** créditos de bienvenida |
 | `BetaReaderAccessGranted` | `Reading` | **Retiene** el coste de un feedback (`FEAT-CRD-009`) |
 | `BetaReaderAccessRevoked` | `Reading` | **Libera** la retención |
-| `FeedbackSubmitted` | `Feedback` | Abona al autor del comentario según `TextTier`; **confirma** la retención del autor de la obra |
+| `FeedbackSubmitted` | `Feedback` | Abona al lector que **envió la corrección**; **confirma** la retención del autor de la obra |
+| `QuestionnaireUpdated` | `Work` | Recalcula coste y recompensa de esa obra. **No altera retenciones ya hechas** |
 | `FeedbackRatedPositively` | `Feedback` | Abona +5 a quien escribió el comentario |
 | `InvitedUserParticipated` | `User` | Abona +5 al invitador |
 | `UserDeleted` | `User` | Cierra la cuenta de créditos según la política de retención (`V-4`) |
@@ -206,8 +233,9 @@ existe, el evento se descarta sin efecto.
 - `RN-3` Un mismo `eventId` no produce efecto más de una vez.
 - `RN-4` Ningún contexto externo determina el importe de un movimiento.
 - `RN-5` Todo movimiento registra el hecho de negocio que lo originó y es auditable.
-- `RN-6` El coste de recibir un comentario se calcula con el nivel del texto y el número de
-  preguntas del cuestionario **en el momento en que se envía el comentario**.
+- `RN-6` El importe queda fijado **en el momento en que se compromete el crédito** —la
+  retención—, no al enviar la corrección. Quien empezó a corregir con unas condiciones las
+  conserva aunque el autor cambie el cuestionario después (`FEAT-CRD-016` `RN-2`, `RN-3`).
 - `RN-7` Los créditos de bienvenida se abonan al **activar** la cuenta, no al crearla. Una
   cuenta sin verificar nunca tiene saldo. Ver
   [`decision:0003`](../decisions/0003-write-operations-require-activated-account.md).

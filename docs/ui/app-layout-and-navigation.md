@@ -53,6 +53,15 @@ porque condiciona qué datos necesita **cualquier** página, no solo la Home.
 
 **Sin footer.** La nota de diseño lo dice de forma explícita: *«SIN FOOTER»*.
 
+> **Contradicción abierta (`L-5`).** La [sección «Leer»](read-section.md) **sí** lleva pie de
+> página, con «© Lectores beta», «Política de privacidad», «Política de cookies», «Aviso
+> legal» e iconos de redes sociales.
+>
+> O el layout tiene footer y esta nota está obsoleta, o el footer es exclusivo de algunas
+> pantallas. Para el backend la consecuencia no es el footer sino los enlaces: aparecen
+> **tres documentos legales distintos** donde hasta ahora solo constaba «Terms &
+> Conditions», y uno de ellos es una política de cookies. Afecta a `FEAT-USR-024`.
+
 ## Menú lateral
 
 Ancho fijo de 241 px, siempre visible.

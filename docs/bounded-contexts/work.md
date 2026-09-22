@@ -40,7 +40,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 |---|---|
 | `Manuscript` | La obra: metadatos, **estado**, modalidad de acceso |
 | `Chapter` | Fragmentos y su contenido |
-| `Questionnaire` | Preguntas que dirigen el feedback |
+| `Questionnaire` | Preguntas que dirigen el feedback. **Versionado**: una corrección responde siempre a la versión con la que empezó. Su configuración determina el precio (`FEAT-CRD-016`) |
 | `Authorship` | Registro de autoría inmutable |
 | `PublicLink` | Acceso sin sesión a una obra |
 | `Ingestion` | Importación desde `.doc`, `.docx`, `.pdf`, `.txt` |
@@ -79,7 +79,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | `WorkContentUpdated` | Cambia el contenido y posiblemente el `TextTier` | `Credits` (referencia de coste), `Feedback` |
 | `WorkAccessModeChanged` | Cambia la modalidad de acceso | `Reading` |
 | `WorkDeleted` | Se elimina la obra | `Reading`, `Feedback`, `Community` |
-| `QuestionnaireUpdated` | Cambia el número de preguntas | `Credits` (coste por pregunta adicional) |
+| `QuestionnaireUpdated` | Cambia el cuestionario: nueva versión | **`Credits`** (recalcula coste **y** recompensa de esa obra) |
 
 ## Reglas de negocio
 

@@ -11,9 +11,16 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 > «corregir una obra», «poner tu obra en corrección». Es el mismo concepto visto desde quien
 > lo aporta. El identificador en código sigue siendo `Feedback`.
 
+> **Precisión importante (2026-09-22).** Lo que este contexto posee es la **corrección**: el
+> cuestionario del autor respondido y enviado. **Los comentarios libres bajo un capítulo no
+> son suyos**, son interacción social de `Community` (`FEAT-COM-036`) y no mueven créditos.
+> Ambos conviven en la misma pantalla, lo que los hacía fáciles de confundir. Ver
+> [`../ui/read-chapter.md`](../ui/read-chapter.md).
+
 ## Qué posee
 
-- Comentarios sobre obras y fragmentos.
+- Correcciones: el cuestionario de la obra respondido por un lector beta.
+- Borradores de corrección, privados de quien los escribe (`FEAT-FBK-011`).
 - Respuestas al cuestionario de la obra.
 - Respuestas del autor a los comentarios.
 - Valoración del comentario por parte del autor (útil / no útil).
@@ -30,11 +37,13 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 | El derecho a comentar (lo **consume** como hecho) | `Reading` |
 | El importe en créditos de un comentario | `Credits` |
 | Los comentarios de las publicaciones del muro | `Community` |
+| **Los comentarios libres bajo un capítulo** | `Community` (`FEAT-COM-036`) |
 
 ## Conceptos
 
 | Concepto | Responsabilidad |
 |---|---|
+| `Correction` | La corrección: borrador, envío e inmutabilidad posterior |
 | `Feedback` | El comentario crítico y su ciclo de vida |
 | `QuestionnaireAnswer` | Respuestas a las preguntas del autor |
 | `Reply` | Respuesta del autor al comentario |
@@ -46,6 +55,7 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 |---|---|---|
 | `Feedback` | `FeedbackId` | Lo deja quien tiene acceso vigente, o quien usa un enlace público. Contiene sus respuestas al cuestionario, la respuesta del autor y su valoración. |
 | `WorkRating` | `WorkRatingId` | Una valoración por lector beta y obra. |
+| `Correction` | `CorrectionId` | **Una por lector y obra** (índice único). Responde a una versión concreta del cuestionario. En `DRAFT` es privada; en `SUBMITTED` es inmutable, porque el autor ya ha pagado por ella. |
 
 ### Value objects y enums
 
@@ -54,6 +64,8 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 | `FeedbackContent` | Texto; longitud mínima por definir (`F-2`) |
 | `FeedbackVisibility` | `VISIBLE`, `HIDDEN_BY_AUTHOR` |
 | `FeedbackOrigin` | `BETA_READER`, `PUBLIC_LINK` |
+| `CorrectionStatus` | `DRAFT`, `SUBMITTED` |
+| `AnswerText` | Longitud mínima y máxima las fija la pregunta (`R-5`) |
 | `RatingValue` | Escala por definir (`F-3`) |
 
 ## Eventos publicados
