@@ -17,14 +17,14 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 37 | 18 | 0 | 0 |
+| `User` (USR) | 37 | 19 | 0 | 0 |
 | `Work` (WRK) | 16 | 3 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 10 | 0 | 0 | 0 |
-| `Community` (COM) | 32 | 8 | 0 | 0 |
+| `Community` (COM) | 35 | 9 | 0 | 0 |
 | `Credits` (CRD) | 15 | 4 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **126** | **34** | **0** | **0** |
+| **Total** | **129** | **36** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -37,7 +37,8 @@ Estado global: **especificación inicial**. No hay código en `src/`.
 - **Gestión de la foto de perfil** — [pantallas](../ui/profile-photo.md);
 - **Crear una publicación** — [pantallas](../ui/create-post.md);
 - **Interacciones con una publicación** — [pantallas](../ui/post-interactions.md);
-- **Mis relatos** y **Más info** — [pantallas](../ui/my-works.md) y [pantallas](../ui/profile-more-info.md).
+- **Mis relatos** y **Más info** — [pantallas](../ui/my-works.md) y [pantallas](../ui/profile-more-info.md);
+- **Perfil de otro usuario** — [pantallas](../ui/user-profile.md).
 
 ---
 
@@ -60,7 +61,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-011 | Configurar recepción de propuestas de LB y writing buddy | User | PENDING | TODO | P2 | — |
 | FEAT-USR-012 | Configurar notificaciones por email | User | PENDING | TODO | P2 | — |
 | FEAT-USR-013 | Eliminar cuenta con confirmación | User | PENDING | BLOCKED | P2 | — |
-| FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | PENDING | TODO | P1 | — |
+| FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-014-view-public-profile.md) |
 | FEAT-USR-015 | Configurar información de la página de autor (bio, foto, referencias) | Writer | PENDING | TODO | P2 | — |
 | FEAT-USR-016 | Personalizar página de autor (fuentes, colores, fondos) | Writer | PENDING | TODO | P3 | — |
 | FEAT-USR-017 | Buscar autores por nombre o temática | User | PENDING | TODO | P1 | — |
@@ -237,6 +238,9 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-030 | Me gusta en un comentario o respuesta | User | PENDING | TODO | P2 | — |
 | FEAT-COM-031 | Responder a un comentario | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-031-reply-to-comment.md) |
 | FEAT-COM-032 | Menciones a usuarios | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-032-mentions.md) |
+| FEAT-COM-033 | Silenciar a un usuario | User | PENDING | TODO | P3 | — |
+| FEAT-COM-034 | Bloquear a un usuario | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-034-block-user.md) |
+| FEAT-COM-035 | Denunciar a un usuario | User | PENDING | DEFERRED | P3 | — |
 
 > Los tres rankings están `BLOCKED` por `CM-4`: el material de partida dice "mejor valorados"
 > pero no define la fórmula de puntuación. Sin ella no hay especificación posible.
@@ -246,6 +250,11 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 > («Publicar para cualquiera») y **no se conocen las demás opciones**. Sin ellas no hay
 > modelo ni filtrado del muro. El mismo modal revela que se puede **adjuntar vídeo**, que no
 > estaba contemplado y arrastra transcodificación y coste de almacenamiento (`C-2`).
+>
+> `FEAT-COM-033` a `FEAT-COM-035` salen del menú «···» del perfil ajeno. **Silenciar y
+> bloquear no son lo mismo**: silenciar es una preferencia de visualización y bloquear es una
+> regla de acceso que atraviesa varios contextos. `FEAT-COM-035` queda `DEFERRED` como las
+> otras dos denuncias: no hay moderación que las atienda (`V-1`).
 >
 > `FEAT-COM-030` a `FEAT-COM-032` salen de la secuencia de interacciones: los comentarios se
 > pueden valorar, admiten respuestas anidadas y llevan **menciones**. Una mención se guarda
@@ -330,6 +339,8 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-COM-006, FEAT-COM-024, rankings | `CM-4` | Una única fórmula de relevancia para el muro, los comentarios y los rankings |
 | FEAT-CRD-009, FEAT-WRK-016 | **`R-1`** | Si la reserva es por lector o por obra. **El estado «En corrección» apunta a por obra** y eliminaría la compensación. Cerrar antes de implementar |
 | FEAT-WRK-016 | `W-9` | Si `WorkStatus` sustituye a `Visibility` |
+| FEAT-COM-034 | `B-2`, `B-3` | Si bloquear revoca el acceso de lector beta y libera su retención, y qué pasa con el feedback que el autor **ya pagó** |
+| FEAT-USR-014 | `U-17` | Si el contador de correcciones es público y la lista no, de forma deliberada |
 
 Estas cinco decisiones son el camino crítico de la especificación. `C-1` es la más urgente:
 afecta al recorrido principal del producto.

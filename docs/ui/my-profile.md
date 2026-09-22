@@ -236,7 +236,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | FEAT-COM-026 | **Nueva** — muro propio | `PENDING` |
 | FEAT-COM-027 | **Nueva** — seguidos y seguidores | `PENDING` |
 | FEAT-FBK-010 | **Nueva** — mis correcciones | `PENDING` |
-| FEAT-USR-014 | Ver perfil público: esta es su variante propia y editable | `PENDING` |
+| FEAT-USR-014 | Ver perfil público: esta es su variante propia y editable | `DRAFT` |
 | FEAT-USR-015 | Página de autor: puede ser esta misma pantalla | `PENDING`, ver `P-5` |
 | FEAT-WRK-004 | «Mis relatos» es una vista de las obras propias | `PENDING` |
 
@@ -254,7 +254,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | P-8 | ¿«Mis Amigos» es el nombre correcto? | Capturas posteriores lo escriben «Mis amigos», corrigiendo la mayúscula. El nombre sigue sugiriendo reciprocidad donde no la hay |
 | P-9 | ¿Las obras publicadas se validan de algún modo, o el autor declara lo que quiera? | Un perfil con méritos inventados afecta a la confianza |
 | P-10 | ¿El enlace «Comprar» apunta fuera de la plataforma? ¿Hay afiliación? | Enlaces salientes y sus implicaciones |
-| P-11 | ¿Qué ve el visitante en la vista pública de este perfil? | No hay capturas de la vista no editable |
+| P-11 | ¿Qué ve el visitante en la vista pública de este perfil? | **Resuelta:** ver [user-profile.md](user-profile.md). Pierde la pestaña de correcciones y gana las acciones sociales |
 
 ## Erratas del diseño
 

@@ -132,6 +132,8 @@ entidades ni de sus repositorios.
 | `PostReposted` | Se repostea una publicación | `Notification` | `postId`, `originalAuthorId`, `repostedBy` |
 | `UserMentioned` | Se menciona a alguien en un comentario | `Notification` | `mentionedUserId`, `byUserId`, `postId`, `commentId` |
 | `AuthorSubscribed` | Un usuario sigue a un autor | `Notification` | `subscriberId`, `authorId` |
+| `UserBlocked` | Un usuario bloquea a otro | `Reading`, `Feedback`, `Credits`, `Notification` | `blockerId`, `blockedId` |
+| `UserUnblocked` | Se deshace el bloqueo | Los mismos | `blockerId`, `blockedId` |
 | `OnboardingAuthorSuggestionsShown` | *(opcional, analítica)* Se muestran sugerencias | — | `userId`, `suggestedAuthorIds` |
 | `DirectMessageSent` | Se envía un mensaje | `Notification` | `conversationId`, `senderId`, `recipientId` |
 

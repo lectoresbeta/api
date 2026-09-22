@@ -32,6 +32,7 @@ seguimiento de autores, los mensajes directos y los rankings.
 | `Post` | Publicaciones del muro, su intención y su formato |
 | `Interaction` | Comentarios y respuestas, apoyos, reacciones, reposts, compartidos y menciones |
 | `Subscription` | Seguimiento de autores, sus sugerencias y los listados de seguidos y seguidores |
+| `Relationship` | Silenciados y bloqueados |
 | `Recommendation` | Read models que alimentan la Home: obras recomendadas y autores sugeridos |
 | `Messaging` | Mensajes directos y conversaciones |
 | `Ranking` | Read models de escritores, obras y lectores |
@@ -100,6 +101,8 @@ periodo.
   poder.
 - `RN-9` **Mencionar a alguien no le da acceso a nada** y no se le avisa de contenido que no
   puede ver.
+- `RN-11` **`Community` no revoca accesos de lector beta ni toca créditos** al bloquear:
+  publica `UserBlocked` y cada contexto decide su reacción.
 - `RN-10` Las menciones se guardan como `UserId`. Guardarlas como texto rompería al cambiar
   el nombre y, con el reciclado de nombres de usuario, podría señalar a otra persona.
 - `RN-6` Este contexto **no consulta** las tablas de `Work`, `User` ni `Credits` para pintar

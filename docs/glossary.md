@@ -39,6 +39,8 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Reacción | `Reaction` | Respuesta emocional con emoji a una publicación. |
 | Apoyo / Me gusta | `Like` | Apoyo simple a una publicación, **a un comentario o a una respuesta**. Se distingue de `Reaction` y, sobre todo, de `FeedbackRating`, que sí mueve créditos. |
 | Suscripción a autor | `AuthorSubscription` | Seguimiento de un autor para recibir avisos de sus publicaciones y obras nuevas. |
+| Silenciar | `Mute` | Ocultar el contenido de alguien **sin que lo sepa** y sin romper el seguimiento. Preferencia de visualización. |
+| Bloquear | `Block` | Cortar el contacto con alguien: deshace los seguimientos, corta los mensajes y le impide interactuar. **Regla de acceso**, no preferencia. |
 | Mensaje directo (MD) | `DirectMessage` | Mensaje privado entre dos usuarios. Requiere que el destinatario los tenga habilitados. |
 | Ranking | `Ranking` | Clasificación de escritores, obras o lectores, filtrable por temática y periodo. |
 | Repost | `Repost` | Republicación de una publicación ajena en el propio muro, sin texto propio. Referencia al original; no lo copia ni amplía su audiencia. Distinto de compartir fuera de la plataforma. |

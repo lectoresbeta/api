@@ -17,6 +17,7 @@ precisa de qué funcionalidades existen y cómo se comportan.
 | [post-interactions.md](post-interactions.md) | Comentar, valorar un comentario, responder y mencionar | `FEAT-COM-006`, `030`–`032` | `DRAFT` |
 | [my-works.md](my-works.md) | «Mis relatos»: filtros por estado, ordenación y estados de una obra | `FEAT-WRK-015`, `FEAT-WRK-016` | `DRAFT` |
 | [profile-more-info.md](profile-more-info.md) | «Más info»: obras publicadas y premios | `FEAT-USR-029`, `FEAT-USR-030` | `DRAFT` |
+| [user-profile.md](user-profile.md) | Perfil ajeno: pestañas, relación, seguir, silenciar, bloquear y denunciar | `FEAT-USR-014`, `FEAT-COM-033`–`035` | `DRAFT` |
 
 El resto se irá incorporando a medida que lleguen las páginas de Figma.
 
