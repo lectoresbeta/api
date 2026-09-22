@@ -99,6 +99,12 @@ condiciona el diseño de dos bounded contexts y el recorrido principal del produ
 | **Complejidad** | Baja | Alta: reservas, expiración, compensación | Media, y con carrera entre consulta y gasto |
 | **Riesgo** | Saldo negativo sin límite | Créditos inmovilizados en accesos que no comentan | Sigue sin garantizar el cobro |
 
+> **El diseño ya se inclina por B.** El modal informativo de créditos dice que los créditos
+> se usan para «poner tus obras en corrección», es decir, **al abrir la obra a feedback y no
+> al recibir cada comentario**. Ver `M-1` en
+> [`FEAT-CRD-014`](FEAT-CRD-014-credits-info-modal.md). No se ha cambiado el modelo por
+> cuenta propia, pero es un argumento fuerte a favor de la reserva previa.
+
 **Recomendación:** opción **B**, con la opción **A** como paso intermedio para una primera
 versión. B es la única que protege a la vez el trabajo del lector y el saldo del autor, y
 lo hace **en el momento correcto**: el acceso es el compromiso, no el comentario. A es
@@ -158,6 +164,7 @@ cobrar dos veces.
 | C-7 | ¿El `textTier` se congela al conceder el acceso o se toma al enviar el comentario? | Un autor podría ampliar el texto tras conceder accesos |
 | C-9 | ¿Se devuelven créditos si el autor oculta el comentario por abusivo? | Protección frente a feedback malicioso |
 | C-10 | ¿El nivel se calcula sobre la obra completa o sobre el fragmento comentado? | Con novelas cambia radicalmente el coste |
+| M-1 | ¿Se paga al poner la obra en corrección en vez de por comentario recibido? | El modal de créditos lo sugiere. Es la misma decisión que `C-1`, vista desde el diseño |
 
 ## Estado
 

@@ -114,6 +114,11 @@ El documento de partida plantea sustituir los tramos por una fórmula continua s
 número exacto de palabras, para evitar el salto brusco entre tramos (un texto de 3.004
 palabras cuesta 40 créditos y uno de 2.999 cuesta 15).
 
+> **Indicio de que ya se ha adoptado.** Las tarjetas de obra del diseño de la Home muestran
+> 6 y 8 créditos para dos obras que caen en el **mismo tramo**. Una tabla por tramos no puede
+> producir dos valores distintos para el mismo tramo, así que o son cifras de maqueta o el
+> diseño asume el cálculo continuo. Ver `C-12` y `FEAT-CRD-013`.
+
 Registrado como `FEAT-CRD-010`, estado `DEFERRED`. La fórmula concreta no está definida.
 El diseño del dominio debe permitir sustituir la estrategia de cálculo **sin rediseñar el
 contexto**: la regla vive tras una abstracción, no repartida en condicionales.
@@ -187,7 +192,7 @@ existe, el evento se descarta sin efecto.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **C-1** | **¿Qué ocurre si el autor no tiene saldo para recibir un comentario?** ¿Se bloquea el envío del feedback, se entrega y el saldo queda negativo, o se retiene el comentario hasta que haya saldo? | **Bloqueante.** Define el flujo entre `Feedback` y `Credits` y el recorrido J-1 completo |
+| **C-1** | **¿Qué ocurre si el autor no tiene saldo para recibir un comentario?** ¿Se bloquea el envío del feedback, se entrega y el saldo queda negativo, o se retiene el comentario hasta que haya saldo? **El modal de créditos del diseño apunta a otra mecánica**: pagar al «poner la obra en corrección», es decir, por adelantado (`M-1`) | **Bloqueante.** Define el flujo entre `Feedback` y `Credits` y el recorrido J-1 completo |
 | C-2 | ¿Se reservan créditos al conceder acceso a un lector beta? | Opción B de [04-cross-context-communication.md](../architecture/04-cross-context-communication.md) |
 | C-3 | ¿Las cantidades son configurables en caliente o van en el código? | Afecta a la auditoría: hay que saber qué regla se aplicó en cada movimiento |
 | C-4 | ¿Se puede comentar la misma obra varias veces y cobrar cada vez? | Vector de abuso directo (`D-2`) |
@@ -196,5 +201,8 @@ existe, el evento se descarta sin efecto.
 | C-7 | ¿Cuándo se fija el `TextTier`: al crear la obra, al recibir cada comentario, o se congela al conceder el acceso? | Un autor podría ampliar el texto tras recibir accesos |
 | C-8 | ¿Existe ajuste manual por parte de la plataforma? | Requiere `MANUAL_ADJUSTMENT` y un actor `Admin` (`V-1`) |
 | C-11 | ¿Qué ocurre con el saldo de una cuenta que nunca se activa? | Hoy no tiene: no se abona nada hasta activar |
+| **C-12** | **¿La insignia de créditos de una obra es lo que gana el lector o lo que cuesta al autor?** Y las cifras del diseño no coinciden con la tabla: dos obras del mismo tramo muestran 6 y 8 | `FEAT-CRD-013`, hoy `BLOCKED`. Si es cálculo continuo, `FEAT-CRD-010` deja de estar diferido |
+| C-13 | ¿Qué es una obra «en corrección»? | Vocabulario del modal de créditos sin equivalente en el modelo (`M-2`) |
+| C-14 | ¿Dónde se consulta la tabla de puntuación de créditos? | `FEAT-CRD-015`: el modal enlaza a una pantalla que no existe |
 | C-9 | ¿Se retiran créditos si el autor oculta un comentario por abusivo? | Protección frente a feedback de baja calidad |
 | C-10 | ¿El nivel se calcula sobre la obra completa o sobre el fragmento comentado? | Con novelas por fragmentos cambia radicalmente el coste (`D-1`) |

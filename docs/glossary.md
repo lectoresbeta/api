@@ -39,6 +39,11 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Suscripción a autor | `AuthorSubscription` | Seguimiento de un autor para recibir avisos de sus publicaciones y obras nuevas. |
 | Mensaje directo (MD) | `DirectMessage` | Mensaje privado entre dos usuarios. Requiere que el destinatario los tenga habilitados. |
 | Ranking | `Ranking` | Clasificación de escritores, obras o lectores, filtrable por temática y periodo. |
+| Repost | `Repost` | Republicación de una publicación ajena en el propio muro. Distinto de compartir fuera de la plataforma. |
+| Compartir | `Share` | Difusión de una publicación **fuera** de Lectores Beta. |
+| Publicación guardada | `SavedPost` | Publicación que el usuario archiva para leer después. Privada. |
+| Obra en corrección | *(por definir)* | Obra abierta a recibir feedback. Vocabulario que aparece en el modal de créditos del diseño; su equivalente en inglés y su encaje en el ciclo de vida de `Work` están **sin decidir** (`M-2`). |
+| Tour | `Tour` | Secuencia de globos que presenta la aplicación la primera vez. Su estado se guarda por usuario y por tour. |
 | Crédito | `Credit` | Unidad de la economía interna que equilibra dar y recibir feedback. |
 | Saldo de créditos | `CreditBalance` | Créditos disponibles de un usuario. |
 | Movimiento de créditos | `CreditTransaction` | Registro inmutable de una variación del saldo, con su motivo y su origen. |
@@ -64,7 +69,8 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 |---|---|---|
 | Modalidad de acceso LB | `BetaReaderAccessMode` | `PUBLIC` (cualquiera se convierte en LB automáticamente), `ON_REQUEST` (requiere aprobación del autor), `PRIVATE` (solo por invitación del autor) |
 | Visibilidad | `Visibility` | `VISIBLE`, `HIDDEN` — aplicable a obra y a fragmento |
-| Tipo de publicación | `PostType` | `GENERAL`, `LOOKING_FOR_BETA_READERS`, `LOOKING_FOR_WRITING_BUDDY`, `OFFERING_AS_BETA_READER` |
+| Tipo de publicación | `PostType` | **Intención**: `GENERAL`, `LOOKING_FOR_BETA_READERS`, `LOOKING_FOR_WRITING_BUDDY`, `OFFERING_AS_BETA_READER` |
+| Formato de publicación | `PostFormat` | **Forma del contenido**: `TEXT`, `TEXT_IMAGE`, `ARTICLE_LINK`. Dimensión independiente de `PostType` |
 | Estado de solicitud | `RequestStatus` | `PENDING`, `ACCEPTED`, `REJECTED`, `CANCELLED`, `EXPIRED` |
 | Nivel de texto | `TextTier` | `MICRO_STORY`, `SHORT_STORY`, `BRIEF_TALE`, `MEDIUM_TALE`, `LONG_TALE`, `MICRO_NOVEL`, `SHORT_NOVEL`, `MEDIUM_NOVEL` |
 | Motivo de movimiento de créditos | `CreditTransactionReason` | `ACCOUNT_ACTIVATED`, `FEEDBACK_GIVEN`, `FEEDBACK_RATED_POSITIVELY`, `INVITED_USER_PARTICIPATED`, `FEEDBACK_RECEIVED`, `MANUAL_ADJUSTMENT` |

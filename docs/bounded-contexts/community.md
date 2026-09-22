@@ -29,9 +29,10 @@ seguimiento de autores, los mensajes directos y los rankings.
 
 | Concepto | Responsabilidad |
 |---|---|
-| `Post` | Publicaciones del muro y su tipo |
-| `Interaction` | Comentarios, reacciones y apoyos |
-| `Subscription` | Seguimiento de autores |
+| `Post` | Publicaciones del muro, su intención y su formato |
+| `Interaction` | Comentarios, apoyos, reacciones, reposts y compartidos |
+| `Subscription` | Seguimiento de autores y sus sugerencias |
+| `Recommendation` | Read models que alimentan la Home: obras recomendadas y autores sugeridos |
 | `Messaging` | Mensajes directos y conversaciones |
 | `Ranking` | Read models de escritores, obras y lectores |
 
@@ -47,7 +48,8 @@ seguimiento de autores, los mensajes directos y los rankings.
 
 | Nombre | Valores |
 |---|---|
-| `PostType` | `GENERAL`, `LOOKING_FOR_BETA_READERS`, `LOOKING_FOR_WRITING_BUDDY`, `OFFERING_AS_BETA_READER` |
+| `PostType` | Intención: `GENERAL`, `LOOKING_FOR_BETA_READERS`, `LOOKING_FOR_WRITING_BUDDY`, `OFFERING_AS_BETA_READER` |
+| `PostFormat` | Formato: `TEXT`, `TEXT_IMAGE`, `ARTICLE_LINK` |
 | `RankingType` | `WRITERS`, `WORKS`, `READERS` |
 | `RankingPeriod` | Por definir (`CM-3`) |
 
@@ -87,6 +89,11 @@ periodo.
 - `RN-2` Un usuario no se suscribe a sí mismo.
 - `RN-3` Una reacción por usuario y publicación; cambiarla sustituye la anterior.
 - `RN-4` El apoyo (`Like`) y la reacción con emoji son mecanismos distintos y coexisten.
+  **El diseño de la Home solo muestra el apoyo**, así que la coexistencia está en duda (`H-5`).
+- `RN-5` `PostType` y `PostFormat` son dimensiones independientes: una publicación buscando
+  lectores beta puede ser de cualquier formato.
+- `RN-6` Este contexto **no consulta** las tablas de `Work`, `User` ni `Credits` para pintar
+  la Home: mantiene proyecciones alimentadas por eventos de integración.
 
 ## Preguntas abiertas
 
@@ -101,3 +108,7 @@ periodo.
 | CM-7 | ¿Los mensajes directos necesitan tiempo real (WebSocket)? | Podría justificar separar `Messaging` (`BC-1`) |
 | CM-8 | ¿Se puede bloquear a un usuario concreto? | Modelo de mensajería |
 | CM-9 | ¿Una publicación de tipo `LOOKING_FOR_BETA_READERS` enlaza con la obra y permite solicitar acceso desde ahí? | Integración con `Reading` |
+| CM-10 | ¿Qué compone el muro de quien no sigue a nadie? (`H-8`) | Define si es cronológico por seguidos o algorítmico |
+| CM-11 | ¿Un repost se puede comentar de forma independiente del original? | Modelo de `Repost` |
+| CM-12 | ¿«Ocultar post» oculta ese post concreto o todos los de ese autor? | `FEAT-COM-022` |
+| CM-13 | ¿Las publicaciones guardadas son privadas y dónde se consultan? | `FEAT-COM-021`, pantalla sin diseñar |

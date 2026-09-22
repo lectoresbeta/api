@@ -90,7 +90,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | W-2 | ¿Se versiona el contenido al editar o se sobrescribe? (`D-4`, `P-3`) | Afecta a autoría y a la validez del feedback previo |
 | W-3 | ¿Qué formatos exactos se aceptan? El documento dice `.doc`, `.pdf`, `.txt`; ¿también `.docx`, `.odt`, `.epub`? | Adaptadores de ingesta |
 | W-4 | ¿Cómo se dividen en fragmentos los ficheros subidos: automáticamente por capítulos, o a mano? | Complejidad de la ingesta |
-| W-5 | ¿Existe un estado de publicación (`DRAFT`/`PUBLISHED`) además de la visibilidad? | Modelo de ciclo de vida |
+| W-5 | ¿Existe un estado de publicación (`DRAFT`/`PUBLISHED`) además de la visibilidad? **El modal de créditos habla de poner una obra «en corrección»**, lo que sugiere un estado más | Modelo de ciclo de vida. Ver `M-2` |
 | W-6 | ¿La visibilidad de un fragmento es independiente de la de la obra? | Reglas de autorización |
 | W-7 | ¿El catálogo de temáticas (`Genre`) es cerrado o libre? | Búsqueda y rankings |
 | W-8 | ¿Se puede limitar el número de lectores beta de una obra? | Control de coste en créditos |

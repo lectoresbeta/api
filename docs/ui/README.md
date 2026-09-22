@@ -8,7 +8,9 @@ precisa de qué funcionalidades existen y cómo se comportan.
 
 | Documento | Flujo | Funcionalidades | Estado |
 |---|---|---|---|
-| [account-creation.md](account-creation.md) | Registro, activación por email y onboarding de tres pasos | `FEAT-USR-001`, `019`–`024`, `FEAT-COM-016`, `FEAT-NOT-008` | `DRAFT` |
+| [app-layout-and-navigation.md](app-layout-and-navigation.md) | Layout común: menú lateral, cabecera, bloque de créditos | `FEAT-CRD-001`, `FEAT-CRD-014`, `FEAT-NOT-009` | `DRAFT` |
+| [account-creation.md](account-creation.md) | Registro, activación por email y onboarding de tres pasos | `FEAT-USR-001`, `019`–`025`, `FEAT-COM-016`, `FEAT-NOT-008` | `DRAFT` |
+| [home.md](home.md) | Home: recomendaciones, muro, estado vacío, tour y modal de créditos | `FEAT-COM-017`–`025`, `FEAT-USR-026`, `FEAT-CRD-013`–`015` | `DRAFT` |
 
 El resto se irá incorporando a medida que lleguen las páginas de Figma.
 

@@ -9,7 +9,7 @@ verdad sobre el alcance.**
   Mientras tanto la fila es toda la información que existe.
 - Ninguna funcionalidad se implementa sin ficha en `APPROVED`.
 
-**Última actualización: 2026-09-21**
+**Última actualización: 2026-09-22**
 
 ---
 
@@ -17,19 +17,22 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 25 | 9 | 0 | 0 |
+| `User` (USR) | 26 | 10 | 0 | 0 |
 | `Work` (WRK) | 14 | 1 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 9 | 0 | 0 | 0 |
-| `Community` (COM) | 16 | 1 | 0 | 0 |
-| `Credits` (CRD) | 12 | 1 | 0 | 0 |
-| `Notification` (NOT) | 8 | 1 | 0 | 0 |
-| **Total** | **94** | **13** | **0** | **0** |
+| `Community` (COM) | 25 | 3 | 0 | 0 |
+| `Credits` (CRD) | 15 | 3 | 0 | 0 |
+| `Notification` (NOT) | 9 | 1 | 0 | 0 |
+| **Total** | **105** | **18** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
-Áreas cubiertas con diseño: **flujo de creación de cuenta y onboarding**
-([especificación de pantallas](../ui/account-creation.md)).
+Áreas cubiertas con diseño:
+
+- **flujo de creación de cuenta y onboarding** — [pantallas](../ui/account-creation.md);
+- **layout general y navegación** — [pantallas](../ui/app-layout-and-navigation.md);
+- **Home**, con tour, estado vacío y modal de créditos — [pantallas](../ui/home.md).
 
 ---
 
@@ -64,6 +67,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
 | FEAT-USR-024 | Aceptar condiciones de uso y política de privacidad | Guest | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-024-accept-terms-and-privacy.md) |
 | FEAT-USR-025 | Bloquear las operaciones de escritura hasta activar la cuenta | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-025-block-writes-until-activation.md) |
+| FEAT-USR-026 | Tour de bienvenida de la Home | User | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-026-welcome-tour.md) |
 
 > `FEAT-USR-013` está `BLOCKED`: no se puede especificar sin resolver qué ocurre con obras,
 > feedback y créditos al eliminar la cuenta (`V-4`, `U-3`).
@@ -160,7 +164,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-COM-001 | Ver las publicaciones del muro principal | User | PENDING | TODO | P1 | — |
-| FEAT-COM-002 | Crear una publicación personalizada | User | PENDING | TODO | P1 | — |
+| FEAT-COM-002 | Crear una publicación (texto, texto+imagen o artículo) | User | PENDING | TODO | P1 | — |
 | FEAT-COM-003 | Publicar buscando lectores beta para una obra | Writer | PENDING | TODO | P1 | — |
 | FEAT-COM-004 | Publicar buscando writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | PENDING | TODO | P2 | — |
@@ -175,9 +179,23 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-014 | Ver y filtrar el ranking de obras | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-015 | Ver y filtrar el ranking de lectores | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-016 | Onboarding paso 3 — sugerencias de autores a seguir | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-016-onboarding-author-suggestions.md) |
+| FEAT-COM-017 | Home — carrusel de obras recomendadas | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-017-home-work-recommendations.md) |
+| FEAT-COM-018 | Home — sugerencias de autores en el muro | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-018-home-author-suggestions.md) |
+| FEAT-COM-019 | Repostear una publicación | User | PENDING | TODO | P2 | — |
+| FEAT-COM-020 | Compartir una publicación fuera de la plataforma | User | PENDING | TODO | P2 | — |
+| FEAT-COM-021 | Guardar una publicación | User | PENDING | TODO | P3 | — |
+| FEAT-COM-022 | Ocultar una publicación del muro | User | PENDING | TODO | P3 | — |
+| FEAT-COM-023 | Denunciar una publicación | User | PENDING | DEFERRED | P3 | — |
+| FEAT-COM-024 | Ordenar el muro por relevancia o por fecha | User | PENDING | BLOCKED | P2 | — |
+| FEAT-COM-025 | Búsqueda global desde la cabecera | User | PENDING | DEFERRED | P3 | — |
 
 > Los tres rankings están `BLOCKED` por `CM-4`: el material de partida dice "mejor valorados"
 > pero no define la fórmula de puntuación. Sin ella no hay especificación posible.
+> `FEAT-COM-024` está `BLOCKED` por lo mismo: «más relevante» necesita esa fórmula.
+>
+> `FEAT-COM-017` a `FEAT-COM-025` salen del diseño de la Home. **Repostear, compartir,
+> guardar y denunciar son interacciones nuevas** que el documento de casos de uso no
+> contemplaba. La búsqueda global está marcada como backlog en el propio diseño.
 
 ---
 
@@ -199,9 +217,17 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-010 | Calcular el coste con fórmula continua en vez de tramos | — (sistema) | PENDING | DEFERRED | P3 | — |
 | FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | PENDING | TODO | P0 | — |
 | FEAT-CRD-012 | Monitorizar la salud de la economía de créditos | Admin | PENDING | DEFERRED | P3 | — |
+| FEAT-CRD-013 | Créditos asociados a una obra (insignia de la tarjeta) | User | DRAFT | BLOCKED | P1 | [ficha](credits/FEAT-CRD-013-work-credit-badge.md) |
+| FEAT-CRD-014 | Modal informativo del sistema de créditos | User | DRAFT | TODO | P2 | [ficha](credits/FEAT-CRD-014-credits-info-modal.md) |
+| FEAT-CRD-015 | Pantalla con la tabla de puntuación de créditos | User | PENDING | TODO | P2 | — |
 
 > `FEAT-CRD-006` es el núcleo del producto y está `BLOCKED` por `C-1`: no está decidido qué
-> ocurre cuando el autor no tiene saldo. Su ficha documenta las tres opciones.
+> ocurre cuando el autor no tiene saldo. Su ficha documenta las tres opciones. **El modal de
+> créditos del diseño apunta al pago por adelantado** («poner tus obras en corrección»), que
+> es la opción de reserva previa: ver `M-1` en `FEAT-CRD-014`.
+>
+> `FEAT-CRD-013` está `BLOCKED`: no se sabe si la insignia de una obra es lo que gana el
+> lector o lo que cuesta al autor, y las cifras del diseño no coinciden con la tabla.
 > `FEAT-CRD-009` depende de que se elija la opción de reserva (`C-2`).
 > `FEAT-CRD-010` es la alternativa que el propio documento de origen plantea.
 
@@ -221,6 +247,7 @@ Ficha del contexto: [`../bounded-contexts/notification.md`](../bounded-contexts/
 | FEAT-NOT-006 | Avisar de feedback recibido, contestado o valorado | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-NOT-007 | Enviar el email de invitación a la plataforma | — (sistema) | PENDING | TODO | P2 | — |
 | FEAT-NOT-008 | Enviar el email de activación de cuenta | — (sistema) | DRAFT | TODO | P0 | [ficha](notification/FEAT-NOT-008-account-activation-email.md) |
+| FEAT-NOT-009 | Centro de notificaciones in-app y contador de no leídas | User | PENDING | TODO | P1 | — |
 
 ---
 
@@ -235,6 +262,8 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-WRK-009 | `W-1` | Cuándo se genera el registro de autoría |
 | FEAT-FBK-008 | `A-3`, `C-5` | Identificación y créditos del comentarista anónimo |
 | FEAT-USR-013 | `V-4`, `U-3` | Qué se conserva al eliminar la cuenta |
+| FEAT-CRD-013 | `H-1`, `H-1b` | Qué significa la insignia de créditos de una obra, y por qué dos obras del mismo tramo muestran cifras distintas |
+| FEAT-COM-024 | `CM-4` | Fórmula de relevancia para ordenar el muro |
 
 Estas cinco decisiones son el camino crítico de la especificación. `C-1` es la más urgente:
 afecta al recorrido principal del producto.

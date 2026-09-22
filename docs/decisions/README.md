@@ -22,7 +22,7 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 
 | Ref | Decisión | Bloquea |
 |---|---|---|
-| `C-1` | Qué ocurre cuando el autor no tiene créditos para recibir un comentario | `FEAT-CRD-006`, `FEAT-FBK-001`. **La más urgente** |
+| `C-1` | Cuándo se pagan los créditos: por comentario recibido o al poner la obra en corrección, y qué ocurre sin saldo | `FEAT-CRD-006`, `FEAT-FBK-001`. **La más urgente.** El modal de créditos apunta al pago por adelantado |
 | `S-1` | Mecanismo de sesión de la API | Todo `User` y toda la autorización |
 | `CM-4` | Fórmula de puntuación de los rankings | `FEAT-COM-013/014/015` |
 | `W-1` | En qué momentos se genera el registro de autoría | `FEAT-WRK-009` |
@@ -33,6 +33,9 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 | `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia | `FEAT-USR-002`, `FEAT-USR-024` |
 | `OB-7` | Si hay edad mínima de registro | `FEAT-USR-022`. Tiene implicaciones legales |
 | `N-2` | Si el nombre público debe ser único | `FEAT-USR-022`. Sin unicidad, dos homónimos son indistinguibles |
+| `H-1` | Si la insignia de créditos de una obra es lo que gana el lector o lo que cuesta al autor, y por qué no coincide con la tabla | `FEAT-CRD-013` |
+| `M-2` | Qué es una obra «en corrección» y si es un estado de `Work` | `Work`, `Credits`, glosario |
+| `H-5` | Si conviven «me gusta» y las reacciones con emoji | `FEAT-COM-007`, `FEAT-COM-008` |
 
 ## Estados
 
