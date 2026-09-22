@@ -25,12 +25,20 @@
 | `GET /me/legal-acceptances` | `getMyLegalAcceptances` | Qué aceptó el usuario y cuándo | FEAT-USR-024 | DRAFT |
 | `GET /me/context` | `getSessionContext` | Contexto de sesión para el layout | FEAT-USR-027 | DRAFT |
 | `GET /me` | `getCurrentUser` | Datos de la cuenta propia | FEAT-USR-008 | PENDING |
+| `GET /me/profile` | `getMyProfile` | Perfil editable: nombre, biografía, foto | FEAT-USR-008 | DRAFT |
+| `PUT /me/profile` | `updateMyProfile` | Editar nombre y biografía | FEAT-USR-008 | DRAFT |
 | `PATCH /me` | `updateCurrentUser` | Editar datos personales | FEAT-USR-008 | PENDING |
-| `PUT /me/password` | `changePassword` | Cambiar contraseña | FEAT-USR-008 | PENDING |
+| `POST /me/email-change` | `requestEmailChange` | Solicitar cambio de correo | FEAT-USR-040 | DRAFT |
+| `POST /me/email-change/confirm` | `confirmEmailChange` | Confirmarlo desde el correo nuevo | FEAT-USR-040 | DRAFT |
+| `PUT /me/password` | `changeMyPassword` | Cambiar o **establecer** contraseña | FEAT-USR-041 | DRAFT |
 | `PUT /me/literary-preferences` | `updateLiteraryPreferences` | Preferencias literarias | FEAT-USR-009 | PENDING |
-| `GET /me/settings` | `getAccountSettings` | Ajustes de cuenta | FEAT-USR-010/011/012 | PENDING |
-| `PATCH /me/settings` | `updateAccountSettings` | MD, propuestas y notificaciones | FEAT-USR-010/011/012 | PENDING |
-| `DELETE /me` | `deleteAccount` | Eliminar cuenta | FEAT-USR-013 | BLOCKED |
+| `GET /me/settings` | `getAccountSettings` | Ajustes de cuenta | FEAT-USR-010/011 | PENDING |
+| `GET /me/privacy-settings` | `getMyPrivacySettings` | Ajustes de privacidad | FEAT-USR-038 | DRAFT |
+| `PUT /me/privacy-settings` | `updateMyPrivacySettings` | Modificarlos | FEAT-USR-038 | DRAFT |
+| `GET /me/notification-preferences` | `getMyNotificationPreferences` | Preferencias de aviso por canal | FEAT-USR-039 | DRAFT |
+| `PUT /me/notification-preferences` | `updateMyNotificationPreferences` | Modificarlas | FEAT-USR-039 | DRAFT |
+| `PATCH /me/settings` | `updateAccountSettings` | MD y propuestas de LB | FEAT-USR-010/011 | PENDING |
+| `DELETE /me` | `deleteMyAccount` | Eliminar cuenta | FEAT-USR-013 | BLOCKED |
 | `GET /users/{userId}` | `getUserProfile` | Perfil público por identificador | FEAT-USR-014 | PENDING |
 | `GET /profiles/{username}` | `getProfileByUsername` | Perfil por nombre de usuario o alias | FEAT-USR-035 | DRAFT |
 | `PUT /me/username` | `changeUsername` | Cambiar el nombre de usuario | FEAT-USR-034 | DRAFT |
@@ -186,3 +194,29 @@ responde `422` con `code: TERMS_NOT_ACCEPTED` y no persiste nada.
 
 Iniciar sesión en una cuenta ya existente no lo exige. Ver
 [`FEAT-USR-002`](../../features/user/FEAT-USR-002-register-with-google.md).
+
+
+---
+
+## Nota sobre las operaciones de la pantalla de Configuración
+
+Las cinco pestañas de [`Configuración`](../../ui/settings.md) **no son un solo recurso**, y
+conviene que la API lo refleje:
+
+| Pestaña | Recurso | Por qué separado |
+|---|---|---|
+| Perfil | `/me/profile` | Datos públicos |
+| Cuenta → correo | `/me/email-change` | Flujo en dos pasos con verificación, no una edición |
+| Cuenta → contraseña | `/me/password` | Operación de seguridad; cierra sesiones |
+| Cuenta → eliminar | `DELETE /me` | Proceso asíncrono entre contextos |
+| Notificaciones | `/me/notification-preferences` | Preferencias, sin efecto en autorización |
+| Privacidad | `/me/privacy-settings` | **Reglas de autorización** |
+
+Un único `PATCH /me/settings` para todo sería más cómodo y ocultaría que **cambiar quién
+puede ver tu perfil no se parece en nada a cambiar si quieres correos**: una afecta a lo que
+el servidor deja hacer a terceros; la otra, a lo que se envía.
+
+Tampoco conviene que el correo y la contraseña se guarden en la misma llamada que el resto:
+son operaciones que exigen reautenticación y que cierran sesiones, y mezclarlas con un cambio
+de biografía obliga a pedir la contraseña para cambiar la biografía o a no pedirla para
+cambiar el correo.

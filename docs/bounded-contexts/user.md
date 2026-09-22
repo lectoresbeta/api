@@ -12,7 +12,8 @@ preferencias y presencia pública como autor.
 - Cuenta de usuario y credenciales.
 - Autenticación local y mediante proveedores externos (Google, Facebook).
 - Recuperación de contraseña.
-- Preferencias de cuenta: mensajes directos, propuestas, notificaciones por email.
+- Preferencias de cuenta: mensajes directos, propuestas, notificaciones por canal.
+- **Ajustes de privacidad** y su aplicación como reglas de autorización (`FEAT-USR-038`).
 - Preferencias literarias.
 - Perfil público y página de autor con su personalización.
 - Invitaciones a la plataforma.
@@ -39,6 +40,8 @@ preferencias y presencia pública como autor.
 | `AuthorPage` | Perfil público: portada, descripción, obras publicadas y premios |
 | `Invitation` | Invitaciones por email y su seguimiento |
 | `Legal` | Documentos legales vigentes y el registro de aceptaciones |
+| `Privacy` | Quién puede ver el perfil, comentar los textos y mandar mensajes |
+| `Preferences` | Qué avisos recibe el usuario y por qué canal; apariencia |
 
 > El nombre de usuario y sus alias sobreviven al borrado de la cuenta durante 30 días, así
 > que `username_alias` no puede depender de que la fila de `user` siga existiendo: lleva
@@ -55,6 +58,8 @@ preferencias y presencia pública como autor.
 | `AccountActivationToken` | `UserId` | Un único token vigente por cuenta. Se almacena con hash, nunca en claro. |
 | `UsernameAlias` | `username` | Nombre de usuario reservado 30 días, por un cambio de nombre o por el borrado de la cuenta. Un alias vigente **ocupa el nombre**; uno caducado no resuelve ni ocupa, aunque su fila siga existiendo. El de un cambio de nombre resuelve al perfil y su titular puede **recuperarlo**; el de una cuenta eliminada solo bloquea. |
 | `LegalAcceptance` | `LegalAcceptanceId` | Inmutable. Registra documento, versión y fecha. |
+| `EmailChangeRequest` | `EmailChangeRequestId` | Una vigente por cuenta. Token hasheado, caduca y se consume una sola vez. **Hasta confirmarse, el correo válido sigue siendo el anterior.** |
+| `UserPrivacySettings` | `UserId` | Un registro por usuario, con valores por defecto explícitos. Un ajuste ausente **no** significa «todo permitido». |
 
 ### Value objects y enums
 
@@ -85,6 +90,15 @@ preferencias y presencia pública como autor.
 | `UserDeleted` | Se elimina la cuenta | Todos (limpieza y anonimización). En `User` convierte su nombre de usuario en alias bloqueado durante 30 días |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` (read models) |
 | `UsernameChanged` | El usuario cambia su nombre de usuario | `Community` (read models que muestran el `@`) |
+| `EmailChangeRequested` | Se pide cambiar el correo | `Notification` (confirmación al nuevo, **aviso al anterior**) |
+| `EmailChanged` | Se confirma el cambio | `Notification`. Cierra las demás sesiones |
+| `PasswordChanged` | Se cambia la contraseña | `Notification` (aviso de seguridad). **Nunca lleva la contraseña ni su hash** |
+| `PrivacySettingsChanged` | Cambian los ajustes de privacidad | `Community` (read models de visibilidad) |
+| `NotificationPreferencesChanged` | Cambian las preferencias de aviso | `Notification` |
+
+> Los avisos de **cambio de correo y de contraseña** son de seguridad: `Notification` los
+> entrega **aunque el usuario tenga todas las notificaciones desactivadas**. Son
+> transaccionales, no notificaciones (`FEAT-USR-039` `RN-3`).
 
 > `InvitedUserParticipated` requiere correlacionar la invitación con el primer comentario del
 > invitado, que ocurre en `Feedback`. Diseño pendiente: ver `U-4`.

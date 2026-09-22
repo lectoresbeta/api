@@ -54,6 +54,16 @@ corrección»*.
 Son dos ejes distintos y conviene no volver a mezclarlos: el estado dice **si** la puerta
 está abierta; la modalidad, **para quién**.
 
+> **Y ahora hay un tercer eje** (`S-14`). La pantalla de Configuración añade un ajuste
+> **global del usuario**: «¿Quién puede comentar mis textos?»
+> ([`FEAT-USR-038`](../user/FEAT-USR-038-privacy-settings.md)). Responde casi a la misma
+> pregunta que `BetaReaderAccessMode`, pero para todo lo que escribe el autor.
+>
+> Propuesta: el ajuste global actúa como **techo**. Una obra puede ser más restrictiva que el
+> perfil, nunca más permisiva. Si se permitiera lo contrario, el ajuste de privacidad sería
+> una recomendación, y un ajuste de privacidad que se puede ignorar no es un ajuste de
+> privacidad.
+
 Pendiente de confirmar (`W-9`).
 
 ## Reglas de negocio

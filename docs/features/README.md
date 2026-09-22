@@ -17,14 +17,14 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 37 | 19 | 0 | 0 |
+| `User` (USR) | 42 | 25 | 0 | 0 |
 | `Work` (WRK) | 16 | 5 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 12 | 3 | 0 | 0 |
 | `Community` (COM) | 36 | 9 | 0 | 0 |
 | `Credits` (CRD) | 16 | 5 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **133** | **42** | **0** | **0** |
+| **Total** | **138** | **48** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -40,7 +40,8 @@ Estado global: **especificación inicial**. No hay código en `src/`.
 - **Mis relatos** y **Más info** — [pantallas](../ui/my-works.md) y [pantallas](../ui/profile-more-info.md);
 - **Perfil de otro usuario** — [pantallas](../ui/user-profile.md);
 - **Sección «Leer»**, catálogo con filtros — [pantallas](../ui/read-section.md);
-- **Lectura de un capítulo y formulario de corrección** — [pantallas](../ui/read-chapter.md).
+- **Lectura de un capítulo y formulario de corrección** — [pantallas](../ui/read-chapter.md);
+- **Configuración del usuario**, cinco pestañas — [pantallas](../ui/settings.md).
 
 ---
 
@@ -57,12 +58,12 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-005 | Login con cuenta de Google | Guest | PENDING | TODO | P0 | — |
 | FEAT-USR-006 | Login con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-007 | Recuperar contraseña | Guest | PENDING | TODO | P0 | — |
-| FEAT-USR-008 | Editar datos de usuario (email, nombre, contraseña, datos personales) | User | PENDING | TODO | P1 | — |
+| FEAT-USR-008 | Editar el perfil — nombre, biografía y foto | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-008-edit-profile.md) |
 | FEAT-USR-009 | Editar preferencias literarias | User | PENDING | TODO | P2 | — |
 | FEAT-USR-010 | Configurar recepción de mensajes directos | User | PENDING | TODO | P2 | — |
 | FEAT-USR-011 | Configurar recepción de propuestas de LB y writing buddy | User | PENDING | TODO | P2 | — |
-| FEAT-USR-012 | Configurar notificaciones por email | User | PENDING | TODO | P2 | — |
-| FEAT-USR-013 | Eliminar cuenta con confirmación | User | PENDING | BLOCKED | P2 | — |
+| FEAT-USR-012 | ~~Configurar notificaciones por email~~ → `FEAT-USR-039` | User | PENDING | DEPRECATED | P3 | — |
+| FEAT-USR-013 | Eliminar la cuenta | User | DRAFT | BLOCKED | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
 | FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-014-view-public-profile.md) |
 | FEAT-USR-015 | Configurar información de la página de autor (bio, foto, referencias) | Writer | PENDING | TODO | P2 | — |
 | FEAT-USR-016 | Personalizar página de autor (fuentes, colores, fondos) | Writer | PENDING | TODO | P3 | — |
@@ -87,9 +88,24 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |
 | FEAT-USR-036 | Purga programada de alias caducados | — (sistema) | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-036-purge-expired-aliases.md) |
 | FEAT-USR-037 | Gestionar la foto de perfil — subir, editar y eliminar | User | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |
+| FEAT-USR-038 | Ajustes de privacidad del usuario | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-038-privacy-settings.md) |
+| FEAT-USR-039 | Preferencias de notificación por canal | User | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-039-notification-preferences.md) |
+| FEAT-USR-040 | Cambiar el correo de la cuenta | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-040-change-email.md) |
+| FEAT-USR-041 | Cambiar o establecer la contraseña | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-041-change-password.md) |
+| FEAT-USR-042 | Preferencias de apariencia (tema) | User | PENDING | TODO | P3 | — *(sin captura)* |
 
-> `FEAT-USR-013` está `BLOCKED`: no se puede especificar sin resolver qué ocurre con obras,
-> feedback y créditos al eliminar la cuenta (`V-4`, `U-3`).
+> `FEAT-USR-013` sigue `BLOCKED`. La pantalla de Configuración aporta el flujo pero **agrava
+> el problema**: promete al usuario que se borrarán «todos los datos asociados», y eso no
+> puede cumplirse —el nombre de usuario queda bloqueado 30 días, las correcciones que otros
+> autores **pagaron** no son suyas para borrarlas, y los movimientos de créditos son
+> inmutables—. La salida conocida es **anonimizar en vez de borrar** (`S-32`).
+>
+> `FEAT-USR-038` a `FEAT-USR-042` salen de la pantalla de **Configuración**. `FEAT-USR-039`
+> absorbe a `FEAT-USR-012`, que solo contemplaba el correo y queda `DEPRECATED`.
+>
+> **`FEAT-USR-034` se ha quedado sin interfaz** (`S-3`): la pestaña «Perfil» permite cambiar
+> el nombre, pero **no el nombre de usuario**, que es justamente para lo que existe toda la
+> maquinaria de alias de `decision:0005`.
 >
 > `FEAT-USR-028` a `FEAT-USR-036` salen del diseño de «Mi perfil».
 >
@@ -384,6 +400,10 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-CRD-016 | `P-5`, `P-6` | Cada cuánto se ajusta el precio y dónde se acumula el margen entre lo que paga el autor y lo que cobra el lector |
 | FEAT-WRK-014 | `W-17` | Si las preguntas de obra entera se repiten en cada capítulo |
 | FEAT-WRK-012 | `L-9` | Cómo llega la insignia de créditos al catálogo sin acoplar `Work` con `Credits` |
+| **FEAT-USR-038, FEAT-WRK-016** | **`S-14`** | Si el ajuste global «quién puede comentar mis textos» manda sobre la modalidad de cada obra, y qué pasa con las retenciones vigentes |
+| FEAT-USR-013 | `U-3`, `V-4`, `S-32` | Si la cuenta se borra o se **anonimiza**. La pantalla promete un borrado total que el sistema no puede hacer |
+| FEAT-USR-039 | `S-11`, `S-12` | Qué tipos de aviso existen, y si corrección y comentario se separan |
+| FEAT-USR-040, FEAT-USR-041 | `S-8` | Qué ve una cuenta de Google donde se pide «contraseña actual» |
 
 **Decisiones tomadas el 2026-09-22** que cierran buena parte de lo anterior:
 

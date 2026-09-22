@@ -47,6 +47,11 @@ aplicar el efecto.
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models | `userId`, `completedAt` |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` | `userId`, campos modificados |
 | `UsernameChanged` | El usuario cambia su nombre de usuario | `Community` (read models con el `@`) | `userId`, `previousUsername`, `newUsername`, `aliasExpiresAt` |
+| `EmailChangeRequested` | Se pide cambiar el correo | `Notification` | `userId`, `requestId`, `expiresAt` |
+| `EmailChanged` | Se confirma el cambio de correo | `Notification`, read models | `userId`, `changedAt` |
+| `PasswordChanged` | Se cambia la contraseña | `Notification` | `userId`, `changedAt` |
+| `PrivacySettingsChanged` | Cambian los ajustes de privacidad | `Community`, read models | `userId`, ajustes modificados |
+| `NotificationPreferencesChanged` | Cambian las preferencias de aviso | `Notification` | `userId`, preferencias modificadas |
 | `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt`. En `User` convierte su nombre de usuario en alias bloqueado 30 días |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` | `inviterId`, `invitedUserId` |
 
