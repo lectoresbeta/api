@@ -69,7 +69,7 @@ edición, sin cajas de «Añadir».
 | Pestaña | Contenido | Funcionalidad |
 |---|---|---|
 | **Mi muro** | Publicaciones propias | `FEAT-COM-026` |
-| **Mis relatos** | Obras propias | `FEAT-WRK-004` |
+| **Mis relatos** | Obras propias, con filtros por estado y ordenación. Ver [my-works.md](my-works.md) | `FEAT-WRK-015` |
 | **Mis correcciones** | Feedback que el usuario ha dado | `FEAT-FBK-010` |
 | **Mis Amigos** | Seguidos y seguidores | `FEAT-COM-027` |
 | **Más info** | Obras publicadas y premios | `FEAT-USR-029`, `FEAT-USR-030` |
@@ -246,12 +246,12 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 |---|---|---|
 | P-1 | ¿Existe `@identificador`? | **Resuelta:** sí, es el `Username`. Ver `decision:0005` |
 | **P-2** | ¿Se confirma que una «obra publicada» es un concepto aparte de `Work`? | Modelo de datos. Mezclarlos sería un error caro |
-| P-3 | ¿«Obra en corrección» es un estado del ciclo de vida de `Work`? | `M-2`, `W-5` |
+| P-3 | ¿«Obra en corrección» es un estado del ciclo de vida de `Work`? | **Resuelta:** sí. Ver [`FEAT-WRK-016`](../features/work/FEAT-WRK-016-work-status.md) |
 | P-4 | ¿Qué es «0 Level»? | **Resuelta:** error del diseño. Se retira de la pantalla y de los modales de foto |
 | P-5 | ¿«Mi perfil» y la «página de autor» de `FEAT-USR-015` son la misma pantalla? | Si no, hay dos perfiles que mantener |
 | P-6 | ¿Sigue en alcance la personalización visual de `FEAT-USR-016`? | No aparece en estas capturas |
 | P-7 | Textos por unificar: «Enviar» frente a «Publicar»; el vacío de «Seguidos» describe también a los seguidores | Coherencia |
-| P-8 | ¿«Mis Amigos» es el nombre correcto para seguidos y seguidores? | Seguir es asimétrico; «amigos» sugiere reciprocidad |
+| P-8 | ¿«Mis Amigos» es el nombre correcto? | Capturas posteriores lo escriben «Mis amigos», corrigiendo la mayúscula. El nombre sigue sugiriendo reciprocidad donde no la hay |
 | P-9 | ¿Las obras publicadas se validan de algún modo, o el autor declara lo que quiera? | Un perfil con méritos inventados afecta a la confianza |
 | P-10 | ¿El enlace «Comprar» apunta fuera de la plataforma? ¿Hay afiliación? | Enlaces salientes y sus implicaciones |
 | P-11 | ¿Qué ve el visitante en la vista pública de este perfil? | No hay capturas de la vista no editable |

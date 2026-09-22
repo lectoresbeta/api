@@ -44,7 +44,7 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Repost | `Repost` | Republicación de una publicación ajena en el propio muro, sin texto propio. Referencia al original; no lo copia ni amplía su audiencia. Distinto de compartir fuera de la plataforma. |
 | Compartir | `Share` | Difusión de una publicación **fuera** de Lectores Beta. |
 | Publicación guardada | `SavedPost` | Publicación que el usuario archiva para leer después. Privada. |
-| Obra en corrección | *(por definir)* | Obra abierta a recibir feedback. Aparece en el modal de créditos y en el perfil. Que «corrección» es `Feedback` ya está confirmado; lo que sigue sin decidir es si «en corrección» designa un **estado** del ciclo de vida de `Work` (`P-3`). |
+| Obra en corrección | `WorkStatus: IN_CORRECTION` | **Estado** del ciclo de vida de una obra: publicada y **abierta a recibir feedback**. Distinto de `VISIBLE`, que se puede leer pero no comentar. |
 | Tour | `Tour` | Secuencia de globos que presenta la aplicación la primera vez. Su estado se guarda por usuario y por tour. |
 | Crédito | `Credit` | Unidad de la economía interna que equilibra dar y recibir feedback. |
 | Saldo de créditos | `CreditBalance` | Créditos disponibles de un usuario. |
@@ -78,7 +78,8 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Español | Inglés | Valores |
 |---|---|---|
 | Modalidad de acceso LB | `BetaReaderAccessMode` | `PUBLIC` (cualquiera se convierte en LB automáticamente), `ON_REQUEST` (requiere aprobación del autor), `PRIVATE` (solo por invitación del autor) |
-| Visibilidad | `Visibility` | `VISIBLE`, `HIDDEN` — aplicable a obra y a fragmento |
+| Estado de la obra | `WorkStatus` | `DRAFT` (solo el autor), `VISIBLE` (legible, sin feedback), `IN_CORRECTION` (legible y abierta a feedback). **Sustituye a `Visibility` en la obra** (`W-9`) |
+| Visibilidad | `Visibility` | `VISIBLE`, `HIDDEN` — **solo aplicable al fragmento**; en la obra queda sustituida por `WorkStatus` |
 | Tipo de publicación | `PostType` | **Intención**: `GENERAL`, `LOOKING_FOR_BETA_READERS`, `LOOKING_FOR_WRITING_BUDDY`, `OFFERING_AS_BETA_READER` |
 | Formato de publicación | `PostFormat` | **Forma del contenido**: `TEXT`, `IMAGE`, `VIDEO`, `LINK`, `WORK`. Dimensión independiente de `PostType` |
 | Audiencia de publicación | `PostAudience` | **Quién puede verla.** Solo se conoce el valor por defecto, «cualquiera» (`C-1`) |

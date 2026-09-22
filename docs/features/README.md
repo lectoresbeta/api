@@ -18,13 +18,13 @@ verdad sobre el alcance.**
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
 | `User` (USR) | 37 | 18 | 0 | 0 |
-| `Work` (WRK) | 14 | 1 | 0 | 0 |
+| `Work` (WRK) | 16 | 3 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 10 | 0 | 0 | 0 |
 | `Community` (COM) | 32 | 8 | 0 | 0 |
 | `Credits` (CRD) | 15 | 4 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **124** | **32** | **0** | **0** |
+| **Total** | **126** | **34** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -139,9 +139,17 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-012 | Buscar obras por tipo, temática y valoración | Reader | PENDING | TODO | P1 | — |
 | FEAT-WRK-013 | Calcular el número de palabras y el nivel de extensión | — (sistema) | PENDING | TODO | P0 | — |
 | FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | PENDING | TODO | P1 | — |
+| FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | DRAFT | TODO | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
+| FEAT-WRK-016 | Estado de una obra — borrador, visible y en corrección | Writer | DRAFT | TODO | P0 | [ficha](work/FEAT-WRK-016-work-status.md) |
 
 > `FEAT-WRK-009` está `BLOCKED`: el documento de origen deja explícitamente abierto en qué
 > momentos se genera el registro (`W-1`).
+>
+> **`FEAT-WRK-016` resuelve qué es «una obra en corrección»**: un estado del ciclo de vida.
+> Una obra está en `DRAFT`, `VISIBLE` o `IN_CORRECTION`, y solo en `IN_CORRECTION` admite
+> feedback. Eso sustituye a `Visibility` (`W-9`) y **reabre `R-1`**: si entrar en corrección
+> es una acción explícita del autor, es el sitio natural para reservar los créditos, y la
+> compensación entre contextos de `decision:0004` dejaría de hacer falta.
 
 ---
 
@@ -319,7 +327,8 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-COM-002 | `C-2` | Si se admite vídeo, con qué límites y si se transcodifica |
 | FEAT-COM-019 | `C-3` | Si un repost es un puntero o una publicación con entidad propia |
 | FEAT-COM-006, FEAT-COM-024, rankings | `CM-4` | Una única fórmula de relevancia para el muro, los comentarios y los rankings |
-| FEAT-CRD-009 | `R-1` | Si la reserva es por lector o por obra. Conviene cerrarlo **antes de implementar** |
+| FEAT-CRD-009, FEAT-WRK-016 | **`R-1`** | Si la reserva es por lector o por obra. **El estado «En corrección» apunta a por obra** y eliminaría la compensación. Cerrar antes de implementar |
+| FEAT-WRK-016 | `W-9` | Si `WorkStatus` sustituye a `Visibility` |
 
 Estas cinco decisiones son el camino crítico de la especificación. `C-1` es la más urgente:
 afecta al recorrido principal del producto.

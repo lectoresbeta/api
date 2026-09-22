@@ -38,7 +38,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 
 | Concepto | Responsabilidad |
 |---|---|
-| `Manuscript` | La obra: metadatos, visibilidad, modalidad de acceso |
+| `Manuscript` | La obra: metadatos, **estado**, modalidad de acceso |
 | `Chapter` | Fragmentos y su contenido |
 | `Questionnaire` | Preguntas que dirigen el feedback |
 | `Authorship` | Registro de autoría inmutable |
@@ -50,7 +50,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 
 | Agregado | Identidad | Invariantes |
 |---|---|---|
-| `Work` | `WorkId` | Un único autor. Al menos un fragmento. El `TextTier` se deriva del contenido, no se fija a mano. |
+| `Work` | `WorkId` | Un único autor. Al menos un fragmento. El `TextTier` se deriva del contenido, no se fija a mano. Está siempre en **exactamente uno** de los tres `WorkStatus`. |
 | `AuthorshipRecord` | `AuthorshipRecordId` | Inmutable. Solo inserción. |
 | `PublicLink` | `PublicLinkId` | Token no enumerable. Revocable. |
 
@@ -63,7 +63,8 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | `ChapterContent` | Texto; calcula `WordCount` |
 | `WordCount` | Entero no negativo |
 | `TextTier` | Derivado de `WordCount` según la tabla de [credits.md](credits.md) |
-| `Visibility` | `VISIBLE`, `HIDDEN` |
+| `WorkStatus` | `DRAFT`, `VISIBLE`, `IN_CORRECTION`. **Sustituye a `Visibility` en la obra** (`W-9`) |
+| `Visibility` | `VISIBLE`, `HIDDEN` — queda **solo para el fragmento** |
 | `BetaReaderAccessMode` | `PUBLIC`, `ON_REQUEST`, `PRIVATE` |
 | `Genre` | Catálogo de temáticas, por definir |
 
@@ -72,7 +73,9 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | Evento | Cuándo | Consumidores |
 |---|---|---|
 | `WorkCreated` | Se crea la obra | `Reading`, `Notification` |
-| `WorkPublished` | La obra se hace visible | `Reading`, `Community`, `Notification` |
+| `WorkPublished` | La obra pasa a `VISIBLE` | `Reading`, `Community`, `Notification` |
+| `WorkOpenedForCorrection` | La obra pasa a `IN_CORRECTION` | **`Credits`**, `Reading`, `Notification` |
+| `WorkClosedForCorrection` | La obra sale de `IN_CORRECTION` | **`Credits`** (libera retenciones), `Reading` |
 | `WorkContentUpdated` | Cambia el contenido y posiblemente el `TextTier` | `Credits` (referencia de coste), `Feedback` |
 | `WorkAccessModeChanged` | Cambia la modalidad de acceso | `Reading` |
 | `WorkDeleted` | Se elimina la obra | `Reading`, `Feedback`, `Community` |
@@ -83,7 +86,12 @@ y bajo qué modalidad se ofrece a los lectores beta.
 - `RN-1` Una obra tiene un único autor.
 - `RN-2` Un fragmento pertenece a una sola obra.
 - `RN-3` El `TextTier` se deriva siempre del número de palabras. Nunca se edita directamente.
-- `RN-4` Una obra o fragmento `HIDDEN` solo es accesible para su autor.
+- `RN-4` Una obra en `DRAFT`, o un fragmento `HIDDEN`, solo son accesibles para su autor.
+- `RN-7` **Solo una obra en `IN_CORRECTION` admite feedback nuevo.** `VISIBLE` se puede leer
+  pero no comentar: el autor decide cuándo abre esa puerta, porque recibir feedback le cuesta
+  créditos.
+- `RN-8` `BetaReaderAccessMode` responde «quién puede comentar» y solo tiene efecto en
+  `IN_CORRECTION`. `WorkStatus` responde «si se puede comentar». Son dos ejes distintos.
 - `RN-5` El registro de autoría es inmutable: editar la obra genera uno nuevo, no modifica el anterior.
 - `RN-6` Cambiar la modalidad de acceso no revoca los accesos ya concedidos.
 
@@ -95,7 +103,11 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | W-2 | ¿Se versiona el contenido al editar o se sobrescribe? (`D-4`, `P-3`) | Afecta a autoría y a la validez del feedback previo |
 | W-3 | ¿Qué formatos exactos se aceptan? El documento dice `.doc`, `.pdf`, `.txt`; ¿también `.docx`, `.odt`, `.epub`? | Adaptadores de ingesta |
 | W-4 | ¿Cómo se dividen en fragmentos los ficheros subidos: automáticamente por capítulos, o a mano? | Complejidad de la ingesta |
-| W-5 | ¿Existe un estado de publicación (`DRAFT`/`PUBLISHED`) además de la visibilidad? **El modal de créditos habla de poner una obra «en corrección»**, lo que sugiere un estado más | Modelo de ciclo de vida. Ver `M-2` |
+| W-5 | ¿Existe un estado de publicación además de la visibilidad? | **Resuelta:** sí, `WorkStatus` con tres valores (`FEAT-WRK-016`) |
+| **W-9** | ¿`WorkStatus` sustituye a `Visibility` en la obra? | Modelo de `Work` |
+| W-10 | ¿Qué transiciones de estado son legales? ¿Se puede despublicar? | Máquina de estados |
+| W-11 | ¿Se puede editar una obra mientras está en corrección? | El texto cambiaría bajo los pies del lector |
+| W-14 | ¿Cuántas correcciones admite una obra a la vez? | Con reserva por obra habría que declararlo (`R-1`) |
 | W-6 | ¿La visibilidad de un fragmento es independiente de la de la obra? | Reglas de autorización |
 | W-7 | ¿El catálogo de temáticas (`Genre`) es cerrado o libre? | Búsqueda y rankings |
 | W-8 | ¿Se puede limitar el número de lectores beta de una obra? | Control de coste en créditos |

@@ -164,14 +164,17 @@ saldo, debe poder recalcularse desde las retenciones.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **R-1** | **¿Se reserva por lector o por obra?** El modal dice «poner tus obras en corrección», que sugiere que el autor declara cuántos feedbacks quiere y reserva por todos de una vez | Variante B2 de `decision:0004`. Cambia el disparador y resuelve de paso `W-8` (limitar el número de lectores beta) |
+| **R-1** | **¿Se reserva por lector o por obra?** | **Nueva evidencia:** el diseño de «Mis relatos» muestra que «En corrección» es un **estado** de la obra (`FEAT-WRK-016`), al que el autor la lleva de forma explícita. Ese es el momento natural de comprometer créditos, y **eliminaría la compensación** entre `Reading` y `Credits` |
 | R-2 | ¿Cuánto dura una retención antes de caducar? | Sin caducidad, los créditos quedan inmovilizados indefinidamente |
 | R-3 | ¿Qué ve el lector cuando su acceso se revoca por falta de saldo del autor? | Es una revocación que no ha provocado él |
 | R-4 | ¿Puede el autor cancelar una retención para recuperar saldo? | Equivaldría a expulsar a un lector beta |
 | R-5 | ¿Qué saldo muestra el menú lateral, el total o el disponible? | Propuesta: el disponible, que es el accionable |
 | R-6 | ¿Se avisa al autor cuando su saldo disponible impide nuevos lectores? | Momento clave para pedirle que comente obras ajenas |
 
-`R-1` conviene resolverlo **antes de implementar**: es barato ahora y caro después.
+`R-1` conviene resolverlo **antes de implementar**: es barato ahora y caro después. Con la
+reserva por obra, el disparador sería `WorkOpenedForCorrection` en lugar de
+`BetaReaderAccessGranted`, y el autor recibiría un «no hay saldo» de inmediato en vez de que
+se le revoque un acceso concedido minutos antes.
 
 ## Estado
 
