@@ -7,7 +7,8 @@
 | Uso | Formatos | Funcionalidad |
 |---|---|---|
 | Manuscrito | `.doc`, `.pdf`, `.txt` (¿y `.docx`?, ver `W-3`) | `FEAT-WRK-002` |
-| Foto de perfil y página de autor | `.jpg`, `.png`, `.webp` | `FEAT-USR-015` |
+| Foto de perfil (avatar) | `.jpg`, `.png`, `.webp`. ¿HEIC? ver `F-3` | `FEAT-USR-037` |
+| Portada del perfil | `.jpg`, `.png`, `.webp` | `FEAT-USR-028` |
 | Fondos de la página de autor | `.jpg`, `.png`, `.webp` | `FEAT-USR-016` |
 
 El documento de origen dice `.doc`; conviene confirmar si incluye `.docx`, que es lo que
@@ -29,8 +30,15 @@ devuelve `202 Accepted` y el cliente consulta el estado del procesamiento.
 
 - El tipo se determina por el **contenido**, no por la extensión ni por el `Content-Type`
   declarado por el cliente.
-- Tamaño máximo por definir. Referencia: una novela media de 75.000 palabras en `.docx` con
-  imágenes puede superar varios megabytes.
+- Tamaño máximo por tipo:
+
+| Uso | Máximo | Origen |
+|---|---|---|
+| Foto de perfil | **2 MB** | Anunciado en el propio modal (`FEAT-USR-037`) |
+| Portada del perfil | Por definir | — |
+| Manuscrito | Por definir. Referencia: una novela media de 75.000 palabras en `.docx` con imágenes puede superar varios megabytes | — |
+
+El límite lo aplica **el servidor**. Que el cliente lo anuncie es una cortesía, no un control.
 - Los ficheros se analizan antes de procesarse. Un PDF es un formato con capacidad de
   ejecución y no se trata como texto inofensivo.
 - Los nombres de fichero originales se sanean y no se usan como ruta de almacenamiento.
@@ -48,5 +56,12 @@ exposición del contenido inédito.
 
 ## Imágenes
 
-- Se reprocesan al subirlas: redimensionado y eliminación de metadatos EXIF.
-- Los metadatos EXIF pueden contener geolocalización. No se conservan.
+- Se reprocesan **siempre** al subirlas: redimensionado, normalización de formato y
+  eliminación de metadatos EXIF.
+- Los metadatos EXIF pueden contener **geolocalización**. No se conservan. Esto vale también
+  cuando el cliente ya ha recortado la imagen: un recorte del navegador no garantiza que los
+  metadatos hayan desaparecido.
+- Si el servidor gira una imagen, debe interpretar antes su orientación EXIF, o las fotos
+  hechas con móvil aparecerán tumbadas.
+- Las cámaras de iOS producen **HEIC** por defecto, un formato que los navegadores no
+  muestran bien. Si se admite, hay que convertirlo en servidor (`F-3`).

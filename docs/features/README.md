@@ -17,14 +17,14 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 36 | 17 | 0 | 0 |
+| `User` (USR) | 37 | 18 | 0 | 0 |
 | `Work` (WRK) | 14 | 1 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 10 | 0 | 0 | 0 |
 | `Community` (COM) | 27 | 3 | 0 | 0 |
 | `Credits` (CRD) | 15 | 4 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **118** | **26** | **0** | **0** |
+| **Total** | **119** | **27** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -33,7 +33,8 @@ Estado global: **especificación inicial**. No hay código en `src/`.
 - **flujo de creación de cuenta y onboarding** — [pantallas](../ui/account-creation.md);
 - **layout general y navegación** — [pantallas](../ui/app-layout-and-navigation.md);
 - **Home**, con tour, estado vacío y modal de créditos — [pantallas](../ui/home.md);
-- **Mi perfil**, estados vacíos — [pantallas](../ui/my-profile.md).
+- **Mi perfil**, estados vacíos — [pantallas](../ui/my-profile.md);
+- **Subida de la foto de perfil** — [pantallas](../ui/profile-photo-upload.md).
 
 ---
 
@@ -79,6 +80,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-034 | Cambiar el nombre de usuario y alias temporal | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-034-change-username.md) |
 | FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |
 | FEAT-USR-036 | Purga programada de alias caducados | — (sistema) | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-036-purge-expired-aliases.md) |
+| FEAT-USR-037 | Subir y recortar la foto de perfil | User | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |
 
 > `FEAT-USR-013` está `BLOCKED`: no se puede especificar sin resolver qué ocurre con obras,
 > feedback y créditos al eliminar la cuenta (`V-4`, `U-3`).

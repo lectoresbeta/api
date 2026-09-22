@@ -31,7 +31,7 @@ agregados de tres bounded contexts distintos.
 | Elemento | Editable | Origen |
 |---|---|---|
 | Imagen de portada | Sí, lápiz | `User`. **Concepto nuevo** |
-| Avatar | Sí, lápiz | `User` |
+| Avatar | Sí, lápiz | `User`. Flujo de subida y recorte en [`FEAT-USR-037`](FEAT-USR-037-upload-profile-photo.md) |
 | Nombre | No desde aquí (`FEAT-USR-008`) | `User` |
 | `@identificador` | Sí, una vez cada 30 días (`FEAT-USR-034`) | `User` — es el `Username` |
 | Descripción | Sí, en línea | `User` |
@@ -66,7 +66,8 @@ ya se propone para los contadores de las tarjetas de autor (`FEAT-COM-016`). Ver
 - `RN-4` Portada, avatar y descripción son **datos públicos**: aparecen en el perfil que ven
   los demás.
 - `RN-5` Las imágenes se procesan al subirlas: redimensionado y **eliminación de metadatos
-  EXIF**, que pueden contener geolocalización (`file-uploads.md`).
+  EXIF**, que pueden contener geolocalización (`file-uploads.md`). El detalle del avatar está
+  en [`FEAT-USR-037`](FEAT-USR-037-upload-profile-photo.md).
 - `RN-6` La descripción se sanea: no admite HTML arbitrario.
 - `RN-7` Solo el titular edita su propio perfil. No existe edición de perfiles ajenos.
 - `RN-8` Los contadores son informativos y **nunca se usan para autorizar** nada.
@@ -120,7 +121,7 @@ Las imágenes se guardan con el puerto `FileStorage`, nunca en la base de datos.
 | P-1 | ¿Existe `@identificador`? | **Resuelta:** es el `Username` (`FEAT-USR-033`) |
 | P-5 | ¿Es esta la «página de autor» de `FEAT-USR-015`? | Si no, hay dos perfiles que mantener |
 | P-12 | ¿Los contadores se componen en cada petición o viven en un read model? | Rendimiento del perfil |
-| P-13 | ¿Hay límites de tamaño y proporción para portada y avatar? | Validación de subida |
+| P-13 | ¿Hay límites de tamaño y proporción para la **portada**? | Los del avatar están definidos (`FEAT-USR-037`); los de la portada no (`F-5`) |
 | P-14 | ¿Longitud máxima de la descripción? | Validación |
 | P-11 | ¿Qué devuelve la vista pública de este perfil? | Sin capturas |
 

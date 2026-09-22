@@ -87,6 +87,9 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `code` | HTTP | Significado |
 |---|---|---|
 | `VALIDATION_FAILED` | 422 | Uno o varios campos no son válidos |
+| `UNSUPPORTED_FILE_TYPE` | 422 | El fichero subido no es de un tipo admitido |
+| `INVALID_IMAGE` | 422 | El fichero dice ser imagen pero no se puede procesar |
+| `FILE_TOO_LARGE` | 413 | El fichero supera el máximo de su tipo |
 | `ACCOUNT_NOT_ACTIVATED` | 403 | La cuenta está en `PENDING_ACTIVATION` y la operación es de escritura |
 | `INVALID_ACTIVATION_TOKEN` | 404 | Token de activación inexistente, usado o manipulado |
 | `ACTIVATION_TOKEN_EXPIRED` | 410 | El token de activación caducó |
