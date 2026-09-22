@@ -84,28 +84,27 @@ o el usuario verá su avatar nuevo en el perfil y el viejo arriba.
 Solo hay diseño para el error de tipo de fichero. Faltan al menos el de tamaño excedido y el
 de fallo de subida (`F-6`).
 
-## Quién aplica el recorte
+## El recorte lo hace el cliente
 
-Es la decisión de fondo de esta pantalla.
+**Decidido.** El navegador aplica el zoom y el giro y sube **la imagen final, ya cuadrada**.
+El servidor recibe un fichero y ningún parámetro de encuadre.
 
-| Opción | Cómo | Valoración |
-|---|---|---|
-| **A. El cliente recorta** | El navegador aplica zoom y giro y sube la imagen final, ya cuadrada | **Recomendada.** El servidor recibe algo pequeño y predecible. El usuario ve exactamente lo que va a quedar |
-| B. El servidor recorta | Se sube el original más los parámetros de zoom y giro | El servidor hereda la responsabilidad de reproducir la vista previa con exactitud, y cualquier diferencia de redondeo se ve |
+Con ello:
 
-**Con cualquiera de las dos, el servidor vuelve a procesar la imagen**: normaliza formato y
-tamaño y **elimina los metadatos EXIF**, que pueden incluir geolocalización. Que el cliente ya
-haya recortado no exime de eso.
+- lo que el usuario ve en la vista previa es exactamente lo que se guarda;
+- el servidor no tiene que interpretar la orientación EXIF, porque no rota nada;
+- **no se conserva el original**, así que reencuadrar obliga a volver a subir la foto. Encaja
+  con el diseño, donde el lápiz reabre «Añadir foto» desde el principio.
 
-Un matiz de la opción B: si el servidor gira la imagen, tiene que interpretar además la
-orientación EXIF del original, o las fotos de móvil aparecerán tumbadas. Con la opción A ese
-problema no existe porque el recorte del navegador ya la resuelve.
+Lo que no cambia: **el servidor sigue reprocesando la imagen**, normalizando el formato y
+**eliminando los metadatos EXIF**, que pueden incluir geolocalización. Recortar y sanear son
+cosas distintas, y que la imagen venga del navegador no garantiza lo segundo.
 
 ## Requisitos de backend derivados
 
 | # | Requisito | Nota |
 |---|---|---|
-| 1 | Aceptar la subida del avatar | `PUT /me/profile/avatar` |
+| 1 | Aceptar la subida del avatar **ya recortado** | `PUT /me/profile/avatar`, sin parámetros de encuadre |
 | 2 | Límite de **2 MB**, impuesto en servidor | El cliente lo anuncia; el servidor lo aplica |
 | 3 | Validar que es una imagen **por su contenido**, no por la extensión | Ver `file-uploads.md` |
 | 4 | Normalizar a imagen cuadrada y redimensionar | 180 × 180 px es la referencia |
@@ -124,8 +123,8 @@ problema no existe porque el recorte del navegador ya la resuelve.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **F-1** | **¿Recorta el cliente o el servidor?** | Determina qué recibe el endpoint: una imagen final o el original más parámetros |
-| F-2 | ¿Se conserva el original para poder reencuadrar más tarde sin volver a subir? | Hoy el lápiz reabre «Añadir foto», lo que sugiere que no |
+| F-1 | ¿Recorta el cliente o el servidor? | **Resuelta:** el cliente |
+| F-2 | ¿Se conserva el original para reencuadrar más tarde? | **No**, consecuencia de `F-1` |
 | F-3 | ¿Qué formatos se aceptan? «Usar la cámara» en iOS produce **HEIC**, que los navegadores no muestran bien | Si no se contempla, las fotos hechas desde iPhone fallarán |
 | F-4 | ¿Se puede **eliminar** la foto y volver al avatar por defecto? | No hay diseño para ello |
 | F-5 | ¿El mismo flujo sirve para la **imagen de portada**? Tiene su propio lápiz pero otras proporciones | Probablemente sí, con otras recomendaciones |

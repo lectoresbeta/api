@@ -41,6 +41,8 @@ la caja de publicación.
   exime de esto: los metadatos pueden incluir la geolocalización de la foto.
 - `RN-4` El resultado se almacena cuadrado. `180 × 180 px` es la referencia del diseño; el
   recorte circular es una máscara de presentación, **la imagen guardada es cuadrada**.
+- `RN-4b` El recorte lo aplica **el cliente**: el endpoint recibe la imagen final y no admite
+  parámetros de encuadre. El servidor no recorta ni gira, solo normaliza y sanea.
 - `RN-5` Las dimensiones que anuncia el modal son una **recomendación**: una imagen mayor o
   menor se acepta y se redimensiona.
 - `RN-6` El fichero se guarda mediante el puerto `FileStorage`, nunca en la base de datos.
@@ -55,25 +57,32 @@ la caja de publicación.
 que el navegador ya ha recortado y guardarla tal cual; eso publicaría las coordenadas de
 donde se tomó la foto.
 
-## Quién recorta
+## El recorte lo hace el cliente
 
-| Opción | Qué sube el cliente | Valoración |
-|---|---|---|
-| **A. El cliente recorta** | La imagen final, cuadrada | **Recomendada.** El servidor recibe algo pequeño y predecible, y el usuario ve exactamente lo que va a quedar |
-| B. El servidor recorta | El original más el zoom y el giro | El servidor debe reproducir la vista previa con exactitud; además tiene que interpretar la orientación EXIF o las fotos de móvil saldrán tumbadas |
+**Decidido:** el navegador aplica el zoom y el giro y sube **la imagen final, ya cuadrada**.
+El servidor recibe un fichero y nada más: ningún parámetro de encuadre.
 
-**Sin decidir** (`F-1`). Con la opción A el endpoint recibe un fichero y nada más; con la B,
-un fichero y dos parámetros.
+Consecuencias:
 
-En ambos casos se aplica `RN-3`.
+- El endpoint es una subida simple. No hay que reproducir en servidor la vista previa que vio
+  el usuario, ni arriesgarse a que difieran por redondeos.
+- **Desaparece el problema de la orientación EXIF al girar.** El recorte del navegador la
+  resuelve antes de subir, así que el servidor nunca tiene que rotar nada.
+- El servidor **sigue reprocesando la imagen** (`RN-3`). Que venga recortada del navegador no
+  es garantía de que no conserve metadatos: el recorte y el saneamiento son cosas distintas.
+- **No se conserva el original.** Reencuadrar más adelante obliga a volver a subir la foto.
+  Es coherente con el diseño, donde el lápiz reabre «Añadir foto» desde el principio.
+
+Lo último es lo único que se pierde con esta opción, y se puede revertir subiendo también el
+original si algún día compensa (`F-2`).
 
 ## Flujo principal
 
 1. El usuario pulsa el lápiz del avatar.
 2. Elige un fichero, o hace una foto con la cámara.
 3. Se valida el tipo en cliente; si no es imagen, se avisa y el modal sigue abierto.
-4. Encuadra con zoom y giro.
-5. Guarda.
+4. Encuadra con zoom y giro **en el navegador**.
+5. Guarda: el cliente genera la imagen recortada y la sube.
 6. El servidor valida tipo y tamaño, reprocesa la imagen y la almacena.
 7. Devuelve la URL nueva.
 8. El cliente refresca el avatar en perfil, cabecera y caja de publicación.
@@ -104,8 +113,8 @@ fallarán o se verán rotas.
 
 `PUT` y no `POST`: el avatar es un recurso único del usuario y volver a subirlo lo reemplaza.
 
-La subida es `multipart/form-data`. Si se adopta la opción B, lleva además los parámetros de
-encuadre.
+La subida es `multipart/form-data` con **un único fichero**: la imagen ya recortada. No lleva
+parámetros de zoom ni de giro.
 
 ## Modelo de datos afectado
 
@@ -122,6 +131,8 @@ La imagen vive en el almacenamiento externo. En base de datos solo queda la refe
 - [ ] Un fichero de más de 2 MB se rechaza con `413`.
 - [ ] La imagen almacenada **no conserva metadatos EXIF**.
 - [ ] La imagen almacenada es cuadrada.
+- [ ] El endpoint no acepta parámetros de encuadre: el recorte ya viene hecho.
+- [ ] Una imagen recortada por el navegador tampoco conserva metadatos EXIF tras guardarse.
 - [ ] Una imagen de 4000 × 3000 px se acepta y se redimensiona.
 - [ ] El nombre original del fichero no aparece en la URL ni en la respuesta.
 - [ ] Subir una foto nueva reemplaza la anterior.
@@ -134,9 +145,9 @@ La imagen vive en el almacenamiento externo. En base de datos solo queda la refe
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **F-1** | ¿Recorta el cliente o el servidor? | Define qué recibe el endpoint |
 | **F-3** | ¿Se acepta HEIC? La cámara de iOS lo produce por defecto | Sin conversión, las fotos desde iPhone fallan |
-| F-2 | ¿Se conserva el original para reencuadrar sin volver a subir? | El diseño sugiere que no |
+| F-1 | ¿Recorta el cliente o el servidor? | **Resuelta:** el cliente. El endpoint recibe la imagen final |
+| F-2 | ¿Se conserva el original para reencuadrar sin volver a subir? | **No**, como consecuencia de `F-1`. Se podría añadir subiendo también el original |
 | F-4 | ¿Se puede eliminar la foto y volver al avatar por defecto? | Sin diseño |
 | F-5 | ¿El mismo flujo sirve para la imagen de portada? | Otras proporciones y otras recomendaciones |
 | F-7 | ¿Hay límite de cambios por periodo? | Un avatar es un vector de contenido inapropiado y no hay moderación (`V-1`) |
@@ -144,6 +155,7 @@ La imagen vive en el almacenamiento externo. En base de datos solo queda la refe
 
 ## Estado
 
-**Especificación:** `DRAFT`. Para llegar a `APPROVED` hacen falta `F-1` y `F-3`.
+**Especificación:** `DRAFT`. Resuelta `F-1`. Para llegar a `APPROVED` falta decidir si se
+acepta HEIC (`F-3`), que es el formato por defecto de la cámara en iOS.
 
 **Implementación:** `TODO`.
