@@ -51,16 +51,32 @@ porque condiciona qué datos necesita **cualquier** página, no solo la Home.
    241 px                        resto (1440 total)
 ```
 
-**Sin footer.** La nota de diseño lo dice de forma explícita: *«SIN FOOTER»*.
+**Hay footer en todo el layout.** La nota de diseño decía *«SIN FOOTER»*, pero producto lo
+ha resuelto: **el diseño debe tener pie de página aunque las maquetas no lo muestren**. La
+nota queda obsoleta.
 
-> **Contradicción abierta (`L-5`).** La [sección «Leer»](read-section.md) **sí** lleva pie de
-> página, con «© Lectores beta», «Política de privacidad», «Política de cookies», «Aviso
-> legal» e iconos de redes sociales.
->
-> O el layout tiene footer y esta nota está obsoleta, o el footer es exclusivo de algunas
-> pantallas. Para el backend la consecuencia no es el footer sino los enlaces: aparecen
-> **tres documentos legales distintos** donde hasta ahora solo constaba «Terms &
-> Conditions», y uno de ellos es una política de cookies. Afecta a `FEAT-USR-024`.
+Contenido, según la [sección «Leer»](read-section.md):
+
+| Elemento | Nota |
+|---|---|
+| «© Lectores beta» | |
+| **Política de privacidad** | `PRIVACY_POLICY` |
+| **Política de cookies** | **Documento nuevo**: no estaba contemplado |
+| **Aviso legal** | **Documento nuevo**: no estaba contemplado |
+| Iconos de redes sociales | Enlaces externos |
+
+Para el backend lo relevante no es el footer sino los enlaces: aparecen **tres documentos
+legales distintos** donde hasta ahora solo constaba «Terms & Conditions». `FEAT-USR-024`
+modela `LegalDocument` con un tipo y una versión, así que admitirlos es añadir valores al
+enum, no rehacer nada.
+
+Dos matices que conviene no pasar por alto:
+
+- **La política de cookies suele exigir consentimiento**, no solo estar publicada. Eso es un
+  banner y un registro de preferencias, que hoy no están en ninguna ficha (`T-6`).
+- **«Aviso legal» y «Condiciones de uso» no son lo mismo.** El aviso legal identifica al
+  titular del sitio; las condiciones regulan la relación con el usuario. Conviene decidir si
+  el aviso legal se acepta —probablemente no— o solo se publica (`T-7`).
 
 ## Menú lateral
 

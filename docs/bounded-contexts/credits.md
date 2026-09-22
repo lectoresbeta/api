@@ -156,24 +156,27 @@ coste = créditos(TextTier) + max(0, númeroDePreguntas − 3)
 > precio del texto y pasa a ser **el principal determinante** del precio, en las dos
 > direcciones.
 >
-> | | Fórmula de arriba | Modelo confirmado |
+> | | Fórmula de arriba | Decidido |
 > |---|---|---|
-> | Coste al autor | `créditos(TextTier) + max(0, preguntas − 3)` | Lo determina el cuestionario |
-> | Recompensa al lector | `créditos(TextTier)` | También lo determina el cuestionario |
-> | Relación entre ambas | Independientes | **Salen de la misma configuración** |
+> | Factores | `TextTier` + recargo por preguntas | **Longitud del texto y confección del cuestionario** (`P-2`) |
+> | Unidad de cálculo | La obra | **El capítulo** (`R-2`) |
+> | Coste y recompensa | Coincidían | **Pueden diferir**, con margen de ajuste dinámico (`P-3`) |
+> | La fórmula | Definida | **Aplazada por decisión de producto** (`P-1`) |
 >
-> La fórmula nueva **no existe todavía**. `FEAT-CRD-016` está `BLOCKED` por tres preguntas:
-> qué atributos del cuestionario pesan (`P-1`), si el `TextTier` sigue interviniendo (`P-2`)
-> y si el autor paga exactamente lo que el lector recibe (`P-3`).
+> Tres consecuencias técnicas de `P-3` que afectan al diseño de este contexto:
 >
-> `P-2` es la crítica: si el precio dependiera **solo** del cuestionario, corregir una novela
-> de 50.000 palabras costaría lo mismo que un microcuento con la misma pregunta, y nadie
-> leería novelas. El esfuerzo del lector es **leer**, no solo responder.
+> 1. El cargo al autor y el abono al lector son **dos movimientos independientes**, nunca una
+>    transferencia entre cuentas.
+> 2. La diferencia la absorbe una **cuenta de sistema**. Sin ella, la suma de saldos deja de
+>    cuadrar en cuanto las dos cifras difieren.
+> 3. Cada movimiento guarda **la versión de la regla** que lo calculó. Un precio que cambia
+>    con el tiempo es imposible de auditar sin eso.
 >
-> `P-3` decide si el sistema conserva, crea o destruye crédito. No es un detalle.
+> Y una dependencia nueva: un ajuste dinámico necesita medir la masa de créditos, así que
+> `FEAT-CRD-012` deja de ser opcional.
 >
-> Hasta que existan esas respuestas, la fórmula de arriba se mantiene documentada como punto
-> de partida, **no como especificación vigente**.
+> Hasta que exista fórmula, la de arriba se mantiene documentada como punto de partida,
+> **no como especificación vigente**.
 
 ## Eventos consumidos
 
@@ -236,6 +239,10 @@ existe, el evento se descarta sin efecto.
 - `RN-6` El importe queda fijado **en el momento en que se compromete el crédito** —la
   retención—, no al enviar la corrección. Quien empezó a corregir con unas condiciones las
   conserva aunque el autor cambie el cuestionario después (`FEAT-CRD-016` `RN-2`, `RN-3`).
+  Con precios dinámicos esta regla deja de ser una comodidad y pasa a ser obligatoria.
+- `RN-9` Lo que paga el autor y lo que cobra el lector son **importes independientes**. La
+  diferencia va a una **cuenta de sistema**, nunca a un descuadre.
+- `RN-10` Todo movimiento registra **la versión de la regla de precio** que lo calculó.
 - `RN-7` Los créditos de bienvenida se abonan al **activar** la cuenta, no al crearla. Una
   cuenta sin verificar nunca tiene saldo. Ver
   [`decision:0003`](../decisions/0003-write-operations-require-activated-account.md).

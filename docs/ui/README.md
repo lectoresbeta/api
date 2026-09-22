@@ -19,7 +19,7 @@ precisa de qué funcionalidades existen y cómo se comportan.
 | [profile-more-info.md](profile-more-info.md) | «Más info»: obras publicadas y premios | `FEAT-USR-029`, `FEAT-USR-030` | `DRAFT` |
 | [user-profile.md](user-profile.md) | Perfil ajeno: pestañas, relación, seguir, silenciar, bloquear y denunciar | `FEAT-USR-014`, `FEAT-COM-033`–`035` | `DRAFT` |
 | [read-section.md](read-section.md) | Sección «Leer»: filtros, ordenación, paginación numerada y pie de página | `FEAT-WRK-012`, `FEAT-CRD-013` | `DRAFT` |
-| [read-chapter.md](read-chapter.md) | Leer un capítulo, comentarlo y **corregirlo** con el cuestionario del autor | `FEAT-FBK-003`, `FEAT-FBK-011`, `FEAT-WRK-014`, `FEAT-COM-036`, `FEAT-CRD-016` | `DRAFT` |
+| [read-chapter.md](read-chapter.md) | Leer un capítulo, comentarlo y **corregirlo** con el cuestionario del autor | `FEAT-FBK-003`, `FEAT-FBK-011`, `FEAT-FBK-012`, `FEAT-WRK-014`, `FEAT-COM-036`, `FEAT-CRD-016` | `DRAFT` |
 
 El resto se irá incorporando a medida que lleguen las páginas de Figma.
 

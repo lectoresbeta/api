@@ -7,9 +7,9 @@
 
 | Método y ruta | `operationId` | Propósito | Funcionalidad | Estado |
 |---|---|---|---|---|
-| `POST /works/{workId}/corrections` | `submitCorrection` | Enviar la corrección | FEAT-FBK-003 | DRAFT |
-| `PUT /works/{workId}/correction/draft` | `saveCorrectionDraft` | Guardar borrador | FEAT-FBK-011 | DRAFT |
-| `DELETE /works/{workId}/correction/draft` | `discardCorrectionDraft` | Descartar borrador | FEAT-FBK-011 | DRAFT |
+| `POST /chapters/{chapterId}/corrections` | `submitCorrection` | Enviar la corrección | FEAT-FBK-003 | DRAFT |
+| `PUT /chapters/{chapterId}/correction/draft` | `saveCorrectionDraft` | Guardar borrador | FEAT-FBK-011 | DRAFT |
+| `DELETE /chapters/{chapterId}/correction/draft` | `discardCorrectionDraft` | Descartar borrador | FEAT-FBK-011 | DRAFT |
 | `GET /works/{workId}/corrections` | `listWorkCorrections` | Correcciones recibidas | FEAT-FBK-004 | PENDING |
 | `POST /corrections/{correctionId}/reply` | `replyToCorrection` | Contestar | FEAT-FBK-005 | PENDING |
 | `POST /corrections/{correctionId}/rating` | `rateCorrection` | Valorarla como útil | FEAT-FBK-006 | PENDING |
@@ -17,12 +17,13 @@
 | `GET /me/corrections` | `listMyCorrections` | Mis correcciones | FEAT-FBK-010 | PENDING |
 | `POST /works/{workId}/rating` | `rateWork` | Valorar la obra | FEAT-FBK-002 | PENDING |
 
-El cuestionario **se lee desde `Work`** (`GET /works/{workId}/questionnaire`): las preguntas
-son del autor, las respuestas son de `Feedback`.
+Las rutas cuelgan del **capítulo**: la corrección es por capítulo (`R-2`). El cuestionario se
+lee desde `Work` (`GET /chapters/{chapterId}/questionnaire`): las preguntas son del autor,
+las respuestas son de `Feedback`.
 
 ---
 
-## `POST /works/{workId}/corrections`
+## `POST /chapters/{chapterId}/corrections`
 
 **`operationId`:** `submitCorrection` · **Funcionalidad:** [`FEAT-FBK-003`](../../features/feedback/FEAT-FBK-003-answer-correction-questionnaire.md)
 
@@ -38,8 +39,10 @@ no puede corregir su propia obra.
 
 ### Reglas aplicadas
 
-- Una corrección por lector y obra, garantizada por índice único.
-- Todas las preguntas obligatorias respondidas, con la longitud mínima de cada una.
+- Una corrección por lector y **capítulo**, garantizada por índice único. El mismo lector
+  puede corregir varios capítulos de la misma obra.
+- Todas las preguntas obligatorias respondidas, con la longitud mínima **en palabras** de
+  cada una.
 - Se envía contra la **versión del cuestionario que se respondió**, aunque el autor lo haya
   cambiado entre medias.
 - Una vez enviada es **inmutable**: no se edita ni se borra, porque el autor ya ha pagado.
@@ -62,7 +65,7 @@ La corrección creada. **Sin importes de créditos**: el abono es asíncrono y l
 | Cuenta sin activar | `403` |
 | El autor intenta corregir su obra | `403` |
 | La obra ya no está en corrección | `409` |
-| Ya envió una corrección de esa obra | `409` |
+| Ya envió una corrección de ese capítulo | `409` |
 | Reintento con la misma `Idempotency-Key` | `200` con la corrección existente |
 
 ### Efectos
@@ -76,7 +79,7 @@ autor, y una cola con reintentos no es sitio para él.
 
 ---
 
-## `PUT /works/{workId}/correction/draft`
+## `PUT /chapters/{chapterId}/correction/draft`
 
 **`operationId`:** `saveCorrectionDraft` · **Funcionalidad:** [`FEAT-FBK-011`](../../features/feedback/FEAT-FBK-011-save-correction-draft.md)
 
@@ -91,7 +94,7 @@ alguien tiene una crítica a medias es información que no le corresponde.
 
 ### Reglas aplicadas
 
-- Un borrador por lector y obra; guardar de nuevo sobrescribe.
+- Un borrador por lector y **capítulo**; guardar de nuevo sobrescribe.
 - **No se valida obligatoriedad ni longitud mínima**: está a medias por definición. Sí el
   máximo, para no almacenar texto sin límite.
 
@@ -99,5 +102,5 @@ alguien tiene una crítica a medias es información que no le corresponde.
 
 **Ninguno.** No publica eventos ni mueve créditos. Un borrador no es un hecho de negocio.
 
-Es idempotente por naturaleza —el recurso es único por lector y obra—, así que no necesita
-`Idempotency-Key`.
+Es idempotente por naturaleza —el recurso es único por lector y capítulo—, así que no
+necesita `Idempotency-Key`.

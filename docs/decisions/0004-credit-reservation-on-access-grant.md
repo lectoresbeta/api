@@ -79,6 +79,15 @@ Detalle en [`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-reserve-credits-on-
 Alto. La retención es un agregado con ciclo de vida propio y su ausencia cambia el contrato
 de tres contextos. Conviene cerrar además `R-1` antes de implementar.
 
+> **Actualización 2026-09-22.** La corrección resulta ser **por capítulo** (`R-2`), no por
+> obra. El acceso de lector beta se concede por obra, así que la unidad sobre la que se
+> reserva y la unidad sobre la que se gasta **han dejado de coincidir**.
+>
+> Esta decisión no se invalida —la reserva previa sigue siendo la respuesta a `C-1`—, pero su
+> **granularidad queda abierta**. La opción B2 («reserva por obra») gana peso, y aparece una
+> tercera: reservar por obra y descontar por capítulo. Ver `R-1` en
+> [`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-reserve-credits-on-access-grant.md).
+
 ## La compensación
 
 Es la consecuencia que más cuidado exige, así que se documenta aquí y no solo en la ficha.

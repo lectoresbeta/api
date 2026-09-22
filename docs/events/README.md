@@ -93,7 +93,7 @@ para calcular la retención sin consultar a `Work`
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `FeedbackSubmitted` | Un LB **envía una corrección**: el cuestionario del autor respondido | **`Credits`**, `Notification`, `Community` | `correctionId`, `workId`, `chapterId?`, `authorId`, `readerId`, `betaReaderAccessId`, `questionnaireVersion`, `submittedAt` |
+| `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification`, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `betaReaderAccessId`, `questionnaireVersion`, `submittedAt` |
 | `FeedbackRatedPositively` | El autor lo valora como útil | **`Credits`**, `Notification`, `Community` | `feedbackId`, `reviewerId`, `authorId` |
 | `FeedbackReplied` | El autor contesta | `Notification` | `feedbackId`, `reviewerId` |
 | `FeedbackHidden` | El autor lo oculta | `Community`, `Credits`* | `feedbackId`, `workId` |
@@ -114,12 +114,16 @@ Un borrador no es un hecho de negocio.
 Tampoco lo es **comentar un capítulo**: eso es `ChapterCommented`, vive en `Community` y no
 mueve créditos. Confundir ambos haría que cada comentario suelto cobrase al autor.
 
+`chapterId` **es obligatorio**: la corrección es por capítulo (`R-2`), y es la longitud de
+ese capítulo la que pesa en el precio junto con el cuestionario. Un evento sin `chapterId`
+dejaría a `Credits` sin poder calcular nada.
+
 ## `Credits`
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance` |
-| `CreditsSpent` | Se confirma una retención | `Notification` | `userId`, `amount`, `reason`, `balance` |
+| `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance`, `pricingRuleVersion?` |
+| `CreditsSpent` | Se confirma una retención | `Notification` | `userId`, `amount`, `reason`, `balance`, `pricingRuleVersion` |
 | `CreditsReserved` | Se retiene el coste de un feedback | `Notification` | `reservationId`, `userId`, `workId`, `amount`, `availableBalance` |
 | `CreditReservationRejected` | No hay saldo disponible | **`Reading`**, `Notification` | `userId`, `workId`, `betaReaderAccessId`, `required`, `available` |
 | `CreditReservationReleased` | Se libera una retención | `Notification` | `reservationId`, `userId`, `amount`, `reason` |

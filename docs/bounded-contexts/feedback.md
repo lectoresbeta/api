@@ -21,6 +21,8 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 
 - Correcciones: el cuestionario de la obra respondido por un lector beta.
 - Borradores de corrección, privados de quien los escribe (`FEAT-FBK-011`).
+- La evaluación antifraude de cada corrección (`FEAT-FBK-012`), como **señal**: quien mueve
+  los créditos sigue siendo `Credits`.
 - Respuestas al cuestionario de la obra.
 - Respuestas del autor a los comentarios.
 - Valoración del comentario por parte del autor (útil / no útil).
@@ -55,7 +57,7 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 |---|---|---|
 | `Feedback` | `FeedbackId` | Lo deja quien tiene acceso vigente, o quien usa un enlace público. Contiene sus respuestas al cuestionario, la respuesta del autor y su valoración. |
 | `WorkRating` | `WorkRatingId` | Una valoración por lector beta y obra. |
-| `Correction` | `CorrectionId` | **Una por lector y obra** (índice único). Responde a una versión concreta del cuestionario. En `DRAFT` es privada; en `SUBMITTED` es inmutable, porque el autor ya ha pagado por ella. |
+| `Correction` | `CorrectionId` | **Una por lector y capítulo** (índice único `(chapterId, readerId)`). Responde a una versión concreta del cuestionario. En `DRAFT` es privada; en `SUBMITTED` es inmutable, porque el autor ya ha pagado por ella. |
 
 ### Value objects y enums
 
@@ -65,7 +67,7 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 | `FeedbackVisibility` | `VISIBLE`, `HIDDEN_BY_AUTHOR` |
 | `FeedbackOrigin` | `BETA_READER`, `PUBLIC_LINK` |
 | `CorrectionStatus` | `DRAFT`, `SUBMITTED` |
-| `AnswerText` | Longitud mínima y máxima las fija la pregunta (`R-5`) |
+| `AnswerText` | Longitud mínima y máxima **en palabras**, fijadas por la pregunta |
 | `RatingValue` | Escala por definir (`F-3`) |
 
 ## Eventos publicados

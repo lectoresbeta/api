@@ -112,8 +112,9 @@ razonable. Hay que añadir la excepción a la convención (`L-4`).
 La pantalla lleva **footer**: «© Lectores beta», «Política de privacidad», «Política de
 cookies», «Aviso legal» e iconos de redes sociales.
 
-Contradice la nota de diseño que decía **«SIN FOOTER»** y que está recogida en
-[app-layout-and-navigation.md](app-layout-and-navigation.md). Ver `L-5`.
+Contradecía la nota de diseño **«SIN FOOTER»**. **Resuelto (`L-5`): hay footer en todo el
+layout**, aunque las maquetas no lo dibujen. Ver
+[app-layout-and-navigation.md](app-layout-and-navigation.md).
 
 Los tres enlaces legales importan: hasta ahora solo constaba «Terms & Conditions» en el menú
 lateral, y aquí aparecen **tres documentos distintos**, uno de ellos de cookies. Afecta a
@@ -135,13 +136,16 @@ lateral, y aquí aparecen **tres documentos distintos**, uno de ellos de cookies
 
 ## Preguntas abiertas
 
+Resuelta: `L-5` (**hay footer** en todo el layout).
+
 | # | Pregunta | Impacto |
 |---|---|---|
 | L-1 | ¿Qué rangos tiene «Tiempo de lectura»? | Define el filtro |
 | L-2 | ¿Qué otras opciones tiene «Organizar según»? | Solo se ve «relevancia» |
 | **L-3** | ¿«0 créditos» significa «no está en corrección»? | Confirma que la insignia es la recompensa del lector |
 | L-4 | ¿Se acepta paginación numerada aquí, frente al cursor por defecto? | Excepción a la convención |
-| L-5 | ¿Hay footer o no? | La nota de diseño decía «SIN FOOTER» |
+| T-6 | ¿Hay banner de consentimiento de cookies y registro de preferencias? | La política de cookies suele exigir consentimiento, no solo publicación |
+| T-7 | ¿El «Aviso legal» se acepta o solo se publica? | No es lo mismo que las condiciones de uso |
 | L-6 | ¿El catálogo excluye las obras propias del usuario? | Corregirse a uno mismo no tiene sentido |
 | L-7 | ¿Se pueden combinar varios géneros y cómo? ¿`Y` o `O`? | Los chips activos muestran varios a la vez |
 | CM-4 | ¿Cómo se calcula «relevancia»? | Cuarto sitio que la necesita |

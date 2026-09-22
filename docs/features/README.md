@@ -20,11 +20,11 @@ verdad sobre el alcance.**
 | `User` (USR) | 37 | 19 | 0 | 0 |
 | `Work` (WRK) | 16 | 5 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
-| `Feedback` (FBK) | 11 | 2 | 0 | 0 |
+| `Feedback` (FBK) | 12 | 3 | 0 | 0 |
 | `Community` (COM) | 36 | 9 | 0 | 0 |
 | `Credits` (CRD) | 16 | 5 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **132** | **41** | **0** | **0** |
+| **Total** | **133** | **42** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -204,6 +204,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-009 | Denunciar un comentario abusivo | User | PENDING | DEFERRED | P3 | — |
 | FEAT-FBK-010 | Mis correcciones — listado del feedback que he dado | User | PENDING | TODO | P2 | — |
 | FEAT-FBK-011 | Guardar un borrador de corrección | BetaReader | DRAFT | TODO | P1 | [ficha](feedback/FEAT-FBK-011-save-correction-draft.md) |
+| FEAT-FBK-012 | Control antifraude de las correcciones | — (sistema) | PENDING | BLOCKED | P0 | [ficha](feedback/FEAT-FBK-012-correction-fraud-control.md) |
 
 > **Una corrección no es un comentario.** La pantalla de lectura tiene las dos cosas a la
 > vez: comentarios libres bajo el texto, que no mueven créditos y pertenecen a `Community`
@@ -211,9 +212,18 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 > `Feedback` (`FEAT-FBK-003`). Hasta ahora la documentación las confundía. Esto aclara `D-1`
 > y `F-1`: **lo que el sistema paga es el cuestionario respondido.**
 >
+> **La corrección es por capítulo** (`R-2`, decidida). Un lector puede corregir cada capítulo
+> por separado, y cada corrección es una operación de créditos independiente. El índice único
+> que impide repetir es `(chapterId, readerId)`.
+>
 > `FEAT-FBK-011` sale del botón «Guardar» del panel de corrección: un borrador **no publica
 > ningún evento ni mueve créditos**. Es el mismo agregado que la corrección, en estado
 > `DRAFT`.
+>
+> `FEAT-FBK-012` recoge el **control antifraude** que producto confirma que existirá. Nace en
+> `P0` porque el formulario de corrección es el único punto de la plataforma donde escribir
+> texto produce saldo, y porque la longitud mínima —única defensa actual— no distingue una
+> respuesta larga de una respuesta con contenido.
 >
 > `FEAT-FBK-008` está `BLOCKED` por `A-3`, `C-5` y `F-6`: sin resolver si el comentarista
 > anónimo se identifica y si la operación mueve créditos, no se puede especificar.
@@ -307,12 +317,16 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-009 | Reservar créditos al conceder acceso a un lector beta | — (sistema) | DRAFT | TODO | P0 | [ficha](credits/FEAT-CRD-009-reserve-credits-on-access-grant.md) |
 | FEAT-CRD-010 | Calcular el coste con fórmula continua en vez de tramos | — (sistema) | PENDING | DEFERRED | P3 | — |
 | FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | PENDING | TODO | P0 | — |
-| FEAT-CRD-012 | Monitorizar la salud de la economía de créditos | Admin | PENDING | DEFERRED | P3 | — |
+| FEAT-CRD-012 | Monitorizar la salud de la economía de créditos | Admin | PENDING | TODO | P1 | — |
 | FEAT-CRD-013 | Créditos asociados a una obra (insignia de la tarjeta) | User | DRAFT | DEFERRED | P3 | [ficha](credits/FEAT-CRD-013-work-credit-badge.md) |
 | FEAT-CRD-014 | Modal informativo del sistema de créditos | User | DRAFT | TODO | P2 | [ficha](credits/FEAT-CRD-014-credits-info-modal.md) |
 | FEAT-CRD-015 | Pantalla con la tabla de puntuación de créditos | User | PENDING | TODO | P2 | — |
 | FEAT-CRD-016 | Coste y recompensa determinados por el cuestionario | — (sistema) | DRAFT | BLOCKED | P0 | [ficha](credits/FEAT-CRD-016-questionnaire-based-pricing.md) |
 
+> **`FEAT-CRD-012` pasa de `DEFERRED` a `TODO`.** Con precios de ajuste dinámico (`P-3`),
+> medir la salud de la economía deja de ser una herramienta de administración y pasa a ser
+> el **instrumento del que depende la política de precios**.
+>
 > **`C-1` está resuelta.** Se adopta la **reserva previa**
 > ([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)): al conceder
 > acceso a un lector beta se retienen los créditos del autor (`FEAT-CRD-009`) y al recibir el
@@ -364,17 +378,40 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-WRK-016 | `W-9` | Si `WorkStatus` sustituye a `Visibility` |
 | FEAT-COM-034 | `B-2`, `B-3` | Si bloquear revoca el acceso de lector beta y libera su retención, y qué pasa con el feedback que el autor **ya pagó** |
 | FEAT-USR-014 | `U-17` | Si el contador de correcciones es público y la lista no, de forma deliberada |
-| **FEAT-CRD-016** | **`P-1`, `P-2`, `P-3`** | **Cómo se traduce el cuestionario en coste y recompensa. Es el corazón económico del producto y ahora mismo no hay fórmula** |
-| FEAT-FBK-003, FEAT-WRK-014, FEAT-CRD-016 | **`R-2`** | Si la corrección es **por capítulo o por obra**. Cambia el modelo de datos y sobre qué se calcula el precio |
+| **FEAT-CRD-016** | **`P-1`** | **La fórmula de precios. Aplazada por decisión de producto: los factores están decididos, la traducción a cifras no** |
+| **FEAT-CRD-009, FEAT-FBK-003** | **`R-1`** | Si la retención es por obra o **por capítulo**. La corrección por capítulo ha separado las dos granularidades |
+| **FEAT-FBK-012** | `AF-1`, `AF-2` | Qué mecanismo antifraude, y si actúa antes o después del abono |
+| FEAT-CRD-016 | `P-5`, `P-6` | Cada cuánto se ajusta el precio y dónde se acumula el margen entre lo que paga el autor y lo que cobra el lector |
+| FEAT-WRK-014 | `W-17` | Si las preguntas de obra entera se repiten en cada capítulo |
 | FEAT-WRK-012 | `L-9` | Cómo llega la insignia de créditos al catálogo sin acoplar `Work` con `Credits` |
-| FEAT-FBK-003 | `Q-3`, `Q-4` | Qué impide cobrar por correcciones vacías de contenido, y si el autor puede rechazarlas |
 
-Estas decisiones son el camino crítico de la especificación. **`P-1`/`P-2`/`P-3` son ahora
-las más urgentes**: sin fórmula de precios no hay economía, y sin economía no hay producto.
-Implementarla con valores provisionales produciría saldos que después habría que corregir a
-mano.
+**Decisiones tomadas el 2026-09-22** que cierran buena parte de lo anterior:
 
-`R-2` es la segunda: afecta al modelo de datos de tres contextos a la vez.
+| # | Decisión |
+|---|---|
+| `P-2` | En el precio intervienen **la longitud del texto y la confección del cuestionario**. El `TextTier` sigue vigente |
+| `P-3` | Coste y recompensa **no tienen por qué coincidir**: cabe un margen, incluso con ajuste dinámico |
+| `P-1` | La fórmula exacta se define **más adelante** |
+| `R-2` | La corrección es **por capítulo** |
+| `R-5` | Las longitudes de respuesta se miden **en palabras** |
+| `Q-3`/`Q-4` | Habrá **control antifraude**, con IA u otros mecanismos. Mecanismo por definir (`FEAT-FBK-012`) |
+| `L-5` | **Hay footer** en todo el layout, aunque las maquetas no lo dibujen |
+
+Dos consecuencias que no existían antes de tomarlas:
+
+- **`R-1` pasa a ser lo más urgente.** El acceso de lector beta se concede **por obra** y el
+  coste ahora se devenga **por capítulo**. La reserva previa de `decision:0004` ya no cubre
+  automáticamente lo que se va a gastar, y la decisión afecta a `Reading`, `Feedback` y
+  `Credits` a la vez.
+- **`FEAT-CRD-012` deja de ser opcional.** Un ajuste dinámico de precios necesita medir la
+  masa de créditos; sin monitorización sería un ajuste a ciegas. Pasa de `DEFERRED`/`P3` a
+  `TODO`/`P1`.
+
+`P-1` sigue bloqueando `FEAT-CRD-016`, pero es un bloqueo distinto: no falta información,
+falta una decisión que producto toma después. Mientras tanto se puede construir todo el
+andamiaje —registro auditable de movimientos, cuenta de sistema, fijación del importe en la
+retención y la abstracción tras la que vivirá la regla—, de modo que lo único pendiente sea
+**una implementación de esa abstracción**.
 
 ### Decisiones que frenan el paso a `APPROVED`
 

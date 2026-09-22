@@ -29,6 +29,15 @@ que aceptarlos.
 Parece un detalle de interfaz y no lo es: la aceptación hay que **poder demostrarla después**,
 y eso solo se consigue si el backend registra qué versión concreta se aceptó y cuándo.
 
+> **El pie de página añade dos documentos más** (`L-5`): una **política de cookies** y un
+> **aviso legal**, además de la política de privacidad. Se suman como tipos de
+> `LegalDocument`; el modelo ya los admite sin cambios.
+>
+> No todos se **aceptan**, sin embargo. Publicar un aviso legal es una obligación de
+> transparencia; recabar consentimiento de cookies es otra cosa y requiere su propio
+> mecanismo (`T-6`, `T-7`). Meterlos todos en la misma casilla del registro sería cómodo y
+> probablemente incorrecto.
+
 ## Actores y autorización
 
 | Actor | Puede | Condición |
@@ -88,7 +97,7 @@ Sí necesita, al menos:
 
 | Tabla | Contenido |
 |---|---|
-| `legal_document` | Tipo (`TERMS_OF_USE`, `PRIVACY_POLICY`), versión, fecha de entrada en vigor |
+| `legal_document` | Tipo (`TERMS_OF_USE`, `PRIVACY_POLICY`, `COOKIE_POLICY`, `LEGAL_NOTICE`), versión, fecha de entrada en vigor |
 | `legal_acceptance` | `user_id`, documento, versión, fecha. **Inmutable** |
 
 ## Diseño (Figma)
@@ -112,6 +121,8 @@ Sí necesita, al menos:
 | # | Pregunta | Impacto |
 |---|---|---|
 | T-1 | ¿Dónde viven los textos legales: en el backend, en el CMS del frontend, o en ficheros estáticos? | Determina si `GET /legal/documents` existe |
+| **T-6** | ¿Hay banner de consentimiento de cookies y registro de preferencias? | Publicar la política no equivale a recabar consentimiento |
+| T-7 | ¿El «Aviso legal» se acepta o solo se publica? | Identifica al titular del sitio; no regula la relación con el usuario |
 | T-2 | ¿Qué ocurre cuando cambian los términos con usuarios ya registrados? ¿Hay reaceptación obligatoria? | Flujo completo sin diseñar |
 | T-3 | ¿Hace falta consentimiento separado para comunicaciones comerciales? El pie del correo incluye «Cancelar suscripción» | Requisito probable de protección de datos |
 | T-4 | ¿El alta con Google también exige aceptación? | **Resuelto:** sí. Sin aceptación no se crea la cuenta (`RN-7`, `FEAT-USR-002`) |

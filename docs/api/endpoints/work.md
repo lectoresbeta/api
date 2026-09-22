@@ -22,7 +22,8 @@
 | `PUT /chapters/{chapterId}/visibility` | `setChapterVisibility` | Visibilidad del fragmento | FEAT-WRK-008 | PENDING |
 | `PUT /works/{workId}/visibility` | `setWorkVisibility` | Visibilidad de la obra | FEAT-WRK-008 | PENDING |
 | `PUT /works/{workId}/access-mode` | `setAccessMode` | Modalidad de acceso de LB | FEAT-WRK-007 | PENDING |
-| `GET /works/{workId}/questionnaire` | `getWorkQuestionnaire` | Ver cuestionario | FEAT-WRK-014 | DRAFT |
+| `GET /works/{workId}/questionnaire` | `getWorkQuestionnaire` | Ver cuestionario (autor) | FEAT-WRK-014 | DRAFT |
+| `GET /chapters/{chapterId}/questionnaire` | `getChapterQuestionnaire` | Cuestionario a responder y borrador | FEAT-FBK-003 | DRAFT |
 | `PUT /works/{workId}/questionnaire` | `updateWorkQuestionnaire` | Definir cuestionario | FEAT-WRK-014 | DRAFT |
 | `POST /works/{workId}/questionnaire/estimate` | `estimateQuestionnairePricing` | Simular coste y recompensa | FEAT-WRK-014 | DRAFT |
 | `PUT /works/{workId}/status` | `setWorkStatus` | Borrador / visible / en corrección | FEAT-WRK-016 | DRAFT |
@@ -151,7 +152,8 @@ Solo el autor de la obra.
 
 ### Entrada
 
-Lista ordenada de preguntas: enunciado, ejemplo, obligatoriedad y longitudes.
+Lista ordenada de preguntas: enunciado, ejemplo, obligatoriedad, longitudes **en palabras** y
+alcance (`EVERY_CHAPTER` / `LAST_CHAPTER`, pendiente de `W-17`).
 
 ### Respuesta
 
@@ -160,23 +162,31 @@ El cuestionario con su `version`. Requiere `If-Match`
 
 ### Efectos
 
-Publica `QuestionnaireUpdated`, que `Credits` consume para recalcular coste y recompensa de
-esa obra.
+Publica `QuestionnaireUpdated`, que `Credits` consume para recalcular coste y recompensa.
+Como el precio depende también de la longitud del texto y la corrección es por capítulo, lo
+que se recalcula es **el precio de cada capítulo**, no una cifra única de la obra.
 
 El payload lleva **los atributos que determinan el precio, no el enunciado de las
 preguntas**: el texto es contenido del autor y no tiene por qué circular por la cola.
 
 ---
 
-## `GET /works/{workId}/questionnaire`
+## `GET /works/{workId}/questionnaire` y `GET /chapters/{chapterId}/questionnaire`
 
-**`operationId`:** `getWorkQuestionnaire` · **Funcionalidades:** [`FEAT-WRK-014`](../../features/work/FEAT-WRK-014-configure-questionnaire.md), [`FEAT-FBK-003`](../../features/feedback/FEAT-FBK-003-answer-correction-questionnaire.md)
+**`operationId`:** `getWorkQuestionnaire` / `getChapterQuestionnaire` · **Funcionalidades:** [`FEAT-WRK-014`](../../features/work/FEAT-WRK-014-configure-questionnaire.md), [`FEAT-FBK-003`](../../features/feedback/FEAT-FBK-003-answer-correction-questionnaire.md)
 
 ### Propósito
 
-Obtener el cuestionario vigente. Para un lector beta, devuelve además **su borrador**, de modo
-que abrir el panel de corrección sea una sola llamada.
+Son dos operaciones distintas sobre el mismo objeto, y conviene que lo sean:
 
-**La representación depende de quién pregunta**: el autor ve la configuración completa; el
-lector, solo lo necesario para responder. No son la misma respuesta aunque describan el mismo
-objeto.
+| Ruta | Para quién | Qué devuelve |
+|---|---|---|
+| `/works/{workId}/questionnaire` | El autor | La configuración completa y su versión |
+| `/chapters/{chapterId}/questionnaire` | El lector beta | Las preguntas que **aplican a ese capítulo** y **su borrador** |
+
+La segunda existe porque la corrección es por capítulo: qué preguntas aplican puede depender
+del capítulo (`W-17`), y el borrador es de ese capítulo. Devolver ambas cosas juntas hace que
+abrir el panel de corrección sea **una sola llamada**.
+
+Que la representación dependa de quién pregunta no es un detalle: el autor ve cómo está
+configurado el formulario; el lector, solo lo que necesita para responderlo.

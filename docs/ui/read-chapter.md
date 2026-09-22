@@ -1,7 +1,7 @@
 ---
 screen: Leer un capítulo y corregirlo
 figma: (capturas aportadas en conversación, 2026-09-22)
-features: [FEAT-WRK-004, FEAT-FBK-003, FEAT-FBK-011, FEAT-WRK-014, FEAT-COM-036, FEAT-CRD-016]
+features: [FEAT-WRK-004, FEAT-FBK-003, FEAT-FBK-011, FEAT-FBK-012, FEAT-WRK-014, FEAT-COM-036, FEAT-CRD-016]
 actors: [User, BetaReader]
 updated: 2026-09-22
 ---
@@ -71,6 +71,7 @@ su «Más relevantes» y sus respuestas anidadas.
 > | Dónde | Bajo el texto, abierto | Panel «Empezar corrección» |
 > | Qué es | Reacción social, libre | Respuesta al cuestionario del autor |
 > | Créditos | **Ninguno** | **Los mueve: cuesta al autor y recompensa al lector** |
+> | Cuántas caben | Las que sean | **Una por lector y capítulo** (`R-2`) |
 > | Modelo | `PostComment` o equivalente | `Feedback` |
 > | Quién | Cualquiera que pueda leer | Quien tenga acceso de lector beta |
 >
@@ -94,7 +95,7 @@ producto quiere fomentar.
 |---|---|
 | Título | «Responde y envía el cuestionario creado por el autor» |
 | Preguntas | Cada una con su área de texto y un **ejemplo** como marcador |
-| Contador | **`0 / 100`** por respuesta |
+| Contador | **`0 / 100`** por respuesta, **en palabras** (`R-5`, resuelta) |
 | Acciones | **«Enviar»** (deshabilitado hasta que haya contenido) y **«Guardar»** |
 
 Preguntas del ejemplo:
@@ -107,6 +108,10 @@ Preguntas del ejemplo:
 
 La tercera menciona al personaje por su nombre: **las preguntas las escribe el autor** para su
 obra concreta, no salen de una plantilla fija.
+
+La cuarta —«¿Qué te pareció el final de la historia?»— es de **obra entera**, y la corrección
+es **por capítulo** (`R-2`). Preguntada en el capítulo 1, no tiene respuesta. Ver `W-17` en
+[`FEAT-WRK-014`](../features/work/FEAT-WRK-014-configure-questionnaire.md).
 
 ### «Guardar» es un borrador
 
@@ -126,17 +131,16 @@ campo libre hasta varias preguntas concretas.
 
 Es una refinación importante del modelo de créditos:
 
-| | Modelo anterior | Con esta pantalla |
+| | Modelo anterior | Decidido |
 |---|---|---|
-| Coste al autor | `créditos(TextTier) + max(0, preguntas − 3)` | Lo determina la configuración del cuestionario |
-| Recompensa al lector | `créditos(TextTier)` | También la determina el cuestionario |
-| Quién decide | La tabla | **El autor**, al confeccionar el formulario |
+| Factores | `TextTier` + recargo por preguntas | **Longitud del texto y confección del cuestionario** |
+| Unidad | La obra | **El capítulo** |
+| Coste y recompensa | Coincidían | **Pueden diferir**, con margen ajustable dinámicamente |
 
-Las dos caras salen de la misma configuración, así que dejan de ser independientes: **a más
-exigente el cuestionario, más cuesta y más se recompensa**. Es coherente y hace explícito el
-intercambio.
+A más exigente el cuestionario y más largo el capítulo, más cuesta y más se recompensa. El
+margen entre ambas cifras permite regular la masa total de créditos sin romper esa relación.
 
-Cómo se traduce exactamente la configuración en cifras **no está definido** (`FEAT-CRD-016`).
+La **fórmula exacta se define más adelante** por decisión de producto (`FEAT-CRD-016`, `P-1`).
 
 ## «También te puede interesar»
 
@@ -162,19 +166,25 @@ mismo motor que las recomendaciones de la Home (`FEAT-COM-017`).
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **R-2** | ¿La corrección es **por capítulo o por obra**? El botón está en el capítulo, pero las preguntas hablan de «la historia» y «el final» | **Bloqueante.** Cambia el cálculo de créditos y el modelo de `Feedback` |
-| **R-3** | ¿Cómo se traduce el cuestionario en coste y recompensa? | `FEAT-CRD-016`. Sin fórmula no hay economía |
-| R-1 | ¿Las métricas son por capítulo o por obra? La pantalla las muestra por capítulo | Agregados en dos niveles |
+| **R-1** | Con la corrección por capítulo, ¿la retención de créditos es por obra o por capítulo? | El acceso se concede por obra; el coste se devenga por capítulo |
+| **W-17** | ¿Se repiten en cada capítulo preguntas que hablan de «la historia» o «el final»? | El autor pagaría por preguntas sin respuesta posible |
+| **R-10** | ¿Hay tope de correcciones por obra? | Trocear una novela en cuarenta capítulos multiplica el coste por cuarenta |
 | R-4 | ¿Quién puede ver «Empezar corrección»? ¿Hace falta acceso de lector beta previo? | Hasta ahora el acceso se concedía antes de leer |
-| R-5 | ¿Qué es el límite `0 / 100`: caracteres o palabras? Cien caracteres es muy poco para una crítica | Validación |
 | R-6 | ¿Se puede leer el capítulo sin acceso de lector beta? | La pantalla no distingue |
-| R-7 | ¿Cuántos borradores de corrección puede tener alguien a la vez? | Uno por obra parece lo natural |
-| R-8 | ¿Caduca un borrador de corrección? | Si reserva algo, sí debería |
+| R-8 | ¿Caduca un borrador de corrección? | Con un borrador por capítulo, el saldo inmovilizado se multiplica |
 | H-3 | ¿Qué cuenta como «lectura»? | Tercera vez que aparece sin definir |
 | R-9 | ¿Los comentarios de un capítulo son `PostComment` o un tipo aparte? | Decide qué contexto los posee |
+| R-11 | ¿Las métricas por capítulo se agregan también a nivel de obra? | La tarjeta del catálogo muestra cifras de obra |
 
-`R-2` es el que más arrastra: si la corrección es por obra, el botón del capítulo abre algo
-que no pertenece a ese capítulo, y el coste no puede calcularse por fragmento.
+Resueltas: **`R-2`** (la corrección es **por capítulo**), **`R-5`** (el contador es en
+**palabras**), `R-3` (los factores son longitud y cuestionario; la fórmula se define después)
+y `R-7` (un borrador por capítulo).
+
+**`R-1` es la que hereda el peso de `R-2`.** El acceso de lector beta se concede por obra,
+pero ahora el gasto ocurre capítulo a capítulo: las dos granularidades han dejado de
+coincidir y la reserva previa de
+[`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md) ya no cubre
+automáticamente lo que se va a gastar.
 
 ## Anomalías
 
@@ -183,4 +193,4 @@ que no pertenece a ese capítulo, y el coste no puede calcularse por fragmento.
 | A-1 | La miga de pan dice «Los guardianes del desierto» y el texto habla de «Guardianes del Horizonte» | Datos de maqueta |
 | A-2 | «Pedro Martinez» sin tilde en la cabecera, con tilde en otras pantallas | Unificar |
 | A-3 | 327K likes sobre 68K lecturas: más likes que lecturas | Datos de maqueta |
-| A-4 | El contador `0 / 100` limita mucho para una crítica literaria | Ver `R-5` |
+| A-4 | El contador `0 / 100` | **Resuelta:** son palabras, no caracteres |

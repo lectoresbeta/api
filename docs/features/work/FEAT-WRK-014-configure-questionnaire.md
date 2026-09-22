@@ -45,7 +45,7 @@ puede existir sin él y porque ninguna cifra de créditos puede calcularse sin �
 | Enunciado | Texto libre, específico de la obra |
 | Ejemplo | Texto de ayuda que el lector ve como marcador |
 | Obligatoriedad | Si la pregunta debe responderse para poder enviar |
-| Longitud mínima y máxima | Por respuesta, en la unidad que fije `R-5` |
+| Longitud mínima y máxima | Por respuesta, **en palabras** (`R-5`, resuelta) |
 
 Las preguntas de la maqueta mencionan al protagonista por su nombre —«la conexión entre el
 protagonista, Ryn, y su misión»—, lo que confirma que **las escribe el autor para su obra
@@ -60,7 +60,8 @@ concreta**, no salen de un catálogo fijo.
 
 ## Reglas de negocio
 
-- `RN-1` Cada obra tiene **un cuestionario**. No hay uno por capítulo (pendiente de `R-2`).
+- `RN-1` El autor define **un cuestionario por obra**, y ese cuestionario se responde **en
+  cada capítulo** (`R-2`). Ver la tensión que eso abre más abajo (`W-17`).
 - `RN-2` Un cuestionario tiene **al menos una pregunta**. El caso mínimo —un solo campo de
   texto libre— es un cuestionario de una pregunta, no la ausencia de cuestionario.
 - `RN-3` Hay un **máximo de preguntas** (`W-11`). Sin tope, un autor con saldo podría pedir
@@ -75,6 +76,9 @@ concreta**, no salen de un catálogo fijo.
   correcciones que empiecen después.
 - `RN-8` El texto de las preguntas está sujeto a las mismas reglas de contenido que el resto
   de lo que un usuario publica.
+- `RN-9` El precio que el autor ve depende de **la longitud del capítulo y del cuestionario**
+  (`P-2`), así que no es una cifra única por obra: **cada capítulo tiene la suya**. Lo que el
+  autor configura una vez se traduce en tantos precios como capítulos tenga.
 
 `RN-4` es la regla que sostiene todo lo demás. Sin versionado, una corrección entregada
 quedaría huérfana: respuestas sin las preguntas que las motivaron, y el autor leyendo un
@@ -85,7 +89,9 @@ texto que no sabe a qué contesta.
 1. El autor abre la configuración del cuestionario de su obra.
 2. Añade, edita, reordena o elimina preguntas.
 3. Mientras edita, el sistema le muestra **el coste estimado** por corrección recibida y **la
-   recompensa** que percibirá el lector.
+   recompensa** que percibirá el lector. Como el precio depende también de la longitud del
+   texto (`P-2`) y la corrección es por capítulo, esa estimación es **por capítulo**
+   (`W-18`).
 4. Guarda.
 5. Se crea una versión nueva y se publica `QuestionnaireUpdated`.
 6. `Credits` recalcula las cifras asociadas a esa obra.
@@ -101,6 +107,7 @@ directo al modelo de `Credits` (`W-12`).
 | Cuestionario sin preguntas | Se rechaza | `422` |
 | Más preguntas que el máximo | Se rechaza | `422` indicando el tope |
 | Longitud mínima mayor que la máxima | Se rechaza | `422` |
+| Todas las preguntas marcadas «solo último capítulo» | Se rechaza: los demás capítulos quedarían sin cuestionario | `422` |
 | No es el autor | Se rechaza | `403` |
 | Obra inexistente | | `404` |
 | Edición concurrente de dos sesiones | Gana la primera; la segunda recibe conflicto | `409` con `If-Match` |
@@ -161,7 +168,8 @@ actualizado el precio de esa obra, que se aplicará cuando alguien obtenga acces
 | `questions` | Colección ordenada de `Question` |
 | `updatedAt` | |
 
-`Question`: `id`, `position`, `statement`, `example`, `required`, `minLength`, `maxLength`.
+`Question`: `id`, `position`, `statement`, `example`, `required`, `minWords`, `maxWords` y
+`scope` (`EVERY_CHAPTER` / `LAST_CHAPTER`, pendiente de `W-17`).
 
 Las versiones antiguas se conservan (`RN-4`). Un índice `(workId, version)` sirve tanto para
 recuperar la vigente como para resolver la que respondió una corrección concreta.
@@ -182,7 +190,7 @@ está confirmada por diseño.
 - [ ] Un cuestionario sin preguntas se rechaza.
 - [ ] Guardar crea una versión nueva y conserva la anterior.
 - [ ] Una corrección en curso sigue respondiendo a la versión con la que empezó.
-- [ ] El autor ve coste y recompensa **antes** de guardar.
+- [ ] El autor ve coste y recompensa **antes** de guardar, con el detalle por capítulo.
 - [ ] `QuestionnaireUpdated` se publica una sola vez por versión.
 - [ ] El evento no contiene el enunciado de las preguntas.
 - [ ] Solo el autor puede editar; un lector beta solo puede leer.
@@ -192,14 +200,42 @@ está confirmada por diseño.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **R-2** | ¿El cuestionario es de la obra o del capítulo? | Cambia `RN-1` y el modelo entero |
+| **W-17** | Si la corrección es por capítulo, ¿tiene sentido repetir en cada capítulo preguntas que hablan de «la historia» o «el final»? | Ver abajo. Afecta al modelo y a la calidad del feedback |
 | **W-11** | ¿Cuál es el máximo de preguntas? | Sin tope, la corrección puede volverse inabordable |
 | **W-12** | ¿Cómo consulta `Work` el precio a `Credits` para mostrarlo al autor? | Es una consulta síncrona entre contextos: necesita contrato explícito |
 | W-13 | ¿Existe pantalla de configuración en Figma? | Sin ella, el detalle del formulario se está deduciendo |
 | W-14 | ¿Hay tipos de pregunta además del texto libre (escala, sí/no, opción múltiple)? | Cambia el modelo y probablemente el precio |
 | W-15 | ¿Hay cuestionarios plantilla sugeridos para autores que no saben qué preguntar? | Producto |
-| R-5 | El contador `0 / 100`, ¿caracteres o palabras? | Define `minLength` y `maxLength` |
+| W-18 | ¿El coste se muestra por capítulo o agregado para toda la obra? | `RN-9`: ya no hay una cifra única |
 | W-16 | ¿Se puede editar el cuestionario con correcciones ya recibidas? | `RN-7` dice que sí; conviene confirmarlo |
+
+### `W-17` — un cuestionario de obra respondido capítulo a capítulo
+
+**Resuelta `R-2`: la corrección es por capítulo.** Eso deja una tensión que conviene no
+esconder.
+
+Las preguntas de la maqueta son de **obra entera**:
+
+> 4. ¿Qué te pareció el final de la historia?
+
+Preguntada en el capítulo 1 de una novela, no tiene respuesta posible. Si el mismo
+cuestionario se responde en cada capítulo, el autor recibe tres o cuatro veces la misma
+pregunta mal planteada, **y paga por cada una**.
+
+Opciones, de menor a mayor esfuerzo:
+
+| Opción | A favor | En contra |
+|---|---|---|
+| Un cuestionario por obra, idéntico en todos los capítulos | Simple; el autor configura una vez | Preguntas sin sentido en capítulos intermedios |
+| Un cuestionario por obra, con preguntas marcadas «solo último capítulo» | Conserva la simplicidad y resuelve el caso real | Añade un atributo a la pregunta |
+| Un cuestionario por capítulo | Máxima precisión | El autor de una novela de 30 capítulos configura 30 formularios |
+
+**Recomendación: la segunda.** Un `scope` por pregunta —`EVERY_CHAPTER` o `LAST_CHAPTER`—
+cubre el caso de la maqueta sin obligar a nadie a configurar treinta formularios, y el precio
+de cada capítulo pasa a depender de las preguntas que realmente aplican en él.
+
+La tercera puede añadirse después como excepción sin rehacer el modelo, siempre que el
+cuestionario se identifique por obra **y** capítulo desde el principio.
 
 `W-12` es la más incómoda: el autor necesita ver el precio mientras configura, y el precio lo
 calcula `Credits`. Un evento no sirve, porque la respuesta se necesita en el momento. La vía
@@ -210,7 +246,9 @@ prohíbe el acoplamiento, no la consulta con contrato).
 
 ## Estado
 
-**Especificación:** `DRAFT`. El mecanismo está claro; falta la pantalla del autor (`W-13`) y
-el contrato de consulta de precio (`W-12`).
+**Especificación:** `DRAFT`. El mecanismo está claro; faltan la pantalla del autor (`W-13`),
+el contrato de consulta de precio (`W-12`) y el alcance de cada pregunta (`W-17`).
+
+Resueltas: `R-2` (corrección por capítulo) y `R-5` (longitudes **en palabras**).
 
 **Implementación:** `TODO`.
