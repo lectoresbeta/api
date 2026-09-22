@@ -1,6 +1,6 @@
 ---
 id: FEAT-USR-037
-title: Subir y recortar la foto de perfil
+title: Gestionar la foto de perfil — subir, editar y eliminar
 context: User
 concept: Profile
 actors: [User]
@@ -9,20 +9,28 @@ impl_status: TODO
 priority: P2
 sources:
   - conversation:2026-09-22 (capturas del flujo de foto de perfil)
-  - docs/ui/profile-photo-upload.md
-endpoints: [PUT /me/profile/avatar]
+  - docs/ui/profile-photo.md
+endpoints: [PUT /me/profile/avatar, DELETE /me/profile/avatar]
 events: [UserProfileUpdated]
 depends_on: [FEAT-USR-028]
 updated: 2026-09-22
 ---
 
-# FEAT-USR-037 — Subir y recortar la foto de perfil
+# FEAT-USR-037 — Gestionar la foto de perfil: subir, editar y eliminar
 
 ## Resumen
 
-El usuario sube su avatar desde el lápiz del perfil, lo encuadra con zoom y giro sobre un
-recorte circular, y lo guarda. El resultado aparece de inmediato en el perfil, la cabecera y
-la caja de publicación.
+El usuario gestiona su avatar desde el lápiz del perfil. Si no tiene foto, se abre el modal de
+subida; si ya la tiene, un concentrador con tres acciones:
+
+| Acción | Qué hace |
+|---|---|
+| **Editar** | Reabre el editor para reencuadrar la foto actual |
+| **Cambiar foto** | Vuelve al modal de subida para elegir otra |
+| **Eliminar** | Pide confirmación y devuelve el avatar por defecto |
+
+El editor permite **escalar, girar y desplazar** sobre un recorte circular. El resultado
+aparece de inmediato en el perfil, la cabecera y la caja de publicación.
 
 ## Actores y autorización
 
@@ -41,8 +49,15 @@ la caja de publicación.
   exime de esto: los metadatos pueden incluir la geolocalización de la foto.
 - `RN-4` El resultado se almacena cuadrado. `180 × 180 px` es la referencia del diseño; el
   recorte circular es una máscara de presentación, **la imagen guardada es cuadrada**.
-- `RN-4b` El recorte lo aplica **el cliente**: el endpoint recibe la imagen final y no admite
-  parámetros de encuadre. El servidor no recorta ni gira, solo normaliza y sanea.
+- `RN-4b` El recorte lo aplica **el cliente**: el servidor no recorta ni gira, solo normaliza
+  y sanea.
+- `RN-4c` Se conserva **el original además de la recortada**, para que «Editar» pueda alejar,
+  desplazar y girar sin degradar la imagen. Ambos ficheros se procesan según `RN-3`.
+- `RN-12` **Eliminar** la foto devuelve al usuario al avatar por defecto y **borra los dos
+  ficheros**: no se conservan copias de una foto que el usuario ha retirado.
+- `RN-13` Eliminar una foto que no existe no es un error: la operación es idempotente.
+- `RN-14` El avatar por defecto no es un fichero del usuario: es el marcador de posición de la
+  interfaz.
 - `RN-5` Las dimensiones que anuncia el modal son una **recomendación**: una imagen mayor o
   menor se acepta y se redimensiona.
 - `RN-6` El fichero se guarda mediante el puerto `FileStorage`, nunca en la base de datos.
@@ -59,33 +74,56 @@ donde se tomó la foto.
 
 ## El recorte lo hace el cliente
 
-**Decidido:** el navegador aplica el zoom y el giro y sube **la imagen final, ya cuadrada**.
-El servidor recibe un fichero y nada más: ningún parámetro de encuadre.
+**Decidido:** el navegador aplica la escala, la rotación y el desplazamiento, y sube **la
+imagen final, ya cuadrada**. El servidor no recorta ni gira: solo normaliza y sanea.
 
-Consecuencias:
-
-- El endpoint es una subida simple. No hay que reproducir en servidor la vista previa que vio
-  el usuario, ni arriesgarse a que difieran por redondeos.
-- **Desaparece el problema de la orientación EXIF al girar.** El recorte del navegador la
-  resuelve antes de subir, así que el servidor nunca tiene que rotar nada.
+- No hay que reproducir en servidor la vista previa que vio el usuario, ni arriesgarse a que
+  difieran por redondeos.
+- **Desaparece el problema de la orientación EXIF al girar**, porque el servidor nunca rota.
 - El servidor **sigue reprocesando la imagen** (`RN-3`). Que venga recortada del navegador no
-  es garantía de que no conserve metadatos: el recorte y el saneamiento son cosas distintas.
-- **No se conserva el original.** Reencuadrar más adelante obliga a volver a subir la foto.
-  Es coherente con el diseño, donde el lápiz reabre «Añadir foto» desde el principio.
+  garantiza que no conserve metadatos: recortar y sanear son cosas distintas.
 
-Lo último es lo único que se pierde con esta opción, y se puede revertir subiendo también el
-original si algún día compensa (`F-2`).
+## «Editar» obliga a conservar el original
+
+Al decidir que el recorte lo hace el cliente se dio por supuesto que bastaría con guardar la
+imagen recortada. **La acción «Editar» del diseño lo desmiente.**
+
+| Si solo se guarda la recortada | Si se guarda también el original |
+|---|---|
+| Editar solo puede recortar **dentro** de una imagen de 180 px | Se puede alejar, desplazar y girar con libertad |
+| Lo recortado una vez no se recupera nunca | Se recupera todo el encuadre |
+| Cada edición degrada la calidad | Siempre se parte del original |
+
+**Propuesta: guardar las dos.** El original es material de trabajo del editor; la recortada es
+la que se muestra. El cliente sigue recortando —esa decisión no cambia—, pero sube **dos
+ficheros** en lugar de uno.
+
+Conviene además guardar el encuadre aplicado (escala, rotación y desplazamiento) para que
+«Editar» reabra el editor donde el usuario lo dejó. Ver `F-10`.
 
 ## Flujo principal
 
 1. El usuario pulsa el lápiz del avatar.
 2. Elige un fichero, o hace una foto con la cámara.
 3. Se valida el tipo en cliente; si no es imagen, se avisa y el modal sigue abierto.
-4. Encuadra con zoom y giro **en el navegador**.
-5. Guarda: el cliente genera la imagen recortada y la sube.
-6. El servidor valida tipo y tamaño, reprocesa la imagen y la almacena.
+4. Encuadra **en el navegador**: escala, rotación y desplazamiento.
+5. Guarda: el cliente sube el original y la imagen recortada.
+6. El servidor valida tipo y tamaño, reprocesa ambas y las almacena.
 7. Devuelve la URL nueva.
 8. El cliente refresca el avatar en perfil, cabecera y caja de publicación.
+
+### Editar una foto existente
+
+1. El usuario abre el concentrador «Foto de perfil» y pulsa «Editar».
+2. El editor carga **el original** y, si se guardó, el encuadre anterior.
+3. El usuario reencuadra y guarda.
+4. Se sube una imagen recortada nueva. **El original no cambia.**
+
+### Eliminar la foto
+
+1. El usuario pulsa «Eliminar» y confirma en el modal de advertencia.
+2. El servidor borra los dos ficheros y limpia la referencia.
+3. El avatar vuelve al de por defecto en las tres vistas.
 
 El paso 8 abarca tres sitios porque la cabecera se pinta con el contexto de sesión
 (`FEAT-USR-027`). Si no se refresca, el usuario verá el avatar nuevo abajo y el viejo arriba.
@@ -100,6 +138,8 @@ El paso 8 abarca tres sitios porque la cabecera se pinta con el contexto de sesi
 | Formato válido pero no soportado, como HEIC | **Sin definir** (`F-3`) | Pendiente |
 | Fallo del almacenamiento | Error, sin dejar el perfil a medias | `502` |
 | Cuenta sin activar | Se rechaza | `403` con `code: ACCOUNT_NOT_ACTIVATED` |
+| Eliminar sin tener foto | Éxito idempotente (`RN-13`) | `204` |
+| Editar sin original guardado | **Sin definir** para las fotos anteriores a `RN-4c` (`F-13`) | Pendiente |
 
 El caso HEIC no es teórico: «Usar la cámara» en iOS produce ese formato por defecto y los
 navegadores no lo muestran. Si no se convierte en servidor, las fotos hechas desde iPhone
@@ -109,20 +149,29 @@ fallarán o se verán rotas.
 
 | Operación | Método y ruta | `operationId` |
 |---|---|---|
-| Cambiar foto de perfil | `PUT /me/profile/avatar` | `updateAvatar` |
+| Subir o reencuadrar la foto | `PUT /me/profile/avatar` | `updateAvatar` |
+| Eliminar la foto | `DELETE /me/profile/avatar` | `deleteAvatar` |
 
 `PUT` y no `POST`: el avatar es un recurso único del usuario y volver a subirlo lo reemplaza.
 
-La subida es `multipart/form-data` con **un único fichero**: la imagen ya recortada. No lleva
-parámetros de zoom ni de giro.
+La subida es `multipart/form-data` con la imagen recortada y, la primera vez, también el
+original. Al reencuadrar basta con la recortada: el original ya está guardado.
+
+**Subir y reencuadrar usan el mismo endpoint.** Para el servidor son la misma operación:
+llega una imagen cuadrada nueva y sustituye a la anterior. La distinción entre «Cambiar» y
+«Editar» es de interfaz.
 
 ## Modelo de datos afectado
 
 | Tabla | Cambio |
 |---|---|
-| `user` | `avatar_url` |
+| `user` | `avatar_url`, `avatar_original_url`, `avatar_crop` |
 
-La imagen vive en el almacenamiento externo. En base de datos solo queda la referencia.
+Las imágenes viven en el almacenamiento externo; en base de datos solo quedan las
+referencias. `avatar_crop` guarda escala, rotación y desplazamiento para reabrir el editor.
+
+`avatar_original_url` **no se expone en el perfil público**: es material de trabajo del
+editor, no la imagen que el usuario ha elegido mostrar.
 
 ## Criterios de aceptación
 
@@ -140,22 +189,33 @@ La imagen vive en el almacenamiento externo. En base de datos solo queda la refe
 - [ ] Con la cuenta sin activar devuelve `403`.
 - [ ] Tras subirla, el avatar aparece actualizado en el perfil y en la cabecera.
 - [ ] Se publica `UserProfileUpdated`.
+- [ ] Se conservan el original y la imagen recortada.
+- [ ] «Editar» parte del original, no de la imagen ya recortada.
+- [ ] Reencuadrar dos veces seguidas no degrada la calidad respecto a la primera.
+- [ ] El original no aparece en el perfil público ni en ninguna respuesta dirigida a terceros.
+- [ ] Eliminar la foto devuelve al avatar por defecto en las tres vistas.
+- [ ] Eliminar la foto borra los dos ficheros del almacenamiento.
+- [ ] Eliminar sin tener foto devuelve éxito, no error.
+- [ ] No se puede eliminar la foto de otro usuario.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
 | **F-3** | ¿Se acepta HEIC? La cámara de iOS lo produce por defecto | Sin conversión, las fotos desde iPhone fallan |
-| F-1 | ¿Recorta el cliente o el servidor? | **Resuelta:** el cliente. El endpoint recibe la imagen final |
-| F-2 | ¿Se conserva el original para reencuadrar sin volver a subir? | **No**, como consecuencia de `F-1`. Se podría añadir subiendo también el original |
-| F-4 | ¿Se puede eliminar la foto y volver al avatar por defecto? | Sin diseño |
+| F-1 | ¿Recorta el cliente o el servidor? | **Resuelta:** el cliente |
+| **F-2** | **¿Se conserva el original?** «Editar» lo exige para poder alejar y desplazar | Sin él, editar solo recorta hacia dentro y degrada la imagen |
+| F-4 | ¿Se puede eliminar la foto? | **Resuelta:** sí, con confirmación, y vuelve al avatar por defecto |
+| F-10 | ¿Se guarda el encuadre para reabrir el editor donde se dejó? | Sin él, «Editar» empieza desde una posición por defecto |
+| F-11 | ¿Hay aviso de confirmación tras eliminar? | Las demás acciones sí lo tienen |
+| F-13 | ¿Qué hace «Editar» con fotos subidas antes de conservar originales? | Solo relevante si se implanta en dos fases |
 | F-5 | ¿El mismo flujo sirve para la imagen de portada? | Otras proporciones y otras recomendaciones |
 | F-7 | ¿Hay límite de cambios por periodo? | Un avatar es un vector de contenido inapropiado y no hay moderación (`V-1`) |
 | F-9 | ¿Se conservan varios tamaños del avatar? | Las tarjetas de autor lo muestran a 40–60 px; servir 180 px en todas es desperdicio |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resuelta `F-1`. Para llegar a `APPROVED` falta decidir si se
-acepta HEIC (`F-3`), que es el formato por defecto de la cámara en iOS.
+**Especificación:** `DRAFT`. Resueltas `F-1` y `F-4`. Para llegar a `APPROVED` faltan `F-2`
+—conservar el original, que «Editar» exige— y `F-3`, si se acepta HEIC.
 
 **Implementación:** `TODO`.

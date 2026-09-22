@@ -40,7 +40,7 @@ edición, sin cajas de «Añadir».
 | Elemento | Detalle |
 |---|---|
 | Portada | Imagen de fondo con lápiz de edición arriba a la derecha. **Concepto nuevo** |
-| Avatar | Círculo superpuesto, con su propio lápiz de edición. Flujo completo en [profile-photo-upload.md](profile-photo-upload.md) |
+| Avatar | Círculo superpuesto, con su propio lápiz de edición. Flujo completo en [profile-photo.md](profile-photo.md) |
 | Insignia | ~~«0 Level»~~ — **error del diseño**, no hay sistema de niveles. No se implementa |
 | Nombre | «Beatriz Alonso» — el nombre público (`FEAT-USR-022`) |
 | Identificador | **«@bealonso»** — el nombre de usuario (`FEAT-USR-033`) |
@@ -195,7 +195,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | # | Requisito | Funcionalidad |
 |---|---|---|
 | 1 | Imagen de portada del perfil, editable | `FEAT-USR-028` |
-| 2 | Avatar editable, con recorte y validación | `FEAT-USR-037` |
+| 2 | Avatar: subir, reencuadrar, cambiar y eliminar | `FEAT-USR-037` |
 | 3 | Descripción editable en línea | `FEAT-USR-028` |
 | 4 | Enlace público de perfil para compartir, basado en el nombre de usuario | `FEAT-USR-032`, `FEAT-USR-035` |
 | 6 | Contadores de seguidos, seguidores, relatos y correcciones | `FEAT-USR-028` |
@@ -225,7 +225,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | FEAT-USR-030 | **Nueva** — premios y reconocimientos | `PENDING` |
 | FEAT-USR-031 | ~~Nivel del usuario~~ — error del diseño | `DEPRECATED` |
 | FEAT-USR-033 a 036 | **Nuevas** — nombre de usuario, cambio con alias, resolución y purga | `DRAFT` |
-| FEAT-USR-037 | **Nueva** — subir y recortar la foto de perfil | `DRAFT` |
+| FEAT-USR-037 | **Nueva** — gestionar la foto de perfil | `DRAFT` |
 | FEAT-USR-032 | **Nueva** — compartir el perfil | `PENDING` |
 | FEAT-COM-026 | **Nueva** — muro propio | `PENDING` |
 | FEAT-COM-027 | **Nueva** — seguidos y seguidores | `PENDING` |
@@ -241,7 +241,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | P-1 | ¿Existe `@identificador`? | **Resuelta:** sí, es el `Username`. Ver `decision:0005` |
 | **P-2** | ¿Se confirma que una «obra publicada» es un concepto aparte de `Work`? | Modelo de datos. Mezclarlos sería un error caro |
 | P-3 | ¿«Obra en corrección» es un estado del ciclo de vida de `Work`? | `M-2`, `W-5` |
-| P-4 | ¿Qué es «0 Level»? | **Resuelta:** error del diseño. Se retira de la pantalla |
+| P-4 | ¿Qué es «0 Level»? | **Resuelta:** error del diseño. Se retira de la pantalla y de los modales de foto |
 | P-5 | ¿«Mi perfil» y la «página de autor» de `FEAT-USR-015` son la misma pantalla? | Si no, hay dos perfiles que mantener |
 | P-6 | ¿Sigue en alcance la personalización visual de `FEAT-USR-016`? | No aparece en estas capturas |
 | P-7 | Textos por unificar: «Enviar» frente a «Publicar»; el vacío de «Seguidos» describe también a los seguidores | Coherencia |

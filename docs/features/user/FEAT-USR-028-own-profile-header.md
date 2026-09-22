@@ -31,7 +31,7 @@ agregados de tres bounded contexts distintos.
 | Elemento | Editable | Origen |
 |---|---|---|
 | Imagen de portada | Sí, lápiz | `User`. **Concepto nuevo** |
-| Avatar | Sí, lápiz | `User`. Flujo de subida y recorte en [`FEAT-USR-037`](FEAT-USR-037-upload-profile-photo.md) |
+| Avatar | Sí, lápiz | `User`. Subir, reencuadrar y eliminar en [`FEAT-USR-037`](FEAT-USR-037-upload-profile-photo.md) |
 | Nombre | No desde aquí (`FEAT-USR-008`) | `User` |
 | `@identificador` | Sí, una vez cada 30 días (`FEAT-USR-034`) | `User` — es el `Username` |
 | Descripción | Sí, en línea | `User` |

@@ -34,7 +34,7 @@ Estado global: **especificación inicial**. No hay código en `src/`.
 - **layout general y navegación** — [pantallas](../ui/app-layout-and-navigation.md);
 - **Home**, con tour, estado vacío y modal de créditos — [pantallas](../ui/home.md);
 - **Mi perfil**, estados vacíos — [pantallas](../ui/my-profile.md);
-- **Subida de la foto de perfil** — [pantallas](../ui/profile-photo-upload.md).
+- **Gestión de la foto de perfil** — [pantallas](../ui/profile-photo.md).
 
 ---
 
@@ -80,7 +80,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-034 | Cambiar el nombre de usuario y alias temporal | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-034-change-username.md) |
 | FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |
 | FEAT-USR-036 | Purga programada de alias caducados | — (sistema) | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-036-purge-expired-aliases.md) |
-| FEAT-USR-037 | Subir y recortar la foto de perfil | User | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |
+| FEAT-USR-037 | Gestionar la foto de perfil — subir, editar y eliminar | User | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |
 
 > `FEAT-USR-013` está `BLOCKED`: no se puede especificar sin resolver qué ocurre con obras,
 > feedback y créditos al eliminar la cuenta (`V-4`, `U-3`).
