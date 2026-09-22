@@ -31,7 +31,7 @@ seguimiento de autores, los mensajes directos y los rankings.
 |---|---|
 | `Post` | Publicaciones del muro, su intención y su formato |
 | `Interaction` | Comentarios, apoyos, reacciones, reposts y compartidos |
-| `Subscription` | Seguimiento de autores y sus sugerencias |
+| `Subscription` | Seguimiento de autores, sus sugerencias y los listados de seguidos y seguidores |
 | `Recommendation` | Read models que alimentan la Home: obras recomendadas y autores sugeridos |
 | `Messaging` | Mensajes directos y conversaciones |
 | `Ranking` | Read models de escritores, obras y lectores |
@@ -112,3 +112,5 @@ periodo.
 | CM-11 | ¿Un repost se puede comentar de forma independiente del original? | Modelo de `Repost` |
 | CM-12 | ¿«Ocultar post» oculta ese post concreto o todos los de ese autor? | `FEAT-COM-022` |
 | CM-13 | ¿Las publicaciones guardadas son privadas y dónde se consultan? | `FEAT-COM-021`, pantalla sin diseñar |
+| CM-14 | ¿La lista de seguidores de un usuario es pública o solo la ve él? | `FEAT-COM-027` |
+| CM-15 | ¿«Mis Amigos» es el nombre adecuado para una relación asimétrica? | Seguir no es ser amigo (`P-8`) |

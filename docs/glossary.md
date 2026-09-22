@@ -12,7 +12,7 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 
 | Español (producto) | Inglés (código) | Definición |
 |---|---|---|
-| Obra | `Work` | Unidad literaria publicada por un autor. Puede ser un relato breve o una novela. Contiene uno o varios fragmentos. |
+| Obra / **Relato** | `Work` | Unidad literaria inédita publicada por un autor en la plataforma. Puede ser un relato breve o una novela. Contiene uno o varios fragmentos. **La interfaz la llama «relato»** («Mis relatos», «Explorar más relatos»). |
 | Fragmento | `Chapter` | Parte de una obra. Una obra corta tiene un único fragmento; una novela, muchos. Es la unidad sobre la que se lee y se comenta. |
 | Autor / Escritor | `Writer` | Usuario en su rol de creador de obras. |
 | Lector | `Reader` | Usuario en su rol de consumidor de obras del catálogo. |
@@ -22,7 +22,7 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Invitación de LB | `AccessInvitation` | Propuesta del autor a un usuario concreto para que sea lector beta de su obra. |
 | Grupo de lectores beta | `BetaReaderGroup` | Conjunto de lectores beta gestionado por el autor para asignarlos a obras en bloque. |
 | Compañero de escritura | `WritingBuddy` | Vínculo recíproco entre dos usuarios que intercambian feedback de forma continuada. |
-| Comentario / Crítica | `Feedback` | Aportación crítica de un lector beta sobre un fragmento u obra. Genera créditos al autor del comentario y los consume al autor de la obra. |
+| Comentario / Crítica / **Corrección** | `Feedback` | Aportación crítica de un lector beta sobre un fragmento u obra. Genera créditos a quien la hace y los consume al autor de la obra. **La interfaz lo llama «corrección»** cuando se mira desde quien lo aporta: «Mis correcciones», «corregir una obra». Es el mismo concepto. |
 | Respuesta a comentario | `FeedbackReply` | Contestación del autor de la obra a un comentario recibido. |
 | Valoración del comentario | `FeedbackRating` | Marca del autor indicando que un comentario le ha resultado útil. Otorga créditos adicionales a quien comentó. |
 | Valoración de obra | `WorkRating` | Puntuación que un lector beta otorga a una obra. Alimenta los rankings. |
@@ -42,7 +42,7 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Repost | `Repost` | Republicación de una publicación ajena en el propio muro. Distinto de compartir fuera de la plataforma. |
 | Compartir | `Share` | Difusión de una publicación **fuera** de Lectores Beta. |
 | Publicación guardada | `SavedPost` | Publicación que el usuario archiva para leer después. Privada. |
-| Obra en corrección | *(por definir)* | Obra abierta a recibir feedback. Vocabulario que aparece en el modal de créditos del diseño; su equivalente en inglés y su encaje en el ciclo de vida de `Work` están **sin decidir** (`M-2`). |
+| Obra en corrección | *(por definir)* | Obra abierta a recibir feedback. Aparece en el modal de créditos y en el perfil. Que «corrección» es `Feedback` ya está confirmado; lo que sigue sin decidir es si «en corrección» designa un **estado** del ciclo de vida de `Work` (`P-3`). |
 | Tour | `Tour` | Secuencia de globos que presenta la aplicación la primera vez. Su estado se guarda por usuario y por tour. |
 | Crédito | `Credit` | Unidad de la economía interna que equilibra dar y recibir feedback. |
 | Saldo de créditos | `CreditBalance` | Créditos disponibles de un usuario. |
@@ -52,7 +52,10 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Regla de créditos | `CreditRule` | Norma que traduce un hecho de negocio en una variación de créditos. |
 | Clasificación del texto | `TextTier` | Nivel de extensión de un texto (micro cuento, relato corto, novela media…) que determina su coste y recompensa en créditos. |
 | Invitación a la plataforma | `PlatformInvitation` | Invitación por email para que alguien se registre. Otorga créditos al invitador si el invitado participa. |
-| Página de autor | `AuthorPage` | Perfil público personalizable de un escritor. |
+| Página de autor / Mi perfil | `AuthorPage` | Perfil público de un escritor: portada, avatar, descripción, obras publicadas y premios. Si son dos pantallas distintas está sin decidir (`P-5`). |
+| Obra publicada | `PublishedBook` | Libro ya editado **fuera de Lectores Beta**, con editorial, año y enlace de compra, que el autor añade a su perfil como mérito. **No es una `Work`**: no tiene contenido en la plataforma, no se lee, no se comenta y no mueve créditos. |
+| Premio o reconocimiento | `AuthorAward` | Mérito que el autor declara en su perfil. |
+| Nivel | *(por definir)* | Insignia «0 Level» del perfil. **No hay ningún sistema de niveles documentado** (`P-4`). |
 | Preferencias literarias | `LiteraryPreferences` | Géneros y temáticas de interés declarados por el usuario. |
 | Temática / Género | `Genre` | Clasificación temática de obras y de intereses de usuario. |
 | Notificación | `Notification` | Aviso dirigido a un usuario, entregable in-app o por email. |
@@ -128,5 +131,6 @@ El diseño escribe «Poeta»; se corrige a «Poesía» (`POETRY`), que es el gé
 | `Review` | `Feedback` | Evita confusión con las revisiones de código y con reseñas públicas. |
 | `Page`, `Section`, `Part` | `Chapter` | Un único nombre para la subdivisión de la obra. |
 | `Points`, `Tokens`, `Coins` | `Credit` | El documento de producto habla de créditos. |
-| `Username`, `Nickname`, `Handle` | — | **No existe el nombre de usuario en la plataforma.** No se pide, no se almacena y no se valida. El alias del saludo se deriva del email y no es un identificador. |
+| `Username`, `Nickname`, `Handle` | — | **Decidido que no existe**, pero el diseño de «Mi perfil» muestra `@bealonso`. Contradicción sin resolver: ver `P-1` en [ui/my-profile.md](ui/my-profile.md). **No usar ninguno de estos nombres hasta que se cierre.** |
+| `Book`, `PublishedWork` para el manuscrito | `Work` | `PublishedBook` es otra cosa: el libro editado fuera de la plataforma. |
 | `Helper`, `Manager`, `Utils` | Un nombre que describa la responsabilidad | Regla explícita de `AGENTS.md`. |

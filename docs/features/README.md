@@ -17,14 +17,14 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 27 | 11 | 0 | 0 |
+| `User` (USR) | 32 | 13 | 0 | 0 |
 | `Work` (WRK) | 14 | 1 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
-| `Feedback` (FBK) | 9 | 0 | 0 | 0 |
-| `Community` (COM) | 25 | 3 | 0 | 0 |
+| `Feedback` (FBK) | 10 | 0 | 0 | 0 |
+| `Community` (COM) | 27 | 3 | 0 | 0 |
 | `Credits` (CRD) | 15 | 4 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **106** | **20** | **0** | **0** |
+| **Total** | **114** | **22** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -32,7 +32,8 @@ Estado global: **especificación inicial**. No hay código en `src/`.
 
 - **flujo de creación de cuenta y onboarding** — [pantallas](../ui/account-creation.md);
 - **layout general y navegación** — [pantallas](../ui/app-layout-and-navigation.md);
-- **Home**, con tour, estado vacío y modal de créditos — [pantallas](../ui/home.md).
+- **Home**, con tour, estado vacío y modal de créditos — [pantallas](../ui/home.md);
+- **Mi perfil**, estados vacíos — [pantallas](../ui/my-profile.md).
 
 ---
 
@@ -69,9 +70,20 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-025 | Bloquear las operaciones de escritura hasta activar la cuenta | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-025-block-writes-until-activation.md) |
 | FEAT-USR-026 | Tour de bienvenida de la Home | User | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-026-welcome-tour.md) |
 | FEAT-USR-027 | Contexto de sesión para el layout | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-027-session-context.md) |
+| FEAT-USR-028 | Mi perfil — cabecera, datos y contadores | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-028-own-profile-header.md) |
+| FEAT-USR-029 | Obras publicadas del autor (bibliografía externa) | Writer | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-029-published-books.md) |
+| FEAT-USR-030 | Premios y reconocimientos del autor | Writer | PENDING | TODO | P3 | — |
+| FEAT-USR-031 | Nivel del usuario | User | PENDING | BLOCKED | P3 | — |
+| FEAT-USR-032 | Compartir el perfil | User | PENDING | TODO | P3 | — |
 
 > `FEAT-USR-013` está `BLOCKED`: no se puede especificar sin resolver qué ocurre con obras,
 > feedback y créditos al eliminar la cuenta (`V-4`, `U-3`).
+>
+> `FEAT-USR-028` a `FEAT-USR-032` salen del diseño de «Mi perfil». **El perfil muestra un
+> `@identificador`** (`@bealonso`), que contradice la decisión de no usar nombre de usuario y
+> no coincide con el alias derivado del email: ver `P-1`, **bloqueante**.
+> `FEAT-USR-031` está `BLOCKED`: aparece una insignia «0 Level» y **no existe ningún sistema
+> de niveles documentado**.
 >
 > `FEAT-USR-019` a `FEAT-USR-025` salen del diseño del flujo de creación de cuenta.
 >
@@ -151,6 +163,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-007 | Ocultar un comentario recibido | Writer | PENDING | TODO | P2 | — |
 | FEAT-FBK-008 | Comentar mediante enlace público sin iniciar sesión | Guest | PENDING | BLOCKED | P2 | — |
 | FEAT-FBK-009 | Denunciar un comentario abusivo | User | PENDING | DEFERRED | P3 | — |
+| FEAT-FBK-010 | Mis correcciones — listado del feedback que he dado | User | PENDING | TODO | P2 | — |
 
 > `FEAT-FBK-008` está `BLOCKED` por `A-3`, `C-5` y `F-6`: sin resolver si el comentarista
 > anónimo se identifica y si la operación mueve créditos, no se puede especificar.
@@ -189,6 +202,8 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-023 | Denunciar una publicación | User | PENDING | DEFERRED | P3 | — |
 | FEAT-COM-024 | Ordenar el muro por relevancia o por fecha | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-025 | Búsqueda global desde la cabecera | User | PENDING | DEFERRED | P3 | — |
+| FEAT-COM-026 | Mi muro — publicaciones propias | User | PENDING | TODO | P2 | — |
+| FEAT-COM-027 | Mis Amigos — seguidos y seguidores | User | PENDING | TODO | P2 | — |
 
 > Los tres rankings están `BLOCKED` por `CM-4`: el material de partida dice "mejor valorados"
 > pero no define la fórmula de puntuación. Sin ella no hay especificación posible.
@@ -277,6 +292,9 @@ implementarse— sin una decisión de producto:
 
 | Funcionalidad | Pendiente de | Decisión necesaria |
 |---|---|---|
+| FEAT-USR-028, FEAT-USR-014 | **`P-1`** | **Si existe un `@identificador` de usuario.** El perfil lo muestra, pero se decidió que el nombre de usuario no existe |
+| FEAT-USR-031 | `P-4` | Qué es el nivel del usuario, cómo se sube y para qué sirve |
+| FEAT-USR-029 | `P-2` | Confirmar que una «obra publicada» es un concepto aparte de `Work` |
 | FEAT-USR-002, FEAT-USR-020 | `OB-11` | Si el alta con Google crea la cuenta ya activada, dado que Google ya verifica el correo |
 | FEAT-USR-002, FEAT-USR-024 | `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia |
 | FEAT-USR-022 | `OB-7` | Si hay edad mínima de registro. Tiene implicaciones legales |

@@ -24,6 +24,9 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 | Ref | Decisión | Bloquea |
 |---|---|---|
 | `R-1` | Si la reserva de créditos es por lector o por obra | `FEAT-CRD-009`. Variante de `decision:0004`, conviene cerrarla **antes de implementar** |
+| `P-1` | Si existe un `@identificador` público de usuario. El perfil muestra `@bealonso` pese a haberse decidido que el nombre de usuario no existe | `FEAT-USR-028`, `FEAT-USR-014`, `FEAT-USR-001`. **Contradice una decisión ya tomada** |
+| `P-4` | Qué es el nivel del usuario («0 Level»), cómo se sube y para qué sirve | `FEAT-USR-031`. Sistema sin documentar en ningún sitio |
+| `P-3` | Si «obra en corrección» es un estado del ciclo de vida de `Work` | `Work`, `Credits` |
 | `S-1` | Mecanismo de sesión de la API | Todo `User` y toda la autorización |
 | `CM-4` | Fórmula de puntuación de los rankings | `FEAT-COM-013/014/015` |
 | `W-1` | En qué momentos se genera el registro de autoría | `FEAT-WRK-009` |
@@ -34,7 +37,6 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 | `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia | `FEAT-USR-002`, `FEAT-USR-024` |
 | `OB-7` | Si hay edad mínima de registro | `FEAT-USR-022`. Tiene implicaciones legales |
 | `N-2` | Si el nombre público debe ser único | `FEAT-USR-022`. Sin unicidad, dos homónimos son indistinguibles |
-| `M-2` | Qué es una obra «en corrección» y si es un estado de `Work` | `Work`, `Credits`, glosario |
 | `H-5` | Si conviven «me gusta» y las reacciones con emoji | `FEAT-COM-007`, `FEAT-COM-008` |
 
 ## Estados

@@ -7,6 +7,10 @@
 La crítica sobre las obras: quién la deja, sobre qué, con qué contenido, cómo responde el
 autor y cómo la valora. Es el productor de los hechos que mueven la economía de créditos.
 
+> **La interfaz llama «corrección» a lo que aquí es `Feedback`**: «Mis correcciones»,
+> «corregir una obra», «poner tu obra en corrección». Es el mismo concepto visto desde quien
+> lo aporta. El identificador en código sigue siendo `Feedback`.
+
 ## Qué posee
 
 - Comentarios sobre obras y fragmentos.
@@ -15,6 +19,7 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 - Valoración del comentario por parte del autor (útil / no útil).
 - Ocultación de comentarios.
 - Valoración de la obra por parte del lector beta.
+- El listado de correcciones que ha hecho cada usuario (`FEAT-FBK-010`) y su contador.
 
 ## Qué NO posee
 
@@ -118,3 +123,5 @@ Payload propuesto (pendiente de cerrar con `C-10`):
 | F-6 | ¿El comentario desde enlace público genera créditos si no hay cuenta? (`A-3`, `C-5`) | Bloquea `FEAT-FBK-008` |
 | F-7 | ¿Se puede editar un comentario ya enviado? | Afecta a la irreversibilidad de los créditos |
 | F-8 | ¿Hay mecanismo de denuncia de comentarios abusivos? (`J-9`) | Requiere moderación |
+| F-9 | ¿Qué muestra «Mis correcciones»: el texto completo, o un resumen con enlace a la obra? | El contenido del feedback es privado entre autor y corrector |
+| F-10 | ¿El contador «Correcciones» del perfil es público? | Es un indicador de reputación; probablemente sí |

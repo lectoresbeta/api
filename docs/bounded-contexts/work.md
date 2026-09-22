@@ -7,6 +7,10 @@
 Qué es una obra, qué contiene, quién la escribió, cómo se estructura, qué extensión tiene
 y bajo qué modalidad se ofrece a los lectores beta.
 
+> **La interfaz llama «relato» a una `Work`** («Mis relatos», «Explorar más relatos»). No
+> confundir con `PublishedBook`, que es el libro ya editado fuera de la plataforma y vive en
+> `User`.
+
 ## Qué posee
 
 - Obras y sus fragmentos.
@@ -23,6 +27,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 
 | No es suyo | Es de |
 |---|---|
+| Las **obras publicadas** del perfil: libros editados fuera de la plataforma, con editorial, año y enlace de compra | `User` (`PublishedBook`) |
 | Quién tiene acceso concedido a la obra | `Reading` |
 | Los comentarios sobre la obra | `Feedback` |
 | Las respuestas al cuestionario | `Feedback` |

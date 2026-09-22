@@ -36,7 +36,7 @@ preferencias y presencia pública como autor.
 | `Authentication` | Credenciales, sesión, proveedores externos, recuperación |
 | `Onboarding` | Los tres pasos posteriores al registro y su estado |
 | `Profile` | Datos públicos y preferencias literarias |
-| `AuthorPage` | Página de autor y su personalización visual |
+| `AuthorPage` | Perfil público: portada, descripción, obras publicadas y premios |
 | `Invitation` | Invitaciones por email y su seguimiento |
 | `Legal` | Documentos legales vigentes y el registro de aceptaciones |
 
@@ -46,6 +46,7 @@ preferencias y presencia pública como autor.
 |---|---|---|
 | `User` | `UserId` | Email único. Una cuenta eliminada no autentica. El estado sigue `PENDING_ACTIVATION → ACTIVE → DELETED`. Solo `ACTIVE` puede escribir. |
 | `AuthorPage` | `UserId` | Pertenece a un único usuario |
+| `PublishedBook` | `PublishedBookId` | Libro editado **fuera** de la plataforma. Sin contenido, sin lectores beta y sin créditos. No confundir con `Work` |
 | `PlatformInvitation` | `PlatformInvitationId` | Token único. Se consume una sola vez. |
 | `AccountActivationToken` | `UserId` | Un único token vigente por cuenta. Se almacena con hash, nunca en claro. |
 | `LegalAcceptance` | `LegalAcceptanceId` | Inmutable. Registra documento, versión y fecha. |
@@ -55,9 +56,11 @@ preferencias y presencia pública como autor.
 | Nombre | Reglas |
 |---|---|
 | `Email` | Formato válido, único, normalizado en minúsculas |
-| ~~`Username`~~ | **No existe.** La plataforma no maneja nombre de usuario. El alias del saludo se deriva del email y no se persiste |
+| ~~`Username`~~ | Decidido que **no existe**. Pero el diseño de «Mi perfil» muestra `@bealonso`, que no coincide con el alias derivado del email. **Contradicción sin resolver** (`P-1`) |
 | `HashedPassword` | ≥8 caracteres, una mayúscula, un número y un carácter especial. Nunca se expone ni se registra en logs |
 | `Name` | **Dato público.** Referente para identificar a un usuario en toda la plataforma. No es el identificador técnico: ese sigue siendo `UserId` |
+| `Description` | Dato público. Texto libre saneado |
+| `AvatarUrl`, `CoverUrl` | Datos públicos. Imágenes sin metadatos EXIF |
 | `BirthDate` | Fecha real y pasada. **Dato privado**: no se expone en la API pública |
 | `LiteraryPreferences` | Conjunto de `Genre`, mínimo tres al completar el onboarding |
 | `AccountStatus` | `PENDING_ACTIVATION`, `ACTIVE`, `DELETED` |
@@ -94,6 +97,9 @@ preferencias y presencia pública como autor.
 | U-10 | ¿El `Name` debe ser único? | Sin unicidad, dos homónimos son indistinguibles. Recomendación: no exigirla y desambiguar con avatar y enlace al perfil |
 | U-7 | ¿Qué puede hacer una cuenta `PENDING_ACTIVATION`? | **Resuelto:** leer y completar el onboarding. Ver `decision:0003` |
 | U-9 | ¿Hay edad mínima para registrarse? (`OB-7`) | Legal: se recoge la fecha de nacimiento sin motivo declarado |
+| **U-11** | **¿Existe un `@identificador` público?** El perfil muestra `@bealonso` pese a la decisión de no usar nombre de usuario | **Bloqueante** (`P-1`). Arrastra unicidad, formato, reserva y URLs de perfil |
+| U-12 | ¿Qué es la insignia «0 Level»? | Sistema de niveles sin documentar (`P-4`) |
+| U-13 | ¿«Mi perfil» y la «página de autor» son la misma pantalla? | Si no, hay dos perfiles que mantener (`P-5`) |
 
 ### Datos privados
 
