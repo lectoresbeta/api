@@ -45,7 +45,7 @@ edición, sin cajas de «Añadir».
 | Nombre | «Beatriz Alonso» — el nombre público (`FEAT-USR-022`) |
 | Identificador | **«@bealonso»** — el nombre de usuario (`FEAT-USR-033`) |
 | Compartir | Icono de compartir junto al nombre |
-| Descripción | Campo editable en línea con marcador «Añade descripcion» |
+| Descripción | Campo editable en línea con marcador «Añade descripcion». Si es larga, se trunca con «Ver más»: la API devuelve el texto completo y el truncado es de cliente |
 
 > ### El `@identificador` es el nombre de usuario
 >
@@ -104,6 +104,12 @@ Son agregados de **tres contextos distintos**. La composición sigue el mismo pa
 | Título | «Todavía no has publicado ningún post» |
 | Texto | «Aquí estarán todos los posts que publiques.» |
 | Botón | «Publica tu primer post» |
+
+Con contenido, el muro muestra las publicaciones propias y las **reposteadas**, estas últimas
+con el encabezado «{NOMBRE} REPOSTEÓ» sobre la publicación original completa. Ver
+[create-post.md](create-post.md).
+
+La caja abre el modal de publicación; no publica directamente.
 
 > En la Home el botón de la misma caja se llamaba «Publicar». Aquí es «Enviar». Ver `P-7`.
 

@@ -21,10 +21,10 @@ verdad sobre el alcance.**
 | `Work` (WRK) | 14 | 1 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 10 | 0 | 0 | 0 |
-| `Community` (COM) | 27 | 3 | 0 | 0 |
+| `Community` (COM) | 29 | 5 | 0 | 0 |
 | `Credits` (CRD) | 15 | 4 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **119** | **27** | **0** | **0** |
+| **Total** | **121** | **29** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -34,7 +34,8 @@ Estado global: **especificación inicial**. No hay código en `src/`.
 - **layout general y navegación** — [pantallas](../ui/app-layout-and-navigation.md);
 - **Home**, con tour, estado vacío y modal de créditos — [pantallas](../ui/home.md);
 - **Mi perfil**, estados vacíos — [pantallas](../ui/my-profile.md);
-- **Gestión de la foto de perfil** — [pantallas](../ui/profile-photo.md).
+- **Gestión de la foto de perfil** — [pantallas](../ui/profile-photo.md);
+- **Crear una publicación** — [pantallas](../ui/create-post.md).
 
 ---
 
@@ -195,7 +196,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-COM-001 | Ver las publicaciones del muro principal | User | PENDING | TODO | P1 | — |
-| FEAT-COM-002 | Crear una publicación (texto, texto+imagen o artículo) | User | PENDING | TODO | P1 | — |
+| FEAT-COM-002 | Crear una publicación (texto, imagen, vídeo, enlace o relato) | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-002-create-post.md) |
 | FEAT-COM-003 | Publicar buscando lectores beta para una obra | Writer | PENDING | TODO | P1 | — |
 | FEAT-COM-004 | Publicar buscando writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | PENDING | TODO | P2 | — |
@@ -212,7 +213,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-016 | Onboarding paso 3 — sugerencias de autores a seguir | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-016-onboarding-author-suggestions.md) |
 | FEAT-COM-017 | Home — carrusel de obras recomendadas | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-017-home-work-recommendations.md) |
 | FEAT-COM-018 | Home — sugerencias de autores en el muro | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-018-home-author-suggestions.md) |
-| FEAT-COM-019 | Repostear una publicación | User | PENDING | TODO | P2 | — |
+| FEAT-COM-019 | Repostear una publicación | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-019-repost.md) |
 | FEAT-COM-020 | Compartir una publicación fuera de la plataforma | User | PENDING | TODO | P2 | — |
 | FEAT-COM-021 | Guardar una publicación | User | PENDING | TODO | P3 | — |
 | FEAT-COM-022 | Ocultar una publicación del muro | User | PENDING | TODO | P3 | — |
@@ -221,10 +222,17 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-025 | Búsqueda global desde la cabecera | User | PENDING | DEFERRED | P3 | — |
 | FEAT-COM-026 | Mi muro — publicaciones propias | User | PENDING | TODO | P2 | — |
 | FEAT-COM-027 | Mis Amigos — seguidos y seguidores | User | PENDING | TODO | P2 | — |
+| FEAT-COM-028 | Incluir un relato de la plataforma en una publicación | User | PENDING | TODO | P2 | — |
+| FEAT-COM-029 | Audiencia de una publicación | User | PENDING | BLOCKED | P1 | — |
 
 > Los tres rankings están `BLOCKED` por `CM-4`: el material de partida dice "mejor valorados"
 > pero no define la fórmula de puntuación. Sin ella no hay especificación posible.
 > `FEAT-COM-024` está `BLOCKED` por lo mismo: «más relevante» necesita esa fórmula.
+>
+> `FEAT-COM-029` está `BLOCKED`: el modal de publicación muestra un selector de audiencia
+> («Publicar para cualquiera») y **no se conocen las demás opciones**. Sin ellas no hay
+> modelo ni filtrado del muro. El mismo modal revela que se puede **adjuntar vídeo**, que no
+> estaba contemplado y arrastra transcodificación y coste de almacenamiento (`C-2`).
 >
 > `FEAT-COM-017` a `FEAT-COM-025` salen del diseño de la Home. **Repostear, compartir,
 > guardar y denunciar son interacciones nuevas** que el documento de casos de uso no
@@ -297,6 +305,9 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-FBK-008 | `A-3`, `C-5` | Identificación y créditos del comentarista anónimo |
 | FEAT-USR-013 | `V-4`, `U-3` | Qué se conserva al eliminar la cuenta. El nombre de usuario **sí** está decidido: queda bloqueado 30 días |
 | FEAT-COM-024 | `CM-4` | Fórmula de relevancia para ordenar el muro |
+| FEAT-COM-029, FEAT-COM-002 | `C-1` | Qué opciones tiene el selector de audiencia de una publicación |
+| FEAT-COM-002 | `C-2` | Si se admite vídeo, con qué límites y si se transcodifica |
+| FEAT-COM-019 | `C-3` | Si un repost es un puntero o una publicación con entidad propia |
 | FEAT-CRD-009 | `R-1` | Si la reserva es por lector o por obra. Conviene cerrarlo **antes de implementar** |
 
 Estas cinco decisiones son el camino crítico de la especificación. `C-1` es la más urgente:

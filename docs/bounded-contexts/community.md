@@ -49,7 +49,8 @@ seguimiento de autores, los mensajes directos y los rankings.
 | Nombre | Valores |
 |---|---|
 | `PostType` | Intención: `GENERAL`, `LOOKING_FOR_BETA_READERS`, `LOOKING_FOR_WRITING_BUDDY`, `OFFERING_AS_BETA_READER` |
-| `PostFormat` | Formato: `TEXT`, `TEXT_IMAGE`, `ARTICLE_LINK` |
+| `PostFormat` | Formato: `TEXT`, `IMAGE`, `VIDEO`, `LINK`, `WORK` |
+| `PostAudience` | Audiencia: solo se conoce «cualquiera» (`C-1`) |
 | `RankingType` | `WRITERS`, `WORKS`, `READERS` |
 | `RankingPeriod` | Por definir (`CM-3`) |
 
@@ -90,8 +91,12 @@ periodo.
 - `RN-3` Una reacción por usuario y publicación; cambiarla sustituye la anterior.
 - `RN-4` El apoyo (`Like`) y la reacción con emoji son mecanismos distintos y coexisten.
   **El diseño de la Home solo muestra el apoyo**, así que la coexistencia está en duda (`H-5`).
-- `RN-5` `PostType` y `PostFormat` son dimensiones independientes: una publicación buscando
-  lectores beta puede ser de cualquier formato.
+- `RN-5` `PostType`, `PostFormat` y `PostAudience` son dimensiones **independientes**: una
+  publicación buscando lectores beta puede llevar cualquier formato y cualquier audiencia.
+- `RN-7` El muro **filtra por audiencia en servidor**. No se sirve una publicación que el
+  lector no debe ver confiando en que el cliente la oculte.
+- `RN-8` Un repost **no amplía la audiencia** del original: quien no podía verlo sigue sin
+  poder.
 - `RN-6` Este contexto **no consulta** las tablas de `Work`, `User` ni `Credits` para pintar
   la Home: mantiene proyecciones alimentadas por eventos de integración.
 
@@ -109,7 +114,10 @@ periodo.
 | CM-8 | ¿Se puede bloquear a un usuario concreto? | Modelo de mensajería |
 | CM-9 | ¿Una publicación de tipo `LOOKING_FOR_BETA_READERS` enlaza con la obra y permite solicitar acceso desde ahí? | Integración con `Reading` |
 | CM-10 | ¿Qué compone el muro de quien no sigue a nadie? (`H-8`) | Define si es cronológico por seguidos o algorítmico |
-| CM-11 | ¿Un repost se puede comentar de forma independiente del original? | Modelo de `Repost` |
+| CM-11 | ¿Un repost se puede comentar de forma independiente del original? | Modelo de `Repost` (`C-3`) |
+| CM-16 | ¿Qué opciones tiene el selector de audiencia? | **Bloqueante** para `FEAT-COM-029` |
+| CM-17 | ¿Se admite vídeo en las publicaciones? | Transcodificación y coste de almacenamiento (`C-2`) |
+| CM-18 | ¿Quién genera la previsualización de un enlace externo? | Si es el backend, hace peticiones a URLs que aporta el usuario |
 | CM-12 | ¿«Ocultar post» oculta ese post concreto o todos los de ese autor? | `FEAT-COM-022` |
 | CM-13 | ¿Las publicaciones guardadas son privadas y dónde se consultan? | `FEAT-COM-021`, pantalla sin diseñar |
 | CM-14 | ¿La lista de seguidores de un usuario es pública o solo la ve él? | `FEAT-COM-027` |

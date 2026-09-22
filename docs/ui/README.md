@@ -13,6 +13,7 @@ precisa de qué funcionalidades existen y cómo se comportan.
 | [home.md](home.md) | Home: recomendaciones, muro, estado vacío, tour y modal de créditos | `FEAT-COM-017`–`025`, `FEAT-USR-026`, `FEAT-CRD-013`–`015` | `DRAFT` |
 | [my-profile.md](my-profile.md) | Mi perfil: cabecera, pestañas y sus cinco estados vacíos | `FEAT-USR-028`–`032`, `FEAT-COM-026`, `FEAT-COM-027`, `FEAT-FBK-010` | `DRAFT` |
 | [profile-photo.md](profile-photo.md) | Gestionar la foto de perfil: subir, reencuadrar, cambiar y eliminar | `FEAT-USR-037` | `DRAFT` |
+| [create-post.md](create-post.md) | Modal de publicación, audiencia, adjuntos y renderizado de un repost | `FEAT-COM-002`, `019`, `028`, `029` | `DRAFT` |
 
 El resto se irá incorporando a medida que lleguen las páginas de Figma.
 

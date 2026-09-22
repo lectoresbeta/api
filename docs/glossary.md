@@ -39,7 +39,7 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Suscripción a autor | `AuthorSubscription` | Seguimiento de un autor para recibir avisos de sus publicaciones y obras nuevas. |
 | Mensaje directo (MD) | `DirectMessage` | Mensaje privado entre dos usuarios. Requiere que el destinatario los tenga habilitados. |
 | Ranking | `Ranking` | Clasificación de escritores, obras o lectores, filtrable por temática y periodo. |
-| Repost | `Repost` | Republicación de una publicación ajena en el propio muro. Distinto de compartir fuera de la plataforma. |
+| Repost | `Repost` | Republicación de una publicación ajena en el propio muro, sin texto propio. Referencia al original; no lo copia ni amplía su audiencia. Distinto de compartir fuera de la plataforma. |
 | Compartir | `Share` | Difusión de una publicación **fuera** de Lectores Beta. |
 | Publicación guardada | `SavedPost` | Publicación que el usuario archiva para leer después. Privada. |
 | Obra en corrección | *(por definir)* | Obra abierta a recibir feedback. Aparece en el modal de créditos y en el perfil. Que «corrección» es `Feedback` ya está confirmado; lo que sigue sin decidir es si «en corrección» designa un **estado** del ciclo de vida de `Work` (`P-3`). |
@@ -78,7 +78,8 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Modalidad de acceso LB | `BetaReaderAccessMode` | `PUBLIC` (cualquiera se convierte en LB automáticamente), `ON_REQUEST` (requiere aprobación del autor), `PRIVATE` (solo por invitación del autor) |
 | Visibilidad | `Visibility` | `VISIBLE`, `HIDDEN` — aplicable a obra y a fragmento |
 | Tipo de publicación | `PostType` | **Intención**: `GENERAL`, `LOOKING_FOR_BETA_READERS`, `LOOKING_FOR_WRITING_BUDDY`, `OFFERING_AS_BETA_READER` |
-| Formato de publicación | `PostFormat` | **Forma del contenido**: `TEXT`, `TEXT_IMAGE`, `ARTICLE_LINK`. Dimensión independiente de `PostType` |
+| Formato de publicación | `PostFormat` | **Forma del contenido**: `TEXT`, `IMAGE`, `VIDEO`, `LINK`, `WORK`. Dimensión independiente de `PostType` |
+| Audiencia de publicación | `PostAudience` | **Quién puede verla.** Solo se conoce el valor por defecto, «cualquiera» (`C-1`) |
 | Estado de solicitud | `RequestStatus` | `PENDING`, `ACCEPTED`, `REJECTED`, `CANCELLED`, `EXPIRED` |
 | Nivel de texto | `TextTier` | `MICRO_STORY`, `SHORT_STORY`, `BRIEF_TALE`, `MEDIUM_TALE`, `LONG_TALE`, `MICRO_NOVEL`, `SHORT_NOVEL`, `MEDIUM_NOVEL` |
 | Motivo de movimiento de créditos | `CreditTransactionReason` | `ACCOUNT_ACTIVATED`, `FEEDBACK_GIVEN`, `FEEDBACK_RATED_POSITIVELY`, `INVITED_USER_PARTICIPATED`, `FEEDBACK_RECEIVED`, `MANUAL_ADJUSTMENT` |
