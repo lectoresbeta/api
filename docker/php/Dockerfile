@@ -26,6 +26,7 @@ RUN install-php-extensions \
 COPY --from=composer/composer:2-bin /composer /usr/bin/composer
 
 COPY docker/php/conf.d/ /usr/local/etc/php/conf.d/
+COPY docker/php/fpm.d/ /usr/local/etc/php-fpm.d/
 COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint
 COPY docker/php/install-deps.sh /usr/local/bin/install-deps
 RUN chmod +x /usr/local/bin/entrypoint /usr/local/bin/install-deps

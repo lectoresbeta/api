@@ -77,7 +77,76 @@ plataforma de despliegue— depende de `O-1`, todavía sin decidir.
 
 ## Salud del sistema
 
-- Endpoint de salud que verifique el acceso a PostgreSQL y a RabbitMQ.
+**Implementado.** Dos rutas, y la diferencia entre ellas importa:
+
+| Ruta | Responde a | Qué toca |
+|---|---|---|
+| `GET /health/live` | ¿Está vivo el proceso? | Nada |
+| `GET /health` | ¿Puede atender peticiones? | PostgreSQL y RabbitMQ |
+
+**Conectar una sonda de vida a `/health` es la forma clásica de convertir un
+hipo de la base de datos en el reinicio simultáneo de todos los contenedores**,
+que es como un incidente pequeño se vuelve una caída. De ahí que sean dos.
+
+Las dos viven **fuera de `/api/v1`**. La dirección de una sonda acaba escrita
+en orquestadores, balanceadores y sistemas de monitorización, que actualiza
+gente que no lee las notas de versión: no puede moverse cuando cambie la
+versión de la API.
+
+### Qué devuelve
+
+```json
+{
+  "status": "up",
+  "checkedAt": "2026-09-24T10:00:00+00:00",
+  "checks": {
+    "database":       { "status": "up", "durationMs": 1.42 },
+    "message_broker": { "status": "up", "durationMs": 3.08 }
+  }
+}
+```
+
+`200` si todo responde, `503` si algo no. El veredicto es **pesimista**: una
+sola dependencia caída basta. Un endpoint que responde «casi bien» obliga a
+quien lo lee a decidir qué significa eso, y a las tres de la mañana nadie
+quiere decidir nada.
+
+Un chequeo puede salir `skipped` cuando no aplica —en test el transporte es
+in-memory y no hay RabbitMQ al que llegar—. No cuenta como fallo: la
+diferencia entre «funciona» y «no se ha preguntado» es justo lo que necesita
+saber quien lee el informe.
+
+### No dice por qué ha fallado
+
+El endpoint es público, porque tiene que responder antes de que nadie pueda
+autenticarse. Eso obliga a que el cuerpo **no contenga el mensaje del error**:
+«conexión rechazada en 10.0.3.7:5432» le regala la topología del sistema a
+cualquiera que pase por ahí. El motivo va al log, que es donde lo necesita
+quien tiene que arreglarlo.
+
+### Por qué se comprueba RabbitMQ
+
+Nada en la API espera al broker —[`decision:0006`](../decisions/0006-credit-system.md)
+eliminó el último caso en que un contexto bloqueaba a otro—, así que un
+RabbitMQ caído no rompe ni una sola petición. Rompe todo lo que viene después:
+los créditos de bienvenida no se abonan, el correo de activación no sale, y el
+único síntoma visible es una cola que crece. Es exactamente el tipo de fallo
+que justifica una sonda.
+
+El chequeo abre conexión y canal, y **no declara nada**. `countMessages()`
+sería la sonda evidente y es la equivocada: el puente de Symfony la implementa
+con `declareQueue()`, así que preguntar **crearía** la cola por la que
+pregunta.
+
+### Añadir una dependencia
+
+Implementar `Shared\Domain\Health\HealthCheck` en `Infrastructure` y nada
+más: el contenedor los etiqueta y el caso de uso los recoge. El contrato exige
+que un chequeo **nunca lance**; un fallo es un resultado `DOWN`, no una
+excepción, porque un endpoint de salud que responde 500 no dice qué se ha roto.
+
+### Lo que falta
+
 - Alerta sobre acumulación de mensajes en la cola de fallos.
 - Alerta sobre crecimiento anómalo del retraso en las colas.
 

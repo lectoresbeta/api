@@ -60,6 +60,18 @@ services:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - app
+    # Sonda de disponibilidad, no de vida: pregunta por `/health`, que
+    # comprueba PostgreSQL y RabbitMQ. Así `make ps` responde a «¿puedo usar
+    # la API?» y no solo a «¿hay un nginx levantado?».
+    #
+    # Nadie depende de la salud de `web`, así que un hipo de PostgreSQL se ve
+    # pero no reinicia nada.
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   # Consumidor de los eventos de integración. Va aparte a propósito: sin un
   # worker corriendo, `AccountActivated` se queda en la cola y los créditos de

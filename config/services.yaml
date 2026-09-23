@@ -7,6 +7,13 @@ services:
         autowire: true
         autoconfigure: true
 
+    # Los chequeos de salud se etiquetan aquí y no con un atributo sobre la
+    # interfaz: `HealthCheck` vive en Domain, y Domain no conoce Symfony.
+    # Deptrac lo comprueba en cada ejecución.
+    _instanceof:
+        LectoresBeta\Shared\Domain\Health\HealthCheck:
+            tags: ['lectoresbeta.health_check']
+
     # Autoregistro de todo el código propio, con tres exclusiones.
     #
     # Lo que se excluye del dominio son las cosas **con estado**: agregados,
@@ -29,20 +36,15 @@ services:
             - '../src/*/*/Domain/{Entity,ValueObject,Enum,Exception,Event}/'
             - '../src/Shared/Domain/{ValueObject,Exception,Event}/'
             - '../src/Shared/Infrastructure/Symfony/Kernel.php'
+            - '../src/Shared/Infrastructure/Symfony/PublicServicesForTestsPass.php'
 
-when@test:
-    services:
-        _defaults:
-            autowire: true
-            autoconfigure: true
-            # En test todo es público. Sin esto el contenedor elimina los
-            # servicios que todavía no inyecta nadie —que ahora mismo son casi
-            # todos— y un test de integración no puede pedírselos.
-            public: true
+    LectoresBeta\Shared\Application\Health\CheckHealth:
+        arguments:
+            $checks: !tagged_iterator lectoresbeta.health_check
 
-        LectoresBeta\:
-            resource: '../src/'
-            exclude:
-                - '../src/*/*/Domain/{Entity,ValueObject,Enum,Exception,Event}/'
-                - '../src/Shared/Domain/{ValueObject,Exception,Event}/'
-                - '../src/Shared/Infrastructure/Symfony/Kernel.php'
+    # El DSN del transporte es configuración, y traducirla a una dependencia
+    # tipada es trabajo de Infrastructure: ni Domain ni Application leen
+    # variables de entorno.
+    LectoresBeta\Shared\Infrastructure\Health\MessageBrokerHealthCheck:
+        arguments:
+            $transportDsn: '%env(MESSENGER_TRANSPORT_DSN)%'

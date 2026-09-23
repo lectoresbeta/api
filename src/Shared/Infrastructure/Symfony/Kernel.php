@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Shared\Infrastructure\Symfony;
 
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 
 /**
@@ -22,5 +23,12 @@ final class Kernel extends BaseKernel
     public function getProjectDir(): string
     {
         return \dirname(__DIR__, 4);
+    }
+
+    protected function build(ContainerBuilder $container): void
+    {
+        if ('test' === $this->environment) {
+            $container->addCompilerPass(new PublicServicesForTestsPass());
+        }
     }
 }

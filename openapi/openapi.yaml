@@ -36,11 +36,23 @@ tags:
     description: Saldo e historial de créditos
   - name: Notifications
     description: Notificaciones y preferencias
+  - name: Health
+    description: Salud del sistema. Fuera de la versión de la API
 
 security:
   - bearerAuth: []
 
 paths:
+
+  # —— Salud ————————————————————————————————————————————————————————————
+  # Fuera de `/api/v1`: cada operación declara sus propios `servers`, porque
+  # la dirección de una sonda no puede cambiar con la versión de la API.
+
+  /health:
+    $ref: './paths/health.yaml#/ready'
+
+  /health/live:
+    $ref: './paths/health.yaml#/live'
 
   # —— Primer corte de implementación ——————————————————————————————————
   # Registro → activación → abono de bienvenida. Atraviesa User, Notification
@@ -97,6 +109,48 @@ components:
         type: string
 
   schemas:
+
+    HealthStatus:
+      type: string
+      enum: [up, down, skipped]
+      description: |
+        `skipped` es un chequeo que no aplica —no hay RabbitMQ al que llegar
+        cuando el transporte configurado es in-memory—. **No cuenta como
+        fallo**: la diferencia entre «funciona» y «no se ha preguntado»
+        importa.
+
+    HealthCheckResult:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthStatus'
+        durationMs:
+          type: number
+          format: double
+          description: Lo que tardó el chequeo, en milisegundos.
+        detail:
+          type: string
+          description: |
+            Solo aparece cuando hay algo que explicar que no revele nada:
+            por qué un chequeo se ha saltado, por ejemplo. **Nunca contiene el
+            mensaje de un error**, porque este endpoint es público.
+
+    HealthReport:
+      type: object
+      required: [status, checkedAt, checks]
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthStatus'
+          description: |
+            Pesimista: una sola dependencia caída basta para que sea `down`.
+        checkedAt:
+          $ref: '#/components/schemas/Timestamp'
+        checks:
+          type: object
+          description: Cada dependencia, por su nombre estable.
+          additionalProperties:
+            $ref: '#/components/schemas/HealthCheckResult'
 
     Uuid:
       type: string

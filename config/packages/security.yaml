@@ -15,9 +15,20 @@ security:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
 
+        # Salud: tiene que responder antes de que nadie pueda autenticarse, y
+        # lo consultan sondas que no tienen credenciales. Va fuera de
+        # `/api/v1` a propósito (ver HealthController).
+        health:
+            pattern: ^/health(/|$)
+            security: false
+
         # Endpoints públicos: registro, activación, login, enlaces públicos.
+        #
+        # Los patrones llevan `(/|$)` al final, y no es cosmético: sin él,
+        # `^/auth` deja también `/authors` sin autenticar, y nadie se entera
+        # hasta que ese endpoint existe.
         public:
-            pattern: ^/(auth|public|legal|genres|content-warnings)
+            pattern: ^/(auth|public|legal|genres|content-warnings)(/|$)
             security: false
 
         api:
@@ -27,7 +38,7 @@ security:
             jwt: ~
 
     access_control:
-        - { path: ^/admin, roles: ROLE_MODERATOR }
+        - { path: '^/admin(/|$)', roles: ROLE_MODERATOR }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

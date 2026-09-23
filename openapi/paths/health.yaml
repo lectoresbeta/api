@@ -1,0 +1,99 @@
+# Salud del sistema.
+#
+# Fuera de `/api/v1` a propósito: la dirección de una sonda acaba escrita en
+# orquestadores, balanceadores y sistemas de monitorización, que actualiza
+# gente que no lee las notas de versión. No puede moverse cuando cambie la
+# versión de la API.
+#
+# Semántica en docs/architecture/07-observability-and-operations.md.
+
+ready:
+  servers:
+    - url: https://api.lectoresbeta.com
+      description: Producción
+    - url: http://localhost:8000
+      description: Desarrollo
+  get:
+    tags: [Health]
+    operationId: checkReadiness
+    summary: ¿Puede el sistema atender peticiones?
+    description: |
+      Comprueba PostgreSQL y RabbitMQ y devuelve `200` o `503`.
+
+      **No dice por qué ha fallado nada.** El endpoint es público, y un
+      mensaje de error de driver regala la topología del sistema. El motivo
+      está en el log.
+
+      Un chequeo puede salir `skipped` cuando no aplica: en entorno de test el
+      transporte es in-memory y no hay RabbitMQ al que llegar. Un `skipped`
+      **no** cuenta como fallo.
+
+      No la use como sonda de vida: una sonda de vida que consulta la base de
+      datos convierte un hipo de PostgreSQL en el reinicio simultáneo de todos
+      los contenedores. Para eso está `/health/live`.
+    security: []
+    responses:
+      '200':
+        description: Todo lo que hace falta responde.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+              const: 'no-store, private'
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/HealthReport'
+            example:
+              status: up
+              checkedAt: '2026-09-24T10:00:00+00:00'
+              checks:
+                database:
+                  status: up
+                  durationMs: 1.42
+                message_broker:
+                  status: up
+                  durationMs: 3.08
+      '503':
+        description: Alguna dependencia no responde.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/HealthReport'
+            example:
+              status: down
+              checkedAt: '2026-09-24T10:00:00+00:00'
+              checks:
+                database:
+                  status: up
+                  durationMs: 1.42
+                message_broker:
+                  status: down
+                  durationMs: 5000.0
+
+live:
+  servers:
+    - url: https://api.lectoresbeta.com
+      description: Producción
+    - url: http://localhost:8000
+      description: Desarrollo
+  get:
+    tags: [Health]
+    operationId: checkLiveness
+    summary: ¿Está vivo el proceso?
+    description: |
+      Responde `200` sin tocar nada. Una sonda que puede fallar por un motivo
+      distinto de «este proceso está atascado» no es una sonda de vida.
+    security: []
+    responses:
+      '200':
+        description: El proceso responde.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  const: up
