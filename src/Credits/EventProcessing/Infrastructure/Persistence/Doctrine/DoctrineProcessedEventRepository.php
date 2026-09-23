@@ -13,9 +13,9 @@ use LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\DoctrineRepository;
  */
 final class DoctrineProcessedEventRepository extends DoctrineRepository implements ProcessedEventRepository
 {
-    public function wasProcessed(string $eventId): bool
+    public function wasProcessed(string $eventId, string $consumer): bool
     {
-        return null !== $this->repository()->find($eventId);
+        return null !== $this->repository()->find(['eventId' => $eventId, 'consumer' => $consumer]);
     }
 
     public function markProcessed(ProcessedEvent $event): void

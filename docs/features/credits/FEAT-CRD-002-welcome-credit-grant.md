@@ -5,7 +5,7 @@ context: Credits
 concept: Account
 actors: []
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - docs/decisions/0006-credit-system.md
@@ -164,4 +164,17 @@ implementación**, no antes.
 [`decision:0006`](../../decisions/0006-credit-system.md); `RN-3` (una vez por usuario, no por
 evento) y `RN-5` (la cuenta nace perezosa) quedan validadas.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL`.
+
+Hecho: `GrantWelcomeCredits` consume `AccountActivated`, crea la cuenta perezosamente, abona
+los 10 con motivo `WELCOME_GRANT` y escribe el movimiento junto a la fila de deduplicación en
+una sola transacción. Las dos protecciones —por evento y por usuario— están cubiertas en
+`tests/Unit/Credits/GrantWelcomeCreditsTest.php`.
+
+**Falta:**
+
+- publicar `CreditsAdded` (`RN-7`). No hay todavía ningún consumidor, pero es parte del
+  contrato;
+- el índice `(user_id, reason)` **sí** está creado (`Version20260923190000`);
+- la comprobación de extremo a extremo contra RabbitMQ: hoy se prueba el handler, no el
+  transporte.

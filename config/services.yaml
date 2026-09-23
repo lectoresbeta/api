@@ -34,7 +34,15 @@ services:
         resource: '../src/'
         exclude:
             - '../src/*/*/Domain/{Entity,ValueObject,Enum,Exception,Event}/'
+            # Comandos, consultas y eventos entrantes son **mensajes**: los
+            # construye quien los envía, con sus datos dentro. Los handlers
+            # viven en `Application/Handler/` justo para poder separarlos
+            # aquí, y por eso la convención de AGENTS.md los lista aparte.
+            - '../src/*/*/Application/{Command,Query,Event}/'
             - '../src/Shared/Domain/{ValueObject,Exception,Event}/'
+            # Un valor, no un servicio: lo construye quien lo crea, con el
+            # token dentro. El contenedor intentaría autoconectar `$plain`.
+            - '../src/Shared/Application/Security/SecureToken.php'
             - '../src/Shared/Infrastructure/Symfony/Kernel.php'
             - '../src/Shared/Infrastructure/Symfony/PublicServicesForTestsPass.php'
 
@@ -50,7 +58,20 @@ services:
     # nueva aparecería porque alguien añadió una clase.
     LectoresBeta\Shared\Infrastructure\Messenger\IncomingEventRegistry:
         arguments:
-            $eventClasses: []
+            $eventClasses:
+                - LectoresBeta\Credits\Account\Application\Event\AccountActivated
+
+    # Los consumidores de eventos se etiquetan aquí y no con
+    # #[AsMessageHandler]: viven en Application, y Application no conoce a
+    # Symfony. Es la misma razón por la que los chequeos de salud se etiquetan
+    # arriba, y Deptrac comprueba las dos.
+    LectoresBeta\Credits\Account\Application\Handler\GrantWelcomeCredits:
+        arguments:
+            # decision:0006 §5. Cambiarlo afecta solo a las activaciones
+            # posteriores: un movimiento es inmutable (FEAT-CRD-002 RN-8).
+            $welcomeCredits: '%app.welcome_credits%'
+        tags:
+            - { name: messenger.message_handler }
 
     # El DSN del transporte es configuración, y traducirla a una dependencia
     # tipada es trabajo de Infrastructure: ni Domain ni Application leen

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Credits\Account\Domain\Repository;
 
 use LectoresBeta\Credits\Account\Domain\Entity\CreditTransaction;
+use LectoresBeta\Credits\Account\Domain\Enum\CreditTransactionReason;
 use LectoresBeta\Credits\Account\Domain\ValueObject\UserId;
 
 /**
@@ -26,6 +27,15 @@ interface CreditTransactionRepository
      * really true (`RN-1`).
      */
     public function balanceOf(UserId $userId): int;
+
+    /**
+     * Whether this account has ever had a movement for this reason.
+     *
+     * Exists for the invariants that are «once per user, for ever» rather
+     * than «once per event»: the welcome grant is one (`FEAT-CRD-002`
+     * `RN-3`), and deduplicating by event id does not cover it.
+     */
+    public function hasMovementWithReason(UserId $userId, CreditTransactionReason $reason): bool;
 
     /**
      * Everything the economy has ever issued: the welcome grants, the

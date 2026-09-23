@@ -4,9 +4,18 @@ doctrine:
         use_savepoints: true
         profiling_collect_backtrace: '%kernel.debug%'
 
-        # La tabla de control de migraciones no la mapea nadie, así que sin
-        # este filtro cada `migrations:diff` propondría borrarla.
-        schema_filter: '~^(?!doctrine_migration_versions)~'
+        # Aquí había un `schema_filter` que ocultaba
+        # `doctrine_migration_versions`, para que `migrations:diff` no
+        # propusiera borrarla. Se ha quitado porque **rompía las migraciones**:
+        # el filtro es de la conexión, así que también se lo ocultaba al
+        # almacén de metadatos de Doctrine Migrations, que dejaba de verla e
+        # intentaba crearla otra vez. Toda migración posterior a la primera
+        # moría con «relation already exists».
+        #
+        # No hace falta: DoctrineBundle ya excluye esa tabla del diff por su
+        # cuenta cuando está instalado MigrationsBundle. Comprobado con un
+        # `migrations:diff` sobre la base al día, que sale vacío.
+
 
     orm:
         auto_generate_proxy_classes: true

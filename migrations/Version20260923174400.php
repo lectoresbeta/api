@@ -1145,8 +1145,8 @@ final class Version20260923174400 extends AbstractMigration
         $this->addSql('DROP TABLE messenger_messages');
 
         foreach (['user_ctx', 'work_ctx', 'reading_ctx', 'feedback_ctx',
-                  'community_ctx', 'credits_ctx', 'moderation_ctx',
-                  'notification_ctx'] as $schemaName) {
+            'community_ctx', 'credits_ctx', 'moderation_ctx',
+            'notification_ctx'] as $schemaName) {
             $this->addSql(\sprintf('DROP SCHEMA IF EXISTS %s CASCADE', $schemaName));
         }
     }

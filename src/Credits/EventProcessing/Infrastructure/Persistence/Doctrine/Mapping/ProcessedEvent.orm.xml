@@ -4,8 +4,10 @@
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
 
-    <!-- The event id is the key: inserting it twice must fail, and that
-         failure is the deduplication. -->
+    <!-- `(event_id, consumer)` is the key: inserting it twice must fail, and
+         that failure is the deduplication (`FEAT-CRD-011` `RN-3`, `RN-4`).
+         The event id alone would let the first rule that processes a fact
+         mark it done for every other rule. -->
     <entity name="LectoresBeta\Credits\EventProcessing\Domain\Entity\ProcessedEvent"
             table="processed_event" schema="credits_ctx">
 
@@ -15,6 +17,10 @@
         </indexes>
 
         <id name="eventId" column="event_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <id name="consumer" column="consumer" type="string" length="64">
             <generator strategy="NONE"/>
         </id>
 

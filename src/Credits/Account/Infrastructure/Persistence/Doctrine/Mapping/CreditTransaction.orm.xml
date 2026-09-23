@@ -14,6 +14,10 @@
                  invariant, and reads by reason. -->
             <index name="idx_credit_transaction_reason" columns="reason,occurred_at"/>
             <index name="idx_credit_transaction_event" columns="event_id"/>
+            <!-- «¿Este usuario ya tiene un WELCOME_GRANT?» se pregunta en
+                 cada activación (`FEAT-CRD-002` `RN-3`), y sin este índice
+                 la respuesta recorre todo el historial de la cuenta. -->
+            <index name="idx_credit_transaction_user_reason" columns="user_id,reason"/>
         </indexes>
 
         <id name="id" type="guid" column="id">

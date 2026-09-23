@@ -5,7 +5,7 @@ context: User
 concept: Account
 actors: [Guest, User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - figma:1800-13778 (Mailing 1470:9560, aviso en 1470:9456)
@@ -178,4 +178,20 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 **Especificación:** `APPROVED` (2026-09-24). `OB-11` resuelta. Lo que queda —duración del
 token, caducidad de cuentas nunca activadas— son constantes y una política posterior.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL`.
+
+Hecho: `POST /api/v1/auth/activate`, el consumo del token, la idempotencia (`RN-3`), la
+indistinguibilidad entre token inexistente y usado (`RN-5`), la distinción del caducado
+(`RN-4`) y la publicación de `AccountActivated` (`RN-7`).
+
+**Falta:**
+
+- el **correo que entrega el token** ([`FEAT-NOT-008`](../notification/FEAT-NOT-008-account-activation-email.md)).
+  Mientras no exista, la activación solo es alcanzable desde los tests;
+- el reenvío ([`FEAT-USR-021`](FEAT-USR-021-resend-activation-email.md)), que es lo que
+  `RN-4` ofrece al caducar.
+
+**Cambio de contrato:** la operación devuelve `204` y **no una sesión**. El enlace se abre a
+menudo en un dispositivo distinto de aquel en que se creó la cuenta, y emitir ahí una sesión
+convertiría un enlace de correo en una credencial de acceso. `openapi/paths/auth.yaml` queda
+actualizado.

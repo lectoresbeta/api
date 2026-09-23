@@ -44,6 +44,22 @@ final class DoctrineCreditTransactionRepository extends DoctrineRepository imple
             ->getSingleScalarResult();
     }
 
+    public function hasMovementWithReason(UserId $userId, CreditTransactionReason $reason): bool
+    {
+        // `SELECT 1 ... LIMIT 1`: the question is whether one exists, and
+        // counting them all to answer it would read the whole history.
+        return null !== $this->entityManager->createQueryBuilder()
+            ->select('t.id')
+            ->from(CreditTransaction::class, 't')
+            ->where('t.userId = :userId')
+            ->andWhere('t.reason = :reason')
+            ->setParameter('userId', $userId->value())
+            ->setParameter('reason', $reason)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function totalIssued(): int
     {
         $taps = array_values(array_filter(

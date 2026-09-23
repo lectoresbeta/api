@@ -44,6 +44,11 @@ activate:
       de bienvenida (`decision:0006`).
 
       El token es de un solo uso y caduca.
+
+      **No devuelve sesión.** El enlace se abre a menudo en un dispositivo
+      distinto de aquel en que se creó la cuenta, y emitir ahí una sesión
+      convertiría un enlace de correo en una credencial de acceso. Quien tenga
+      la sesión abierta la conserva; quien no, inicia sesión con normalidad.
     security: []
     requestBody:
       required: true
@@ -57,14 +62,22 @@ activate:
                 type: string
                 minLength: 32
     responses:
-      '200':
-        description: Cuenta activada.
+      '204':
+        description: |
+          Cuenta activada. Idempotente: activar una cuenta ya activa devuelve
+          lo mismo (`FEAT-USR-020` `RN-3`).
+      '404':
+        description: |
+          Token inexistente, ya usado o manipulado. **Los tres casos son
+          indistinguibles** a propósito (`RN-5`).
         content:
-          application/json:
+          application/problem+json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/Session'
+              $ref: '../openapi.yaml#/components/schemas/Problem'
       '410':
-        description: El token ha caducado o ya se usó.
+        description: |
+          El token ha caducado. Este sí se distingue, porque hay que ofrecer
+          el reenvío (`FEAT-USR-021`).
         content:
           application/problem+json:
             schema:

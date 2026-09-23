@@ -113,18 +113,37 @@ final class CreditsPersistenceTest extends KernelTestCase
         self::assertSame(8, $this->transactions->balanceOf($userId));
     }
 
-    public function testAnEventIsRecordedOnlyOnce(): void
+    public function testAnEventIsRecordedOnlyOncePerConsumer(): void
     {
         $eventId = CreditTransactionId::generate()->value();
 
-        self::assertFalse($this->processedEvents->wasProcessed($eventId));
+        self::assertFalse($this->processedEvents->wasProcessed($eventId, 'welcome-grant'));
 
         $this->processedEvents->markProcessed(
-            new ProcessedEvent($eventId, 'AccountActivated', $this->now()),
+            new ProcessedEvent($eventId, 'welcome-grant', 'AccountActivated', $this->now()),
         );
         $this->entityManager->flush();
 
-        self::assertTrue($this->processedEvents->wasProcessed($eventId));
+        self::assertTrue($this->processedEvents->wasProcessed($eventId, 'welcome-grant'));
+    }
+
+    /**
+     * La razón de que la clave sea `(eventId, consumer)` y no el identificador
+     * a secas (`FEAT-CRD-011` `RN-4`): dos reglas independientes tienen que
+     * poder ver el mismo hecho. Con la clave anterior, la primera en procesar
+     * lo marcaba como hecho para la segunda, que no se ejecutaba nunca.
+     */
+    public function testTwoRulesEachSeeTheSameEvent(): void
+    {
+        $eventId = CreditTransactionId::generate()->value();
+
+        $this->processedEvents->markProcessed(
+            new ProcessedEvent($eventId, 'welcome-grant', 'AccountActivated', $this->now()),
+        );
+        $this->entityManager->flush();
+
+        self::assertTrue($this->processedEvents->wasProcessed($eventId, 'welcome-grant'));
+        self::assertFalse($this->processedEvents->wasProcessed($eventId, 'invitation-reward'));
     }
 
     /**
@@ -135,7 +154,7 @@ final class CreditsPersistenceTest extends KernelTestCase
     {
         $eventId = CreditTransactionId::generate()->value();
 
-        $this->processedEvents->markProcessed(new ProcessedEvent($eventId, 'AccountActivated', $this->now()));
+        $this->processedEvents->markProcessed(new ProcessedEvent($eventId, 'welcome-grant', 'AccountActivated', $this->now()));
         $this->entityManager->flush();
         $this->entityManager->clear();
 
@@ -143,6 +162,7 @@ final class CreditsPersistenceTest extends KernelTestCase
 
         $this->entityManager->getConnection()->insert('credits_ctx.processed_event', [
             'event_id' => $eventId,
+            'consumer' => 'welcome-grant',
             'event_name' => 'AccountActivated',
             'processed_at' => $this->now()->format('Y-m-d H:i:s'),
         ]);

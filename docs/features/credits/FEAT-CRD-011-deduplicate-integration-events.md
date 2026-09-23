@@ -5,7 +5,7 @@ context: Credits
 concept: EventProcessing
 actors: []
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - docs/decisions/0006-credit-system.md
@@ -141,5 +141,15 @@ movimientos que dependan de ella.
 **Especificación:** `APPROVED` (2026-09-23). `RN-4` —la clave es `(eventId, consumer)`, lo que
 **obliga a cambiar una tabla ya creada**— y el plazo de retención de `RN-7` quedan validados.
 
-**Implementación:** `TODO`. Existen la entidad `ProcessedEvent`, su repositorio y su tabla; les
-falta la columna `consumer`, el comando de purga y los consumidores que los usen.
+**Implementación:** `PARTIAL`.
+
+Hecho: la clave es `(event_id, consumer)` —migración `Version20260923190000`—, la restricción
+de unicidad la impone PostgreSQL (`RN-3`) y el primer consumidor la usa
+([`FEAT-CRD-002`](FEAT-CRD-002-welcome-credit-grant.md)).
+
+**Falta:**
+
+- el **comando de purga** y su programación (`RN-7`). `purgeOlderThan` existe en el
+  repositorio; no hay nada que lo llame, así que hoy la tabla crece sin límite;
+- comprobar el comportamiento ante un duplicado **en el transporte real** (`RN-5`): que se
+  confirme el mensaje y no acabe en la cola de fallos.

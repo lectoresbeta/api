@@ -7,10 +7,10 @@
 
 | Método y ruta | `operationId` | Propósito | Funcionalidad | Estado |
 |---|---|---|---|---|
-| `POST /auth/register` | `registerUser` | Registro con email y contraseña | FEAT-USR-001 | DRAFT |
+| `POST /api/v1/auth/register` | `registerUser` | Registro con email y contraseña | FEAT-USR-001 | **Implementado** |
 | `GET /auth/oauth/{provider}` | `startOAuth` | Iniciar autenticación externa. **Solo `google` en esta fase** | FEAT-USR-002/005 | PENDING |
 | `POST /auth/oauth/{provider}/callback` | `completeOAuth` | Completar autenticación externa | FEAT-USR-002/005 | PENDING |
-| `POST /auth/activate` | `activateAccount` | Activar la cuenta con el token del correo | FEAT-USR-020 | DRAFT |
+| `POST /api/v1/auth/activate` | `activateAccount` | Activar la cuenta con el token del correo | FEAT-USR-020 | **Implementado** |
 | `POST /auth/activation/resend` | `resendActivationEmail` | Reenviar el correo de activación | FEAT-USR-021 | DRAFT |
 | `POST /auth/login` | `login` | Login con email y contraseña | FEAT-USR-004 | PENDING |
 | `POST /auth/logout` | `logout` | Cerrar sesión | FEAT-USR-004 | PENDING |
@@ -59,52 +59,63 @@
 
 ---
 
-## `POST /auth/register`
+## `POST /api/v1/auth/register`
 
 **`operationId`:** `registerUser` · **Funcionalidad:** [`FEAT-USR-001`](../../features/user/FEAT-USR-001-register-with-email.md)
 
 ### Propósito
 
-Crear una cuenta con email, nombre de usuario y contraseña.
+Crear una cuenta con email y contraseña.
 
 ### Autorización
 
-Público. Se rechaza si la petición llega con una sesión activa.
+Público.
 
 ### Reglas aplicadas
 
-`RN-1` a `RN-8` de `FEAT-USR-001`.
+`RN-1` a `RN-15` de `FEAT-USR-001`.
 
 ### Entrada
 
-`email`, `username`, `password` y opcionalmente `invitationToken`.
+`email`, `password`, `acceptedLegalVersions` y opcionalmente `invitationToken`.
 
-**No se acepta** ningún campo que determine créditos iniciales, rol o identidad: son
-decisiones del servidor.
+**No se pide nombre de usuario**: se asigna solo a partir del email (`RN-2`). Y **no se
+acepta** ningún campo que determine créditos iniciales, rol o identidad: son decisiones del
+servidor.
 
 ### Respuesta
 
-`201 Created` con la cuenta creada. Si además devuelve una sesión depende de `S-1`.
+`202 Accepted`, **sin cuerpo y siempre la misma**, exista o no ya una cuenta con ese correo.
+
+Es la pieza que hace cumplir `RN-14`. Un `201` cuando el alta procede y otra cosa cuando no,
+convierte el formulario de alta en un comprobador de quién tiene cuenta en la plataforma; y
+devolver una sesión solo en el primer caso es el mismo oráculo con otro nombre.
 
 ### Errores específicos
 
 | `code` | HTTP | Cuándo |
 |---|---|---|
-| `VALIDATION_FAILED` | 422 | Formato inválido o política de contraseña incumplida |
-| `USERNAME_TAKEN` | 422 | Nombre de usuario ocupado |
-| `EMAIL_ALREADY_REGISTERED` | 409 | Email con cuenta. Ver `RN-8` y `Q-2`: la respuesta no debe permitir enumerar emails |
+| `INVALID_VALUE` | 422 | El correo no tiene forma de correo |
+| `WEAK_PASSWORD` | 422 | La contraseña incumple la política (`RN-3`) |
+| `TERMS_NOT_ACCEPTED` | 422 | Falta la versión aceptada de alguno de los dos documentos |
+
+**No existe un error de «correo ya registrado».** Ese caso devuelve `202`.
+
+Los `422` se comprueban **antes** de mirar si el correo está libre, de modo que ninguno de
+ellos dependa de si hay cuenta: describen lo que el cliente acaba de escribir, que ya sabe.
 
 ### Efectos
 
-Publica `UserRegistered`, que provoca de forma asíncrona la creación de la cuenta de créditos
-**con saldo 0** y el envío del correo de activación (`FEAT-NOT-008`).
+Publica `UserRegistered`, que provocará de forma asíncrona el envío del correo de activación
+(`FEAT-NOT-008`). **`Credits` no lo consume**: no hay efecto de créditos en el registro, y la
+cuenta de créditos no se crea hasta la activación (`FEAT-CRD-002` `RN-5`).
 
 La cuenta se crea en `PENDING_ACTIVATION`: el usuario entra directamente al onboarding, pero
 no puede ejecutar ninguna operación de escritura hasta activarla (`FEAT-USR-025`).
 
 ---
 
-## `POST /auth/activate`
+## `POST /api/v1/auth/activate`
 
 **`operationId`:** `activateAccount` · **Funcionalidad:** [`FEAT-USR-020`](../../features/user/FEAT-USR-020-activate-account.md)
 
@@ -125,7 +136,13 @@ extrae y lo envía.
 
 ### Respuesta
 
-`200 OK`. La operación es idempotente: reactivar una cuenta ya activa devuelve éxito.
+`204 No Content`. La operación es idempotente: reactivar una cuenta ya activa devuelve lo
+mismo.
+
+**No devuelve sesión**, aunque el diseño inicial la contemplaba. El enlace se abre a menudo en
+un dispositivo distinto de aquel en que se creó la cuenta, y emitir una sesión ahí convertiría
+un enlace de correo en una credencial de acceso. Quien tenga su sesión abierta la conserva;
+quien no, inicia sesión con normalidad.
 
 ### Errores específicos
 
@@ -133,6 +150,9 @@ extrae y lo envía.
 |---|---|---|
 | `ACTIVATION_TOKEN_EXPIRED` | 410 | El token caducó; se ofrece reenviar |
 | `INVALID_ACTIVATION_TOKEN` | 404 | Token inexistente, usado o manipulado. No se distingue cuál |
+
+Que el caducado **sí** se distinga es deliberado: hay que poder ofrecer el reenvío, y decirlo
+solo revela algo a quien ya tenía un enlace válido.
 
 ### Efectos
 

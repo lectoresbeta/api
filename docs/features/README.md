@@ -57,7 +57,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-USR-001 | Registro con email y contraseña | Guest | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-001-register-with-email.md) |
+| FEAT-USR-001 | Registro con email y contraseña | Guest | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-001-register-with-email.md) |
 | FEAT-USR-002 | Registro con cuenta de Google | Guest | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-002-register-with-google.md) |
 | FEAT-USR-003 | Registro con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-004 | Login con email y contraseña | Guest | PENDING | TODO | P0 | — |
@@ -76,7 +76,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-017 | Buscar autores por nombre o temática | User | PENDING | TODO | P1 | — |
 | FEAT-USR-018 | Invitar a personas a la plataforma por email | User | PENDING | TODO | P2 | — |
 | FEAT-USR-019 | Registro y login con LinkedIn | Guest | APPROVED | DEFERRED | P3 | [ficha](user/FEAT-USR-019-linkedin-oauth.md) |
-| FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
+| FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
 | FEAT-USR-021 | Reenviar el email de activación | Guest, User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
 | FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
 | FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
@@ -410,7 +410,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-CRD-001 | Consultar el saldo de créditos | User | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-001-check-credit-balance.md) |
-| FEAT-CRD-002 | Abonar los créditos de bienvenida al **activar** la cuenta (+10) | — (sistema) | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-002-welcome-credit-grant.md) |
+| FEAT-CRD-002 | Abonar los créditos de bienvenida al **activar** la cuenta (+10) | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-002-welcome-credit-grant.md) |
 | FEAT-CRD-003 | ~~Abonar créditos por dar feedback según nivel del texto~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-004 | ~~Abonar +5 por feedback valorado positivamente~~ → `FEAT-CRD-017` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-005 | Abonar +5 al invitador cuando el invitado entrega su primera corrección | — (sistema) | PENDING | TODO | P2 | — |
@@ -419,7 +419,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-008 | Consultar el historial de movimientos de créditos | User | PENDING | TODO | P1 | — |
 | FEAT-CRD-009 | Comprobar el saldo al empezar una corrección | — (sistema) | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-009-balance-check-on-correction-start.md) |
 | FEAT-CRD-010 | ~~Fórmula continua en vez de tramos~~ → adoptada en `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
-| FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-011-deduplicate-integration-events.md) |
+| FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-011-deduplicate-integration-events.md) |
 | FEAT-CRD-012 | Salud de la economía de créditos | Admin | APPROVED | TODO | P1 | [ficha](credits/FEAT-CRD-012-economy-health.md) |
 | FEAT-CRD-013 | Créditos asociados a un capítulo (insignia de la tarjeta) | User | APPROVED | TODO | P2 | [ficha](credits/FEAT-CRD-013-work-credit-badge.md) |
 | FEAT-CRD-014 | Modal informativo del sistema de créditos | User | APPROVED | TODO | P2 | [ficha](credits/FEAT-CRD-014-credits-info-modal.md) |

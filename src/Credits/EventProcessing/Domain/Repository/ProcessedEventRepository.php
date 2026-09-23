@@ -7,15 +7,15 @@ namespace LectoresBeta\Credits\EventProcessing\Domain\Repository;
 use LectoresBeta\Credits\EventProcessing\Domain\Entity\ProcessedEvent;
 
 /**
- * The deduplication ledger (`RN-3`).
+ * The deduplication ledger (`FEAT-CRD-011`).
  *
- * `markProcessed` returns false when the event had already been applied, so
- * the caller can drop it without effect. The check and the record have to
- * happen inside the same transaction as the movement they guard.
+ * The check and the record have to happen inside the same transaction as the
+ * movement they guard, and both are keyed by `(eventId, consumer)`: a fact is
+ * applied at most once **per rule**, not once in total.
  */
 interface ProcessedEventRepository
 {
-    public function wasProcessed(string $eventId): bool;
+    public function wasProcessed(string $eventId, string $consumer): bool;
 
     public function markProcessed(ProcessedEvent $event): void;
 
