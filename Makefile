@@ -8,10 +8,16 @@ SHELL := /bin/bash
 #
 DC       = docker compose
 SERVICE  = app
-EXEC     = $(DC) exec -T $(SERVICE)
+EXEC     = $(DC) exec -T --user www-data $(SERVICE)
 PHP      = $(EXEC) php
 COMPOSER = $(EXEC) composer
 CONSOLE  = $(PHP) bin/console
+
+# El contenedor escribe en el mismo directorio que tú: vendor/, var/ y lo que
+# corrija php-cs-fixer. Pasarle tu UID hace que `www-data` sea tú dentro de la
+# imagen, y que no acabes con un checkout que no puedes borrar sin sudo.
+export HOST_UID := $(shell id -u)
+export HOST_GID := $(shell id -g)
 
 ## —— Ciclo de vida ———————————————————————————————————————————————————
 
@@ -20,8 +26,6 @@ build: ## Construye las imágenes
 
 up: ## Levanta todo y deja la base de datos migrada
 	$(DC) up -d
-	@echo "Esperando a que el contenedor termine de instalar dependencias…"
-	@until $(DC) exec -T $(SERVICE) test -f vendor/autoload_runtime.php >/dev/null 2>&1; do sleep 2; done
 	$(MAKE) jwt-keys
 	$(MAKE) migrate
 	@echo
@@ -49,6 +53,9 @@ logs-worker: ## Sigue solo el consumidor de eventos
 	$(DC) logs -f worker
 
 sh: ## Abre una shell en el contenedor de la aplicación
+	$(DC) exec --user www-data $(SERVICE) bash
+
+sh-root: ## Abre una shell como root, para instalar algo o mirar permisos
 	$(DC) exec $(SERVICE) bash
 
 console: ## Ejecuta un comando de Symfony: make console CMD="debug:router"
@@ -113,8 +120,12 @@ docs: ## Valida docs/
 jwt-keys: ## Genera el par de claves para firmar los JWT
 	$(CONSOLE) lexik:jwt:generate-keypair --skip-if-exists
 
-composer-install: ## Instala dependencias dentro del contenedor
-	$(COMPOSER) install
+deps: ## Instala o actualiza las dependencias
+	$(DC) run --rm deps
+
+deps-reset: ## Borra vendor/ y lo reinstala desde cero
+	$(DC) run --rm --user root deps rm -rf vendor
+	$(DC) run --rm deps
 
 audit: ## Avisos de seguridad de las dependencias
 	$(COMPOSER) audit
@@ -136,4 +147,4 @@ help:
 .PHONY: build up down destroy restart ps logs logs-worker sh console install \
         migrate migration migration-status schema-validate db-reset db-test psql \
         check cs fix stan deptrac test test-unit docs \
-        jwt-keys composer-install audit consume failed help
+        jwt-keys deps deps-reset audit consume failed sh-root help

@@ -46,6 +46,7 @@ probarla implicaría mandar correos de verdad a direcciones reales.
 
 | Servicio | Qué es |
 |---|---|
+| `deps` | Instala las dependencias y termina. Los demás esperan a que acabe |
 | `app` | PHP-FPM con el código montado por volumen: editar un fichero se ve en la siguiente petición |
 | `web` | nginx, que sirve `public/` y habla con `app` |
 | `worker` | `messenger:consume integration`, en marcha permanente |
@@ -55,6 +56,27 @@ probarla implicaría mandar correos de verdad a direcciones reales.
 queda en la cola y los créditos de bienvenida no se abonan nunca. Es la primera confusión de
 cualquiera que arranque el proyecto, y por eso el worker se levanta solo con `make up` en vez
 de dejarlo a que alguien se acuerde.
+
+**Y `deps` también va aparte, por un motivo que costó un rato encontrar.** Instalar las
+dependencias desde el *entrypoint* parecía lo natural, pero `app` y `worker` montan el mismo
+`vendor/` y arrancan a la vez: los dos lanzaban `composer install` sobre el mismo directorio
+y el resultado era un autoloader que apuntaba a paquetes que todavía no estaban. Un servicio
+de un solo uso, del que los demás dependen con `service_completed_successfully`, lo hace una
+vez y en un orden garantizado.
+
+Es idempotente: si `vendor/` está al día no hace nada, así que levantar el entorno por segunda
+vez es instantáneo. Si alguna vez `vendor/` queda en mal estado, `make deps-reset` lo borra y
+lo reinstala desde cero.
+
+## Los ficheros que escribe el contenedor son tuyos
+
+El contenedor escribe en el mismo directorio en el que trabajas: `vendor/`, `var/` y lo que
+corrija `php-cs-fixer`. Si los escribiera `root` —que es lo que hacen las imágenes de PHP por
+defecto—, en Linux acabarías con un checkout que no puedes borrar sin `sudo`.
+
+El Makefile le pasa tu UID a la imagen y `www-data` pasa a ser tú dentro del contenedor. Los
+comandos de calidad se ejecutan con ese usuario. Si alguna vez hace falta root —instalar algo,
+mirar permisos—, `make sh-root`.
 
 ## Comandos
 
@@ -66,6 +88,9 @@ make destroy         # parar y BORRAR los volúmenes, base de datos incluida
 make logs            # seguir los registros
 make sh              # una shell dentro del contenedor
 make console CMD="debug:router"
+
+make deps            # instalar o actualizar dependencias
+make deps-reset      # borrar vendor/ y reinstalar desde cero
 
 make migrate         # aplicar migraciones pendientes
 make migration       # generar una a partir del mapeo

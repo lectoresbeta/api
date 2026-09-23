@@ -27,7 +27,8 @@ COPY --from=composer/composer:2-bin /composer /usr/bin/composer
 
 COPY docker/php/conf.d/ /usr/local/etc/php/conf.d/
 COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint
-RUN chmod +x /usr/local/bin/entrypoint
+COPY docker/php/install-deps.sh /usr/local/bin/install-deps
+RUN chmod +x /usr/local/bin/entrypoint /usr/local/bin/install-deps
 
 WORKDIR /app
 
@@ -37,11 +38,27 @@ CMD ["php-fpm"]
 
 FROM base AS dev
 
+# El código llega por volumen, así que todo lo que el contenedor escriba
+# —vendor/, var/, lo que corrija php-cs-fixer— aparece en el disco de quien
+# desarrolla. Si lo escribe root, en Linux acaba con un checkout que no puede
+# borrar sin sudo.
+#
+# La solución es que `www-data` dentro de la imagen tenga el UID de fuera.
+# `-o` permite que el identificador ya esté ocupado: da igual que coincida con
+# otro usuario del sistema, lo que importa es el número.
+ARG UID=1000
+ARG GID=1000
+
 ENV APP_ENV=dev \
     APP_DEBUG=1 \
-    COMPOSER_ALLOW_SUPERUSER=1
+    COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_HOME=/tmp/composer
 
-RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
+RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini" \
+    && groupmod -o -g "${GID}" www-data \
+    && usermod -o -u "${UID}" -g "${GID}" www-data \
+    && mkdir -p /tmp/composer \
+    && chown -R www-data:www-data /tmp/composer
 
 # En desarrollo el código llega por volumen: la imagen solo trae el runtime.
 

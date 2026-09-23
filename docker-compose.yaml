@@ -1,27 +1,51 @@
 # Entorno completo de desarrollo: la aplicación y sus servicios.
 #
-# `make up` levanta esto. PHP ya no hace falta en la máquina.
+# `make build && make up` levanta esto. PHP ya no hace falta en la máquina.
 name: lectoresbeta
 
+# Lo que comparten los tres contenedores de PHP. Un ancla de YAML y no tres
+# copias: cuando cambia una variable de entorno hay que cambiarla en un sitio.
+x-php: &php
+  build:
+    context: .
+    dockerfile: docker/php/Dockerfile
+    target: dev
+    args:
+      # Los pone el Makefile. Sin ellos, todo lo que escriba el contenedor
+      # —vendor/, var/, lo que corrija php-cs-fixer— acaba siendo de root en
+      # el disco de quien desarrolla.
+      UID: ${HOST_UID:-1000}
+      GID: ${HOST_GID:-1000}
+  environment:
+    APP_ENV: dev
+    APP_DEBUG: '1'
+    DATABASE_URL: 'postgresql://lectoresbeta:lectoresbeta@postgres:5432/lectoresbeta?serverVersion=16&charset=utf8'
+    MESSENGER_TRANSPORT_DSN: 'amqp://lectoresbeta:lectoresbeta@rabbitmq:5672/%2f/messages'
+    MAILER_DSN: 'smtp://mailpit:1025'
+    DEFAULT_URI: 'http://localhost:8000'
+  volumes:
+    - .:/app
+    - jwt:/app/config/jwt
+
 services:
-  # PHP-FPM. En desarrollo el código llega por volumen, así que editar un
-  # fichero se ve en la siguiente petición sin reconstruir nada.
+  # Instala las dependencias, una sola vez y antes que nadie.
+  #
+  # Tiene que ser un servicio aparte. Cuando lo hacía el entrypoint, `app` y
+  # `worker` arrancaban a la vez sobre el mismo vendor/ montado y los dos
+  # lanzaban `composer install`: el resultado es un autoloader que apunta a
+  # paquetes que todavía no estaban.
+  deps:
+    <<: *php
+    command: ['/usr/local/bin/install-deps']
+    restart: 'no'
+
+  # PHP-FPM. El código llega por volumen, así que editar un fichero se ve en la
+  # siguiente petición sin reconstruir nada.
   app:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
-      target: dev
-    environment:
-      APP_ENV: dev
-      APP_DEBUG: '1'
-      DATABASE_URL: 'postgresql://lectoresbeta:lectoresbeta@postgres:5432/lectoresbeta?serverVersion=16&charset=utf8'
-      MESSENGER_TRANSPORT_DSN: 'amqp://lectoresbeta:lectoresbeta@rabbitmq:5672/%2f/messages'
-      MAILER_DSN: 'smtp://mailpit:1025'
-      DEFAULT_URI: 'http://localhost:8000'
-    volumes:
-      - .:/app
-      - jwt:/app/config/jwt
+    <<: *php
     depends_on:
+      deps:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       rabbitmq:
@@ -41,10 +65,8 @@ services:
   # worker corriendo, `AccountActivated` se queda en la cola y los créditos de
   # bienvenida no se abonan nunca.
   worker:
-    build:
-      context: .
-      dockerfile: docker/php/Dockerfile
-      target: dev
+    <<: *php
+    user: www-data
     command:
       - php
       - bin/console
@@ -53,18 +75,10 @@ services:
       - --time-limit=3600
       - --memory-limit=256M
       - -vv
-    environment:
-      APP_ENV: dev
-      APP_DEBUG: '1'
-      DATABASE_URL: 'postgresql://lectoresbeta:lectoresbeta@postgres:5432/lectoresbeta?serverVersion=16&charset=utf8'
-      MESSENGER_TRANSPORT_DSN: 'amqp://lectoresbeta:lectoresbeta@rabbitmq:5672/%2f/messages'
-      MAILER_DSN: 'smtp://mailpit:1025'
-      DEFAULT_URI: 'http://localhost:8000'
     restart: unless-stopped
-    volumes:
-      - .:/app
-      - jwt:/app/config/jwt
     depends_on:
+      deps:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
       rabbitmq:
