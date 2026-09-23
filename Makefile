@@ -20,8 +20,8 @@ build: ## Construye las imágenes
 
 up: ## Levanta todo y deja la base de datos migrada
 	$(DC) up -d
-	@echo "Esperando a que la aplicación responda…"
-	@until $(DC) exec -T $(SERVICE) php -r 'exit(0);' >/dev/null 2>&1; do sleep 1; done
+	@echo "Esperando a que el contenedor termine de instalar dependencias…"
+	@until $(DC) exec -T $(SERVICE) test -f vendor/autoload_runtime.php >/dev/null 2>&1; do sleep 2; done
 	$(MAKE) jwt-keys
 	$(MAKE) migrate
 	@echo
