@@ -10,6 +10,27 @@ framework:
     validation:
         email_validation_mode: html5
 
+    # Fuerza bruta contra el inicio de sesión (FEAT-USR-004 RN-13).
+    #
+    # Dos limitadores porque paran ataques distintos: por dirección detiene a
+    # una máquina probando miles de contraseñas; por cuenta detiene a mil
+    # máquinas probando unas pocas contra una misma persona. El primero solo
+    # no sirve contra lo segundo.
+    #
+    # El de cuenta se puede usar para dejar a alguien fuera fallando aposta,
+    # así que es el más generoso de los dos; el ajuste fino queda para cuando
+    # haya datos reales (`S-8`).
+    rate_limiter:
+        login_by_ip:
+            policy: sliding_window
+            limit: 10
+            interval: '5 minutes'
+
+        login_by_account:
+            policy: sliding_window
+            limit: 20
+            interval: '15 minutes'
+
 when@test:
     framework:
         test: true

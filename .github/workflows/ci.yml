@@ -35,6 +35,12 @@ jobs:
       - name: Aislamiento entre bounded contexts
         run: vendor/bin/deptrac analyse --config-file=deptrac.contexts.yaml --fail-on-uncovered --report-uncovered
 
+      # El spec de OpenAPI llegó a tener dos claves duplicadas que se
+      # tragaban definiciones enteras en silencio. Un linter lo habría visto
+      # el primer día.
+      - name: Sintaxis de YAML
+        run: php bin/console lint:yaml config openapi --parse-tags
+
       - name: Documentación
         run: python3 docs/_tools/check-docs.py
 

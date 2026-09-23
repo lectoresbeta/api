@@ -40,9 +40,12 @@ services:
             # aquí, y por eso la convención de AGENTS.md los lista aparte.
             - '../src/*/*/Application/{Command,Query,Event,Contract,DTO}/'
             - '../src/Shared/Domain/{ValueObject,Exception,Event}/'
-            # Un valor, no un servicio: lo construye quien lo crea, con el
-            # token dentro. El contenedor intentaría autoconectar `$plain`.
+            # Dos valores que viven en carpetas de servicios. El contenedor
+            # intentaría autoconectar sus strings, y son cosas que construye
+            # quien las crea: el token, con su secreto dentro; el usuario
+            # autenticado, con el identificador que venía en la petición.
             - '../src/Shared/Application/Security/SecureToken.php'
+            - '../src/User/Authentication/Infrastructure/Security/AuthenticatedUser.php'
             - '../src/Shared/Infrastructure/Symfony/Kernel.php'
             - '../src/Shared/Infrastructure/Symfony/PublicServicesForTestsPass.php'
 
@@ -66,6 +69,18 @@ services:
     # #[AsMessageHandler]: viven en Application, y Application no conoce a
     # Symfony. Es la misma razón por la que los chequeos de salud se etiquetan
     # arriba, y Deptrac comprueba las dos.
+    # Symfony registra los limitadores como `limiter.<nombre>` y no los
+    # autoconecta por interfaz en esta versión. Se pasan a mano, que además
+    # deja a la vista cuál es cuál.
+    LectoresBeta\User\Authentication\Infrastructure\Controller\LogInController:
+        arguments:
+            $byAddress: '@limiter.login_by_ip'
+            $byAccount: '@limiter.login_by_account'
+
+    LectoresBeta\User\Authentication\Infrastructure\Security\LexikAccessTokenIssuer:
+        arguments:
+            $lifetimeInSeconds: '%app.jwt_ttl%'
+
     # Los contratos publicados se enlazan **a mano**, y es la única lista de
     # alias que este fichero mantiene. Un contrato es la puerta por la que un
     # contexto entra en otro (decision:0014): conviene que abrirla sea un

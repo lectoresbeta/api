@@ -21,6 +21,16 @@ enum FailureKind
     /** The input cannot be accepted. */
     case INVALID;
 
+    /**
+     * We do not know who is asking, or no longer do.
+     *
+     * Distinct from `FORBIDDEN`: there the caller is identified and the
+     * answer is no, here the answer is «say who you are». Collapsing the two
+     * is what produces a client that logs somebody out when what it needed
+     * was to tell them they lack permission.
+     */
+    case UNAUTHENTICATED;
+
     /** It does not exist, or must not be revealed to exist. */
     case NOT_FOUND;
 

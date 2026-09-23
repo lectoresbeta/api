@@ -5,7 +5,7 @@ context: Credits
 concept: Account
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P0
 sources:
   - docs/decisions/0006-credit-system.md
@@ -143,5 +143,11 @@ Ninguna.
 **Especificación:** `APPROVED` (2026-09-23). La ruta `/credits/balance` y `RN-2` —la
 ausencia de cuenta es un saldo de cero, no un error— quedan validadas.
 
-**Implementación:** `TODO`. La operación no entra en `openapi/` hasta que la ficha esté
-`APPROVED`.
+**Implementación:** `DONE`.
+
+`GET /api/v1/credits/balance`, documentado en `openapi/paths/credits.yaml` y cubierto por
+`tests/Functional/Credits/CreditBalanceTest.php`, incluido `RN-2`: quien no tiene movimientos
+ve `0` y no un `404`.
+
+Es además el primer endpoint autenticado del proyecto, así que sus tests son también los que
+comprueban que el token de acceso sirve para algo.

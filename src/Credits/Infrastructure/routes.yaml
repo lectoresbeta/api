@@ -1,19 +1,11 @@
-# Rutas del bounded context `Credits`. Todavía ninguna.
+# Rutas del bounded context `Credits`.
 #
-# El fichero existe vacío a propósito: quien añada el primer endpoint de
-# `Credits` no tiene que averiguar dónde va, y `config/routes.yaml` —que lo
-# importa— sigue siendo el censo de contextos que exponen API.
-#
-# El nombre de cada ruta es su `operationId` de OpenAPI. No es cosmético: es
-# lo que permite comprobar de forma mecánica que lo implementado y el contrato
-# publicado no se han separado, y hay un test que lo hace
-# (`tests/Unit/Architecture/RoutingConventionTest.php`).
-#
-# Formato:
-#
-#     <operationId>:
-#         path: /api/v1/...
-#         controller: LectoresBeta\Credits\<Concepto>\Infrastructure\Controller\<Algo>Controller::__invoke
-#         methods: [POST]
-#
-# Convención completa: docs/api/conventions/routing.md
+# Casi todo este contexto funciona por eventos y no por HTTP: los créditos se
+# mueven al recibir hechos de otros contextos, nunca por una llamada. No
+# existe —ni debe existir— un endpoint para sumar o restar créditos
+# (decision:0002).
+
+getCreditBalance:
+    path: /api/v1/credits/balance
+    controller: LectoresBeta\Credits\Account\Infrastructure\Controller\GetCreditBalanceController::__invoke
+    methods: [GET]

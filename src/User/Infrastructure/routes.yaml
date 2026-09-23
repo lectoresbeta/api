@@ -12,3 +12,18 @@ activateAccount:
     path: /api/v1/auth/activate
     controller: LectoresBeta\User\Account\Infrastructure\Controller\ActivateAccountController::__invoke
     methods: [POST]
+
+login:
+    path: /api/v1/auth/login
+    controller: LectoresBeta\User\Authentication\Infrastructure\Controller\LogInController::__invoke
+    methods: [POST]
+
+refreshSession:
+    path: /api/v1/auth/refresh
+    controller: LectoresBeta\User\Authentication\Infrastructure\Controller\RenewSessionController::__invoke
+    methods: [POST]
+
+logout:
+    path: /api/v1/auth/logout
+    controller: LectoresBeta\User\Authentication\Infrastructure\Controller\LogOutController::__invoke
+    methods: [POST]

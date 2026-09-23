@@ -160,3 +160,133 @@ oauthCallback:
               $ref: '../openapi.yaml#/components/schemas/Session'
       '422':
         $ref: '../openapi.yaml#/components/responses/ValidationError'
+
+login:
+  post:
+    tags: [Auth]
+    operationId: login
+    summary: Iniciar sesión con correo y contraseña
+    description: |
+      Devuelve un token de acceso de **15 minutos** y un token de refresco
+      revocable (`decision:0007`).
+
+      **Una cuenta sin activar inicia sesión con normalidad**: el onboarding
+      ocurre antes de activar. Lo que no puede es escribir
+      (`FEAT-USR-025`).
+
+      Credenciales incorrectas, cuenta inexistente, cuenta dada de alta con
+      Google y cuenta eliminada dan **exactamente la misma respuesta**
+      (`FEAT-USR-004` `RN-2`), y el servidor verifica una contraseña ficticia
+      cuando el correo no existe para que tampoco el **tiempo** los distinga.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email, password]
+            properties:
+              email:
+                type: string
+                format: email
+              password:
+                type: string
+    responses:
+      '200':
+        description: Sesión iniciada.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Session'
+      '401':
+        description: 'Credenciales no válidas. `code: INVALID_CREDENTIALS`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '403':
+        description: |
+          Cuenta bloqueada. `code: ACCOUNT_BLOCKED`.
+
+          Se distingue a propósito: solo llega aquí quien ya ha acertado la
+          contraseña, y callarlo dejaría a una persona sancionada creyendo
+          que la ha olvidado.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '429':
+        $ref: '../openapi.yaml#/components/responses/TooManyRequests'
+
+refresh:
+  post:
+    tags: [Auth]
+    operationId: refreshSession
+    summary: Renovar la sesión
+    description: |
+      **El token de refresco rota**: el presentado queda revocado y se
+      entrega uno nuevo, así que sirve una sola vez (`FEAT-USR-004` `RN-10`).
+
+      Presentar uno **ya revocado** revoca todas las sesiones del usuario
+      (`RN-11`): que dos partes tengan el mismo token no tiene lectura
+      benigna, y es la única acción que expulsa a un ladrón sin saber cuál de
+      los dos lo es.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [refreshToken]
+            properties:
+              refreshToken:
+                type: string
+    responses:
+      '200':
+        description: Sesión renovada.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Session'
+      '401':
+        description: 'Token de refresco inexistente, caducado o revocado. `code: INVALID_REFRESH_TOKEN`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '403':
+        description: 'Cuenta bloqueada. `code: ACCOUNT_BLOCKED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+logout:
+  post:
+    tags: [Auth]
+    operationId: logout
+    summary: Cerrar sesión
+    description: |
+      Revoca el token de refresco presentado.
+
+      **El token de acceso sigue siendo válido hasta 15 minutos**: un JWT no
+      se puede retirar (`decision:0007`). Conviene no prometer lo contrario.
+
+      Idempotente: un token inexistente o ya revocado también devuelve `204`.
+      Distinguirlos diría a quien pregunta si ese token era real.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [refreshToken]
+            properties:
+              refreshToken:
+                type: string
+    responses:
+      '204':
+        description: Sesión cerrada.

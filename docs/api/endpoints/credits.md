@@ -9,7 +9,7 @@
 
 | Método y ruta | `operationId` | Propósito | Funcionalidad | Estado |
 |---|---|---|---|---|
-| `GET /credits/balance` | `getCreditBalance` | Saldo del usuario autenticado | FEAT-CRD-001 | REVIEW |
+| `GET /api/v1/credits/balance` | `getCreditBalance` | Saldo del usuario autenticado | FEAT-CRD-001 | **Implementado** |
 | `GET /credits/transactions` | `listCreditTransactions` | Historial de movimientos | FEAT-CRD-008 | PENDING |
 | `POST /corrections/{correctionId}/tip` | `tipCorrection` | Propina a una corrección | FEAT-CRD-017 | PENDING |
 | `GET /admin/credits/health` | `getEconomyHealth` | Estado agregado de la economía | FEAT-CRD-012 | PENDING |
@@ -21,7 +21,7 @@ debe existir— un endpoint para sumar o restar créditos.
 
 ---
 
-## `GET /credits/balance`
+## `GET /api/v1/credits/balance`
 
 **`operationId`:** `getCreditBalance` · **Funcionalidad:** [`FEAT-CRD-001`](../../features/credits/FEAT-CRD-001-check-credit-balance.md)
 

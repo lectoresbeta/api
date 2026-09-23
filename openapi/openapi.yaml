@@ -67,6 +67,18 @@ paths:
   /auth/activation/resend:
     $ref: './paths/auth.yaml#/resend'
 
+  /auth/login:
+    $ref: './paths/auth.yaml#/login'
+
+  /auth/refresh:
+    $ref: './paths/auth.yaml#/refresh'
+
+  /auth/logout:
+    $ref: './paths/auth.yaml#/logout'
+
+  /credits/balance:
+    $ref: './paths/credits.yaml#/balance'
+
   /auth/oauth/{provider}/callback:
     $ref: './paths/auth.yaml#/oauthCallback'
 
@@ -210,6 +222,15 @@ components:
         acceptedLegalVersions:
           $ref: '#/components/schemas/LegalAcceptance'
 
+    PageInfo:
+      type: object
+      required: [hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
     Problem:
       type: object
       description: |
@@ -225,6 +246,8 @@ components:
           type: string
         status:
           type: integer
+        detail:
+          type: string
         code:
           type: string
           description: |
@@ -232,47 +255,6 @@ components:
             nunca por `title` ni por `detail`, que son para personas y pueden
             cambiar sin que sea un cambio incompatible.
           examples: ['WEAK_PASSWORD']
-        detail:
-          type: string
-        errors:
-          type: array
-          items:
-            type: object
-            required: [field, code, message]
-            properties:
-              field:
-                type: string
-              code:
-                type: string
-              message:
-                type: string
-
-    PageInfo:
-      type: object
-      required: [hasNextPage]
-      properties:
-        nextCursor:
-          type: [string, 'null']
-        hasNextPage:
-          type: boolean
-
-    Problem:
-      type: object
-      description: Respuesta de error, basada en RFC 7807.
-      required: [title, status, code]
-      properties:
-        type:
-          type: string
-          format: uri
-        title:
-          type: string
-        status:
-          type: integer
-        detail:
-          type: string
-        code:
-          type: string
-          description: Código estable y legible por máquina. El cliente decide por este campo.
         errors:
           type: array
           items:
@@ -353,8 +335,6 @@ components:
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
-
-  responses:
 
     ValidationError:
       description: La petición no cumple las reglas de validación.

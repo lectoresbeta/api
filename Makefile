@@ -91,10 +91,14 @@ psql: ## Abre psql contra la base de datos de desarrollo
 
 ## —— Calidad —————————————————————————————————————————————————————————
 
-check: cs stan deptrac test docs ## Lo mismo que ejecuta CI
+check: cs stan deptrac lint test docs ## Lo mismo que ejecuta CI
 
 cs: ## Comprueba el estilo sin modificar nada
 	$(EXEC) vendor/bin/php-cs-fixer fix --dry-run --diff
+
+lint: ## Valida la sintaxis de YAML y de las plantillas
+	$(CONSOLE) lint:yaml config openapi --parse-tags
+	$(CONSOLE) lint:container
 
 fix: ## Corrige el estilo
 	$(EXEC) vendor/bin/php-cs-fixer fix
@@ -146,5 +150,5 @@ help:
 
 .PHONY: build up down destroy restart ps logs logs-worker sh console install \
         migrate migration migration-status schema-validate db-reset db-test psql \
-        check cs fix stan deptrac test test-unit docs \
+        check cs fix stan deptrac lint test test-unit docs \
         jwt-keys deps deps-reset audit consume failed sh-root help

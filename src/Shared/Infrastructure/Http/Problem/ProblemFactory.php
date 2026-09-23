@@ -68,6 +68,7 @@ final readonly class ProblemFactory
     {
         return match ($kind) {
             FailureKind::INVALID => Response::HTTP_UNPROCESSABLE_ENTITY,
+            FailureKind::UNAUTHENTICATED => Response::HTTP_UNAUTHORIZED,
             FailureKind::NOT_FOUND => Response::HTTP_NOT_FOUND,
             FailureKind::CONFLICT => Response::HTTP_CONFLICT,
             FailureKind::FORBIDDEN => Response::HTTP_FORBIDDEN,

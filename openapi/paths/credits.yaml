@@ -1,0 +1,44 @@
+# Saldo de créditos.
+#
+# Casi todo `Credits` funciona por eventos: no hay —ni debe haber— ninguna
+# operación para sumar o restar créditos desde fuera (decision:0002).
+
+balance:
+  get:
+    tags: [Credits]
+    operationId: getCreditBalance
+    summary: Consultar el saldo propio
+    description: |
+      Un **único** entero con signo. No hay «saldo disponible» frente a
+      «saldo total» porque el sistema no retiene créditos
+      (`decision:0006` §3): lo que se ve es lo que se tiene.
+
+      Dos cosas que el cliente debe respetar:
+
+      - **`balance` puede ser negativo** (`FEAT-CRD-018`). Un cliente que lo
+        trate como natural mostrará cifras equivocadas justo cuando la
+        persona más necesita entender qué pasa;
+      - **una cuenta sin movimientos devuelve `0`, no `404`.** Es el estado
+        normal de quien se ha registrado y aún no ha activado.
+
+      No existe forma de consultar el saldo de otra persona. La vista
+      agregada de la economía es `FEAT-CRD-012` y trabaja con totales.
+    responses:
+      '200':
+        description: Saldo del usuario autenticado.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+              examples: ['no-store, private']
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [balance]
+              properties:
+                balance:
+                  type: integer
+                  examples: [10]
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

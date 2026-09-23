@@ -12,8 +12,9 @@
 | `POST /auth/oauth/{provider}/callback` | `completeOAuth` | Completar autenticación externa | FEAT-USR-002/005 | PENDING |
 | `POST /api/v1/auth/activate` | `activateAccount` | Activar la cuenta con el token del correo | FEAT-USR-020 | **Implementado** |
 | `POST /auth/activation/resend` | `resendActivationEmail` | Reenviar el correo de activación | FEAT-USR-021 | DRAFT |
-| `POST /auth/login` | `login` | Login con email y contraseña | FEAT-USR-004 | PENDING |
-| `POST /auth/logout` | `logout` | Cerrar sesión | FEAT-USR-004 | PENDING |
+| `POST /api/v1/auth/login` | `login` | Login con email y contraseña | FEAT-USR-004 | **Implementado** |
+| `POST /api/v1/auth/refresh` | `refreshSession` | Renovar la sesión. El refresco **rota** | FEAT-USR-004 | **Implementado** |
+| `POST /api/v1/auth/logout` | `logout` | Cerrar sesión | FEAT-USR-004 | **Implementado** |
 | `POST /auth/password-reset` | `requestPasswordReset` | Solicitar recuperación | FEAT-USR-007 | PENDING |
 | `POST /auth/password-reset/{token}` | `confirmPasswordReset` | Fijar nueva contraseña | FEAT-USR-007 | PENDING |
 | `GET /me/onboarding` | `getOnboardingState` | Paso en el que se retoma el onboarding | FEAT-USR-022 | DRAFT |
@@ -158,6 +159,77 @@ solo revela algo a quien ya tenía un enlace válido.
 
 Publica `AccountActivated`, que desencadena el abono de los **10 créditos de bienvenida**
 (`FEAT-CRD-002`) y habilita todas las operaciones de escritura (`FEAT-USR-025`).
+
+---
+
+## `POST /api/v1/auth/login`
+
+**`operationId`:** `login` · **Funcionalidad:** [`FEAT-USR-004`](../../features/user/FEAT-USR-004-login-with-email.md)
+
+### Propósito
+
+Abrir una sesión: token de acceso de 15 minutos y token de refresco revocable
+([`decision:0007`](../../decisions/0007-jwt-sessions.md)).
+
+### Autorización
+
+Pública. **Una cuenta sin activar inicia sesión con normalidad**: el onboarding ocurre antes
+de activar, así que impedirlo dejaría fuera a todo el mundo justo después de registrarse. Lo
+que no puede hacer es escribir (`FEAT-USR-025`).
+
+### Respuesta
+
+`200` con `accessToken`, `refreshToken` y `expiresIn`.
+
+El token de acceso lleva `sub`, `iat`, `exp` y `jti`, **y nada más**. Un rol dentro de un token
+sobrevive a su propia retirada hasta quince minutos, así que los permisos se consultan.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `INVALID_CREDENTIALS` | 401 | Contraseña incorrecta, cuenta inexistente, cuenta de Google sin contraseña o cuenta eliminada. **Los cuatro son indistinguibles** |
+| `ACCOUNT_BLOCKED` | 403 | Cuenta bloqueada, con la contraseña correcta |
+| — | 429 | Demasiados intentos, por dirección o por cuenta |
+
+`ACCOUNT_BLOCKED` sí se distingue, y es deliberado: solo llega ahí quien ya ha acertado la
+contraseña, y callarlo dejaría a una persona sancionada creyendo que la ha olvidado.
+
+Cuando el correo no existe, el servidor **verifica igualmente una contraseña ficticia**. Sin
+eso, la diferencia de tiempo delataría qué correos tienen cuenta y el cuidado con los mensajes
+no serviría de nada.
+
+---
+
+## `POST /api/v1/auth/refresh`
+
+**`operationId`:** `refreshSession` · **Funcionalidad:** [`FEAT-USR-004`](../../features/user/FEAT-USR-004-login-with-email.md)
+
+### Propósito
+
+Renovar la sesión. **El token de refresco rota**: el presentado queda revocado y se entrega
+uno nuevo, así que sirve una sola vez.
+
+### Efectos
+
+Presentar un token **ya revocado** revoca **todas** las sesiones del usuario. Que dos partes
+tengan el mismo token no tiene lectura benigna, y cerrar todo es la única acción que expulsa a
+un ladrón sin saber cuál de los dos lo es. A quien pregunta no se le dice nada de esto: puede
+ser el ladrón.
+
+---
+
+## `POST /api/v1/auth/logout`
+
+**`operationId`:** `logout` · **Funcionalidad:** [`FEAT-USR-004`](../../features/user/FEAT-USR-004-login-with-email.md)
+
+### Respuesta
+
+`204`, siempre. Un token inexistente o ya revocado también: distinguirlos diría a quien
+pregunta si ese token era real, y el resultado que pedía —quedar fuera— es cierto igualmente.
+
+**El token de acceso sigue siendo válido hasta 15 minutos.** Un JWT no se puede retirar, y
+conviene no prometer lo contrario en ninguna pantalla.
 
 ---
 

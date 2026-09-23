@@ -225,13 +225,18 @@ propiedades privadas, renombrar una clase rompe a los consumidores.
 
 ## Lo que todavía no existe
 
-- **No hay casos de uso ni controladores.** Hay persistencia —66 tablas, sus entidades, sus
-  mapeos y sus repositorios— pero nada que los orqueste todavía. Las rutas de `openapi/`
-  describen lo que habrá.
-- No hay publicación ni consumo de eventos de integración: el transporte está configurado y el
-  worker corre, pero no hay nada que enviar.
-- El proveedor de usuarios de Symfony Security es un `memory: ~` provisional. Se sustituye por
-  `LectoresBeta\User\Authentication\Infrastructure\Security\UserProvider` cuando exista
-  `FEAT-USR-001`. Hasta entonces el contenedor arranca, pero nadie puede autenticarse.
-- No hay proveedor de correo elegido para producción (`N-2` de `FEAT-NOT-008`).
+La primera rodaja vertical **ya funciona**: alta, correo de activación, activación, abono de
+los créditos de bienvenida, inicio de sesión y consulta de saldo. Lo que falta:
+
+- **La mayor parte del producto.** Hay persistencia para 66 tablas y casos de uso para seis
+  funcionalidades. `Work`, `Reading`, `Feedback`, `Community` y `Moderation` no tienen todavía
+  ningún caso de uso.
+- **Las escrituras no comprueban el estado de la cuenta** (`FEAT-USR-025`). Una cuenta sin
+  activar podría escribir en cuanto exista algo donde escribir, así que esto va **antes** que
+  el primer endpoint de escritura y no después.
+- No hay proveedor de correo elegido para producción (`N-3` de `FEAT-NOT-008`).
+- Cambiar contraseña o correo todavía no invalida los tokens de refresco
+  (`decision:0007` `RN-3`): es trabajo de `FEAT-USR-041` y `FEAT-USR-040`.
+- Nadie purga `processed_event` ni los alias caducados: los comandos existen, la programación
+  no.
 - No hay entorno de producción definido (`docs/architecture/07-observability-and-operations.md`).

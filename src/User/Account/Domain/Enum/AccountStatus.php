@@ -27,8 +27,18 @@ enum AccountStatus: string
         return self::ACTIVE === $this;
     }
 
+    /**
+     * A blocked account does **not** authenticate
+     * ([`FEAT-MOD-006`](../../../../../docs/features/moderation/FEAT-MOD-006-sanctions.md),
+     * [`decision:0007`](../../../../../docs/decisions/0007-jwt-sessions.md)).
+     *
+     * An unactivated one does: the onboarding happens before activating
+     * (`FEAT-USR-001` `RN-9`), so refusing here would lock everybody out
+     * immediately after signing up. What it cannot do is write
+     * (`canWrite()`).
+     */
     public function canAuthenticate(): bool
     {
-        return self::DELETED !== $this;
+        return self::PENDING_ACTIVATION === $this || self::ACTIVE === $this;
     }
 }

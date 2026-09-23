@@ -83,6 +83,10 @@ final class ActivationFlowTest extends WebTestCase
         $this->consumePendingEvents();
 
         self::assertSame(10, $this->creditsOf($user->id()->value()));
+
+        // 4. Y la persona los ve, por la API y con su propia sesión: el
+        //    recorrido entero tal y como lo vive un cliente.
+        self::assertSame(['balance' => 10], $this->balanceAsSeenBy('recorrido@ejemplo.com'));
     }
 
     /**
@@ -105,6 +109,33 @@ final class ActivationFlowTest extends WebTestCase
         $this->deliver($encoded);
 
         self::assertCount(1, self::getMailerMessages());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function balanceAsSeenBy(string $email): array
+    {
+        $this->client->request('POST', '/api/v1/auth/login', server: [
+            'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => '198.51.100.'.(1 + crc32($this->name()) % 200),
+        ], content: json_encode(['email' => $email, 'password' => 'Valida1!'], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseIsSuccessful();
+
+        /** @var array{accessToken: string} $session */
+        $session = json_decode((string) $this->client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+
+        $this->client->request('GET', '/api/v1/credits/balance', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$session['accessToken'],
+        ]);
+
+        self::assertResponseIsSuccessful();
+
+        /** @var array<string, mixed> $balance */
+        $balance = json_decode((string) $this->client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+
+        return $balance;
     }
 
     /**

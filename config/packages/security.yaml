@@ -10,12 +10,12 @@ security:
         LectoresBeta\User\Account\Domain\Entity\User: 'auto'
 
     providers:
-        # Hasta que exista FEAT-USR-001 no hay de dónde cargar usuarios. Se
-        # deja un proveedor vacío para que el contenedor arranque; se sustituye
-        # por `id: LectoresBeta\User\Authentication\Infrastructure\Security\UserProvider`
-        # en cuanto ese servicio exista.
+        # Resuelve el `sub` del token contra la base de datos en cada
+        # petición autenticada. Es lo que cierra parte de la ventana de
+        # quince minutos de decision:0007: una cuenta bloqueada o eliminada
+        # deja de autenticar en el acto, aunque su token siga firmado.
         app_users:
-            memory: ~
+            id: LectoresBeta\User\Authentication\Infrastructure\Security\AuthenticatedUserProvider
 
     firewalls:
         dev:

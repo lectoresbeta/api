@@ -60,7 +60,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-001 | Registro con email y contraseña | Guest | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-001-register-with-email.md) |
 | FEAT-USR-002 | Registro con cuenta de Google | Guest | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-002-register-with-google.md) |
 | FEAT-USR-003 | Registro con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
-| FEAT-USR-004 | Login con email y contraseña | Guest | PENDING | TODO | P0 | — |
+| FEAT-USR-004 | Login con email y contraseña, y ciclo de vida de la sesión | Guest | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-004-login-with-email.md) |
 | FEAT-USR-005 | Login con cuenta de Google | Guest | PENDING | TODO | P0 | — |
 | FEAT-USR-006 | Login con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-007 | Recuperar contraseña | Guest | PENDING | TODO | P0 | — |
@@ -409,7 +409,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-CRD-001 | Consultar el saldo de créditos | User | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-001-check-credit-balance.md) |
+| FEAT-CRD-001 | Consultar el saldo de créditos | User | APPROVED | DONE | P0 | [ficha](credits/FEAT-CRD-001-check-credit-balance.md) |
 | FEAT-CRD-002 | Abonar los créditos de bienvenida al **activar** la cuenta (+10) | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-002-welcome-credit-grant.md) |
 | FEAT-CRD-003 | ~~Abonar créditos por dar feedback según nivel del texto~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-004 | ~~Abonar +5 por feedback valorado positivamente~~ → `FEAT-CRD-017` | — | PENDING | DEPRECATED | P3 | — |

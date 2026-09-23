@@ -61,8 +61,12 @@ abstract readonly class Uuid implements \Stringable
         return new static($normalised);
     }
 
+    /**
+     * @return non-empty-string
+     */
     public function value(): string
     {
+        /** @var non-empty-string the pattern guarantees 36 characters */
         return $this->value;
     }
 

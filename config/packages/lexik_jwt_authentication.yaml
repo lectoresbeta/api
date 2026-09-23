@@ -9,6 +9,11 @@ lexik_jwt_authentication:
     pass_phrase: '%env(JWT_PASSPHRASE)%'
     token_ttl: '%app.jwt_ttl%'
 
+    # El sujeto va en `sub`, que es la reclamación estándar y la que exige
+    # decision:0007 RN-4. Por defecto Lexik escribe y lee `username`, que
+    # además invita a meter ahí algo legible por humanos.
+    user_id_claim: sub
+
     # El token no lleva roles ni datos personales: meter roles aquí haría que
     # un permiso retirado siguiera vigente hasta quince minutos después.
     token_extractors:
