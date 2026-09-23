@@ -121,7 +121,7 @@ milisegundos. Añadirlo después, con obras publicadas, es mucho más caro.
 |---|---|---|
 | MOD-34 | Cuando la revisión tarde, ¿espera el autor o se publica de forma optimista? | Hoy no importa; con IA sí |
 | MOD-35 | ¿Se revisan también las **correcciones**, o solo los textos? | Una corrección ofensiva es igual de dañina |
-| **MOD-37** | Si se usa IA externa, ¿sale obra inédita de la plataforma? | Es exactamente lo que la plataforma existe para custodiar |
+| **MOD-37** | Si se usa IA externa, ¿sale obra inédita de la plataforma? | **Anotado y aceptado como decisión a tomar** cuando llegue la implementación real. Hoy el revisor no consulta nada externo |
 | MOD-46 | ¿Se revisa cada pulsación de «guardar», o hay agrupación? | Un editor que guarda solo dispararía una revisión por minuto |
 
 Resuelta: `MOD-36` (**se revisa en cada modificación**, no solo al publicar).

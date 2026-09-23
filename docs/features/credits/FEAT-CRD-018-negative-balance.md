@@ -76,6 +76,9 @@ De ahí se siguen dos cosas:
   corrección.
 - `RN-7` Al volver a cero o más, se **desbloquea todo automáticamente** y se avisa al autor.
 - `RN-8` Un saldo negativo **no caduca ni se condona** por el paso del tiempo.
+- `RN-8b` Durante una **suspensión parcial** la deuda queda **congelada**: ni crece ni bloquea
+  nada ([`FEAT-MOD-006`](../moderation/FEAT-MOD-006-sanctions.md) `RN-9`). Sin ello el usuario
+  quedaría atrapado: no puede corregir, y corregir es la única forma de saldarla.
 - `RN-9` Una corrección que deja el saldo en negativo **se entrega bloqueada**: el autor ve
   sus metadatos, no su contenido.
 - `RN-10` Al volver a saldo ≥ 0, **todas** las correcciones bloqueadas se desbloquean a la

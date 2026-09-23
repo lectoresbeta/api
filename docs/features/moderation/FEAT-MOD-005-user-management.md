@@ -83,6 +83,8 @@ reclamación en su nombre** desde el backoffice.
   estando bloqueado para presentar nuevas.
 - `RN-14` **Quien la registra no puede resolverla**: sigue aplicando el conflicto de interés
   ([`FEAT-MOD-002`](FEAT-MOD-002-review-claim.md) `RN-1`).
+- `RN-15` Consume el **cupo mensual del usuario** y cuenta para su bloqueo acumulativo si se
+  desestima (`MOD-45`). La vía es más lenta, no más barata.
 
 `RN-14` no es evidente y sí importante: registrar una reclamación no es una decisión, pero
 quien la ha redactado a partir de un correo **ya se ha formado una opinión**. Debe resolverla
@@ -141,7 +143,7 @@ Familias plausibles, a decidir en `MOD-1`:
 |---|---|---|
 | **MOD-1** | ¿Qué catálogo de sanciones? | Sin él no hay nada que imponer |
 | MOD-18 | ¿Puede el backoffice leer el contenido de una corrección no reclamada? | Es contenido privado entre dos personas |
-| MOD-45 | Una reclamación registrada en nombre de otro, ¿consume su cupo? | Si no, el correo es la forma de saltarse el límite |
+| MOD-47 | ¿Qué hace el moderador si el correo no aporta nada reclamable? | No registrarla también es una decisión, y no queda traza |
 | MOD-19 | ¿Se avisa al usuario de que su ficha ha sido consultada? | Transparencia frente a operatividad |
 | MOD-20 | ¿Hay exportación de datos de un usuario a petición suya? | Obligación legal en varias jurisdicciones |
 

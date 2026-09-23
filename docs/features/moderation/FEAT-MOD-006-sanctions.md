@@ -85,6 +85,9 @@ es una decisión que conviene tomar con criterio legal, no de diseño.
   registrarse.
 - `RN-8` Un usuario suspendido **sigue debiendo lo que debía**: la sanción no salda deudas ni
   las condona.
+- `RN-9` Durante una **suspensión parcial**, la deuda del usuario queda **congelada** (`MOD-43`):
+  ni crece ni le bloquea nada, y vuelve a contar al levantarse la sanción. Sin esto quedaría
+  atrapado, porque corregir es la única forma de saldarla y la suspensión se lo impide.
 
 `RN-6` mantiene separadas dos cosas que es cómodo mezclar: **devolver el crédito repara al
 perjudicado; la sanción corrige al infractor.** Una reclamación puede producir lo primero sin
@@ -123,8 +126,11 @@ Tres salidas posibles:
 | Congelar la deuda mientras dure | La deuda no crece ni bloquea | Un estado más que mantener |
 | Dejarlo atrapado | Simple | La sanción se vuelve indefinida de hecho |
 
-**Recomiendo la segunda**: la deuda queda congelada y sin efecto mientras dura la suspensión,
-y vuelve a contar al levantarse. Ver `MOD-43`.
+**Decidido: la deuda se congela.** Mientras dura la suspensión parcial, el saldo negativo del
+usuario queda sin efecto —no crece, no bloquea nada— y vuelve a contar al levantarse.
+
+Así la sanción castiga lo que debe castigar —no poder participar— sin convertirse en una
+condena indefinida por un motivo colateral.
 
 ## Eventos
 
@@ -153,17 +159,16 @@ directamente habría dos dueños del estado del usuario.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **MOD-43** | Con suspensión parcial y saldo negativo, ¿cómo salda la deuda? | Sin salida, la sanción se vuelve indefinida de hecho |
 | **MOD-44** | ¿Qué se conserva exactamente de una cuenta expulsada, si esa persona pide su supresión? | Conflicto entre el derecho de supresión y no readmitir |
 | MOD-25 | ¿Cómo se evita que una suspensión indefinida se olvide? | Sería una expulsión que nadie decidió |
 | MOD-28 | ¿Hay escalado automático por reincidencia? | Tres avisos deberían pesar más que uno |
 
-Resueltas: `MOD-27` (**solo lectura**: entra, no interactúa) y `MOD-26` (la expulsión
-**bloquea, no anonimiza**).
+Resueltas: `MOD-27` (**solo lectura**), `MOD-26` (la expulsión **bloquea, no anonimiza**) y
+`MOD-43` (**la deuda se congela** durante la suspensión).
 
 ## Estado
 
-**Especificación:** `DRAFT`. `MOD-43` conviene cerrarla antes de implementar: es un callejón
-sin salida para un usuario real, no un caso teórico.
+**Especificación:** `DRAFT`. Nada bloquea `APPROVED` salvo `MOD-44`, que es una consulta
+legal, no de diseño.
 
 **Implementación:** `TODO`.

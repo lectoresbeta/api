@@ -126,9 +126,12 @@ eso, **junto al botón bloqueado hay un enlace para escribir por correo** (`MOD-
 Es deliberadamente más lenta. El tope y el bloqueo siguen cumpliendo su función —desincentivar
 reclamar a la ligera— pero **nadie se queda sin forma de avisar de algo serio**.
 
-Lo que hay que decidir es si una reclamación creada por esa vía **consume cupo y cuenta para
-el bloqueo acumulativo** (`MOD-45`). Si no lo hiciera, el correo sería sencillamente la forma
+**Una reclamación registrada por esa vía consume cupo y cuenta para el bloqueo acumulativo**
+igual que cualquier otra (`MOD-45`). Si no lo hiciera, el correo sería sencillamente la forma
 de saltarse el límite.
+
+Lo que cambia no es el coste, es **quién decide que merece entrar**: en la vía normal decide
+el usuario; en esta, un moderador que ha leído el correo.
 
 **Y el crédito no se mueve hasta que un moderador aprueba.** Mientras la reclamación está
 pendiente, el corrector conserva lo que cobró: no hay ningún estado intermedio en el que el
@@ -208,13 +211,12 @@ puede impedir que otro contexto borre lo suyo.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **MOD-45** | Una reclamación entrada por correo, ¿consume cupo y cuenta para el bloqueo? | Si no, el correo es la forma de saltarse el límite |
 | **MOD-21** | ¿Se reinicia el contador de desestimadas en algún momento? | Sin reinicio, un error de hace dos años sigue pesando |
 | C-46 | ¿Puede el autor reclamar una corrección por enlace público? | No hay créditos que devolver, pero sí contenido que moderar |
 
 Resueltas: `MOD-2` (**3 al mes** con bloqueo acumulativo), `MOD-5` (**se agrupan**), `MOD-10`
-(**sí puede** reclamar un invitado) y `MOD-22` (**vía alternativa por correo** cuando el botón
-está bloqueado).
+(**sí puede** reclamar un invitado), `MOD-22` (**vía alternativa por correo**) y `MOD-45` (esa
+vía **consume cupo** igualmente).
 
 ## Estado
 
