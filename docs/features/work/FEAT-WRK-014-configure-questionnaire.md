@@ -5,7 +5,7 @@ context: Work
 concept: Questionnaire
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - conversation:2026-09-22 (el formulario lo configura el autor y condiciona los créditos)
@@ -16,7 +16,7 @@ endpoints:
   - PUT /works/{workId}/questionnaire
 depends_on: [FEAT-WRK-001]
 events: [QuestionnaireUpdated]
-updated: 2026-09-24
+updated: 2026-09-23
 ---
 
 # FEAT-WRK-014 — Definir el cuestionario que acompaña a la obra
@@ -50,8 +50,13 @@ puede existir sin él y porque ninguna cifra de créditos puede calcularse sin �
 > **El mínimo de palabras no es solo una validación: es el precio.** La suma de los mínimos de
 > todas las preguntas —`requiredWords`— es el segundo término de la fórmula de
 > [`decision:0006`](../../decisions/0006-credit-system.md). Un cuestionario sin mínimos
-> valdría 0 en ese término, y **una novela entera se corregiría por 2 créditos**. Por eso
-> `C-14` pregunta si fijar un mínimo debe ser obligatorio; la respuesta razonable es que sí.
+> valdría 0 en ese término, y **una novela entera se corregiría por 2 créditos**.
+>
+> **`C-14` resuelta: declarar el mínimo es obligatorio.** Una pregunta sin mínimo obligaría a
+> `Credits` a suponer un valor —el suelo de `ChapterPricing`, 25 palabras— sobre un total que
+> llega ya sumado, y no puede deshacerse una suma para aplicar un suelo a los sumandos. Con el
+> mínimo obligatorio, `requiredWords` es exacto y el suelo de `ChapterPricing` queda donde
+> debe: guardando las entradas que **no** vienen de un cuestionario.
 
 Las preguntas de la maqueta mencionan al protagonista por su nombre —«la conexión entre el
 protagonista, Ryn, y su misión»—, lo que confirma que **las escribe el autor para su obra
@@ -100,9 +105,12 @@ porque la respuesta se necesita en el momento.
   cada capítulo** (`R-2`). Ver la tensión que eso abre más abajo (`W-17`).
 - `RN-2` Un cuestionario tiene **al menos una pregunta**. El caso mínimo —un solo campo de
   texto libre— es un cuestionario de una pregunta, no la ausencia de cuestionario.
-- `RN-3` Hay un **máximo de preguntas** (`W-11`) y un **máximo de palabras exigidas**, que es
-  lo que realmente acota el precio. Sin tope, un autor con saldo podría pedir
-  cuarenta respuestas y convertir la corrección en un trabajo inabordable.
+- `RN-3` Hay un **máximo de preguntas** —20, `W-11` resuelta— y un **máximo de palabras
+  exigidas** —2.000—, que es lo que realmente acota el precio. Sin tope, un autor con saldo
+  podría pedir cuarenta respuestas y convertir la corrección en un trabajo inabordable.
+  Las 2.000 palabras no son una cifra redonda cualquiera: `ceil(requiredWords / 100)` alcanza
+  ahí el tope de 20 créditos de [`decision:0006`](../../decisions/0006-credit-system.md), así
+  que **a partir de ese punto el autor no paga más y el lector escribe más**.
 - `RN-4` Editar el cuestionario **crea una versión nueva**. Las versiones anteriores se
   conservan porque hay correcciones que las responden.
 - `RN-5` Cambiar el cuestionario **no altera los precios ya anotados** ni las correcciones
@@ -241,12 +249,13 @@ está confirmada por diseño.
 | # | Pregunta | Impacto |
 |---|---|---|
 | ~~W-17~~ | Si la corrección es por capítulo, ¿tiene sentido repetir en cada capítulo preguntas que hablan de «la historia» o «el final»? | Ver abajo. Afecta al modelo y a la calidad del feedback |
-| W-11 | ¿Cuál es el máximo de preguntas? | Sin tope, la corrección puede volverse inabordable |
+| ~~W-11~~ | ¿Cuál es el máximo de preguntas? | **Resuelta:** 20 preguntas y 2.000 palabras exigidas (`RN-3`) |
 | ~~W-12~~ | ¿Cómo consulta `Work` el precio a `Credits` para mostrarlo al autor? | Es una consulta síncrona entre contextos: necesita contrato explícito |
 | W-13 | ¿Existe pantalla de configuración en Figma? | Sin ella, el detalle del formulario se está deduciendo |
 | W-14 | ¿Hay tipos de pregunta además del texto libre (escala, sí/no, opción múltiple)? | Cambia el modelo y probablemente el precio |
 | W-15 | ¿Hay cuestionarios plantilla sugeridos para autores que no saben qué preguntar? | Producto |
 | W-18 | ¿El coste se muestra por capítulo o agregado para toda la obra? | `RN-9`: ya no hay una cifra única |
+| ~~C-14~~ | ¿Es obligatorio declarar el mínimo de palabras? | **Resuelta:** sí. Ver arriba |
 | W-16 | ¿Se puede editar el cuestionario con correcciones ya recibidas? | `RN-7` dice que sí; conviene confirmarlo |
 
 ### `W-17` — un cuestionario de obra respondido capítulo a capítulo
@@ -286,7 +295,54 @@ prohíbe el acoplamiento, no la consulta con contrato).
 
 ## Estado
 
-**Especificación:** `APPROVED` (2026-09-24). `W-17` y `W-12` resueltas: `scope` por pregunta y contrato de
-consulta explícito para el precio. `W-11`, el máximo de preguntas, es una constante.
+**Especificación:** `APPROVED` (2026-09-24). `W-17` y `W-12` resueltas: `scope` por pregunta y
+contrato de consulta explícito para el precio. `W-11` y `C-14` resueltas al implementar.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-23).
+
+### Hecho
+
+- `GET /api/v1/works/{workId}/questionnaire` y `PUT /api/v1/works/{workId}/questionnaire`.
+- Agregado `Questionnaire` con sus `Question`, en el esquema `work_ctx`, con índice
+  `(work_id, version)`.
+- **Versionado** (`RN-4`): guardar crea la versión `n+1` y conserva la anterior íntegra, con
+  sus preguntas. Nada se actualiza en sitio, así que una corrección en curso sigue
+  respondiendo a la versión con la que empezó (`RN-5`, `RN-7`).
+- Validación completa de `RN-2` y `RN-3`, cada caso con su `code` propio:
+  `QUESTIONNAIRE_WITHOUT_QUESTIONS`, `TOO_MANY_QUESTIONS`, `TOO_MANY_REQUIRED_WORDS`,
+  `INVALID_WORD_RANGE`, `EMPTY_QUESTION`, `MISSING_MINIMUM_WORDS` y
+  `QUESTIONNAIRE_ONLY_FOR_LAST_CHAPTER`.
+- `If-Match` opcional sobre la versión vigente; una versión caduca produce `409`
+  `STALE_VERSION`.
+- `QuestionnaireUpdated` con `workId`, `version`, `questionCount`, `requiredWords`,
+  `requiredWordsForEveryChapter` y `updatedAt`. **Sin el enunciado de ninguna pregunta**, y
+  hay una prueba que lo comprueba buscando en el payload el nombre del protagonista de la
+  maqueta.
+- Lectura autorizada por `WorkReadPolicy`, la misma que decide quién ve los capítulos: un
+  cuestionario describe una obra inédita tan bien como su texto.
+
+### Por qué el evento lleva dos totales y no uno
+
+`requiredWords` es la suma de todos los mínimos; `requiredWordsForEveryChapter`, solo la de
+las preguntas con `scope: EVERY_CHAPTER`. El segundo es el que `Credits` necesita para el
+precio de un capítulo cualquiera, y el primero para el último, que además responde las de
+`LAST_CHAPTER`. Mandar solo el total obligaría a `Credits` a cobrar en todos los capítulos
+preguntas que solo se responden en uno —exactamente lo que `W-17` vino a evitar—, y mandar la
+lista de preguntas con su alcance sería poner contenido del autor en la cola.
+
+### Falta
+
+- `POST /works/{workId}/questionnaire/estimate` (`estimateQuestionnairePricing`, `RN-6`,
+  `W-12`). Necesita un contrato de consulta **de lectura** publicado por `Credits`, que aún no
+  existe: va con [`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md), no aquí.
+  Hasta entonces el autor configura sin ver el precio.
+- La vista del lector (`GET /chapters/{chapterId}/questionnaire`) es de
+  [`FEAT-FBK-003`](../feedback/FEAT-FBK-003-answer-correction-questionnaire.md). `GET` sobre
+  la obra devuelve hoy la configuración completa a cualquiera que pueda leerla; la
+  representación reducida nace con la pantalla que la usa.
+- `RN-8` —el texto de las preguntas sujeto a las reglas de contenido— está pendiente de que
+  existan esas reglas para todo lo demás (`FEAT-MOD-*`). El enunciado se guarda tal cual, y no
+  se sirve como HTML.
+- Reordenar y editar preguntas sueltas: el `PUT` sustituye el cuestionario entero. Es lo que
+  `RN-4` pide —cada guardado es una versión— y basta para la pantalla, pero no hay operación
+  de detalle.

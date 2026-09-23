@@ -22,10 +22,10 @@
 | `PUT /chapters/{chapterId}/visibility` | `setChapterVisibility` | Visibilidad del fragmento | FEAT-WRK-008 | PENDING |
 | `PUT /works/{workId}/visibility` | `setWorkVisibility` | Visibilidad de la obra | FEAT-WRK-008 | PENDING |
 | `PUT /api/v1/works/{workId}/access-mode` | `setAccessMode` | Quién puede ser lector beta | FEAT-WRK-007 | **Implementado** |
-| `GET /works/{workId}/questionnaire` | `getWorkQuestionnaire` | Ver cuestionario (autor) | FEAT-WRK-014 | DRAFT |
+| `GET /api/v1/works/{workId}/questionnaire` | `getWorkQuestionnaire` | Ver el cuestionario vigente | FEAT-WRK-014 | **Implementado** |
 | `GET /chapters/{chapterId}/questionnaire` | `getChapterQuestionnaire` | Cuestionario a responder y borrador | FEAT-FBK-003 | DRAFT |
-| `PUT /works/{workId}/questionnaire` | `updateWorkQuestionnaire` | Definir cuestionario | FEAT-WRK-014 | DRAFT |
-| `POST /works/{workId}/questionnaire/estimate` | `estimateQuestionnairePricing` | Simular coste y recompensa | FEAT-WRK-014 | DRAFT |
+| `PUT /api/v1/works/{workId}/questionnaire` | `updateWorkQuestionnaire` | Definir el cuestionario. Crea una versión | FEAT-WRK-014 | **Implementado** |
+| `POST /works/{workId}/questionnaire/estimate` | `estimateQuestionnairePricing` | Simular coste y recompensa | FEAT-WRK-014 | BLOCKED |
 | `PUT /api/v1/works/{workId}/status` | `changeWorkStatus` | Publicar, abrir o cerrar la corrección | FEAT-WRK-016 | **Implementado** |
 | `POST /works/{workId}/public-link` | `createPublicLink` | Crear enlace público | FEAT-WRK-010 | PENDING |
 | `DELETE /public-links/{linkId}` | `revokePublicLink` | Revocar enlace público | FEAT-WRK-010 | PENDING |
@@ -219,64 +219,143 @@ Un filtro con valor inválido **no se ignora**: devolver resultados de otra cons
 que devolver un error.
 
 ---
-
-## `PUT /works/{workId}/questionnaire`
+## `PUT /api/v1/works/{workId}/questionnaire`
 
 **`operationId`:** `updateWorkQuestionnaire` · **Funcionalidad:** [`FEAT-WRK-014`](../../features/work/FEAT-WRK-014-configure-questionnaire.md)
 
 ### Propósito
 
 Sustituir el cuestionario de la obra. **Crea una versión nueva**; las anteriores se conservan
-porque hay correcciones que las responden.
+enteras, con sus preguntas, porque hay correcciones que las responden. Nada se actualiza en
+sitio, así que una corrección en curso nunca cambia de preguntas a mitad.
 
 ### Autorización
 
-Solo el autor de la obra.
+Solo el autor. Una obra ajena responde `404`, no `403`: decir «existe, pero no es tuya» sobre
+una obra inédita ya es decir demasiado.
 
-### Reglas aplicadas
-
-- Al menos una pregunta; como máximo `N` (`W-11`).
-- No altera el precio de las correcciones ya empezadas.
-- Se permite guardar aunque el autor no tenga saldo para el coste resultante: configurar no
-  gasta; abrir la obra a corrección, sí.
+Requiere cuenta activada.
 
 ### Entrada
 
-Lista ordenada de preguntas: enunciado, ejemplo, obligatoriedad, longitudes **en palabras** y
-alcance (`EVERY_CHAPTER` / `LAST_CHAPTER`, pendiente de `W-17`).
+`questions`, lista ordenada. La posición en el array es la posición de la pregunta.
+
+| Campo | Obligatorio | Notas |
+|---|---|---|
+| `statement` | Sí | El enunciado, texto libre |
+| `example` | No | Texto de ayuda que el lector ve como marcador |
+| `required` | No | Por defecto `true` |
+| `minWords` | **Sí** | Mínimo de palabras de la respuesta |
+| `maxWords` | No | Si se declara, no puede ser menor que `minWords` |
+| `scope` | No | `EVERY_CHAPTER` (por defecto) o `LAST_CHAPTER` |
+
+**`minWords` es obligatorio y no es una validación de formulario: es el precio.** La suma de
+los mínimos es el término de escritura de la fórmula de
+[`decision:0006`](../../decisions/0006-credit-system.md). Sin mínimos, una novela entera se
+corregiría por 2 créditos.
+
+### Reglas aplicadas
+
+| Regla | `code` | HTTP |
+|---|---|---|
+| Al menos una pregunta | `QUESTIONNAIRE_WITHOUT_QUESTIONS` | 422 |
+| Como mucho 20 | `TOO_MANY_QUESTIONS` | 422 |
+| Como mucho 2.000 palabras exigidas en total | `TOO_MANY_REQUIRED_WORDS` | 422 |
+| Enunciado no vacío | `EMPTY_QUESTION` | 422 |
+| `minWords` declarado y mayor que cero | `MISSING_MINIMUM_WORDS` | 422 |
+| `minWords` ≤ `maxWords` | `INVALID_WORD_RANGE` | 422 |
+| Alguna pregunta aplica a todos los capítulos | `QUESTIONNAIRE_ONLY_FOR_LAST_CHAPTER` | 422 |
+| `If-Match` coincide con la versión vigente | `STALE_VERSION` | 409 |
+
+Las 2.000 palabras son el punto donde `ceil(requiredWords / 100)` alcanza el tope de 20
+créditos: más allá, **el autor no paga más y el lector escribe más**.
+
+La última regla de las `422` evita el cuestionario que se responde en un solo capítulo y deja
+los demás sin nada que preguntar.
+
+Se permite guardar aunque el autor no tenga saldo para el coste resultante: configurar no
+gasta; abrir la obra a corrección, sí.
+
+### Concurrencia
+
+`If-Match: "<version>"` lleva la versión que el autor tenía en pantalla
+([`concurrencia`](../conventions/concurrency-and-idempotency.md)). Es **opcional**: un cliente
+que no lo envíe sigue funcionando y asume el riesgo de pisar a otra pestaña. La respuesta
+`409` incluye la versión vigente, para que el cliente pueda releer y reintentar.
 
 ### Respuesta
 
-El cuestionario con su `version`. Requiere `If-Match`
-([`concurrencia`](../conventions/concurrency-and-idempotency.md)).
+`200` con la `version` creada.
 
 ### Efectos
 
-Publica `QuestionnaireUpdated`, que `Credits` consume para recalcular coste y recompensa.
-Como el precio depende también de la longitud del texto y la corrección es por capítulo, lo
-que se recalcula es **el precio de cada capítulo**, no una cifra única de la obra.
+Publica `QuestionnaireUpdated`, que `Credits` consume para recalcular el precio **de cada
+capítulo**, no una cifra única de la obra.
 
-El payload lleva **los atributos que determinan el precio, no el enunciado de las
-preguntas**: el texto es contenido del autor y no tiene por qué circular por la cola.
+El payload lleva `version`, `questionCount`, `requiredWords` y `requiredWordsForEveryChapter`,
+y **no lleva el enunciado de ninguna pregunta**: el texto es contenido del autor y no tiene
+por qué circular por la cola.
+
+Los dos totales van por separado porque el precio de un capítulo intermedio cuenta solo las
+preguntas de alcance `EVERY_CHAPTER`, mientras que el último capítulo las responde todas.
+Mandar un solo total haría pagar en cada capítulo preguntas que solo se contestan en uno.
 
 ---
 
-## `GET /works/{workId}/questionnaire` y `GET /chapters/{chapterId}/questionnaire`
+## `GET /api/v1/works/{workId}/questionnaire`
 
-**`operationId`:** `getWorkQuestionnaire` / `getChapterQuestionnaire` · **Funcionalidades:** [`FEAT-WRK-014`](../../features/work/FEAT-WRK-014-configure-questionnaire.md), [`FEAT-FBK-003`](../../features/feedback/FEAT-FBK-003-answer-correction-questionnaire.md)
+**`operationId`:** `getWorkQuestionnaire` · **Funcionalidad:** [`FEAT-WRK-014`](../../features/work/FEAT-WRK-014-configure-questionnaire.md)
 
 ### Propósito
 
-Son dos operaciones distintas sobre el mismo objeto, y conviene que lo sean:
+Devolver el cuestionario vigente de la obra: su `version`, `requiredWords` y la lista ordenada
+de preguntas.
+
+### Autorización
+
+La misma que decide quién lee los capítulos
+([`FEAT-WRK-004`](../../features/work/FEAT-WRK-004-read-a-work.md)): un cuestionario describe
+una obra inédita tan bien como su texto —los enunciados nombran a los personajes y suelen
+adelantar el final—, así que no puede ser más accesible que ella.
+
+### Respuesta
+
+`200`. Una obra **sin cuestionario todavía** devuelve `version: 0` y una lista vacía, no un
+`404`: es el estado normal de una obra recién creada, y un error ahí obligaría al cliente a
+distinguir dos casos que para él son el mismo.
+
+---
+
+## `GET /chapters/{chapterId}/questionnaire`
+
+**`operationId`:** `getChapterQuestionnaire` · **Funcionalidad:** [`FEAT-FBK-003`](../../features/feedback/FEAT-FBK-003-answer-correction-questionnaire.md) · **Estado:** PENDING
+
+La vista del lector es una operación distinta sobre el mismo objeto, y conviene que lo sea:
 
 | Ruta | Para quién | Qué devuelve |
 |---|---|---|
 | `/works/{workId}/questionnaire` | El autor | La configuración completa y su versión |
 | `/chapters/{chapterId}/questionnaire` | El lector beta | Las preguntas que **aplican a ese capítulo** y **su borrador** |
 
-La segunda existe porque la corrección es por capítulo: qué preguntas aplican puede depender
-del capítulo (`W-17`), y el borrador es de ese capítulo. Devolver ambas cosas juntas hace que
-abrir el panel de corrección sea **una sola llamada**.
+Existe porque la corrección es por capítulo: qué preguntas aplican depende del capítulo —una
+de alcance `LAST_CHAPTER` no aparece en el capítulo 3— y el borrador es de ese capítulo.
+Devolver ambas cosas juntas hace que abrir el panel de corrección sea **una sola llamada**.
 
-Que la representación dependa de quién pregunta no es un detalle: el autor ve cómo está
-configurado el formulario; el lector, solo lo que necesita para responderlo.
+Nace con la pantalla que la usa, no antes.
+
+---
+
+## `POST /works/{workId}/questionnaire/estimate`
+
+**`operationId`:** `estimateQuestionnairePricing` · **Funcionalidad:** [`FEAT-WRK-014`](../../features/work/FEAT-WRK-014-configure-questionnaire.md) · **Estado:** BLOCKED
+
+Simula coste y recompensa **mientras el autor configura**, sin guardar nada (`RN-6`). Devuelve
+cifras por capítulo y nada más.
+
+Está bloqueada porque el cálculo es de `Credits` y todavía no existe quien lo haga
+([`FEAT-CRD-016`](../../features/credits/FEAT-CRD-016-effort-based-pricing.md)). Cuando exista,
+`Work` la resolverá con un **contrato de consulta de solo lectura** publicado por `Credits`
+—cifras, nunca su modelo—, que es lo que
+[`decision:0014`](../../decisions/0014-published-contracts-between-contexts.md) permite. Es el
+caso raro en que la consulta síncrona está justificada: el precio se necesita en el momento, y
+un evento llega tarde.

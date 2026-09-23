@@ -35,3 +35,16 @@ setAccessMode:
     path: /api/v1/works/{workId}/access-mode
     controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\SetAccessModeController::__invoke
     methods: [PUT]
+
+# El cuestionario (FEAT-WRK-014). No es un accesorio de la obra: es el
+# instrumento con el que el autor fija el precio de su propia corrección.
+
+getWorkQuestionnaire:
+    path: /api/v1/works/{workId}/questionnaire
+    controller: LectoresBeta\Work\Questionnaire\Infrastructure\Controller\GetQuestionnaireController::__invoke
+    methods: [GET]
+
+updateWorkQuestionnaire:
+    path: /api/v1/works/{workId}/questionnaire
+    controller: LectoresBeta\Work\Questionnaire\Infrastructure\Controller\ReplaceQuestionnaireController::__invoke
+    methods: [PUT]

@@ -106,6 +106,9 @@ paths:
   /works/{workId}/access-mode:
     $ref: './paths/works.yaml#/accessMode'
 
+  /works/{workId}/questionnaire:
+    $ref: './paths/works.yaml#/questionnaire'
+
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'
 

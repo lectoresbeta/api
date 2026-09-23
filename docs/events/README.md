@@ -69,14 +69,27 @@ aplicar el efecto.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `WorkCreated` | Se crea la obra | `Reading`, `Notification` | `workId`, `authorId`, `title`, `wordCount`, `textTier`, `accessMode`, `visibility` |
-| `WorkPublished` | La obra se hace visible | `Reading`, `Community`, `Notification` | `workId`, `authorId`, `title`, `genre` |
-| `WorkContentUpdated` | Cambia el contenido | `Feedback`, `Credits` | `workId`, `wordCount`, `textTier` |
-| `WorkAccessModeChanged` | Cambia la modalidad | `Reading` | `workId`, `accessMode` |
+| `WorkCreated` | Se crea la obra | `Reading`, `Notification` | `workId`, `authorId`, `title`, `accessMode`, `status`, `createdAt` |
+| `WorkPublished` | La obra pasa a `PUBLISHED` | `Reading`, `Community`, `Notification` | `workId`, `authorId`, `title`, `wordCount`, `chapterCount`, `publishedAt` |
+| `WorkOpenedForCorrection` | La obra pasa a `IN_CORRECTION` | `Reading`, **`Credits`** | `workId`, `authorId`, `openedAt` |
+| `WorkClosedForCorrection` | La obra vuelve a `PUBLISHED` | `Reading`, **`Credits`** | `workId`, `authorId`, `closedAt` |
+| `WorkContentUpdated` | Cambia el contenido | `Feedback`, `Credits` | `workId`, `wordCount` |
+| `WorkAccessModeChanged` | Cambia la modalidad | `Reading` | `workId`, `authorId`, `accessMode`, `changedAt` |
 | `WorkDeleted` | Se elimina | `Reading`, `Feedback`, `Community` | `workId`, `authorId` |
-| `QuestionnaireUpdated` | Cambia el cuestionario | **`Credits`** | `workId`, `version`, `questionCount`, atributos que influyen en el precio (`P-1`) |
+| `QuestionnaireUpdated` | Cambia el cuestionario: nueva versión | **`Credits`** | `workId`, `version`, `questionCount`, `requiredWords`, `requiredWordsForEveryChapter`, `updatedAt` |
 
-**Ningún evento de `Work` transporta el contenido de la obra.**
+**Ningún evento de `Work` transporta el contenido de la obra**, y `QuestionnaireUpdated`
+tampoco transporta el enunciado de las preguntas: es contenido del autor, y `Credits` no lo
+necesita para calcular nada.
+
+`QuestionnaireUpdated` lleva **dos** totales de palabras exigidas porque el precio de un
+capítulo cuenta solo las preguntas de alcance `EVERY_CHAPTER`, mientras que el último
+capítulo las responde todas ([`FEAT-WRK-014`](../features/work/FEAT-WRK-014-configure-questionnaire.md),
+`W-17`). Con un solo total, el autor pagaría en cada capítulo por preguntas que solo se
+contestan en uno.
+
+`textTier` ya no aparece en ningún payload: lo eliminó
+[`decision:0006`](../decisions/0006-credit-system.md).
 
 ## `Reading`
 

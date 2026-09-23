@@ -410,3 +410,203 @@ accessMode:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+questionnaire:
+  get:
+    tags: [Works]
+    operationId: getWorkQuestionnaire
+    summary: El cuestionario vigente de una obra
+    description: |
+      Quién puede verlo lo decide **la obra**, con la misma política que
+      gobierna leer su texto: un cuestionario describe una obra inédita tan
+      bien como sus capítulos —las preguntas nombran personajes y giros de la
+      trama—, así que guardar el texto y dejar las preguntas abiertas sería
+      guardar la puerta y dejar la ventana.
+
+      Una obra sin cuestionario todavía devuelve `version: 0` y una lista
+      vacía, **no un `404`**: es el estado normal de una obra recién creada.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: El cuestionario en vigor.
+        content:
+          application/json:
+            schema:
+              $ref: '#/questionnaireBody'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'La obra no existe, o no puedes leerla. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  put:
+    tags: [Works]
+    operationId: updateWorkQuestionnaire
+    summary: Sustituir el cuestionario
+    description: |
+      **No es un constructor de formularios: es el instrumento con el que el
+      autor fija el precio de su propia corrección.** La suma de los mínimos
+      de palabras es el término de escritura del precio, y la recompensa que
+      gana quien corrige (`decision:0006`, regla 1).
+
+      De ahí que las reglas de aquí sean de negocio y no de validación:
+
+      - **al menos una pregunta.** Un único campo de texto libre es un
+        cuestionario de una pregunta, no la ausencia de cuestionario;
+      - **cada pregunta declara su mínimo de palabras**, y es obligatorio
+        (`C-14`, resuelta): sin él, el autor estaría pidiendo trabajo sin
+        decir cuánto, y `Credits` tendría que adivinarlo con un suelo que el
+        autor nunca ve;
+      - **como mucho 2.000 palabras exigidas** en total. Ahí es exactamente
+        donde el término de escritura alcanza el tope de 20 créditos: más allá
+        el autor no paga más y quien corrige escribe más;
+      - **alguna pregunta debe aplicar a todos los capítulos.** Si todas
+        fueran del último, los demás capítulos no tendrían nada que responder
+        y el autor pagaría por ellos igualmente.
+
+      Guardar **crea una versión nueva y conserva la anterior**. Sin eso, una
+      corrección ya entregada quedaría huérfana: respuestas sin las preguntas
+      que las motivaron. También es lo que hace que editar no moleste a una
+      corrección en curso.
+
+      `If-Match` lleva la versión que había en pantalla. Es opcional, y sin él
+      dos pestañas se pisan en silencio.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: If-Match
+        in: header
+        required: false
+        schema:
+          type: string
+          examples: ['"3"']
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [questions]
+            properties:
+              questions:
+                type: array
+                minItems: 1
+                maxItems: 20
+                items:
+                  type: object
+                  required: [statement, minWords]
+                  properties:
+                    statement:
+                      type: string
+                    example:
+                      type: [string, 'null']
+                      description: Texto de ayuda que el lector ve como marcador.
+                    required:
+                      type: boolean
+                      default: true
+                    minWords:
+                      type: integer
+                      minimum: 1
+                      description: Obligatorio. Es el precio.
+                    maxWords:
+                      type: [integer, 'null']
+                    scope:
+                      type: string
+                      enum: [EVERY_CHAPTER, LAST_CHAPTER]
+                      default: EVERY_CHAPTER
+                      description: |
+                        `LAST_CHAPTER` para lo que solo tiene sentido al
+                        final. Una pregunta sobre el desenlace no tiene
+                        respuesta posible en el capítulo 1, y sin esto el
+                        autor pagaría por ella igualmente.
+    responses:
+      '200':
+        description: Versión creada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'La obra no existe **o no es tuya**. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: 'Alguien guardó antes. `code: STALE_VERSION`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `QUESTIONNAIRE_WITHOUT_QUESTIONS`, `TOO_MANY_QUESTIONS`,
+          `MISSING_MINIMUM_WORDS`, `TOO_MANY_REQUIRED_WORDS`,
+          `INVALID_WORD_RANGE`, `EMPTY_QUESTION` o
+          `QUESTIONNAIRE_ONLY_FOR_LAST_CHAPTER`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+questionnaireBody:
+  type: object
+  required: [workId, version, requiredWords, questions]
+  properties:
+    workId:
+      type: string
+      format: uuid
+    version:
+      type: integer
+      description: '`0` cuando la obra todavía no tiene cuestionario.'
+    requiredWords:
+      type: integer
+      description: Suma de los mínimos. Es el término de escritura del precio.
+    questions:
+      type: array
+      items:
+        type: object
+        required: [questionId, position, statement, required, minWords, scope]
+        properties:
+          questionId:
+            type: string
+            format: uuid
+          position:
+            type: integer
+          statement:
+            type: string
+          example:
+            type: [string, 'null']
+          required:
+            type: boolean
+          minWords:
+            type: integer
+          maxWords:
+            type: [integer, 'null']
+          scope:
+            type: string
+            enum: [EVERY_CHAPTER, LAST_CHAPTER]

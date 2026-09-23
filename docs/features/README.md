@@ -168,7 +168,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-011 | Generar enlace para compartir en redes sociales y captar LB | Writer | PENDING | TODO | P2 | — |
 | FEAT-WRK-012 | Sección «Leer» — catálogo con filtros y ordenación | User | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-012-browse-catalogue.md) |
 | FEAT-WRK-013 | Calcular el número de palabras y el nivel de extensión | — (sistema) | PENDING | TODO | P0 | — |
-| FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | APPROVED | TODO | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
+| FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
 | FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
 | FEAT-WRK-016 | Estado de una obra — borrador, visible y en corrección | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-016-work-status.md) |
 | FEAT-WRK-017 | Clasificación de contenido sensible de una obra | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-017-content-rating.md) |
@@ -509,7 +509,7 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-COM-034 | `B-2`, `B-3` | Si bloquear revoca el acceso de lector beta y si puede terminar quien ya estaba corrigiendo, y qué pasa con el feedback que el autor **ya pagó** |
 | FEAT-USR-014 | `U-17` | Si el contador de correcciones es público y la lista no, de forma deliberada |
 | **FEAT-FBK-012** | `AF-1`, `AF-2` | Qué mecanismo antifraude, y si actúa antes o después del abono |
-| FEAT-WRK-014 | `W-17` | Si las preguntas de obra entera se repiten en cada capítulo |
+| ~~FEAT-WRK-014~~ | ~~`W-17`~~ | **Resuelto:** cada pregunta declara su alcance, `EVERY_CHAPTER` o `LAST_CHAPTER`, y el precio de un capítulo cuenta solo las que aplican en él |
 | FEAT-WRK-012 | `L-9` | Cómo llega la insignia de créditos al catálogo sin acoplar `Work` con `Credits` |
 | FEAT-CRD-019 | `C-42`, `C-28` | Qué cupo de descubierto por periodo, y cómo se avisa al autor de que puede quedar en deuda |
 | **FEAT-MOD-001, FEAT-MOD-002** | **`MOD-2`** | Límite de reclamaciones y consecuencia de reclamar en falso. Sin ello, reclamar es una forma gratuita de no pagar una corrección |
