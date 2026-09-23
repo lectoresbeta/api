@@ -4,6 +4,11 @@
 - **Fecha:** 2026-09-21
 - **Afecta a:** `User`, `Work`, `Reading`, `Feedback`, `Community`, `Credits`
 
+> **Nota (2026-09-23):** este ADR citaba **20 créditos** de bienvenida. La cifra la fija
+> ahora [`0006`](0006-credit-system.md), que la dejó en **10**. La decisión de este documento
+> —qué puede hacer una cuenta sin activar y cuándo se abonan los créditos— no cambia; solo se
+> retira un número que había dejado de ser cierto.
+
 ## Contexto
 
 El diseño del alta permite completar el onboarding sin haber activado la cuenta: el aviso de
@@ -14,7 +19,7 @@ Pero deja una cuenta funcional creada solo con una dirección de correo que nadi
 comprobado. Y Lectores Beta tiene dos incentivos económicos que lo convierten en un problema
 concreto:
 
-- cada cuenta nueva recibe **20 créditos** de bienvenida;
+- cada cuenta nueva recibe créditos de bienvenida;
 - invitar a alguien que después participa otorga **+5 créditos** al invitador
   (`FEAT-CRD-005`).
 
@@ -27,7 +32,7 @@ que es el mecanismo central del producto.
 Una cuenta en `PENDING_ACTIVATION` puede leer y completar el onboarding, pero **no puede
 ejecutar ninguna operación de escritura**. Además:
 
-- los **20 créditos de bienvenida se abonan al activar la cuenta**, no al registrarla:
+- los **créditos de bienvenida se abonan al activar la cuenta**, no al registrarla:
   `Credits` consume `AccountActivated`, no `UserRegistered`;
 - las obras de un autor sin activar **no admiten comentarios**, de modo que el bloqueo cubre
   también lo que la cuenta recibe, no solo lo que hace.

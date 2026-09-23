@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Tests\Unit\Architecture;
 
+use LectoresBeta\User\Account\Infrastructure\Http\RequireActivatedAccountListener;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Yaml\Yaml;
 
@@ -162,6 +163,33 @@ final class RoutingConventionTest extends TestCase
         foreach (array_keys($this->declaredRoutes()) as $name) {
             self::assertContains((string) $name, $operations, \sprintf(
                 'La ruta %s no tiene operationId en openapi/. Toda ruta implementada se documenta.',
+                $name,
+            ));
+        }
+    }
+
+    /**
+     * Las rutas exentas de exigir cuenta activada existen de verdad
+     * ([`FEAT-USR-025`](../../../docs/features/user/FEAT-USR-025-block-writes-until-activation.md)).
+     *
+     * Un nombre mal escrito ahí no rompe nada visible: la ruta simplemente
+     * deja de estar exenta, y quien no ha activado su cuenta se queda sin
+     * poder pedir el correo que necesita para activarla. Es el peor tipo de
+     * fallo —silencioso y en el camino de salida— y esto lo convierte en un
+     * test rojo.
+     *
+     * Se comprueba contra los `operationId` de `openapi/` y no contra las
+     * rutas declaradas, porque una operación puede estar especificada y
+     * exenta antes de implementarse. Que el nombre coincida con la ruta el
+     * día que exista ya lo garantiza el test de arriba.
+     */
+    public function testEveryRouteExemptFromActivationIsARealOperation(): void
+    {
+        $operations = $this->operationIds();
+
+        foreach (RequireActivatedAccountListener::allowedWithoutActivation() as $name) {
+            self::assertContains($name, $operations, \sprintf(
+                'La ruta %s figura como exenta de exigir cuenta activada, pero no existe en openapi/.',
                 $name,
             ));
         }

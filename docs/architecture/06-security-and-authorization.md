@@ -21,9 +21,15 @@ nombre público (`Name`) es solo de presentación.
 la que llega por Google: el proveedor externo acredita quién es la persona, no qué ha
 aceptado.
 
-**Decisión pendiente** (`S-1`): mecanismo de sesión de la API. Opciones: JWT de vida corta
-con refresh token, tokens opacos en servidor, o sesión de Symfony. Debe cerrarse en un ADR
-antes de implementar `FEAT-USR-004`.
+**Mecanismo de sesión:** JWT de 15 minutos más token de refresco revocable
+([`decision:0007`](../decisions/0007-jwt-sessions.md), que cerró `S-1`). El token lleva
+`sub`, `iat`, `exp` y `jti`, y **ningún rol ni dato personal**: un permiso dentro de un token
+sobrevive a su propia retirada hasta quince minutos, así que los permisos se consultan.
+
+La contrapartida asumida es esa misma ventana. Se compensa en los dos sitios donde importa:
+el proveedor de usuarios resuelve el `sub` **contra la base de datos** en cada petición, de
+modo que una cuenta bloqueada o eliminada deja de autenticar en el acto; y las escrituras
+comprueban además el estado de la cuenta (ver más abajo).
 
 Detalle del contrato en [`../api/conventions/authentication.md`](../api/conventions/authentication.md).
 
@@ -53,16 +59,29 @@ Antes de cualquier regla de autorización por recurso se comprueba el estado de 
 |---|---|---|---|
 | `PENDING_ACTIVATION` | Sí | Sí | **No** |
 | `ACTIVE` | Sí | Sí | Sí |
+| `BLOCKED` | **No autentica** | No | No |
 | `DELETED` | No | No | No |
 
 Una cuenta sin activar no puede crear obras, comentar, publicar en el muro, enviar mensajes
-directos ni **recibir comentarios en sus obras**. Tampoco tiene créditos: los 20 de
-bienvenida se abonan al activar.
+directos ni **recibir comentarios en sus obras**. Tampoco tiene saldo: los créditos de
+bienvenida se abonan al activar
+([`FEAT-CRD-002`](../features/credits/FEAT-CRD-002-welcome-credit-grant.md)).
 
 Es una política **única y centralizada**, aplicada en el borde HTTP, no una comprobación
 repetida endpoint por endpoint. Detalle en
 [`FEAT-USR-025`](../features/user/FEAT-USR-025-block-writes-until-activation.md) y motivación
 en [`decision:0003`](../decisions/0003-write-operations-require-activated-account.md).
+
+**Cómo está implementada:** `RequireActivatedAccountListener`, en `User`, sobre
+`kernel.controller`. Deniega por defecto —todo método HTTP no seguro exige cuenta activada— y
+las excepciones se enumeran por nombre en la propia clase, con su motivo. La consecuencia que
+importa: **un endpoint de escritura nuevo queda protegido en cuanto existe**, sin que quien lo
+escriba tenga que acordarse de nada.
+
+Lee el estado **de la base de datos** en cada escritura, que es lo que
+[`decision:0007`](../decisions/0007-jwt-sessions.md) `RN-5` exige: la firma de un token sigue
+siendo válida quince minutos después de que la cuenta deje de poder escribir. Ese es el
+momento en que la ventana del JWT deja de importar para lo que de verdad importa.
 
 El caso que no encaja en ese borde es «recibir comentarios»: no depende de quién llama, sino
 del estado del autor de la obra. `Feedback` lo resuelve con una proyección alimentada por
@@ -139,7 +158,7 @@ Nunca se registran en logs ni se exponen en respuestas:
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| S-1 | ¿Qué mecanismo de sesión usa la API? | Bloquea el diseño de autenticación |
+| ~~S-1~~ | ¿Qué mecanismo de sesión usa la API? | **Resuelto:** JWT de 15 minutos con token de refresco revocable ([`decision:0007`](../decisions/0007-jwt-sessions.md)) |
 | S-2 | ¿El enlace público expira o se revoca? ¿Tiene límite de usos? | Riesgo de difusión no controlada del contenido |
 | S-3 | ¿Se requiere verificación del email al registrarse? | **Resuelto:** sí. Es la barrera de escritura y de créditos (`decision:0003`) |
 | S-7 | ¿El registro con Google crea la cuenta ya activada? Google ya verifica el correo | Evitaría una verificación redundante (`OB-11`) |

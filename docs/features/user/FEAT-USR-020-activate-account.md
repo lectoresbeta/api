@@ -117,7 +117,7 @@ extrae y lo envía.
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `AccountActivated` | La cuenta pasa a `ACTIVE` | **`Credits`** (abona los 20 de bienvenida), `Notification`, `Feedback` (para aplicar `RN-4` de `FEAT-USR-025`) |
+| `AccountActivated` | La cuenta pasa a `ACTIVE` | **`Credits`** (abona los 10 de bienvenida), `Notification`, `Feedback` (para aplicar `RN-4` de `FEAT-USR-025`) |
 
 ## Efectos en créditos
 

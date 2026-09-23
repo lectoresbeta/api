@@ -5,7 +5,7 @@ context: User
 concept: Account
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - conversation:2026-09-21
@@ -120,4 +120,31 @@ consultando las tablas de `User`.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL`.
+
+Hecho: la política existe y es **una sola**, aplicada en el borde HTTP
+(`RequireActivatedAccountListener`, `RN-1` a `RN-3`, `RN-7`). **Deniega por defecto**: todo
+método HTTP no seguro exige cuenta activada, y las excepciones se enumeran por nombre y con
+su motivo en la propia clase. Un endpoint de escritura nuevo queda protegido en cuanto existe,
+sin que su autor tenga que saber que esta regla está ahí.
+
+Cumple además `RN-5` de [`decision:0007`](../../decisions/0007-jwt-sessions.md): la cuenta se
+lee **de la base de datos** en cada escritura, porque la firma de un token sigue siendo válida
+quince minutos después de que la cuenta deje de poder escribir.
+
+Cubierto por `tests/Unit/User/RequireActivatedAccountListenerTest.php`, y la lista de
+exenciones está protegida contra erratas en `RoutingConventionTest`: un nombre mal escrito
+dejaría a quien no ha activado sin poder pedir el correo que necesita para activar, que es el
+peor fallo posible de esta regla.
+
+**Falta:**
+
+- **Un test de extremo a extremo.** Hoy no existe ningún endpoint de escritura no exento
+  contra el que ejercerla: todas las escrituras que hay son, por definición, de las
+  permitidas. El primer endpoint de escritura que se implemente **debe** traer ese test, y
+  entonces se podrá afirmar que la regla se aplica y no solo que está escrita.
+- `RN-4`: que las obras de un autor sin activar **no admitan correcciones**. Es de `Feedback`,
+  por evento y proyección local, y no hay todavía ni obras ni correcciones.
+- Las excepciones del onboarding (`RN-5`) y de la gestión de la cuenta (`RN-6`) están
+  declaradas para lo que existe. Cada funcionalidad nueva de esas dos familias tiene que
+  añadirse a la lista, y el test solo comprueba que lo añadido existe, no que no falte nada.
