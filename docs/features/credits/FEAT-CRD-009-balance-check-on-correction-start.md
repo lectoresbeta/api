@@ -5,15 +5,15 @@ context: Credits
 concept: Pricing
 actors: []
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - conversation:2026-09-23 (rediseño del sistema de créditos)
   - docs/decisions/0006-credit-system.md
 endpoints: []
-events: [CorrectionStarted, ChapterCorrectabilityChanged]
+events: [CorrectionStarted, CorrectionDraftDiscarded, ChapterCorrectabilityChanged]
 depends_on: [FEAT-CRD-016]
-updated: 2026-09-24
+updated: 2026-09-23
 ---
 
 # FEAT-CRD-009 — Comprobar el saldo al empezar una corrección
@@ -147,15 +147,17 @@ saldo y no hay ningún estado que reconciliar. Es una cotización.
 
 ## Criterios de aceptación
 
-- [ ] Un capítulo es corregible si y solo si el saldo del autor cubre su precio.
-- [ ] Empezar una corrección **no modifica el saldo del autor**.
-- [ ] En ningún momento existe un «saldo disponible» distinto del saldo.
-- [ ] El importe cobrado al entregar es el anotado al empezar, no el vigente.
-- [ ] Dos lectores simultáneos con saldo para uno: los dos escriben y los dos cobran.
-- [ ] Un lector sin prisa no pierde su anotación por tiempo.
-- [ ] Con saldo negativo, ningún capítulo del autor aparece como corregible.
-- [ ] `Feedback` abre el panel sin esperar respuesta de `Credits`.
-- [ ] La proyección de corregibilidad no contiene importes.
+- [x] Un capítulo es corregible si y solo si el saldo del autor cubre su precio.
+- [x] Empezar una corrección **no modifica el saldo del autor**.
+- [x] En ningún momento existe un «saldo disponible» distinto del saldo.
+- [x] El importe cobrado al entregar es el anotado al empezar, no el vigente.
+- [x] Dos lectores simultáneos con saldo para uno: los dos escriben y los dos cobran.
+- [x] Un lector sin prisa no pierde su anotación por tiempo. *No hay caducidad en ninguna
+      parte del modelo: no es una regla implementada, es una que no existe.*
+- [x] Con saldo negativo, ningún capítulo del autor aparece como corregible.
+- [ ] `Feedback` abre el panel sin esperar respuesta de `Credits`. *Nada aquí obliga a
+      esperar —el aviso es un evento— pero el panel no existe todavía.*
+- [x] La proyección de corregibilidad no contiene importes.
 
 ## Preguntas abiertas
 
@@ -184,4 +186,45 @@ más bajo sería frustrante para el lector que llega y no puede empezar.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-23).
+
+### Hecho
+
+- `Credits` consume `CorrectionStarted` y anota el precio en `correction_price`. **No mueve
+  un solo crédito**, y hay una prueba funcional que lo comprueba sobre la base de datos: el
+  saldo del autor es el mismo antes y después de que alguien empiece a corregirle.
+- Consume `CorrectionDraftDiscarded` y descarta la anotación. No hay nada que liberar.
+- Publica `ChapterCorrectabilityChanged` **solo cuando la respuesta cambia**, con
+  `chapterId`, `workId` y un booleano. Sin importes ni saldos: es lo único que mantiene a
+  `Feedback` fuera de la economía.
+- La respuesta se recalcula desde los cuatro sitios donde puede cambiar —el texto de un
+  capítulo, el cuestionario, un movimiento de saldo y una corrección que empieza o se
+  descarta—, y el tope de tres simultáneas (`RN-8`) es parte del cálculo.
+
+### Por qué la respuesta anterior se guarda
+
+`chapter_price` lleva ahora una columna `correctable`. No está para que nadie la consulte
+—`Feedback` tiene su propia proyección— sino para poder publicar **solo los cambios**: el
+precio de un capítulo se recalcula muchas más veces de las que su respuesta se mueve, y un
+contexto que recibiera un evento por cada recálculo no aprendería nada al recibir uno.
+
+### Una anotación no se renegocia
+
+Un segundo `CorrectionStarted` del mismo lector sobre el mismo capítulo **conserva la primera
+anotación**. Volver a cotizar dejaría al lector refrescar su precio reabriendo el panel
+después de que el autor ampliara el capítulo, que es justo lo contrario de lo que `RN-2`
+promete.
+
+### Falta
+
+- **Quien publique los dos hechos.** `Feedback` no existe todavía como código
+  ([`FEAT-FBK-003`](../feedback/FEAT-FBK-003-answer-correction-questionnaire.md)), así que
+  las pruebas los fabrican con el payload que define el catálogo de eventos y los pasan por
+  el serializador real. Lo que tiene que coincidir el día que ese contexto llegue es el
+  nombre del hecho y la forma de su payload: no hay nada más compartido.
+- **La proyección en `Feedback`** que consume `ChapterCorrectabilityChanged`, y con ella la
+  comprobación al abrir el panel.
+- **La nota silenciosa** en la tarjeta de «Mis relatos» (`RN-9`): es de `Work`, y necesita
+  saber cuántas correcciones hay abiertas, que hoy solo sabe `Credits`.
+- **El descubierto deliberado** de [`FEAT-CRD-019`](FEAT-CRD-019-overdraft-correction.md),
+  la excepción a `RN-6`.

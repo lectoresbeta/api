@@ -240,7 +240,7 @@ existe, el evento se descarta sin efecto.
 | `credit_transaction` | Movimientos inmutables, indexados por `user_id` y fecha |
 | `processed_event` | `(event_id, consumer)` procesados, con marca temporal y política de purga |
 | `correction_price` | La cotización de cada corrección en curso. **No es una retención**: no participa en el saldo (`FEAT-CRD-009`) |
-| `chapter_price` | Read model del precio de cada capítulo (`FEAT-CRD-016`) |
+| `chapter_price` | Read model del precio de cada capítulo, y de si admite correcciones ahora mismo (`FEAT-CRD-016`, `FEAT-CRD-009`). La corregibilidad se guarda para poder publicar **solo los cambios** |
 | `work_questionnaire_demand` | Read model de lo que exige el cuestionario vigente de cada obra. Los dos hechos que forman un precio llegan por separado y hay que conservar el primero (`FEAT-CRD-016`) |
 | `overdraft_grant` | Descubiertos concedidos y su cupo semanal (`FEAT-CRD-019`) |
 | `credit_rule` | Reglas vigentes, si se decide hacerlas configurables (`C-3`). **Todavía no existe** |

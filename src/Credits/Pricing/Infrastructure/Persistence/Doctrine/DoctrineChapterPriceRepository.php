@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Credits\Pricing\Infrastructure\Persistence\Doctrine;
 
+use LectoresBeta\Credits\Account\Domain\ValueObject\UserId;
 use LectoresBeta\Credits\Pricing\Domain\Entity\ChapterPrice;
 use LectoresBeta\Credits\Pricing\Domain\Repository\ChapterPriceRepository;
 use LectoresBeta\Credits\Pricing\Domain\ValueObject\ChapterId;
@@ -28,6 +29,11 @@ final class DoctrineChapterPriceRepository extends DoctrineRepository implements
     public function ofWork(WorkId $workId): array
     {
         return array_values($this->repository()->findBy(['workId' => $workId->value()]));
+    }
+
+    public function ofAuthor(UserId $authorId): array
+    {
+        return array_values($this->repository()->findBy(['authorId' => $authorId->value()]));
     }
 
     protected function entityClass(): string

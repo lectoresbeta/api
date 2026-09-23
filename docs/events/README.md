@@ -111,9 +111,9 @@ para calcular la retención sin consultar a `Work`
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `CorrectionStarted` | Un LB pulsa «Empezar corrección» | **`Credits`** (anota el precio), `Notification` | `chapterId`, `workId`, `authorId`, `readerId` |
+| `CorrectionStarted` | Un LB pulsa «Empezar corrección» | **`Credits`** (anota el precio), `Notification` | `chapterId`, `workId`, `authorId`, `readerId`, `startedAt` |
 | `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification`, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `questionnaireVersion`, `submittedAt` |
-| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación) | `chapterId`, `readerId` |
+| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación) | `chapterId`, `readerId`, `discardedAt` |
 | `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` | `correctionId`, `authorId`, `readerId`, `amount` |
 | `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` NO lo consume** | `correctionId`, `workId`, `chapterId`, `authorId`, `authorLabel?` |
 | `FeedbackRatedPositively` | El autor lo valora como útil | `Notification`, `Community`. **`Credits` ya no lo consume**: la bonificación automática se sustituyó por la propina | `correctionId`, `readerId`, `authorId` |
@@ -144,11 +144,11 @@ dejaría a `Credits` sin poder calcular nada.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance` |
-| `CreditsSpent` | Se carga una corrección recibida | `Notification` | `userId`, `amount`, `reason`, `balance` |
-| `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, `Work` | `chapterId`, `correctable`. **Sin importes** |
-| `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` | `userId`, `balance` |
-| `CreditBalanceWentNegative` | El saldo cruza a negativo | `Notification` | `userId`, `balance` |
+| `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance`, `addedAt` |
+| `CreditsSpent` | Se carga una corrección recibida | `Notification` | `userId`, `amount`, `reason`, `balance`, `spentAt` |
+| `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, `Work` | `chapterId`, `workId`, `correctable`, `changedAt`. **Sin importes** |
+| `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` | `userId`, `balance`, `changedAt` |
+| `CreditBalanceWentNegative` | El saldo **cruza** a negativo | `Notification`, `Feedback` | `userId`, `balance`, `crossedAt` |
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` | `userId`, `balance` |
 | `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback`, `Notification` | `holdId`, `userId`, `chapterId`, `amount` |
 | `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` | `userId`, `correctionId` |
@@ -159,7 +159,17 @@ esperar respuesta. Que la proyección vaya ligeramente retrasada solo puede prod
 descubierto, que es un caso aceptado.
 
 `ChapterCorrectabilityChanged` lleva **un booleano, no un importe**: ningún contexto ajeno
-tiene por qué conocer saldos.
+tiene por qué conocer saldos. Se publica **solo cuando la respuesta cambia**: el precio de un
+capítulo se recalcula muchas más veces de las que su corregibilidad se mueve.
+
+`CreditBalanceWentNegative` es el **cruce**, no el estado. Se publica en el movimiento que
+hunde la cuenta y no otra vez mientras siga hundida: quien recibiera uno por cada cargo no
+podría distinguir el instante del estado, y es el instante el que merece un aviso y el que
+bloquea la corrección recién llegada.
+
+`CreditsAdded` y `CreditsSpent` narran **un movimiento y su motivo**, que es de donde se
+escribe un aviso a la persona; `CreditBalanceChanged` dice **cuál es la cifra ahora**, que es
+lo que necesita un read model y lo único que se puede aplicar fuera de orden sin hacer daño.
 
 `Credits` **nunca oculta ni enseña el texto de una corrección**. En el descubierto publica el
 hecho económico; qué se ve lo decide `Feedback`, que es quien posee la corrección.

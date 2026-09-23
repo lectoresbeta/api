@@ -217,31 +217,29 @@ parecen en nada, y la maqueta no lo aclara. Lo habitual en un catálogo de descu
 [`decision:0008`](../../decisions/0008-catalogue-ordering.md). Las preguntas que quedan son
 detalles de filtro que no afectan al modelo.
 
-**Implementación:** `TODO`, y **bloqueada por datos que todavía no existen**.
+**Implementación:** `TODO`. **Ya no está bloqueada.**
 
 La ordenación por relevancia —`RN-4`, y el corazón de
-[`decision:0008`](../../decisions/0008-catalogue-ordering.md)— necesita el **saldo del autor**
-y el **precio del capítulo**. Los dos son de `Credits`, llegan por eventos, y hoy no hay quien
-los publique:
+[`decision:0008`](../../decisions/0008-catalogue-ordering.md)— necesita datos de `Credits` que
+llegan por eventos. De los cinco que alimentan el read model, hoy se publican cuatro:
 
 ```text
-Credits ──CreditBalanceChanged──────────────▶ ┐  no existe
-Credits ──ChapterCorrectabilityChanged──────▶ │  no existe
+Credits ──CreditBalanceChanged──────────────▶ ┐  se publica (FEAT-CRD-006)
+Credits ──ChapterCorrectabilityChanged──────▶ │  se publica (FEAT-CRD-009)
 Work    ──WorkOpenedForCorrection───────────▶ ├─▶ catalogue_entry
-Work    ──ChapterContentUpdated─────────────▶ │  se publica
-Feedback──FeedbackSubmitted─────────────────▶ ┘  no existe
+Work    ──ChapterContentUpdated─────────────▶ │  se publica (FEAT-CRD-016)
+Feedback──FeedbackSubmitted─────────────────▶ ┘  nadie lo publica todavía
 ```
 
-De los cinco se publican dos. Los que faltan son precisamente los de `Credits`, y son los que
-la ordenación necesita: con `price` y `authorBalance` a cero,
-`capacidad = min(saldo ÷ precio, 10)` no es una ordenación degradada, es una división por cero.
+La división por cero desapareció: `ChapterCorrectabilityChanged` **es** el filtro duro —solo
+entran los capítulos corregibles ahora mismo— y el saldo y el precio llegan por su cuenta.
 
-La cadena era **cuestionario → precio → catálogo**, y los dos primeros eslabones ya existen:
-[`FEAT-WRK-014`](FEAT-WRK-014-configure-questionnaire.md) publica lo que exige el cuestionario
-y [`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md) mantiene el precio vigente
-de cada capítulo. **Lo que falta es que `Credits` publique lo que ya sabe**: que el saldo de un
-autor cambió, y que un capítulo dejó de ser corregible.
+El único que falta es `FeedbackSubmitted`, y falta porque `Feedback` no existe todavía como
+código ([`FEAT-FBK-003`](../feedback/FEAT-FBK-003-answer-correction-questionnaire.md)). Sin
+él, el término de **desatención** —`1 ÷ (1 + correcciones recibidas)`— vale 1 para todas las
+obras.
 
-Implementar el catálogo antes que eso obligaría a ordenar por otra cosa —fecha, por ejemplo—
-y eso **contradice la razón de ser del producto**: `decision:0008` descarta explícitamente
-cualquier orden que no reparta trabajo. Es mejor no tenerlo que tenerlo mal.
+Eso no es una ordenación mal hecha: es la ordenación correcta en una plataforma donde
+todavía nadie ha corregido nada. El día que existan correcciones, el contador empieza a
+moverse y el orden se separa solo. Conviene, eso sí, que el read model tenga el campo desde
+el principio, para no tener que reconstruirlo después.

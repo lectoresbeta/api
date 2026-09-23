@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Credits\Account\Application\Handler;
 
 use LectoresBeta\Credits\Account\Application\Event\AccountActivated;
+use LectoresBeta\Credits\Account\Application\Service\AnnounceMovement;
 use LectoresBeta\Credits\Account\Domain\Entity\CreditAccount;
 use LectoresBeta\Credits\Account\Domain\Enum\CreditTransactionReason;
 use LectoresBeta\Credits\Account\Domain\Repository\CreditAccountRepository;
@@ -13,6 +14,7 @@ use LectoresBeta\Credits\Account\Domain\ValueObject\CreditTransactionId;
 use LectoresBeta\Credits\Account\Domain\ValueObject\UserId;
 use LectoresBeta\Credits\EventProcessing\Domain\Entity\ProcessedEvent;
 use LectoresBeta\Credits\EventProcessing\Domain\Repository\ProcessedEventRepository;
+use LectoresBeta\Credits\Pricing\Application\Service\RefreshCorrectability;
 use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 
@@ -44,6 +46,8 @@ final readonly class GrantWelcomeCredits
         private CreditAccountRepository $accounts,
         private CreditTransactionRepository $transactions,
         private ProcessedEventRepository $processedEvents,
+        private AnnounceMovement $announce,
+        private RefreshCorrectability $correctability,
         private TransactionalSession $session,
         private Clock $clock,
         private int $welcomeCredits,
@@ -72,6 +76,8 @@ final readonly class GrantWelcomeCredits
             return;
         }
 
+        $balanceBefore = $account->balance();
+
         $movement = $account->apply(
             CreditTransactionId::generate(),
             $this->welcomeCredits,
@@ -90,5 +96,13 @@ final readonly class GrantWelcomeCredits
                 new ProcessedEvent($event->eventId(), self::CONSUMER, $event->eventName(), $now),
             );
         });
+
+        $this->announce->of($movement, $balanceBefore, $account->balance());
+
+        // Ten credits is enough to afford a correction, so chapters this
+        // person already wrote may become correctable at this exact moment
+        // (`FEAT-CRD-009`). Without this, an author who uploaded before
+        // activating would stay invisible until they touched something.
+        $this->correctability->forAuthor($userId);
     }
 }

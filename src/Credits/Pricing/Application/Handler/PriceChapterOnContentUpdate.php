@@ -8,6 +8,7 @@ use LectoresBeta\Credits\Account\Domain\ValueObject\UserId;
 use LectoresBeta\Credits\EventProcessing\Domain\Entity\ProcessedEvent;
 use LectoresBeta\Credits\EventProcessing\Domain\Repository\ProcessedEventRepository;
 use LectoresBeta\Credits\Pricing\Application\Event\ChapterContentUpdated;
+use LectoresBeta\Credits\Pricing\Application\Service\RefreshCorrectability;
 use LectoresBeta\Credits\Pricing\Domain\Entity\ChapterPrice;
 use LectoresBeta\Credits\Pricing\Domain\Repository\ChapterPriceRepository;
 use LectoresBeta\Credits\Pricing\Domain\Repository\WorkQuestionnaireDemandRepository;
@@ -48,6 +49,7 @@ final readonly class PriceChapterOnContentUpdate
         private WorkQuestionnaireDemandRepository $demands,
         private ProcessedEventRepository $processedEvents,
         private WorkPricing $workPricing,
+        private RefreshCorrectability $correctability,
         private ChapterPricing $pricing,
         private TransactionalSession $session,
         private Clock $clock,
@@ -104,5 +106,9 @@ final readonly class PriceChapterOnContentUpdate
                 new ProcessedEvent($event->eventId(), self::CONSUMER, $event->eventName(), $now),
             );
         });
+
+        // A different price may put a chapter within reach of the author's
+        // balance, or out of it (`FEAT-CRD-009`).
+        $this->correctability->forWork($workId);
     }
 }

@@ -39,6 +39,14 @@ class ChapterPrice
 
     private int $price;
 
+    /**
+     * Whether the chapter admits a correction right now. It lives on the row
+     * so that a change can be **noticed**: without the previous answer there
+     * is nothing to compare against, and every recalculation would either
+     * publish an event or none at all.
+     */
+    private bool $correctable = false;
+
     private \DateTimeImmutable $updatedAt;
 
     public function __construct(
@@ -94,6 +102,28 @@ class ChapterPrice
     public function requiredWords(): int
     {
         return $this->requiredWords;
+    }
+
+    public function isCorrectable(): bool
+    {
+        return $this->correctable;
+    }
+
+    /**
+     * Returns whether this is news. Only a change is worth an event: the
+     * price of a chapter is recomputed far more often than its answer to
+     * «can this be corrected?» actually moves.
+     */
+    public function updateCorrectability(bool $correctable, \DateTimeImmutable $now): bool
+    {
+        if ($correctable === $this->correctable) {
+            return false;
+        }
+
+        $this->correctable = $correctable;
+        $this->updatedAt = $now;
+
+        return true;
     }
 
     /**

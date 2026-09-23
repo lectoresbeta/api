@@ -414,10 +414,10 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-003 | ~~Abonar créditos por dar feedback según nivel del texto~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-004 | ~~Abonar +5 por feedback valorado positivamente~~ → `FEAT-CRD-017` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-005 | Abonar +5 al invitador cuando el invitado entrega su primera corrección | — (sistema) | PENDING | TODO | P2 | — |
-| FEAT-CRD-006 | Cargar al autor y abonar al lector al entregarse la corrección | — (sistema) | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-006-charge-author-for-received-feedback.md) |
+| FEAT-CRD-006 | Cargar al autor y abonar al lector al entregarse la corrección | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-006-charge-author-for-received-feedback.md) |
 | FEAT-CRD-007 | ~~Coste adicional por preguntas extra del cuestionario~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-008 | Consultar el historial de movimientos de créditos | User | PENDING | TODO | P1 | — |
-| FEAT-CRD-009 | Comprobar el saldo al empezar una corrección | — (sistema) | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-009-balance-check-on-correction-start.md) |
+| FEAT-CRD-009 | Comprobar el saldo al empezar una corrección | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-009-balance-check-on-correction-start.md) |
 | FEAT-CRD-010 | ~~Fórmula continua en vez de tramos~~ → adoptada en `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-011-deduplicate-integration-events.md) |
 | FEAT-CRD-012 | Salud de la economía de créditos | Admin | APPROVED | TODO | P1 | [ficha](credits/FEAT-CRD-012-economy-health.md) |

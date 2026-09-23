@@ -7,6 +7,7 @@ namespace LectoresBeta\Credits\Pricing\Application\Handler;
 use LectoresBeta\Credits\EventProcessing\Domain\Entity\ProcessedEvent;
 use LectoresBeta\Credits\EventProcessing\Domain\Repository\ProcessedEventRepository;
 use LectoresBeta\Credits\Pricing\Application\Event\QuestionnaireUpdated;
+use LectoresBeta\Credits\Pricing\Application\Service\RefreshCorrectability;
 use LectoresBeta\Credits\Pricing\Domain\Entity\WorkQuestionnaireDemand;
 use LectoresBeta\Credits\Pricing\Domain\Repository\ChapterPriceRepository;
 use LectoresBeta\Credits\Pricing\Domain\Repository\WorkQuestionnaireDemandRepository;
@@ -41,6 +42,7 @@ final readonly class RepriceWorkOnQuestionnaireUpdate
         private WorkQuestionnaireDemandRepository $demands,
         private ProcessedEventRepository $processedEvents,
         private WorkPricing $workPricing,
+        private RefreshCorrectability $correctability,
         private TransactionalSession $session,
         private Clock $clock,
     ) {
@@ -86,6 +88,8 @@ final readonly class RepriceWorkOnQuestionnaireUpdate
 
             $this->markProcessed($event, $now);
         });
+
+        $this->correctability->forWork($workId);
     }
 
     private function markProcessed(QuestionnaireUpdated $event, \DateTimeImmutable $now): void

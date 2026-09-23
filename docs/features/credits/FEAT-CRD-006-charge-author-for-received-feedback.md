@@ -5,7 +5,7 @@ context: Credits
 concept: Account
 actors: []
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - _sources/credit-system.pdf#p1
@@ -15,7 +15,7 @@ sources:
 endpoints: []
 events: [FeedbackSubmitted, CreditsSpent, CreditsAdded, CreditBalanceChanged, CreditBalanceWentNegative]
 depends_on: [FEAT-CRD-009, FEAT-FBK-001, FEAT-WRK-013, FEAT-CRD-011]
-updated: 2026-09-24
+updated: 2026-09-23
 ---
 
 # FEAT-CRD-006 — Confirmar el cargo al autor cuando recibe un comentario
@@ -140,15 +140,15 @@ nada.
 
 ## Criterios de aceptación
 
-- [ ] Recibir `FeedbackSubmitted` genera **dos** movimientos por el mismo importe.
-- [ ] El importe coincide exactamente con el precio anotado al empezar la corrección.
-- [ ] La suma de los dos movimientos es **cero**: la operación no crea ni destruye créditos.
-- [ ] Procesar dos veces el mismo `eventId` produce un único par de movimientos.
-- [ ] El lector cobra aunque el autor no tenga saldo, y el autor queda en negativo.
-- [ ] Movimientos y registro del `eventId` son atómicos.
-- [ ] El saldo resultante coincide con la suma de todos los movimientos.
-- [ ] `Credits` no llama a `Work` ni a `Feedback` en todo el proceso.
-- [ ] Un precio anotado de 15 créditos sigue cobrando 15 aunque la obra haya crecido
+- [x] Recibir `FeedbackSubmitted` genera **dos** movimientos por el mismo importe.
+- [x] El importe coincide exactamente con el precio anotado al empezar la corrección.
+- [x] La suma de los dos movimientos es **cero**: la operación no crea ni destruye créditos.
+- [x] Procesar dos veces el mismo `eventId` produce un único par de movimientos.
+- [x] El lector cobra aunque el autor no tenga saldo, y el autor queda en negativo.
+- [x] Movimientos y registro del `eventId` son atómicos.
+- [x] El saldo resultante coincide con la suma de todos los movimientos.
+- [x] `Credits` no llama a `Work` ni a `Feedback` en todo el proceso.
+- [x] Un precio anotado de 15 créditos sigue cobrando 15 aunque la obra haya crecido
       entretanto.
 
 El último criterio es el que da sentido a anotar el precio: se fija cuando se adquiere el
@@ -163,7 +163,7 @@ compromiso, no cuando se cumple.
 | ~~C-6~~, ~~C-10~~ | Tramos por extensión y nivel del texto | **Desaparecen** con el `TextTier`. El precio es una fórmula continua sobre las palabras **del capítulo** ([`FEAT-CRD-016`](FEAT-CRD-016-effort-based-pricing.md)) |
 | C-4 | ¿Un mismo lector puede corregir varias veces el mismo capítulo y cobrar cada vez? | **Una corrección por lector y capítulo**; queda confirmar qué ocurre con una corrección rehecha |
 | C-9 | ¿Se devuelven créditos si el autor oculta la corrección por abusiva? | Protección frente a feedback malicioso. Es una reversión, con sus motivos `CLAIM_REVERSAL_*` |
-| **C-15** | ¿Qué se hace con un `FeedbackSubmitted` sin precio anotado? | `RN-7` propone recalcular dejando traza. Confirmar |
+| ~~C-15~~ | ¿Qué se hace con un `FeedbackSubmitted` sin precio anotado? | **Resuelta:** se reconstruye con el precio vigente y el movimiento lleva `reconstructedPrice`. Refusar el cobro dejaría sin pagar un trabajo ya hecho |
 
 ## Estado
 
@@ -171,4 +171,53 @@ compromiso, no cuando se cumple.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`. Depende de `FEAT-CRD-009`.
+**Implementación:** `PARTIAL` (2026-09-23). **La economía funciona de punta a punta**, y lo
+único que le falta es quien pulse el botón.
+
+### Hecho
+
+- `Credits` consume `FeedbackSubmitted` y registra **los dos movimientos en la misma
+  transacción**, con el `eventId` que los causó y con el capítulo, la obra y la contraparte
+  en los metadatos. Una prueba funcional comprueba sobre PostgreSQL que la suma de los dos
+  saldos no cambia: una corrección transfiere, no emite.
+- El importe es el **anotado** al empezar ([`FEAT-CRD-009`](FEAT-CRD-009-balance-check-on-correction-start.md)),
+  y hay una prueba de que ampliar el capítulo y endurecer el cuestionario mientras el lector
+  escribe no altera lo que cobra.
+- **El lector cobra aunque el autor no pueda pagarle** (`RN-3`). El saldo del autor queda
+  negativo y se publica `CreditBalanceWentNegative`.
+- Idempotencia por `(eventId, consumer)`: el consumidor se llama `correction-charge` y no
+  cierra el hecho para las demás reglas que lo miran, como la recompensa por invitación
+  ([`FEAT-CRD-011`](FEAT-CRD-011-deduplicate-integration-events.md) `RN-4`).
+- Se publican `CreditsSpent`, `CreditsAdded` y `CreditBalanceChanged`, y el abono de
+  bienvenida los publica también: cualquier movimiento se anuncia igual.
+
+### `C-15` resuelta: una entrega sin precio anotado se reconstruye y lo dice
+
+`RN-7` proponía recalcular dejando traza, y así se ha hecho: se toma el precio vigente del
+capítulo y el movimiento lleva `reconstructedPrice: true` en sus metadatos.
+
+Lo que no se hace es **refusar el cobro**. El trabajo ya está hecho, y un lector sin cobrar
+por una anotación que se perdió sería exactamente el fallo que `RN-3` existe para evitar. Si
+tampoco se conoce el capítulo, se aplica el suelo de dos créditos: pagar de menos es malo,
+no pagar es peor.
+
+### El cruce a negativo es un momento, no un estado
+
+`CreditBalanceWentNegative` se publica **en el movimiento que hunde la cuenta**, y no otra vez
+mientras siga hundida. Un consumidor que recibiera uno por cada cargo no podría distinguir el
+instante en que ocurre del estado en que se está, y es el instante el que merece un aviso y
+el que bloquea la corrección recién llegada
+([`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md)).
+
+### Falta
+
+- **Quien publique `FeedbackSubmitted`.** `Feedback` no existe todavía como código
+  ([`FEAT-FBK-003`](../feedback/FEAT-FBK-003-answer-correction-questionnaire.md)): las
+  pruebas fabrican el hecho con el payload del catálogo y lo pasan por el serializador real.
+  Es lo único que separa esto de estar vivo.
+- **La corrección bloqueada** de [`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md): `Credits`
+  publica el hecho económico, pero decidir qué se ve es de `Feedback`.
+- **`CreditDebtCleared`**, cuando el autor vuelve a cero o más: nada lo publica todavía.
+- **Los avisos** de `Notification`: los eventos salen, pero nadie los escucha.
+- `C-4` y `C-9` —corregir dos veces el mismo capítulo, y devolver créditos al ocultar una
+  corrección abusiva— siguen abiertas y no las toca esta implementación.

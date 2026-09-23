@@ -79,6 +79,9 @@ services:
                 - LectoresBeta\Credits\Account\Application\Event\AccountActivated
                 - LectoresBeta\Credits\Pricing\Application\Event\ChapterContentUpdated
                 - LectoresBeta\Credits\Pricing\Application\Event\QuestionnaireUpdated
+                - LectoresBeta\Credits\Pricing\Application\Event\CorrectionStarted
+                - LectoresBeta\Credits\Pricing\Application\Event\CorrectionDraftDiscarded
+                - LectoresBeta\Credits\Account\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
 
     # Los consumidores de eventos se etiquetan aquí y no con
@@ -141,6 +144,18 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\Credits\Pricing\Application\Handler\RepriceWorkOnQuestionnaireUpdate:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Credits\Pricing\Application\Handler\QuoteCorrectionOnStart:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Credits\Pricing\Application\Handler\DropQuotationOnDraftDiscarded:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Credits\Account\Application\Handler\ChargeCorrectionOnFeedbackSubmitted:
         tags:
             - { name: messenger.message_handler }
 
