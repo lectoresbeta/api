@@ -15,7 +15,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 
 - Obras y sus fragmentos.
 - El contenido del texto y su ingesta (editor o fichero subido).
-- El cálculo del número de palabras y del nivel de extensión (`TextTier`).
+- El cálculo del **número de palabras** de cada capítulo, que `Credits` usa para el precio.
 - Visibilidad de obra y de fragmento.
 - Modalidad de acceso de lectores beta (configuración, **no** los accesos concedidos).
 - El cuestionario asociado a la obra.
@@ -31,7 +31,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | Quién tiene acceso concedido a la obra | `Reading` |
 | Los comentarios sobre la obra | `Feedback` |
 | Las respuestas al cuestionario | `Feedback` |
-| El coste en créditos del texto (calcula el `TextTier`, no el precio) | `Credits` |
+| El precio en créditos de una corrección (calcula las **palabras**, no el precio) | `Credits` |
 | Las publicaciones del muro que promocionan la obra | `Community` |
 
 ## Conceptos

@@ -5,7 +5,7 @@ context: Credits
 concept: Rule
 actors: [User]
 spec_status: DRAFT
-impl_status: DEFERRED
+impl_status: TODO
 priority: P3
 sources:
   - figma:1800-14717 (tarjeta de obra del carrusel)
@@ -45,31 +45,39 @@ por adelantado de `M-1`— dejarán de coincidir.
 **Recomendación: es la recompensa del lector.** Es la única lectura útil en ese contexto: a
 quien busca qué leer le importa lo que gana, no lo que paga otro.
 
-## Problema 2: las cifras no coinciden con la tabla
+## Las cifras del diseño ahora cuadran
 
-| Obra | Tiempo de lectura | Palabras aprox. | `TextTier` | Tabla | Diseño |
+Las tarjetas mostraban **6** y **8** créditos para dos obras que caían en el mismo tramo de la
+tabla antigua. Con tramos eso era imposible: el mismo tramo solo puede dar un valor.
+
+Con la fórmula de [`decision:0006`](../../decisions/0006-credit-system.md) se explican solas:
+
+| Obra | Tiempo | Palabras aprox. | Leer | Cuestionario | Total |
 |---|---|---|---|---|---|
-| El secreto de Teresa | 8 min | ~1.600–2.000 | `SHORT_STORY` | 15 | **6** |
-| Slush, daiquiris, pizza | 10 min | ~2.000–2.500 | `SHORT_STORY` | 15 | **8** |
+| El secreto de Teresa | 8 min | ~2.000 | 2 | 4 (≈400 palabras exigidas) | **6** |
+| Slush, daiquiris, pizza | 10 min | ~2.500 | 3 | 5 (≈500 palabras exigidas) | **8** |
 
-Dos observaciones:
+Dos obras de extensión parecida pueden valer distinto **porque sus cuestionarios piden cosas
+distintas**. Era justo lo que el diseño mostraba y el modelo antiguo no podía producir.
 
-1. Ninguna cifra coincide con el tramo que les correspondería.
-2. Las dos obras caen en el **mismo tramo** y sin embargo muestran cifras distintas, 6 y 8.
+No es una confirmación definitiva —las palabras son estimadas a partir del tiempo de
+lectura—, pero el orden de magnitud encaja y la forma de la discrepancia también. Es un
+indicio razonable de que la fórmula se parece a lo que el diseño tenía en la cabeza.
 
-Lo segundo es lo relevante: **una tabla por tramos no puede producir dos valores distintos
-para el mismo tramo**. O las cifras son inventadas para la maqueta, o el diseño está
-asumiendo el **cálculo continuo** que `credit-system.pdf` planteaba como alternativa y que
-está registrado como `FEAT-CRD-010`, hoy `DEFERRED`.
+## Qué significa la insignia
 
-La proporción encaja con esa hipótesis: 8 min → 6 créditos y 10 min → 8 créditos crecen de
-forma continua con la extensión.
+**Lo que gana el lector.** Y como coste y recompensa son la misma cifra, es también lo que
+paga el autor: la ambigüedad que arrastraba esta ficha (`C-12`) desaparece por construcción.
+
+El «0 créditos» en gris del catálogo significa que **ese capítulo no se puede corregir ahora
+mismo**, sea porque la obra no está en corrección o porque el autor no tiene saldo disponible
+que cubra el precio.
 
 ## Reglas de negocio
 
 Provisionales hasta resolver `H-1`:
 
-- `RN-1` La cifra la calcula **`Credits`**, no `Work`. `Work` aporta el `TextTier` y el
+- `RN-1` La cifra la calcula **`Credits`**, no `Work`. `Work` aporta las **palabras** y el
   número de palabras; la traducción a créditos es de `Credits` y de nadie más.
 - `RN-2` La cifra mostrada y la que se aplica al registrar el movimiento **deben proceder de
   la misma regla**. Una insignia que prometa 6 y luego abone 15 es peor que no mostrar nada.

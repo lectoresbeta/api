@@ -27,7 +27,7 @@ mecanismo que hace que recibir crítica exija haberla dado antes, y por tanto el
 económico del producto.
 
 Desde [`decision:0004`](../../decisions/0004-credit-reservation-on-access-grant.md), el cargo
-**no se decide aquí**: el importe ya se retuvo al conceder el acceso (`FEAT-CRD-009`). Lo que
+**no se decide aquí**: el importe ya se retuvo al empezar la corrección (`FEAT-CRD-009`). Lo que
 ocurre al recibir el comentario es **confirmar esa retención**, convirtiéndola en un
 movimiento real.
 
@@ -72,21 +72,25 @@ coste = créditos(textTier) + max(0, questionCount − 3)
   [`credits.md`](../../bounded-contexts/credits.md#clasificación-por-extensión-texttier).
 - Las tres primeras preguntas del cuestionario no tienen coste; cada pregunta adicional suma
   1 crédito.
-- `textTier` y `questionCount` se toman del estado de la obra **en el momento de conceder el
-  acceso**, que es cuando se retiene.
+- El importe es **el que se retuvo** al empezar la corrección
+  ([`FEAT-CRD-009`](FEAT-CRD-009-hold-credits-on-correction-start.md)), no el vigente al
+  entregar. Cambiar el texto o el cuestionario entre medias no altera lo que cobra quien ya
+  estaba corrigiendo.
 
 ### Ejemplos
 
-| Texto | Palabras | `TextTier` | Preguntas | Coste |
-|---|---|---|---|---|
-| Relato corto | 2.400 | `SHORT_STORY` (15) | 3 | **15** |
-| Relato corto | 2.400 | `SHORT_STORY` (15) | 6 | **18** |
-| Micro cuento | 380 | `MICRO_STORY` (5) | 3 | **5** |
-| Relato medio | 3.004 | `MEDIUM_TALE` (40) | 3 | **40** |
-| Relato corto | 2.999 | `SHORT_STORY` (15) | 3 | **15** |
+| Capítulo | Palabras | Palabras exigidas | Leer | Escribir | Importe |
+|---|---|---|---|---|---|
+| Micro cuento | 380 | 50 | 1 | 1 | **2** |
+| Relato corto | 2.400 | 300 | 3 | 3 | **6** |
+| Relato corto | 2.400 | 600 | 3 | 6 | **9** |
+| Capítulo de novela | 4.000 | 750 | 4 | 8 | **12** |
 
-Las dos últimas filas ilustran el salto entre tramos que motiva el cálculo continuo
-(`FEAT-CRD-010`): cinco palabras de diferencia multiplican el coste por más de dos.
+Las dos filas centrales muestran lo que el modelo antiguo no sabía expresar: **el mismo texto
+cuesta distinto según lo que el autor pida**.
+
+Y ya no hay saltos entre tramos: 2.999 y 3.004 palabras cuestan prácticamente lo mismo, que es
+lo que cabe esperar de cinco palabras de diferencia.
 
 ## Flujo principal
 

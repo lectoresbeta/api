@@ -89,108 +89,102 @@ Registro inmutable. Campos: identificador, `UserId`, importe con signo, motivo
 El saldo **no es un campo editable de forma independiente**: es la consecuencia de los
 movimientos y debe poder recalcularse desde cero.
 
-## Reglas de crédito
+## El modelo económico
 
-### Cuantificación general
+Definido en [`decision:0006`](../decisions/0006-credit-system.md). Nueve reglas.
 
-| Hecho de negocio | Efecto | Motivo (`reason`) |
-|---|---|---|
-| **Activar** la cuenta (no crearla) | **+20** | `ACCOUNT_ACTIVATED` |
-| Dar feedback de un texto | **+** según nivel del texto | `FEEDBACK_GIVEN` |
-| Que tu feedback reciba una valoración positiva | **+5** | `FEEDBACK_RATED_POSITIVELY` |
-| Invitar a un usuario y que participe | **+5** | `INVITED_USER_PARTICIPATED` |
-| Recibir un comentario sobre un texto propio | **−** según nivel del texto | `FEEDBACK_RECEIVED` |
-| Pregunta adicional del cuestionario (más allá de 3) | **−1** adicional por pregunta y por comentario recibido | incluido en `FEEDBACK_RECEIVED` |
-
-### Clasificación por extensión (`TextTier`)
-
-| Nivel (producto) | `TextTier` | Extensión | Créditos |
-|---|---|---|---|
-| Micro cuento | `MICRO_STORY` | 1 – 500 palabras | 5 |
-| Micro relato | `BRIEF_TALE` | 501 – 1.000 | 10 |
-| Relato corto | `SHORT_STORY` | 1.001 – 3.000 | 15 |
-| Relato medio | `MEDIUM_TALE` | 3.001 – 5.000 | 40 |
-| Relato largo | `LONG_TALE` | 5.001 – 10.000 | 60 |
-| Micro novela | `MICRO_NOVEL` | 10.001 – 20.000 | 100 |
-| Novela corta | `SHORT_NOVEL` | 20.001 – 50.000 | 200 |
-| Novela media | `MEDIUM_NOVEL` | 50.001 – 75.000 | 500 |
-
-> A partir de 10.000 palabras se recomienda dividir el texto en fragmentos más pequeños.
->
-> **Nota de trazabilidad:** el documento de origen escribe "20.0001" en el tramo de novela
-> corta; se interpreta como 20.001, continuidad del tramo anterior.
->
-> **Sin definir:** qué ocurre por encima de 75.000 palabras.
-
-### Alternativa de cálculo continuo
-
-El documento de partida plantea sustituir los tramos por una fórmula continua sobre el
-número exacto de palabras, para evitar el salto brusco entre tramos (un texto de 3.004
-palabras cuesta 40 créditos y uno de 2.999 cuesta 15).
-
-> **Indicio de que ya se ha adoptado.** Las tarjetas de obra del diseño de la Home muestran
-> 6 y 8 créditos para dos obras que caen en el **mismo tramo**. Una tabla por tramos no puede
-> producir dos valores distintos para el mismo tramo, así que o son cifras de maqueta o el
-> diseño asume el cálculo continuo. Ver `C-12` y `FEAT-CRD-013`.
-
-Registrado como `FEAT-CRD-010`, estado `DEFERRED`. La fórmula concreta no está definida.
-El diseño del dominio debe permitir sustituir la estrategia de cálculo **sin rediseñar el
-contexto**: la regla vive tras una abstracción, no repartida en condicionales.
-
-### Coste del cuestionario
-
-Por defecto el cuestionario que acompaña al texto tiene **3 preguntas sin coste adicional**.
-Cada pregunta añadida por encima de tres suma **+1 crédito al coste de cada comentario
-recibido**.
-
-Coste de recibir un comentario:
+### 1. El precio mide esfuerzo
 
 ```text
-coste = créditos(TextTier) + max(0, númeroDePreguntas − 3)
+precio = techo(palabras del capítulo / 1.000) + techo(palabras exigidas / 100)
 ```
 
-> ### Esta fórmula está superada (`FEAT-CRD-016`)
->
-> Producto ha confirmado que **la configuración del cuestionario determina a la vez el coste
-> del autor y la recompensa del lector**. El cuestionario deja de ser un **recargo** sobre el
-> precio del texto y pasa a ser **el principal determinante** del precio, en las dos
-> direcciones.
->
-> | | Fórmula de arriba | Decidido |
-> |---|---|---|
-> | Factores | `TextTier` + recargo por preguntas | **Longitud del texto y confección del cuestionario** (`P-2`) |
-> | Unidad de cálculo | La obra | **El capítulo** (`R-2`) |
-> | Coste y recompensa | Coincidían | **Pueden diferir**, con margen de ajuste dinámico (`P-3`) |
-> | La fórmula | Definida | **Aplazada por decisión de producto** (`P-1`) |
->
-> Tres consecuencias técnicas de `P-3` que afectan al diseño de este contexto:
->
-> 1. El cargo al autor y el abono al lector son **dos movimientos independientes**, nunca una
->    transferencia entre cuentas.
-> 2. La diferencia la absorbe una **cuenta de sistema**. Sin ella, la suma de saldos deja de
->    cuadrar en cuanto las dos cifras difieren.
-> 3. Cada movimiento guarda **la versión de la regla** que lo calculó. Un precio que cambia
->    con el tiempo es imposible de auditar sin eso.
->
-> Y una dependencia nueva: un ajuste dinámico necesita medir la masa de créditos, así que
-> `FEAT-CRD-012` deja de ser opcional.
->
-> Hasta que exista fórmula, la de arriba se mantiene documentada como punto de partida,
-> **no como especificación vigente**.
+Dos términos —**leer** y **escribir**—, entre 2 y 20, por capítulo
+([`FEAT-CRD-016`](../features/credits/FEAT-CRD-016-effort-based-pricing.md)).
+
+Las «palabras exigidas» son la suma de los mínimos que el autor fija en sus preguntas: **un
+solo número que captura toda la exigencia del cuestionario**.
+
+### 2. Coste = recompensa
+
+El autor paga exactamente lo que cobra el lector. **Una corrección mueve créditos; no los
+crea ni los destruye.**
+
+De ahí sale lo que gobierna todo este contexto:
+
+```text
+suma de todos los saldos (incluidos los negativos) = grifos − descubierto no recuperado
+```
+
+El promedio de créditos por usuario es **siempre** el regalo de bienvenida. Que todos tengan
+demasiados créditos es imposible por construcción; el riesgo real es la **concentración**.
+
+Y la consecuencia práctica más útil: **ajustar el precio no pone en riesgo la economía**,
+porque el precio es una transferencia. Solo cambia la velocidad de circulación.
+
+### 3. Grifos y desagües
+
+| | Cuánto | Cuándo |
+|---|---|---|
+| **Bienvenida** | +10 | Al activar la cuenta |
+| **Invitación** | +5 al invitador | Cuando el invitado **entrega su primera corrección**. Tope 10 por usuario |
+| **Descubierto no recuperado** | Emisión | Cuando una deuda no se salda (`FEAT-CRD-019`) |
+
+Y nada más. El total de bonificaciones por invitación nunca supera `5 × usuarios`, porque cada
+usuario nuevo solo puede generarla una vez.
+
+El momento del abono de la invitación es la decisión de diseño, no el importe: pagarla contra
+**una corrección real entregada** hace que el fraude con cuentas falsas sea *peor* que el
+comportamiento honesto.
+
+### 4. Lo que no es un grifo
+
+- La **propina** ([`FEAT-CRD-017`](../features/credits/FEAT-CRD-017-author-tip.md)) sale del
+  saldo del autor. Es una transferencia, y por eso es inmune a la colusión: si dos cuentas se
+  propinan mutuamente, el neto es cero.
+- El **enlace público**
+  ([`FEAT-FBK-008`](../features/feedback/FEAT-FBK-008-public-link-correction.md)) está
+  **fuera de la economía**: ni cuesta ni recompensa. `Credits` no consume su evento.
+
+### 5. Retención y descubierto
+
+Se retiene **al empezar la corrección**
+([`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-hold-credits-on-correction-start.md)), no
+al conceder el acceso. El corrector **cobra siempre**; si el autor no llega, queda en negativo
+([`FEAT-CRD-018`](../features/credits/FEAT-CRD-018-negative-balance.md)).
+
+Con saldo negativo no se reciben más correcciones, pero **sí se puede corregir**: es como se
+sale del descubierto.
+
+## Lo que este rediseño deroga
+
+| Ya no existe | Por qué |
+|---|---|
+| Tramos por `TextTier` | La fórmula continua es más simple y no crea saltos injustos en los bordes |
+| Recargo por preguntas sobre las tres de base | Absorbido por el segundo término del precio |
+| Bonificación por feedback valorado | Era un grifo abierto a que dos cuentas se valorasen en bucle. La propina lo hace mejor |
+| Margen dinámico entre coste y recompensa | Resolvía un problema —la inflación— que no existe en una transferencia pura |
+| Cuenta de sistema que absorbía el margen | Sin margen, no hay nada que absorber |
+| Versión de la regla en cada movimiento | Con precio fijado en la retención, basta con guardar el importe |
+| Compensación entre `Reading` y `Credits` | La retención vive entera aquí y la dispara un hecho de `Feedback` |
 
 ## Eventos consumidos
 
 | Evento | Origen | Efecto |
 |---|---|---|
 | `UserRegistered` | `User` | Crea `CreditAccount` **con saldo 0**. No abona nada |
-| `AccountActivated` | `User` | Abona los **+20** créditos de bienvenida |
-| `BetaReaderAccessGranted` | `Reading` | **Retiene** el coste de un feedback (`FEAT-CRD-009`) |
-| `BetaReaderAccessRevoked` | `Reading` | **Libera** la retención |
-| `FeedbackSubmitted` | `Feedback` | Abona al lector que **envió la corrección**; **confirma** la retención del autor de la obra |
-| `QuestionnaireUpdated` | `Work` | Recalcula coste y recompensa de esa obra. **No altera retenciones ya hechas** |
-| `FeedbackRatedPositively` | `Feedback` | Abona +5 a quien escribió el comentario |
-| `InvitedUserParticipated` | `User` | Abona +5 al invitador |
-| `UserDeleted` | `User` | Cierra la cuenta de créditos según la política de retención (`V-4`) |
+| `AccountActivated` | `User` | Abona los **+10** créditos de bienvenida |
+| `CorrectionStarted` | `Feedback` | **Retiene** el precio del capítulo, o lo rechaza |
+| `CorrectionDraftDiscarded` | `Feedback` | **Libera** la retención |
+| `FeedbackSubmitted` | `Feedback` | Confirma: **carga al autor y abona al lector** el importe retenido |
+| `CorrectionTipped` | `Feedback` | Transfiere la propina del autor al lector |
+| `WorkContentUpdated` | `Work` | Actualiza las palabras de cada capítulo en su read model de precios |
+| `QuestionnaireUpdated` | `Work` | Actualiza las palabras exigidas. **No altera retenciones ya hechas** |
+| `InvitedUserParticipated` | `User` | Abona +5 al invitador, hasta el tope de 10 |
+| `UserDeleted` | `User` | Anonimiza la cuenta de créditos. Los movimientos permanecen (`C-21`) |
+
+**`PublicCorrectionSubmitted` no se consume.** Es la forma más clara de expresar que el enlace
+público está fuera de la economía.
 
 `Credits` **decide** el efecto. Los eventos describen hechos, no instrucciones.
 
@@ -200,15 +194,22 @@ coste = créditos(TextTier) + max(0, númeroDePreguntas − 3)
 |---|---|---|
 | `CreditsAdded` | Se abonan créditos | `Notification` |
 | `CreditsSpent` | Se confirma una retención | `Notification` |
-| `CreditsReserved` | Se retiene el coste de un feedback | `Notification` |
-| `CreditReservationRejected` | No hay saldo disponible para retener | **`Reading`**, `Notification` |
-| `CreditReservationReleased` | Se libera una retención | `Notification` |
-| `CreditBalanceChanged` | Cambia el saldo o el retenido | **`Reading`** (proyección), read models, `Notification` |
-| `InsufficientCredits` | Llega un hecho sin retención que lo respalde | `Feedback`, `Notification` |
+| `CreditsHeld` | Se retiene al empezar una corrección | **`Feedback`** (abre el panel), `Notification` |
+| `CreditHoldRejected` | No hay disponible | **`Feedback`** (no abre el panel), `Notification` |
+| `CreditHoldReleased` | Caduca o se descarta el borrador | `Feedback`, `Notification` |
+| `CreditBalanceChanged` | Cambia el saldo o el retenido | Read models, `Notification` |
+| `CreditBalanceWentNegative` | El saldo cruza a negativo | `Notification` (avisa y **explica la salida**) |
+| `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` |
+| `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback` (bloquea el contenido), `Notification` |
+| `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` |
 
-`CreditReservationRejected` es el único evento de `Credits` del que depende otro contexto para
-**deshacer** algo. Perderlo deja un acceso concedido sin respaldo, así que su publicación
-exige Outbox Pattern.
+**`CreditHoldRejected` es el único del que otro contexto depende para no dejar trabajar.**
+`Feedback` debe esperarlo antes de abrir el panel de corrección, así que su publicación exige
+Outbox Pattern: perderlo dejaría a un lector escribiendo sin respaldo.
+
+Nótese que **`Credits` nunca oculta ni enseña el texto de una corrección**. En el descubierto
+publica el hecho económico; quien decide qué se ve es `Feedback`, que es quien posee la
+corrección.
 
 ## Idempotencia
 
@@ -234,23 +235,23 @@ existe, el evento se descarta sin efecto.
 - `RN-1` El saldo es siempre la suma de los movimientos de la cuenta.
 - `RN-2` Un movimiento nunca se modifica ni se elimina. Una corrección es un movimiento nuevo.
 - `RN-3` Un mismo `eventId` no produce efecto más de una vez.
-- `RN-4` Ningún contexto externo determina el importe de un movimiento.
+- `RN-4` **Ningún contexto externo determina el importe de un movimiento.**
 - `RN-5` Todo movimiento registra el hecho de negocio que lo originó y es auditable.
-- `RN-6` El importe queda fijado **en el momento en que se compromete el crédito** —la
-  retención—, no al enviar la corrección. Quien empezó a corregir con unas condiciones las
-  conserva aunque el autor cambie el cuestionario después (`FEAT-CRD-016` `RN-2`, `RN-3`).
-  Con precios dinámicos esta regla deja de ser una comodidad y pasa a ser obligatoria.
-- `RN-9` Lo que paga el autor y lo que cobra el lector son **importes independientes**. La
-  diferencia va a una **cuenta de sistema**, nunca a un descuadre.
-- `RN-10` Todo movimiento registra **la versión de la regla de precio** que lo calculó.
-- `RN-7` Los créditos de bienvenida se abonan al **activar** la cuenta, no al crearla. Una
-  cuenta sin verificar nunca tiene saldo. Ver
-  [`decision:0003`](../decisions/0003-write-operations-require-activated-account.md).
-- `RN-8` El coste de un feedback se **retiene al conceder el acceso** y se confirma al
-  recibir el comentario. Sin saldo disponible no se concede el acceso, así que el saldo
-  nunca queda negativo. Ver
-  [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md).
-- `RN-9` El importe se fija en el momento de la retención y no se recalcula al confirmarla.
+- `RN-6` **Lo que paga el autor y lo que cobra el lector es la misma cifra.**
+- `RN-7` El importe queda fijado **al retener**, no al entregar. Quien empezó a corregir con
+  unas condiciones las conserva aunque el autor cambie el cuestionario después.
+- `RN-8` Los créditos de bienvenida se abonan al **activar** la cuenta, no al crearla. Una
+  cuenta sin verificar nunca tiene saldo
+  ([`decision:0003`](../decisions/0003-write-operations-require-activated-account.md)).
+- `RN-9` **El corrector cobra siempre.** Si el autor no llega, queda en negativo.
+- `RN-10` Con saldo negativo no se reciben correcciones; **sí se pueden dar**.
+- `RN-11` Se cumple en todo momento la invariante contable: la suma de todos los saldos es
+  igual a los grifos menos el descubierto no recuperado.
+
+`RN-11` no es documentación: es un test que debe ejecutarse periódicamente
+([`FEAT-CRD-012`](../features/credits/FEAT-CRD-012-economy-health.md)). Si se rompe, hay un
+movimiento en el sistema que no es una transferencia, y eso significa que alguien tiene
+créditos que nadie pagó.
 
 ## Preguntas abiertas
 
@@ -258,18 +259,27 @@ existe, el evento se descarta sin efecto.
 |---|---|---|
 | ~~C-1~~ | ¿Qué ocurre si el autor no tiene saldo? | **Resuelta:** reserva previa. Sin saldo disponible no hay acceso. Ver [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md) |
 | ~~C-2~~ | ¿Se reservan créditos al conceder acceso? | **Resuelta:** sí |
-| **R-1** | **¿La reserva es por lector o por obra?** El modal dice «poner tus obras en corrección», que sugiere reservar por un número de plazas | Variante de `decision:0004`. Cerrar **antes de implementar** |
-| R-2 | ¿Cuánto dura una retención antes de caducar? | Sin caducidad los créditos quedan inmovilizados |
-| C-15 | ¿Qué se hace con un `FeedbackSubmitted` sin retención asociada? | `FEAT-CRD-006` `RN-7` |
-| C-3 | ¿Las cantidades son configurables en caliente o van en el código? | Afecta a la auditoría: hay que saber qué regla se aplicó en cada movimiento |
-| C-4 | ¿Se puede comentar la misma obra varias veces y cobrar cada vez? | Vector de abuso directo (`D-2`) |
-| C-5 | ¿El feedback desde enlace público (sin sesión) genera o consume créditos? | Falta una cuenta de créditos del comentarista (`A-3`) |
-| C-6 | ¿Qué coste tiene un texto de más de 75.000 palabras? | Tramo no cubierto por la tabla |
-| C-7 | ¿Cuándo se fija el `TextTier`: al crear la obra, al recibir cada comentario, o se congela al conceder el acceso? | Un autor podría ampliar el texto tras recibir accesos |
+| **C-14** | ¿Obliga el cuestionario a fijar un mínimo de palabras por pregunta? | **Sin mínimos, una novela se corregiría por 2 créditos** (`FEAT-CRD-016`) |
+| **C-18** | ¿La comprobación de saldo al empezar es asíncrona o una consulta síncrona con contrato? | Entre pulsar «Empezar corrección» y poder escribir hay un viaje por la cola |
+| C-16 | ¿Cuánto dura una retención antes de caducar? Propuesta: 7 días | Corta castiga al lector; larga congela el saldo del autor |
+| C-17 | Al caducar la retención, ¿puede el lector recuperarla y entregar igualmente? | Sin ello se pierde trabajo real |
+| C-13 | ¿Cómo se cuentan las palabras de un texto con formato enriquecido? | Debe coincidir con lo que ve el lector |
+| C-15 | ¿Qué se hace con un `FeedbackSubmitted` sin retención asociada? | `FEAT-CRD-006` |
+| C-3 | ¿Las cantidades son configurables en caliente o van en el código? | La bienvenida y las dos constantes del precio son las palancas del sistema |
 | C-8 | ¿Existe ajuste manual por parte de la plataforma? | Requiere `MANUAL_ADJUSTMENT` y un actor `Admin` (`V-1`) |
 | C-11 | ¿Qué ocurre con el saldo de una cuenta que nunca se activa? | Hoy no tiene: no se abona nada hasta activar |
-| C-12 | ¿La insignia de créditos de una obra es lo que gana el lector o lo que cuesta al autor? Las cifras del diseño no coinciden con la tabla | **Aplazado** a la documentación detallada del sistema de créditos (`FEAT-CRD-013`, `DEFERRED`) |
-| C-13 | ¿Qué es una obra «en corrección»? | Vocabulario del modal de créditos sin equivalente en el modelo (`M-2`) |
-| C-14 | ¿Dónde se consulta la tabla de puntuación de créditos? | `FEAT-CRD-015`: el modal enlaza a una pantalla que no existe |
-| C-9 | ¿Se retiran créditos si el autor oculta un comentario por abusivo? | Protección frente a feedback de baja calidad |
-| C-10 | ¿El nivel se calcula sobre la obra completa o sobre el fragmento comentado? | Con novelas por fragmentos cambia radicalmente el coste (`D-1`) |
+| C-21 | ¿Qué pasa con una deuda si el usuario elimina su cuenta? | Anonimizar no la cobra: contablemente es emisión |
+| C-27 | ¿Cuántos días de inactividad para el descubierto de reactivación? | `FEAT-CRD-019` |
+| C-9 | ¿Se retiran créditos si el autor oculta un comentario por abusivo? | Ligado al control antifraude (`FEAT-FBK-012`) |
+
+**Resueltas por [`decision:0006`](../decisions/0006-credit-system.md):**
+
+| # | Cómo |
+|---|---|
+| `R-1` | La retención es **por lector y por capítulo**, al empezar la corrección |
+| `C-4` | Una corrección por lector y capítulo; sí se pueden corregir varios capítulos |
+| `C-5` | El enlace público **no genera ni consume** créditos |
+| `C-6`, `C-7`, `C-10` | Desaparecen con el `TextTier`: el precio es continuo sobre las palabras **del capítulo** |
+| `C-12` | La insignia es **lo que gana el lector**, que es lo mismo que paga el autor |
+| `C-13` (antiguo) | «En corrección» es un estado de la obra (`FEAT-WRK-016`) |
+| `P-1`, `P-2`, `P-3` | La fórmula existe, y coste y recompensa coinciden |

@@ -1,9 +1,28 @@
 # 0004 — Los créditos se reservan al conceder acceso y se confirman al recibir el feedback
 
-- **Estado:** Aceptada
+- **Estado:** Sustituida parcialmente por [`0006`](0006-credit-system.md)
 - **Fecha:** 2026-09-22
 - **Afecta a:** `Credits`, `Reading`, `Feedback`, `Work`
 - **Resuelve:** `C-1`, y con ella `C-2` y `M-1`
+
+> **Sustituida en parte por [`0006`](0006-credit-system.md) (2026-09-23).**
+>
+> Lo que **sigue vigente** es el fondo: se retiene crédito **antes** de que el lector trabaje,
+> para que nadie escriba una crítica que después no se pueda pagar. Esa era la respuesta a
+> `C-1` y no ha cambiado.
+>
+> Lo que **cambia** es el momento y la granularidad. La retención ya no ocurre al conceder el
+> acceso de lector beta sino **al pulsar «Empezar corrección»**, y es por capítulo. Con ello:
+>
+> - se retiene solo por quien está escribiendo ahora, no por todo el que tenga acceso;
+> - **desaparece la compensación entre `Reading` y `Credits`**, porque la retención vive
+>   entera en `Credits` y la dispara un hecho de `Feedback`;
+> - `R-1` queda resuelta.
+>
+> Se añade además una red que esta decisión no contemplaba: **el corrector cobra siempre**, y
+> si el autor no llega queda en negativo
+> ([`FEAT-CRD-018`](../features/credits/FEAT-CRD-018-negative-balance.md)). La retención pasa
+> de ser la *garantía* del pago a ser su *prevención*.
 
 ## Contexto
 
@@ -43,7 +62,7 @@ De ahí se derivan dos conceptos que antes no existían:
 - **Retención** (`CreditReservation`), con su propio ciclo de vida: `HELD → CONFIRMED` o
   `HELD → RELEASED`.
 
-Detalle en [`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-reserve-credits-on-access-grant.md).
+Detalle en [`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-hold-credits-on-correction-start.md).
 
 ## Alternativas consideradas
 
@@ -86,7 +105,7 @@ de tres contextos. Conviene cerrar además `R-1` antes de implementar.
 > Esta decisión no se invalida —la reserva previa sigue siendo la respuesta a `C-1`—, pero su
 > **granularidad queda abierta**. La opción B2 («reserva por obra») gana peso, y aparece una
 > tercera: reservar por obra y descontar por capítulo. Ver `R-1` en
-> [`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-reserve-credits-on-access-grant.md).
+> [`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-hold-credits-on-correction-start.md).
 
 ## La compensación
 

@@ -17,7 +17,7 @@
 
 - **Lógica de negocio de ningún tipo.**
 - Entidades o value objects con significado de producto (`Work`, `Credit`, `Feedback`…).
-- Enums de negocio (`TextTier`, `PostType`, `BetaReaderAccessMode`…).
+- Enums de negocio (`PostType`, `BetaReaderAccessMode`…).
 - Servicios compartidos entre contextos para evitar duplicar una regla.
 - Modelos usados por más de un contexto.
 

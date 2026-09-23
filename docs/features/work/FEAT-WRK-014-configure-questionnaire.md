@@ -29,7 +29,7 @@ personajes, ritmo o final.
 
 Esa configuración no es solo una plantilla de formulario: **determina cuánto le cuesta al
 autor recibir una respuesta y cuánto gana el lector que la escribe**
-([`FEAT-CRD-016`](../credits/FEAT-CRD-016-questionnaire-based-pricing.md)).
+([`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md)).
 
 ## Por qué esto sube de prioridad
 
@@ -46,6 +46,12 @@ puede existir sin él y porque ninguna cifra de créditos puede calcularse sin �
 | Ejemplo | Texto de ayuda que el lector ve como marcador |
 | Obligatoriedad | Si la pregunta debe responderse para poder enviar |
 | Longitud mínima y máxima | Por respuesta, **en palabras** (`R-5`, resuelta) |
+
+> **El mínimo de palabras no es solo una validación: es el precio.** La suma de los mínimos de
+> todas las preguntas —`requiredWords`— es el segundo término de la fórmula de
+> [`decision:0006`](../../decisions/0006-credit-system.md). Un cuestionario sin mínimos
+> valdría 0 en ese término, y **una novela entera se corregiría por 2 créditos**. Por eso
+> `C-14` pregunta si fijar un mínimo debe ser obligatorio; la respuesta razonable es que sí.
 
 Las preguntas de la maqueta mencionan al protagonista por su nombre —«la conexión entre el
 protagonista, Ryn, y su misión»—, lo que confirma que **las escribe el autor para su obra
@@ -64,13 +70,14 @@ concreta**, no salen de un catálogo fijo.
   cada capítulo** (`R-2`). Ver la tensión que eso abre más abajo (`W-17`).
 - `RN-2` Un cuestionario tiene **al menos una pregunta**. El caso mínimo —un solo campo de
   texto libre— es un cuestionario de una pregunta, no la ausencia de cuestionario.
-- `RN-3` Hay un **máximo de preguntas** (`W-11`). Sin tope, un autor con saldo podría pedir
+- `RN-3` Hay un **máximo de preguntas** (`W-11`) y un **máximo de palabras exigidas**, que es
+  lo que realmente acota el precio. Sin tope, un autor con saldo podría pedir
   cuarenta respuestas y convertir la corrección en un trabajo inabordable.
 - `RN-4` Editar el cuestionario **crea una versión nueva**. Las versiones anteriores se
   conservan porque hay correcciones que las responden.
 - `RN-5` Cambiar el cuestionario **no altera las retenciones ya hechas** ni las correcciones
   en curso: quien empezó con unas condiciones las conserva
-  ([`FEAT-CRD-016`](../credits/FEAT-CRD-016-questionnaire-based-pricing.md), `RN-3`).
+  ([`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md), `RN-3`).
 - `RN-6` El autor ve **el coste mientras configura**, no después de guardar.
 - `RN-7` Un cuestionario puede editarse con la obra `IN_CORRECTION`, pero solo afecta a las
   correcciones que empiecen después.
@@ -138,14 +145,17 @@ representación** aunque describan el mismo objeto.
 
 | Evento | Cuándo | Payload relevante |
 |---|---|---|
-| `QuestionnaireUpdated` | Al guardar una versión nueva | `eventId`, `workId`, `version`, `questionCount`, atributos que influyen en el precio |
+| `QuestionnaireUpdated` | Al guardar una versión nueva | `eventId`, `workId`, `version`, `questionCount`, **`requiredWords`** |
 
 El payload incluye **los atributos que `Credits` necesita para calcular**, no el enunciado de
 las preguntas: el texto es contenido del autor y no tiene por qué circular por la cola.
 
-Cuáles son exactamente esos atributos depende de `P-1` de
-[`FEAT-CRD-016`](../credits/FEAT-CRD-016-questionnaire-based-pricing.md). Hasta que esa
-pregunta se responda, el contrato del evento no puede cerrarse.
+`requiredWords` —la suma de los mínimos de palabras de todas las preguntas— es el dato que
+importa: es el **segundo término del precio**
+([`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md)).
+
+Que un solo número baste es lo que mantiene simple este contrato: `Credits` no necesita saber
+cuántas preguntas hay ni de qué tipo son.
 
 **Consume**
 

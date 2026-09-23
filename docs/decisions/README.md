@@ -15,8 +15,9 @@ Plantilla: [`../_templates/adr.md`](../_templates/adr.md).
 | [0001](0001-documentation-as-source-of-truth.md) | La documentación de `docs/` es la fuente de verdad del producto | Aceptada | 2026-09-21 |
 | [0002](0002-credits-as-isolated-bounded-context.md) | `Credits` es un bounded context aislado y solo accesible por eventos | Aceptada | 2026-09-21 |
 | [0003](0003-write-operations-require-activated-account.md) | Las operaciones de escritura exigen tener la cuenta activada | Aceptada | 2026-09-21 |
-| [0004](0004-credit-reservation-on-access-grant.md) | Los créditos se reservan al conceder acceso y se confirman al recibir el feedback | Aceptada | 2026-09-22 |
+| [0004](0004-credit-reservation-on-access-grant.md) | Los créditos se reservan al conceder acceso y se confirman al recibir el feedback | **Sustituida en parte por [0006](0006-credit-system.md)** | 2026-09-22 |
 | [0005](0005-username-with-temporary-aliases.md) | El nombre de usuario existe, es editable y deja un alias temporal al cambiarlo | Aceptada | 2026-09-22 |
+| [0006](0006-credit-system.md) | **Sistema de créditos: precio por esfuerzo, transferencia pura y retención al empezar la corrección** | Aceptada | 2026-09-23 |
 
 ## Decisiones pendientes
 
@@ -24,14 +25,14 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 
 | Ref | Decisión | Bloquea |
 |---|---|---|
-| `R-1` | Si la reserva de créditos es por lector o por obra. **El estado «En corrección» apunta a por obra**, lo que eliminaría la compensación entre contextos | `FEAT-CRD-009`, `FEAT-WRK-016`. Cerrar **antes de implementar** |
 | `W-9` | Si `WorkStatus` sustituye a `Visibility` en la obra | `Work`, catálogo, recomendaciones |
 | `S-1` | Mecanismo de sesión de la API | Todo `User` y toda la autorización |
 | `CM-4` | Fórmula de puntuación de los rankings | `FEAT-COM-013/014/015` |
 | `W-1` | En qué momentos se genera el registro de autoría | `FEAT-WRK-009` |
 | `P-1` | Un esquema de PostgreSQL por contexto, o uno solo | La primera migración |
-| `V-4` | Qué se conserva al eliminar una cuenta | `FEAT-USR-013` |
-| `D-1` | Si el feedback se ancla al fragmento o a la obra | `Feedback` y el cálculo de créditos |
+| `V-4`, `U-3` | Qué pasa con los mensajes directos y con las obras propias al **anonimizar** una cuenta | `FEAT-USR-013` |
+| `C-14` | Si el cuestionario obliga a fijar un mínimo de palabras por pregunta. Sin mínimos, una novela se corregiría por 2 créditos | `FEAT-CRD-016` |
+| `AF-1`, `AF-2` | Qué mecanismo antifraude y si actúa antes o después del abono | `FEAT-FBK-012` |
 | `OB-11` | Si el alta con Google crea la cuenta ya activada, dado que Google ya verifica el correo | `FEAT-USR-002`, `FEAT-USR-020` |
 | `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia | `FEAT-USR-002`, `FEAT-USR-024` |
 | `OB-7` | Si hay edad mínima de registro | `FEAT-USR-022`. Tiene implicaciones legales |

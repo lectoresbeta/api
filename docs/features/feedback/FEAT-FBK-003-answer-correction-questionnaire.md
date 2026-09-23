@@ -81,7 +81,7 @@ saldo. Ese es exactamente el escenario que la reserva previa evita.
 
 - `RN-1` Una corrección responde a **un cuestionario concreto de una obra concreta**. La
   versión del cuestionario vigente al empezar es la que se responde, aunque el autor lo
-  cambie después (`RN-3` de [`FEAT-CRD-016`](../credits/FEAT-CRD-016-questionnaire-based-pricing.md)).
+  cambie después (`RN-3` de [`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md)).
 - `RN-2` Un lector puede enviar **una sola corrección por capítulo**. Sí puede corregir
   varios capítulos de la misma obra, cada uno con su coste y su recompensa (`R-2`).
 - `RN-3` Una corrección enviada es **inmutable**. No se edita ni se borra: el autor ya ha
@@ -191,7 +191,7 @@ El hecho publicado es: **un lector beta ha entregado una corrección de una obra
 
 `Credits` decide qué significa: confirmar la retención del autor y abonar al lector, con los
 importes que fijó al reservar ([`FEAT-CRD-006`](../credits/FEAT-CRD-006-charge-author-for-received-feedback.md),
-[`FEAT-CRD-016`](../credits/FEAT-CRD-016-questionnaire-based-pricing.md)).
+[`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md)).
 
 `Feedback` no conoce ninguna de las dos cifras y no debe conocerlas.
 

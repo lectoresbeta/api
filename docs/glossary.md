@@ -25,8 +25,12 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | **Corrección** / Crítica | `Correction` (agregado de `Feedback`) | **El cuestionario del autor respondido y enviado por un lector beta, sobre un capítulo concreto.** Es lo que mueve los créditos: los consume al autor y los abona al lector. Una por lector y capítulo. La interfaz la llama «corrección» («Mis correcciones», «Empezar corrección»). |
 | Comentario de un capítulo | `ChapterComment` | Reacción social libre bajo el texto de un capítulo, con respuestas y menciones. **No es una corrección**: no cuesta ni recompensa créditos y pertenece a `Community`, no a `Feedback`. |
 | Borrador de corrección | `Correction` con `status: DRAFT` | Corrección empezada y no enviada. Privada del lector; el autor no sabe que existe. No mueve créditos. |
-| Margen de créditos | `CreditSpread` | Diferencia entre lo que paga el autor y lo que cobra el lector por una misma corrección. Permite regular la masa total de créditos; se acumula en una cuenta de sistema, nunca en un descuadre. |
-| Cuenta de sistema | `SystemCreditAccount` | Cuenta interna que absorbe el margen. Sin ella, la suma de saldos deja de cuadrar cuando coste y recompensa difieren. |
+| Precio de una corrección | `CorrectionPrice` | `techo(palabras del capítulo / 1.000) + techo(palabras exigidas / 100)`, entre 2 y 20. Es a la vez lo que paga el autor y lo que cobra el lector. |
+| Palabras exigidas | `requiredWords` | Suma de los mínimos de palabras que el autor fija en las preguntas de su cuestionario. Un solo número que captura toda su exigencia, y el segundo término del precio. |
+| Propina | `CorrectionTip` | Créditos extra que el autor da **de su propio saldo** a una corrección que le ha servido. Es una transferencia, así que no altera la masa y es inmune a la colusión. |
+| Saldo negativo / descubierto | `negativeBalance` | El corrector cobra siempre; si el autor no llega, queda en negativo. Con saldo negativo no se reciben correcciones, pero **sí se pueden dar**: es como se sale. |
+| Corrección en descubierto | `OverdraftCorrection` | Corrección concedida a un autor sin saldo como gancho de reactivación. Existe, se ve que existe, pero no su contenido hasta que repone saldo. |
+| Enlace público de corrección | `PublicCorrectionLink` | URL que el autor reparte fuera de la plataforma para que alguien corrija sin registrarse. **No cuesta créditos ni los da.** |
 | Biografía / Descripción | `bio` | Texto de presentación del usuario, **300 caracteres**. Es el mismo campo que se ve bajo la foto en «Mi perfil» y que se edita en Configuración. |
 | Cuenta anonimizada | `UserStatus: DELETED` | Cuenta eliminada: se suprimió todo dato personal y se conserva, sin autor identificable, lo que pertenece a terceros —correcciones pagadas, movimientos de créditos, comentarios—. Irreversible. |
 | Mensaje operativo | `OperationalMessage` | Correo que responde a algo que el usuario acaba de pedir o que afecta a la seguridad de su cuenta: activación, restablecimiento de contraseña, cambio de correo. **No es una notificación** y no se puede desactivar. |
@@ -59,10 +63,10 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Crédito | `Credit` | Unidad de la economía interna que equilibra dar y recibir feedback. |
 | Saldo de créditos | `CreditBalance` | Créditos disponibles de un usuario. |
 | Movimiento de créditos | `CreditTransaction` | Registro inmutable de una variación del saldo, con su motivo y su origen. |
-| Retención de créditos | `CreditReservation` | Créditos comprometidos al conceder un acceso de lector beta y aún no gastados. Se confirma al recibir el feedback o se libera si el acceso termina sin él. |
+| Retención de créditos | `CreditHold` | Créditos bloqueados **al empezar una corrección**: el saldo no baja, deja de estar disponible. Se confirma al entregarse la corrección o se libera si caduca o se descarta. |
 | Saldo disponible | `availableBalance` | Saldo menos retenciones vigentes. **Es el que gobierna lo que el autor puede hacer** y el que se muestra en la interfaz. |
 | Regla de créditos | `CreditRule` | Norma que traduce un hecho de negocio en una variación de créditos. |
-| Clasificación del texto | `TextTier` | Nivel de extensión de un texto (micro cuento, relato corto, novela media…) que determina su coste y recompensa en créditos. |
+| ~~Clasificación del texto~~ | ~~`TextTier`~~ | **Derogado** ([`decision:0006`](decisions/0006-credit-system.md)). El precio ya no usa tramos sino una fórmula continua sobre el número de palabras. El recuento de palabras sigue existiendo; la clasificación en niveles, no. |
 | Invitación a la plataforma | `PlatformInvitation` | Invitación por email para que alguien se registre. Otorga créditos al invitador si el invitado participa. |
 | Página de autor / Mi perfil | `AuthorPage` | Perfil público de un escritor: portada, avatar, descripción, obras publicadas y premios. Si son dos pantallas distintas está sin decidir (`P-5`). |
 | Obra publicada | `PublishedBook` | Libro ya editado **fuera de Lectores Beta**, con editorial, año y enlace de compra, que el autor añade a su perfil como mérito. **No es una `Work`**: no tiene contenido en la plataforma, no se lee, no se comenta y no mueve créditos. |
@@ -94,7 +98,7 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Formato de publicación | `PostFormat` | **Forma del contenido**: `TEXT`, `IMAGE`, `VIDEO`, `LINK`, `WORK`. Dimensión independiente de `PostType` |
 | Audiencia de publicación | `PostAudience` | **Quién puede verla.** Solo se conoce el valor por defecto, «cualquiera» (`C-1`) |
 | Estado de solicitud | `RequestStatus` | `PENDING`, `ACCEPTED`, `REJECTED`, `CANCELLED`, `EXPIRED` |
-| Nivel de texto | `TextTier` | `MICRO_STORY`, `SHORT_STORY`, `BRIEF_TALE`, `MEDIUM_TALE`, `LONG_TALE`, `MICRO_NOVEL`, `SHORT_NOVEL`, `MEDIUM_NOVEL` |
+| ~~Nivel de texto~~ | ~~`TextTier`~~ | **Derogado.** Ver arriba |
 | Motivo de movimiento de créditos | `CreditTransactionReason` | `ACCOUNT_ACTIVATED`, `FEEDBACK_GIVEN`, `FEEDBACK_RATED_POSITIVELY`, `INVITED_USER_PARTICIPATED`, `FEEDBACK_RECEIVED`, `MANUAL_ADJUSTMENT` |
 | Estado de la cuenta | `AccountStatus` | `PENDING_ACTIVATION` (solo lectura y onboarding), `ACTIVE`, `DELETED` |
 | Estado del onboarding | `OnboardingStatus` | `PROFILE_PENDING`, `GENRES_PENDING`, `SUGGESTIONS_PENDING`, `COMPLETED` |

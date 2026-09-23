@@ -20,11 +20,11 @@ verdad sobre el alcance.**
 | `User` (USR) | 42 | 25 | 0 | 0 |
 | `Work` (WRK) | 16 | 5 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
-| `Feedback` (FBK) | 12 | 3 | 0 | 0 |
+| `Feedback` (FBK) | 12 | 4 | 0 | 0 |
 | `Community` (COM) | 36 | 9 | 0 | 0 |
-| `Credits` (CRD) | 16 | 5 | 0 | 0 |
+| `Credits` (CRD) | 19 | 8 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **138** | **48** | **0** | **0** |
+| **Total** | **141** | **53** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -42,6 +42,10 @@ Estado global: **especificación inicial**. No hay código en `src/`.
 - **Sección «Leer»**, catálogo con filtros — [pantallas](../ui/read-section.md);
 - **Lectura de un capítulo y formulario de corrección** — [pantallas](../ui/read-chapter.md);
 - **Configuración del usuario**, cinco pestañas — [pantallas](../ui/settings.md).
+
+El **sistema de créditos** se ha rediseñado de cero y está definido en
+[`decision:0006`](../decisions/0006-credit-system.md). Es la fuente de verdad del modelo
+económico; las fichas `FEAT-CRD-*` lo desarrollan.
 
 ---
 
@@ -218,7 +222,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-005 | Contestar a un comentario recibido | Writer | PENDING | TODO | P1 | — |
 | FEAT-FBK-006 | Valorar positivamente un comentario recibido | Writer | PENDING | TODO | P1 | — |
 | FEAT-FBK-007 | Ocultar un comentario recibido | Writer | PENDING | TODO | P2 | — |
-| FEAT-FBK-008 | Comentar mediante enlace público sin iniciar sesión | Guest | PENDING | BLOCKED | P2 | — |
+| FEAT-FBK-008 | Corregir por enlace público sin cuenta | Guest | DRAFT | TODO | P1 | [ficha](feedback/FEAT-FBK-008-public-link-correction.md) |
 | FEAT-FBK-009 | Denunciar un comentario abusivo | User | PENDING | DEFERRED | P3 | — |
 | FEAT-FBK-010 | Mis correcciones — listado del feedback que he dado | User | PENDING | TODO | P2 | — |
 | FEAT-FBK-011 | Guardar un borrador de corrección | BetaReader | DRAFT | TODO | P1 | [ficha](feedback/FEAT-FBK-011-save-correction-draft.md) |
@@ -243,8 +247,12 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 > texto produce saldo, y porque la longitud mínima —única defensa actual— no distingue una
 > respuesta larga de una respuesta con contenido.
 >
-> `FEAT-FBK-008` está `BLOCKED` por `A-3`, `C-5` y `F-6`: sin resolver si el comentarista
-> anónimo se identifica y si la operación mueve créditos, no se puede especificar.
+> **`FEAT-FBK-008` deja de estar `BLOCKED`.** `A-3`, `C-5` y `F-6` están resueltas: el
+> corrector anónimo se identifica con **una etiqueta opcional y sin verificar**, y la
+> operación **no mueve créditos en ninguna dirección**. Además de dar feedback al autor, es
+> una **válvula de seguridad de la economía** —un autor a cero siempre tiene una salida— y el
+> mejor canal de captación disponible, porque la persona ya ha hecho el trabajo antes de que
+> se le pida registrarse.
 > `FEAT-FBK-009` no está en el material de partida; depende de que exista moderación (`V-1`).
 
 ---
@@ -324,38 +332,53 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-CRD-001 | Consultar saldo de créditos | User | PENDING | TODO | P0 | — |
-| FEAT-CRD-002 | Abonar créditos de bienvenida al **activar** la cuenta (+20) | — (sistema) | PENDING | TODO | P0 | — |
-| FEAT-CRD-003 | Abonar créditos por dar feedback, según nivel del texto | — (sistema) | PENDING | TODO | P0 | — |
-| FEAT-CRD-004 | Abonar +5 créditos por feedback valorado positivamente | — (sistema) | PENDING | TODO | P1 | — |
-| FEAT-CRD-005 | Abonar +5 créditos por invitación que participa | — (sistema) | PENDING | TODO | P2 | — |
-| FEAT-CRD-006 | Confirmar el cargo al autor cuando recibe un comentario | — (sistema) | DRAFT | TODO | P0 | [ficha](credits/FEAT-CRD-006-charge-author-for-received-feedback.md) |
-| FEAT-CRD-007 | Aplicar el coste adicional por preguntas extra del cuestionario | — (sistema) | PENDING | TODO | P1 | — |
+| FEAT-CRD-001 | Consultar saldo total, retenido y disponible | User | PENDING | TODO | P0 | — |
+| FEAT-CRD-002 | Abonar los créditos de bienvenida al **activar** la cuenta (+10) | — (sistema) | PENDING | TODO | P0 | — |
+| FEAT-CRD-003 | ~~Abonar créditos por dar feedback según nivel del texto~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
+| FEAT-CRD-004 | ~~Abonar +5 por feedback valorado positivamente~~ → `FEAT-CRD-017` | — | PENDING | DEPRECATED | P3 | — |
+| FEAT-CRD-005 | Abonar +5 al invitador cuando el invitado entrega su primera corrección | — (sistema) | PENDING | TODO | P2 | — |
+| FEAT-CRD-006 | Cargar al autor y abonar al lector al entregarse la corrección | — (sistema) | DRAFT | TODO | P0 | [ficha](credits/FEAT-CRD-006-charge-author-for-received-feedback.md) |
+| FEAT-CRD-007 | ~~Coste adicional por preguntas extra del cuestionario~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-008 | Consultar el historial de movimientos de créditos | User | PENDING | TODO | P1 | — |
-| FEAT-CRD-009 | Reservar créditos al conceder acceso a un lector beta | — (sistema) | DRAFT | TODO | P0 | [ficha](credits/FEAT-CRD-009-reserve-credits-on-access-grant.md) |
-| FEAT-CRD-010 | Calcular el coste con fórmula continua en vez de tramos | — (sistema) | PENDING | DEFERRED | P3 | — |
+| FEAT-CRD-009 | Retener créditos al empezar una corrección | — (sistema) | DRAFT | TODO | P0 | [ficha](credits/FEAT-CRD-009-hold-credits-on-correction-start.md) |
+| FEAT-CRD-010 | ~~Fórmula continua en vez de tramos~~ → adoptada en `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | PENDING | TODO | P0 | — |
-| FEAT-CRD-012 | Monitorizar la salud de la economía de créditos | Admin | PENDING | TODO | P1 | — |
-| FEAT-CRD-013 | Créditos asociados a una obra (insignia de la tarjeta) | User | DRAFT | DEFERRED | P3 | [ficha](credits/FEAT-CRD-013-work-credit-badge.md) |
+| FEAT-CRD-012 | Salud de la economía de créditos | Admin | DRAFT | TODO | P1 | [ficha](credits/FEAT-CRD-012-economy-health.md) |
+| FEAT-CRD-013 | Créditos asociados a un capítulo (insignia de la tarjeta) | User | DRAFT | TODO | P2 | [ficha](credits/FEAT-CRD-013-work-credit-badge.md) |
 | FEAT-CRD-014 | Modal informativo del sistema de créditos | User | DRAFT | TODO | P2 | [ficha](credits/FEAT-CRD-014-credits-info-modal.md) |
-| FEAT-CRD-015 | Pantalla con la tabla de puntuación de créditos | User | PENDING | TODO | P2 | — |
-| FEAT-CRD-016 | Coste y recompensa determinados por el cuestionario | — (sistema) | DRAFT | BLOCKED | P0 | [ficha](credits/FEAT-CRD-016-questionnaire-based-pricing.md) |
+| FEAT-CRD-015 | Pantalla explicativa de cómo se calcula el precio | User | PENDING | TODO | P2 | — |
+| FEAT-CRD-016 | Precio de una corrección según el esfuerzo | — (sistema) | DRAFT | TODO | P0 | [ficha](credits/FEAT-CRD-016-effort-based-pricing.md) |
+| FEAT-CRD-017 | Propina del autor a una buena corrección | Writer | DRAFT | TODO | P2 | [ficha](credits/FEAT-CRD-017-author-tip.md) |
+| FEAT-CRD-018 | Saldo negativo — el corrector cobra siempre | — (sistema) | DRAFT | TODO | P0 | [ficha](credits/FEAT-CRD-018-negative-balance.md) |
+| FEAT-CRD-019 | Corrección en descubierto como gancho de reactivación | — (sistema) | DRAFT | TODO | P2 | [ficha](credits/FEAT-CRD-019-overdraft-correction.md) |
 
-> **`FEAT-CRD-012` pasa de `DEFERRED` a `TODO`.** Con precios de ajuste dinámico (`P-3`),
-> medir la salud de la economía deja de ser una herramienta de administración y pasa a ser
-> el **instrumento del que depende la política de precios**.
+> **El sistema de créditos se ha rediseñado de cero**
+> ([`decision:0006`](../decisions/0006-credit-system.md)). Nueve reglas:
 >
-> **`C-1` está resuelta.** Se adopta la **reserva previa**
-> ([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)): al conceder
-> acceso a un lector beta se retienen los créditos del autor (`FEAT-CRD-009`) y al recibir el
-> comentario se confirman (`FEAT-CRD-006`). Sin saldo disponible no se concede el acceso, así
-> que el saldo nunca queda negativo. Ambas fichas pasan de `BLOCKED`/`DEFERRED` a `TODO` y
-> son el camino crítico del contexto.
+> 1. **El precio mide esfuerzo**: `techo(palabras/1.000) + techo(palabras exigidas/100)`, por
+>    capítulo, entre 2 y 20 (`FEAT-CRD-016`).
+> 2. **Coste = recompensa.** Una corrección mueve créditos, no los crea ni los destruye.
+> 3. **Se retiene al empezar la corrección**, no al conceder el acceso (`FEAT-CRD-009`).
+> 4. **El corrector cobra siempre**; el autor puede quedar en negativo (`FEAT-CRD-018`).
+> 5. **Bienvenida: 10 créditos** al activar la cuenta.
+> 6. **Invitación: +5** cuando el invitado entrega su primera corrección, tope 10.
+> 7. **Propina** del autor, de su propio saldo (`FEAT-CRD-017`).
+> 8. **El enlace público queda fuera de la economía** (`FEAT-FBK-008`).
+> 9. **Corrección en descubierto** como gancho de reactivación (`FEAT-CRD-019`).
 >
-> `FEAT-CRD-013` queda `DEFERRED`: las cifras concretas de la insignia se definirán al
-> documentar el sistema de créditos en detalle.
-> `FEAT-CRD-009` depende de que se elija la opción de reserva (`C-2`).
-> `FEAT-CRD-010` es la alternativa que el propio documento de origen plantea.
+> **El hallazgo que lo ordena todo:** con coste igual a recompensa, la masa total de créditos
+> no depende del precio. El promedio por usuario es **siempre** el regalo de bienvenida, así
+> que «que todos tengan demasiados créditos» es imposible por construcción. El riesgo real no
+> es la inflación sino la **concentración**, y la fórmula de precios se puede ajustar sin
+> poner en riesgo la economía.
+>
+> **Queda derogado** lo que el rediseño sustituye: los tramos por `TextTier` y el recargo por
+> preguntas (`FEAT-CRD-003`, `FEAT-CRD-007`, `FEAT-CRD-010`), la bonificación automática por
+> feedback valorado (`FEAT-CRD-004`, reemplazada por la propina) y el margen dinámico entre
+> coste y recompensa, con su cuenta de sistema y su versionado de reglas.
+>
+> **`R-1` queda resuelta** y la compensación entre `Reading` y `Credits` desaparece: la
+> retención vive entera en `Credits` y la dispara un hecho de `Feedback`.
 
 ---
 
@@ -385,23 +408,20 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 |---|---|---|
 | FEAT-COM-013/014/015 | `CM-4` | Fórmula de puntuación de cada ranking |
 | FEAT-WRK-009 | `W-1` | Cuándo se genera el registro de autoría |
-| FEAT-FBK-008 | `A-3`, `C-5` | Identificación y créditos del comentarista anónimo |
 | FEAT-USR-013 | `V-4`, `U-3` | Qué se conserva al eliminar la cuenta. El nombre de usuario **sí** está decidido: queda bloqueado 30 días |
 | FEAT-COM-024 | `CM-4` | Fórmula de relevancia para ordenar el muro |
 | FEAT-COM-029, FEAT-COM-002 | `C-1` | Qué opciones tiene el selector de audiencia de una publicación |
 | FEAT-COM-002 | `C-2` | Si se admite vídeo, con qué límites y si se transcodifica |
 | FEAT-COM-019 | `C-3` | Si un repost es un puntero o una publicación con entidad propia |
 | FEAT-COM-006, FEAT-COM-024, rankings | `CM-4` | Una única fórmula de relevancia para el muro, los comentarios y los rankings |
-| FEAT-CRD-009, FEAT-WRK-016 | **`R-1`** | Si la reserva es por lector o por obra. **El estado «En corrección» apunta a por obra** y eliminaría la compensación. Cerrar antes de implementar |
 | FEAT-WRK-016 | `W-9` | Si `WorkStatus` sustituye a `Visibility` |
 | FEAT-COM-034 | `B-2`, `B-3` | Si bloquear revoca el acceso de lector beta y libera su retención, y qué pasa con el feedback que el autor **ya pagó** |
 | FEAT-USR-014 | `U-17` | Si el contador de correcciones es público y la lista no, de forma deliberada |
-| **FEAT-CRD-016** | **`P-1`** | **La fórmula de precios. Aplazada por decisión de producto: los factores están decididos, la traducción a cifras no** |
-| **FEAT-CRD-009, FEAT-FBK-003** | **`R-1`** | Si la retención es por obra o **por capítulo**. La corrección por capítulo ha separado las dos granularidades |
 | **FEAT-FBK-012** | `AF-1`, `AF-2` | Qué mecanismo antifraude, y si actúa antes o después del abono |
-| FEAT-CRD-016 | `P-5`, `P-6` | Cada cuánto se ajusta el precio y dónde se acumula el margen entre lo que paga el autor y lo que cobra el lector |
 | FEAT-WRK-014 | `W-17` | Si las preguntas de obra entera se repiten en cada capítulo |
 | FEAT-WRK-012 | `L-9` | Cómo llega la insignia de créditos al catálogo sin acoplar `Work` con `Credits` |
+| FEAT-CRD-016 | `C-14` | Si el cuestionario obliga a fijar un mínimo por pregunta. Sin mínimos, una novela se corregiría por 2 créditos |
+| FEAT-CRD-019 | `C-27`, `C-28` | Días de inactividad y cómo se avisa al autor de que puede quedar en descubierto |
 | FEAT-USR-013 | `U-3`, `V-4` | Qué pasa con las **obras propias** y con los mensajes directos al anonimizar la cuenta |
 | FEAT-USR-038 | `S-36` | Si endurecer el ajuste global revoca los accesos de lector beta ya concedidos, y qué se hace con sus retenciones |
 | FEAT-USR-038 | `S-13`, `S-16` | Qué opciones tienen los desplegables y qué es «visibilidad de actividad» |

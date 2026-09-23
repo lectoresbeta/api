@@ -133,14 +133,16 @@ Es una refinación importante del modelo de créditos:
 
 | | Modelo anterior | Decidido |
 |---|---|---|
-| Factores | `TextTier` + recargo por preguntas | **Longitud del texto y confección del cuestionario** |
+| Factores | Tramos por extensión + recargo por preguntas | **`techo(palabras/1.000) + techo(palabras exigidas/100)`** |
 | Unidad | La obra | **El capítulo** |
-| Coste y recompensa | Coincidían | **Pueden diferir**, con margen ajustable dinámicamente |
+| Coste y recompensa | Dos cifras | **La misma cifra**: una corrección mueve créditos, no los crea |
+| Rango | — | Entre 2 y 20 |
 
-A más exigente el cuestionario y más largo el capítulo, más cuesta y más se recompensa. El
-margen entre ambas cifras permite regular la masa total de créditos sin romper esa relación.
+Las «palabras exigidas» son la suma de los mínimos que el autor fija en sus preguntas: un solo
+número que captura toda la exigencia del cuestionario.
 
-La **fórmula exacta se define más adelante** por decisión de producto (`FEAT-CRD-016`, `P-1`).
+El modelo completo está en [`decision:0006`](../decisions/0006-credit-system.md).
+
 
 ## «También te puede interesar»
 

@@ -98,8 +98,12 @@ para calcular la retención sin consultar a `Work`
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification`, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `betaReaderAccessId`, `questionnaireVersion`, `submittedAt` |
-| `FeedbackRatedPositively` | El autor lo valora como útil | **`Credits`**, `Notification`, `Community` | `feedbackId`, `reviewerId`, `authorId` |
+| `CorrectionStarted` | Un LB pulsa «Empezar corrección» | **`Credits`** (retiene), `Notification` | `chapterId`, `workId`, `authorId`, `readerId` |
+| `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification`, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `questionnaireVersion`, `submittedAt` |
+| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (libera) | `chapterId`, `readerId` |
+| `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` | `correctionId`, `authorId`, `readerId`, `amount` |
+| `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` NO lo consume** | `correctionId`, `workId`, `chapterId`, `authorId`, `authorLabel?` |
+| `FeedbackRatedPositively` | El autor lo valora como útil | `Notification`, `Community`. **`Credits` ya no lo consume**: la bonificación automática se sustituyó por la propina | `correctionId`, `readerId`, `authorId` |
 | `FeedbackReplied` | El autor contesta | `Notification` | `feedbackId`, `reviewerId` |
 | `FeedbackHidden` | El autor lo oculta | `Community`, `Credits`* | `feedbackId`, `workId` |
 | `WorkRated` | Un LB valora la obra | `Community` | `workId`, `authorId`, `readerId`, `rating` |
@@ -127,47 +131,24 @@ dejaría a `Credits` sin poder calcular nada.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance`, `pricingRuleVersion?` |
-| `CreditsSpent` | Se confirma una retención | `Notification` | `userId`, `amount`, `reason`, `balance`, `pricingRuleVersion` |
-| `CreditsReserved` | Se retiene el coste de un feedback | `Notification` | `reservationId`, `userId`, `workId`, `amount`, `availableBalance` |
-| `CreditReservationRejected` | No hay saldo disponible | **`Reading`**, `Notification` | `userId`, `workId`, `betaReaderAccessId`, `required`, `available` |
-| `CreditReservationReleased` | Se libera una retención | `Notification` | `reservationId`, `userId`, `amount`, `reason` |
-| `CreditBalanceChanged` | Cambia el saldo o el retenido | **`Reading`**, read models, `Notification` | `userId`, `balance`, `held`, `available` |
-| `InsufficientCredits` | Llega un hecho sin retención que lo respalde | `Feedback`, `Notification` | `userId`, `required`, `available`, `sourceEventId` |
+| `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance` |
+| `CreditsSpent` | Se confirma una retención | `Notification` | `userId`, `amount`, `reason`, `balance` |
+| `CreditsHeld` | Se retiene al empezar una corrección | **`Feedback`**, `Notification` | `holdId`, `userId`, `chapterId`, `readerId`, `amount`, `expiresAt` |
+| `CreditHoldRejected` | No hay disponible | **`Feedback`**, `Notification` | `chapterId`, `readerId`, `required`, `available` |
+| `CreditHoldReleased` | Caduca o se descarta el borrador | `Feedback`, `Notification` | `holdId`, `userId`, `amount`, `reason` |
+| `CreditBalanceChanged` | Cambia el saldo o el retenido | Read models, `Notification` | `userId`, `balance`, `held`, `available` |
+| `CreditBalanceWentNegative` | El saldo cruza a negativo | `Notification` | `userId`, `balance` |
+| `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` | `userId`, `balance` |
+| `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback`, `Notification` | `holdId`, `userId`, `chapterId`, `amount` |
+| `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` | `userId`, `correctionId` |
 
-`CreditReservationRejected` es el único evento del catálogo del que **otro contexto depende
-para deshacer algo**: `Reading` revoca con él un acceso ya concedido. Perderlo deja el
-sistema en un estado incorrecto, así que su publicación exige **Outbox Pattern**.
+**`CreditHoldRejected` es el evento más delicado del sistema.** Es el único del que otro
+contexto depende para **no dejar trabajar**: `Feedback` debe esperarlo antes de abrir el panel
+de corrección. Perderlo deja a un lector escribiendo sin respaldo, así que exige Outbox
+Pattern.
 
-`Credits` publica hechos de su propio modelo. Los consumidores **nunca** dependen de sus
-entidades ni de sus repositorios.
-
-## `Community`
-
-| Evento | Cuándo | Consumidores | Payload |
-|---|---|---|---|
-| `PostPublished` | Se publica en el muro | `Notification` | `postId`, `authorId`, `type`, `format`, `audience` |
-| `PostCommented` | Se comenta una publicación | `Notification` | `postId`, `commentId`, `postAuthorId`, `commentAuthorId` |
-| `PostReposted` | Se repostea una publicación | `Notification` | `postId`, `originalAuthorId`, `repostedBy` |
-| `UserMentioned` | Se menciona a alguien en un comentario | `Notification` | `mentionedUserId`, `byUserId`, `postId`, `commentId` |
-| `AuthorSubscribed` | Un usuario sigue a un autor | `Notification` | `subscriberId`, `authorId` |
-| `UserBlocked` | Un usuario bloquea a otro | `Reading`, `Feedback`, `Credits`, `Notification` | `blockerId`, `blockedId` |
-| `UserUnblocked` | Se deshace el bloqueo | Los mismos | `blockerId`, `blockedId` |
-| `OnboardingAuthorSuggestionsShown` | *(opcional, analítica)* Se muestran sugerencias | — | `userId`, `suggestedAuthorIds` |
-| `DirectMessageSent` | Se envía un mensaje | `Notification` | `conversationId`, `senderId`, `recipientId` |
-| `ChapterCommented` | Se comenta un capítulo | `Notification` | `chapterId`, `workId`, `commentId`, `authorId`, `commentAuthorId` |
-| `ChapterLiked` | Se da «me gusta» a un capítulo | `Notification` | `chapterId`, `workId`, `authorId`, `byUserId` |
-
-`DirectMessageSent` **no transporta el contenido del mensaje**: la notificación avisa y
-enlaza, no reproduce.
-
-`PostPublished` y `UserMentioned` llevan la audiencia o dependen de ella: `Notification`
-comprueba que el destinatario puede ver el contenido **antes** de avisarle. Un aviso sobre
-algo que no se puede abrir es, además de inútil, una filtración.
-
-## `Notification`
-
-No publica eventos de integración. Es un contexto terminal.
+`Credits` **nunca oculta ni enseña el texto de una corrección**. En el descubierto publica el
+hecho económico; qué se ve lo decide `Feedback`, que es quien posee la corrección.
 
 ---
 

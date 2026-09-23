@@ -74,8 +74,12 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `FeedbackSubmitted` | Se envía un comentario | **`Credits`**, `Notification`, `Community` (rankings) |
-| `FeedbackRatedPositively` | El autor valora el comentario como útil | **`Credits`** (+5), `Notification`, `Community` |
+| `CorrectionStarted` | Un lector pulsa «Empezar corrección» | **`Credits`** (retiene el precio del capítulo) |
+| `FeedbackSubmitted` | Se **entrega** una corrección | **`Credits`**, `Notification`, `Community` (rankings) |
+| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (libera la retención) |
+| `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` (reputación) |
+| `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` no lo consume**: está fuera de la economía |
+| `FeedbackRatedPositively` | El autor valora la corrección como útil | `Notification`, `Community`. **Ya no mueve créditos**: la bonificación automática se sustituyó por la propina |
 | `FeedbackReplied` | El autor contesta | `Notification` |
 | `FeedbackHidden` | El autor oculta un comentario | `Community` (rankings), posiblemente `Credits` (`C-9`) |
 | `WorkRated` | Un LB valora la obra | `Community` (rankings de obras y escritores) |
@@ -107,10 +111,20 @@ Payload propuesto (pendiente de cerrar con `C-10`):
 
 | Evento | Origen | Efecto |
 |---|---|---|
-| `BetaReaderAccessGranted` | `Reading` | Habilita a ese usuario para comentar esa obra |
-| `BetaReaderAccessRevoked` | `Reading` | Deja de poder comentar; el feedback ya emitido se conserva |
-| `WorkDeleted` | `Work` | Cierra el feedback asociado |
-| `InsufficientCredits` | `Credits` | Llegó un feedback sin retención que lo respalde. Indica un fallo de integración, no un caso normal: con la reserva previa el saldo se comprometió al conceder el acceso |
+| `CreditsHeld` | **`Credits`** | Se abre el panel: hay respaldo para pagar esta corrección |
+| `CreditHoldRejected` | **`Credits`** | **No se abre el panel.** Se explica por qué |
+| `CreditHoldReleased` | `Credits` | La retención caducó; para entregar hay que volver a retener |
+| `OverdraftCorrectionGranted` | `Credits` | La corrección se marca como **bloqueada** para el autor |
+| `CorrectionUnlocked` | `Credits` | El autor repuso saldo: se desbloquea el contenido |
+| `WorkClosedForCorrection` | `Work` | Los borradores en curso dejan de poder enviarse (`Q-5`) |
+
+`CreditHoldRejected` es el único evento que **impide** a este contexto dejar trabajar a un
+usuario, y por eso hay que esperarlo antes de abrir el panel de corrección. Es el punto donde
+la asincronía tiene coste visible (`C-18`).
+
+**Quién decide qué se ve es `Feedback`, no `Credits`.** En el descubierto, `Credits` publica
+el hecho económico; ocultar o enseñar el texto de una corrección es decisión de quien la
+posee.
 
 ## Reglas de negocio
 
