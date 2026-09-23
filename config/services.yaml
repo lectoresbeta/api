@@ -7,20 +7,19 @@ services:
         autowire: true
         autoconfigure: true
 
-    # El autoregistro se limita a Application e Infrastructure.
+    # Autoregistro de todo el código propio, con dos exclusiones.
     #
     # El dominio NO se registra como servicio: sus objetos se construyen con
     # `new`, no se inyectan. Un agregado que el contenedor sabe crear acaba
     # teniendo dependencias de infraestructura.
+    #
+    # Los controladores son servicios normales: llevan el atributo
+    # #[AsController] de Symfony, que ya les pone la etiqueta
+    # `controller.service_arguments`. No hace falta registrarlos aparte, y
+    # así el atributo se queda donde debe estar, en Infrastructure.
     LectoresBeta\:
-        resource: '../src/*/*/{Application,Infrastructure}'
+        resource: '../src/'
         exclude:
-            - '../src/*/*/Domain'
-
-    LectoresBeta\Shared\:
-        resource: '../src/Shared/{Application,Infrastructure}'
-
-    # Los controladores son infraestructura y viven dentro de cada concepto.
-    LectoresBeta\.Controller\:
-        resource: '../src/*/*/Infrastructure/Controller'
-        tags: ['controller.service_arguments']
+            - '../src/*/*/Domain/'
+            - '../src/Shared/Domain/'
+            - '../src/Shared/Infrastructure/Symfony/Kernel.php'

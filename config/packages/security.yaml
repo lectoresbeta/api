@@ -3,8 +3,12 @@ security:
         Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
 
     providers:
+        # Hasta que exista FEAT-USR-001 no hay de dónde cargar usuarios. Se
+        # deja un proveedor vacío para que el contenedor arranque; se sustituye
+        # por `id: LectoresBeta\User\Authentication\Infrastructure\Security\UserProvider`
+        # en cuanto ese servicio exista.
         app_users:
-            id: LectoresBeta\User\Authentication\Infrastructure\Security\UserProvider
+            memory: ~
 
     firewalls:
         dev:

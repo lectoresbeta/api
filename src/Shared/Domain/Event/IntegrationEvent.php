@@ -5,34 +5,35 @@ declare(strict_types=1);
 namespace LectoresBeta\Shared\Domain\Event;
 
 /**
- * Contrato público asíncrono entre bounded contexts.
+ * Public asynchronous contract between bounded contexts.
  *
- * Un evento de integración describe **un hecho que ya ha ocurrido** en el
- * contexto que lo publica. Nunca es una instrucción para otro: quien lo
- * recibe decide qué significa en su propio modelo.
+ * An integration event describes **a fact that has already happened** in the
+ * context that publishes it. It is never an instruction for another one: the
+ * consumer decides what the fact means inside its own model.
  *
- * Reglas que esta interfaz existe para recordar:
+ * Rules this interface exists to remember:
  *
- * - no transporta agregados ni entidades de Doctrine;
- * - no transporta importes de créditos salvo que los publique `Credits`;
- * - no transporta contenido privado —texto de obras, correcciones, mensajes—,
- *   porque una cola con reintentos y colas de fallos no es sitio para él;
- * - lleva `eventId` estable, porque los consumidores deben ser idempotentes:
- *   hay que asumir entrega repetida.
+ * - it never carries aggregates or Doctrine entities;
+ * - it never carries credit amounts unless `Credits` is the publisher;
+ * - it never carries private content — work text, corrections, messages —
+ *   because a queue with retries and a failure transport is no place for it;
+ * - it carries a stable `eventId`, because consumers must be idempotent:
+ *   duplicate delivery has to be assumed.
  *
- * Es una interfaz de dominio a propósito: marcar un evento no puede obligar a
- * conocer Messenger. El enrutado a RabbitMQ es cosa de Infrastructure.
+ * It is deliberately a domain interface: marking an event as an integration
+ * event must not force anyone to know about Messenger. Routing to RabbitMQ is
+ * an Infrastructure concern.
  */
 interface IntegrationEvent
 {
     /**
-     * Identificador estable del hecho. Reintentar la publicación no lo cambia.
+     * Stable identifier of the fact. Republishing it does not change it.
      */
     public function eventId(): string;
 
     /**
-     * Nombre del hecho en términos de negocio: `FeedbackSubmitted`,
-     * `AccountActivated`. Nunca `UpdateCreditsCommand`.
+     * Name of the fact in business terms: `FeedbackSubmitted`,
+     * `AccountActivated`. Never `UpdateCreditsCommand`.
      */
     public function eventName(): string;
 

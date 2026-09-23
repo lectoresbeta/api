@@ -12,8 +12,11 @@ final class FrozenClockTest extends TestCase
     {
         $clock = FrozenClock::at('2026-09-24T10:00:00');
 
-        self::assertSame('2026-09-24 10:00:00', $clock->now()->format('Y-m-d H:i:s'));
-        self::assertSame('2026-09-24 10:00:00', $clock->now()->format('Y-m-d H:i:s'));
+        $first = $clock->now();
+        $second = $clock->now();
+
+        self::assertSame('2026-09-24 10:00:00', $first->format('Y-m-d H:i:s'));
+        self::assertEquals($first, $second);
     }
 
     public function testItCanBeAdvancedExplicitly(): void

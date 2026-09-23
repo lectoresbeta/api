@@ -7,6 +7,12 @@ framework:
             # RabbitMQ es el transporte del proyecto (AGENTS.md).
             integration:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                # JSON y no la serialización nativa de PHP. Un evento de
+                # integración es un contrato público entre contextos: su
+                # formato en el cable no puede depender del nombre de una
+                # clase ni de sus propiedades privadas, porque entonces
+                # renombrar una clase rompe a los consumidores.
+                serializer: messenger.transport.symfony_serializer
                 options:
                     exchange:
                         name: lectoresbeta.events

@@ -7,10 +7,10 @@ namespace LectoresBeta\Tests\Unit\Shared;
 use LectoresBeta\Shared\Domain\Clock\Clock;
 
 /**
- * Reloj detenido para los tests de dominio.
+ * A stopped clock for domain tests.
  *
- * Vive en tests y no en src porque no es una implementación del sistema: es
- * una herramienta de prueba.
+ * It lives in tests/ rather than src/ because it is not an implementation the
+ * system runs on: it is a testing tool.
  */
 final class FrozenClock implements Clock
 {

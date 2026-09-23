@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace LectoresBeta\Shared\Domain\Clock;
 
 /**
- * El tiempo, como puerto.
+ * Time, as a port.
  *
- * Llamar a `new \DateTimeImmutable()` dentro de una regla de negocio la hace
- * imposible de probar: no se puede escribir un test de «el alias caduca a los
- * 30 días» si el dominio pregunta la hora al sistema operativo.
+ * Calling `new \DateTimeImmutable()` inside a business rule makes that rule
+ * impossible to test: there is no way to write a test for "the alias expires
+ * after 30 days" if the domain asks the operating system what time it is.
  */
 interface Clock
 {

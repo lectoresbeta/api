@@ -6,7 +6,8 @@ parameters:
     tmpDir: var/cache/phpstan
 
     # AGENTS.md: "avoid broad mixed usage", "type collections where practical".
-    checkMissingIterableValueType: true
+    # En PHPStan 2.x la comprobación de iterables sin tipo de valor forma parte
+    # del nivel 6 en adelante, así que el nivel 7 ya la incluye.
     treatPhpDocTypesAsCertain: false
 
     # Sin baseline a propósito. AGENTS.md lo dice explícitamente:

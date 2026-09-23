@@ -7,6 +7,13 @@
 # `Credits` tiene aislamiento reforzado: es regla dura de AGENTS.md y de
 # docs/decisions/0002-credits-as-isolated-bounded-context.md.
 parameters:
+  # deptrac 2.x lee analyser.internal_tag y analyser.types sin aplicar
+  # valores por defecto, y avisa si faltan. Los declaramos explícitamente.
+  analyser:
+    internal_tag: null
+    types:
+      - class
+      - function
   paths:
     - ./src
   layers:
@@ -29,16 +36,24 @@ parameters:
     - name: Shared
       collectors: [{ type: directory, value: src/Shared/.* }]
 
+    # Todo lo que no es nuestro. No es un contexto: esta capa existe sólo para
+    # que `--fail-on-uncovered` pueda seguir vigilando lo que sí lo es.
+    - name: Vendor
+      collectors: [{ type: classLike, value: '^(?!LectoresBeta\\).*' }]
+
   ruleset:
-    # Todos pueden usar Shared. Nadie puede usar a nadie más.
-    User: [Shared]
-    Work: [Shared]
-    Reading: [Shared]
-    Feedback: [Shared]
-    Community: [Shared]
-    Credits: [Shared]
-    Moderation: [Shared]
-    Notification: [Shared]
+    # Todos pueden usar Shared y las librerías de terceros. Nadie puede usar a
+    # ningún otro contexto.
+    User: [Shared, Vendor]
+    Work: [Shared, Vendor]
+    Reading: [Shared, Vendor]
+    Feedback: [Shared, Vendor]
+    Community: [Shared, Vendor]
+    Credits: [Shared, Vendor]
+    Moderation: [Shared, Vendor]
+    Notification: [Shared, Vendor]
 
     # Shared es genérico: no conoce ningún contexto de negocio.
-    Shared: ~
+    Shared: [Vendor]
+
+    Vendor: ~

@@ -8,12 +8,12 @@ use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 
 /**
- * El kernel vive en Infrastructure, no en la raíz de src/.
+ * The kernel lives in Infrastructure, not at the root of src/.
  *
- * No es cosmética: AGENTS.md exige que Symfony siga siendo un detalle de
- * infraestructura, y dejar el kernel en src/Kernel.php lo colocaría por
- * encima de los bounded contexts, como si el framework fuese el centro del
- * sistema.
+ * This is not cosmetic: AGENTS.md requires Symfony to remain an
+ * infrastructure detail, and leaving the kernel in src/Kernel.php would place
+ * it above the bounded contexts, as if the framework were the centre of the
+ * system.
  */
 final class Kernel extends BaseKernel
 {
