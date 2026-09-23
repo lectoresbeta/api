@@ -4,7 +4,7 @@ title: Sección «Leer» — catálogo de obras con filtros y ordenación
 context: Work
 concept: Manuscript
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -14,7 +14,7 @@ endpoints:
   - GET /works
 depends_on: [FEAT-WRK-016, FEAT-CRD-013]
 events: []
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-WRK-012 — Sección «Leer»: catálogo de obras
@@ -44,7 +44,9 @@ una decisión distinta, que resuelve `FEAT-WRK-004`.
 - `RN-2` El filtro de estado ofrece solo esos dos valores. `DRAFT` no puede aparecer como
   opción ni por manipulación del parámetro.
 - `RN-3` El recuento total refleja **los filtros aplicados**, no el catálogo entero.
-- `RN-4` La ordenación por defecto es **relevancia** (`CM-4`).
+- `RN-4` La ordenación por defecto es **relevancia**, definida en
+  [`decision:0008`](../../decisions/0008-catalogue-ordering.md): reparte trabajo, **no premia
+  popularidad**.
 - `RN-5` El filtro de temática es **multiselección**.
 - `RN-6` La insignia de créditos de cada obra la resuelve `Credits`, no `Work`
   ([`FEAT-CRD-013`](../credits/FEAT-CRD-013-work-credit-badge.md)). Una obra que no está en
@@ -64,6 +66,39 @@ una decisión distinta, que resuelve `FEAT-WRK-004`.
 `RN-1` y `RN-2` son la misma regla vista desde dentro y desde el borde. La segunda hace falta
 porque un filtro de la interfaz no es una autorización: `?status=DRAFT` debe rechazarse en el
 backend aunque el desplegable no lo ofrezca.
+
+## La relevancia reparte trabajo
+
+```text
+puntuación = capacidad × desatención × frescura
+
+capacidad   = min(saldo del autor ÷ precio del capítulo, 10)
+desatención = 1 ÷ (1 + correcciones recibidas)
+frescura    = 1 ÷ (1 + semanas abierta a corrección)^0.5
+```
+
+Ninguno de los tres factores es la popularidad, y es deliberado: **la plataforma no existe
+para que se lean obras, sino para que se corrijan**. Ordenar por popularidad concentraría las
+correcciones en pocos textos y dejaría a la mayoría de autores sin ninguna.
+
+La propiedad que hace que se sostenga solo: **aparecer arriba consume lo que te puso arriba**.
+Cada corrección recibida gasta saldo del autor y sube su contador, así que los dos primeros
+factores bajan a la vez y la obra deja sitio a otra.
+
+El tope de 10 en la capacidad impide que un autor con mucho saldo monopolice el catálogo.
+
+Antes de puntuar hay un **filtro duro**: solo entran capítulos corregibles ahora mismo.
+Enseñar algo que el lector no puede corregir desperdicia el sitio más valioso de la pantalla.
+
+## De dónde salen los datos de `Credits`
+
+La ordenación necesita el **saldo del autor** y el **precio del capítulo**, que son de otro
+contexto. No se resuelve con un `JOIN` —sería acceso directo al modelo de `Credits`— sino con
+un **read model del catálogo** alimentado por eventos (`L-9`, resuelta en
+[`decision:0008`](../../decisions/0008-catalogue-ordering.md)).
+
+`catalogue_entry` guarda lo justo para filtrar y ordenar, **nada de contenido**, y se
+reconstruye reprocesando eventos.
 
 ## Paginación numerada, como excepción
 
@@ -156,13 +191,14 @@ explícitamente. Hace falta un read model o un contrato de consulta (`L-9`).
 - [ ] Las obras propias del usuario no aparecen.
 - [ ] La insignia de créditos no se obtiene consultando tablas de `Credits`.
 - [ ] Con el catálogo vacío se devuelve `200` con lista vacía.
+- [ ] Una obra que recibe una corrección **baja de posición**.
+- [ ] Un capítulo que deja de ser corregible desaparece del catálogo.
+- [ ] No existe ningún `JOIN` entre tablas de `Work` y de `Credits`.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **CM-4** | ¿Cómo se calcula la relevancia? | Es el orden por defecto; cuarto sitio que la necesita |
-| **L-9** | ¿Cómo llega la insignia de créditos al catálogo sin acoplar contextos? | Read model o contrato de consulta |
 | L-1 | ¿Qué rangos tiene «Tiempo de lectura»? | Define el filtro |
 | L-2 | ¿Qué otras opciones de ordenación hay? | Solo se ve «relevancia» |
 | L-6 | ¿Se excluyen las obras propias? | `RN-7` lo asume |
@@ -177,6 +213,8 @@ parecen en nada, y la maqueta no lo aclara. Lo habitual en un catálogo de descu
 
 ## Estado
 
-**Especificación:** `DRAFT`. `CM-4` y `L-9` deben cerrarse antes de `APPROVED`.
+**Especificación:** `APPROVED` (2026-09-24). `CM-4` y `L-9` resueltas en
+[`decision:0008`](../../decisions/0008-catalogue-ordering.md). Las preguntas que quedan son
+detalles de filtro que no afectan al modelo.
 
 **Implementación:** `TODO`.

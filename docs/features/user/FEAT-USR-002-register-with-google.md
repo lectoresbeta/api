@@ -4,7 +4,7 @@ title: Registro con cuenta de Google
 context: User
 concept: Authentication
 actors: [Guest]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -14,7 +14,7 @@ sources:
 endpoints: [GET /auth/oauth/google, POST /auth/oauth/google/callback]
 events: [UserRegistered, AccountActivated]
 depends_on: [FEAT-USR-024]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-USR-002 — Registro con cuenta de Google
@@ -34,7 +34,26 @@ igual que el registro con email. Sin esa aceptación no se crea la cuenta.
 |---|---|---|
 | `Guest` | Registrarse con su cuenta de Google | Aceptando los documentos legales |
 
-## Reglas de negocio
+## La cuenta nace activada
+
+**El alta con Google marca el correo como verificado** (`OB-11`, resuelta). No se envía correo
+de activación y la cuenta entra directamente en `ACTIVE`.
+
+| | Alta con email | **Alta con Google** |
+|---|---|---|
+| Estado inicial | `PENDING_ACTIVATION` | **`ACTIVE`** |
+| Correo de activación | Sí | **No** |
+| Créditos de bienvenida | Al activar | **En el alta** |
+| Puede escribir | Tras activar | **De inmediato** |
+
+El motivo es sencillo: Google ya ha comprobado que esa dirección pertenece a quien la usa.
+Mandar un correo de activación sería **pedirle al usuario que demuestre algo ya demostrado**, y
+la única consecuencia sería perder gente en un paso que no aporta seguridad.
+
+Lo que no cambia: la **aceptación legal sigue siendo obligatoria** (`T-4`). Sin ella no se crea
+la cuenta, venga de donde venga.
+
+## Reglas de negocio## Reglas de negocio
 
 - `RN-1` **No se crea ninguna cuenta sin aceptación de los documentos legales vigentes.**
   Es la misma exigencia que en el registro con email (`FEAT-USR-024`), y se aplica aunque
@@ -158,7 +177,8 @@ el contrato cuando se retomen. Cada uno tiene su adaptador en `Infrastructure` t
 
 ## Estado
 
-**Especificación:** `DRAFT`. La regla legal está cerrada en backend. Faltan `OB-11` y la
-elección de interfaz entre las opciones A y B.
+**Especificación:** `APPROVED` (2026-09-24). `OB-11` resuelta: la cuenta nace activada. Lo
+que queda —vincular varios proveedores, dónde viven los textos legales— no impide
+implementar el alta.
 
 **Implementación:** `TODO`.

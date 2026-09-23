@@ -4,7 +4,7 @@ title: Responder y enviar el cuestionario de corrección
 context: Feedback
 concept: Correction
 actors: [BetaReader]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -17,7 +17,7 @@ endpoints:
   - PUT /chapters/{chapterId}/correction/draft
 depends_on: [FEAT-WRK-014, FEAT-RDG-001, FEAT-CRD-016]
 events: [FeedbackSubmitted]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-FBK-003 — Responder y enviar el cuestionario de corrección
@@ -55,7 +55,8 @@ suelto sobre un fragmento.
 | Actor | Puede | Condición |
 |---|---|---|
 | `BetaReader` | Responder y enviar una corrección | Tiene acceso concedido a la obra y la obra está `IN_CORRECTION` |
-| `User` sin acceso | Leer, si la obra lo permite | **No** ve el panel de corrección (`R-4`) |
+| `User` en obra `PUBLIC` | **Corregir directamente.** Empezar concede el acceso | Obra `IN_CORRECTION` y saldo del autor suficiente |
+| `User` en obra `ON_REQUEST` o `PRIVATE` | Corregir **tras obtener acceso** | Solicitud aceptada o invitación |
 | `Writer` | Recibir y leer la corrección | Es el autor de la obra |
 | `Writer` sobre su propia obra | **No** puede corregirse a sí mismo | `RN-8` |
 
@@ -67,7 +68,7 @@ corrección es una operación de escritura.
 
 1. La obra está en estado `IN_CORRECTION`
    ([`FEAT-WRK-016`](../work/FEAT-WRK-016-work-status.md)).
-2. El lector tiene acceso de lector beta concedido (`FEAT-RDG-001` o `FEAT-RDG-002`).
+2. El lector puede corregir esa obra según su modalidad (ver abajo).
 3. El capítulo era **corregible** al empezar: el saldo del autor cubría su precio
    ([`FEAT-CRD-009`](../credits/FEAT-CRD-009-balance-check-on-correction-start.md)).
 4. El autor ha configurado el cuestionario ([`FEAT-WRK-014`](../work/FEAT-WRK-014-configure-questionnaire.md)).
@@ -79,6 +80,33 @@ quedarse sin saldo. Si ocurre, **el lector cobra igualmente** y el autor queda e
 
 Nadie escribe una crítica y se queda sin cobrar. Esa es la única garantía que el lector
 necesita, y no hace falta apartar créditos para dársela.
+
+## Quién puede corregir: el acceso lo concede el propio acto
+
+**En una obra `PUBLIC`, pulsar «Empezar corrección» concede el acceso de lector beta** (`R-4`,
+resuelta). No hay solicitud previa ni espera.
+
+| Modalidad de la obra | Qué hace falta para corregir |
+|---|---|
+| `PUBLIC` | **Nada.** Empezar concede el acceso (`FEAT-RDG-001`) |
+| `ON_REQUEST` | Solicitud aceptada por el autor |
+| `PRIVATE` | Invitación del autor |
+
+Tres motivos por los que es así:
+
+1. **`PUBLIC` ya expresa la voluntad del autor.** Significa literalmente «cualquiera puede».
+   Exigir además una solicitud sería pedirle permiso a quien ya dijo que sí.
+2. **La fricción rompe el ciclo del producto.** El recorrido es *descubrir → leer → corregir*,
+   y una espera en medio cae justo en el punto donde el lector estaba dispuesto a trabajar
+   gratis. Quien recibe un «espera a que el autor te acepte» no suele volver.
+3. `FEAT-RDG-001` ya lo decía: *«convertirse en lector beta automáticamente en obra
+   `PUBLIC`»*. Lo que contradecía el modelo no era esa funcionalidad, sino la precondición que
+   esta ficha tenía antes.
+
+**El autor no pierde control:** elige la modalidad, puede cerrar la obra a corrección en
+cualquier momento y su ajuste global de privacidad sigue actuando como techo
+([`FEAT-USR-038`](../user/FEAT-USR-038-privacy-settings.md)). Si quiere filtrar quién le
+corrige, la herramienta es `ON_REQUEST`, no complicar `PUBLIC`.
 
 ## Reglas de negocio
 
@@ -230,7 +258,8 @@ cuestionario creado por el autor», con contador por respuesta y los botones «E
 
 - [ ] Un lector beta con acceso puede enviar una corrección de un capítulo de una obra `IN_CORRECTION`.
 - [ ] El mismo lector puede corregir varios capítulos de la misma obra.
-- [ ] Quien no tiene acceso recibe `403` y no ve el cuestionario.
+- [ ] En una obra `PUBLIC`, empezar una corrección concede el acceso sin pasos previos.
+- [ ] En `ON_REQUEST` y `PRIVATE`, quien no tiene acceso recibe `403` y no ve el cuestionario.
 - [ ] El autor no puede corregir su propia obra.
 - [ ] Enviar dos veces la misma corrección no crea dos correcciones ni dos abonos.
 - [ ] Una respuesta por debajo del mínimo **de palabras** se rechaza con `422` indicando la pregunta.
@@ -244,7 +273,6 @@ cuestionario creado por el autor», con contador por respuesta y los botones «E
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **R-4** | ¿Hace falta acceso de lector beta previo, o «Empezar corrección» lo concede? | Decide si la reserva ocurre antes o al abrir el panel |
 | **C-41** | ¿Cuántas correcciones simultáneas admite un capítulo? | Acota el descubierto por carrera **sin apartar créditos** |
 | **R-10** | ¿Hay tope de correcciones por obra o por capítulo? | Trocear una obra en cuarenta capítulos multiplica el coste por cuarenta |
 | Q-5 | Si el autor cierra la corrección, ¿qué pasa con los borradores en curso? | Trabajo del lector perdido |
@@ -252,7 +280,8 @@ cuestionario creado por el autor», con contador por respuesta y los botones «E
 | Q-7 | ¿Puede el lector ver después sus propias correcciones enviadas? | `FEAT-FBK-010` |
 | Q-9 | ¿Se notifica al lector cuando el autor lee o valora su corrección? | Cierra el bucle de reputación |
 
-Resueltas: `R-2` (**por capítulo**), `R-5` (**palabras**), `Q-3`/`Q-4` (habrá control
+Resueltas: `R-4` (**en obra `PUBLIC`, empezar concede el acceso**), `R-2` (**por capítulo**),
+`R-5` (**palabras**), `Q-3`/`Q-4` (habrá control
 antifraude, [`FEAT-FBK-012`](FEAT-FBK-012-correction-fraud-control.md)) y **`R-1`**, que
 desaparece al eliminarse la retención.
 
@@ -266,7 +295,8 @@ que se ha quitado.
 
 ## Estado
 
-**Especificación:** `DRAFT`. El modelo de datos ya está determinado (`R-2` resuelta). Falta
-`R-1` y `R-4` para llegar a `APPROVED`.
+**Especificación:** `APPROVED` (2026-09-24). `R-4` resuelta: en obra `PUBLIC` el acceso lo
+concede el propio acto de empezar. Es la ficha central del producto y ya no depende de
+ninguna decisión pendiente.
 
 **Implementación:** `TODO`.

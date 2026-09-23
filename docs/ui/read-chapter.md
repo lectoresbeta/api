@@ -171,7 +171,7 @@ mismo motor que las recomendaciones de la Home (`FEAT-COM-017`).
 | R-12 | ¿Se avisa al autor de que alguien ha empezado a corregirle? | Le permitiría reponer saldo y evitar que la corrección llegue bloqueada |
 | **W-17** | ¿Se repiten en cada capítulo preguntas que hablan de «la historia» o «el final»? | El autor pagaría por preguntas sin respuesta posible |
 | **R-10** | ¿Hay tope de correcciones por obra? | Trocear una novela en cuarenta capítulos multiplica el coste por cuarenta |
-| R-4 | ¿Quién puede ver «Empezar corrección»? ¿Hace falta acceso de lector beta previo? | Hasta ahora el acceso se concedía antes de leer |
+| R-4 | ¿Quién puede ver «Empezar corrección»? | **Resuelta:** en obra `PUBLIC`, cualquiera; empezar concede el acceso. `ON_REQUEST` y `PRIVATE` exigen permiso previo |
 | R-6 | ¿Se puede leer el capítulo sin acceso de lector beta? | La pantalla no distingue |
 | R-8 | ¿Caduca un borrador de corrección? | Con un borrador por capítulo, el saldo inmovilizado se multiplica |
 | H-3 | ¿Qué cuenta como «lectura»? | Tercera vez que aparece sin definir |

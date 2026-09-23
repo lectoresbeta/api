@@ -4,7 +4,7 @@ title: Crear obra con el editor WYSIWYG
 context: Work
 concept: Manuscript
 actors: [Writer]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -12,7 +12,7 @@ sources:
 endpoints: [POST /works, POST /works/{workId}/chapters]
 events: [WorkCreated]
 depends_on: [FEAT-USR-004]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-WRK-001 — Crear obra con el editor WYSIWYG
@@ -43,6 +43,55 @@ petición**: sería una vía directa a crear obras en nombre de otro.
 
 Crear una obra **no requiere créditos**. Los créditos se consumen al recibir feedback, no al
 publicar.
+
+## Cómo se almacena el contenido
+
+**HTML saneado con lista blanca corta, más texto plano derivado** (`Q-4`, resuelta).
+
+```text
+content_html  ← lo que se guarda, saneado al escribir
+content_text  ← derivado, fuente de verdad para el recuento y la búsqueda
+```
+
+### La lista blanca
+
+| Se admite | Para qué |
+|---|---|
+| `p`, `br` | Párrafos y saltos |
+| `strong`, `em` | **Negrita** y *cursiva* |
+| `blockquote` | Citas |
+| `h2`, `h3` | Subtítulos dentro de un capítulo |
+| `hr` | Separador de escena |
+
+Y **nada más**. En particular:
+
+- **Sin enlaces.** Ni `<a>` ni imágenes incrustadas. La literatura no los necesita, y quitarlos
+  elimina de golpe el vector de spam más obvio y la mitad de la complejidad del saneado. Es
+  una restricción que casi nadie echará de menos y que ahorra problemas durante años.
+- Sin tablas, sin estilos en línea, sin `span`, sin `div`.
+
+### Dos reglas que son la mitad del valor
+
+**Se sanea al escribir, nunca al renderizar.** No se guarda nada que no se estaría dispuesto a
+servir. Si el saneado ocurriera en la lectura, cualquier camino nuevo hacia esos datos —una
+exportación, un correo, una API futura— se convertiría en un agujero.
+
+**El recuento de palabras se hace sobre `content_text`**, no sobre el HTML. No es un detalle de
+implementación: de ese número depende **el precio de toda corrección**
+([`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md) `RN-8`), así que tiene que
+ser estable y no depender del marcado.
+
+### Por qué HTML y no Markdown
+
+Markdown sería más seguro por construcción y más fácil de contar. Pierde en lo que más ocurre
+aquí: **un autor pegando cincuenta mil palabras desde Word**. Un editor visual sobre HTML
+saneado absorbe ese pegado; uno sobre Markdown produce un desastre que el autor tiene que
+limpiar a mano.
+
+La tercera opción —una estructura propia tipo JSON— tenía sentido cuando el feedback se
+anclaba a fragmentos del texto. Desde que la corrección es un cuestionario
+([`decision:0006`](../../decisions/0006-credit-system.md)) esa necesidad desapareció, y con
+ella su principal ventaja.
 
 ## Reglas de negocio
 
@@ -148,20 +197,26 @@ a después.
 - [ ] Una petición sin sesión recibe `401`.
 - [ ] El contenido enriquecido se almacena saneado frente a inyección de HTML y scripts.
 
+## Estado inicial y forma de la creación
+
+- `Q-1`, resuelta: una obra nace en **`DRAFT`**. Es el único valor seguro: nacer visible
+  expondría contenido inédito por un descuido.
+- `Q-2`, resuelta: la creación es **incremental**. Se crea la obra con sus metadatos y después
+  se añaden capítulos. Una novela de cuarenta capítulos no cabe en una petición, y obligar a
+  ello convertiría cada guardado en un envío completo.
+
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| Q-1 | ¿Cuáles son la visibilidad y la modalidad de acceso por defecto? | Una obra visible por error expondría contenido inédito |
-| Q-2 | ¿Creación atómica con fragmentos o incremental? | Diseño del endpoint y del agregado |
 | Q-3 | ¿Qué ocurre si falla la generación del registro de autoría? | ¿Es parte de la transacción o asíncrono? |
-| Q-4 | ¿Qué formato enriquecido se admite y cómo se almacena (HTML saneado, Markdown, estructura propia)? | Persistencia, saneado y cálculo de palabras |
 | Q-5 | ¿Hay borradores con guardado automático? | Cambia el ciclo de vida de la obra (`W-5`) |
 | Q-6 | ¿Qué metadatos son obligatorios: temática, sinopsis, portada? | Validación y búsqueda |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Para llegar a `APPROVED` hacen falta: la página de Figma del
-editor y las respuestas a `Q-1`, `Q-2` y `Q-4`.
+**Especificación:** `APPROVED` (2026-09-24). `Q-4`, `Q-1` y `Q-2` resueltas. Lo que queda
+—registro de autoría, guardado automático, metadatos obligatorios— no impide implementar
+la creación de una obra.
 
 **Implementación:** `TODO`.

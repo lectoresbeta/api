@@ -4,7 +4,7 @@ title: Comentar una publicación
 context: Community
 concept: Interaction
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -14,7 +14,7 @@ sources:
 endpoints: [GET /posts/{postId}/comments, POST /posts/{postId}/comments]
 events: [PostCommented]
 depends_on: [FEAT-COM-002]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-COM-006 — Comentar una publicación
@@ -96,11 +96,29 @@ aparte.
 - [ ] Con la cuenta sin activar devuelve `403`.
 - [ ] Se publica `PostCommented` y el autor de la publicación recibe el aviso.
 
+## «Más relevantes»: la fórmula
+
+```text
+puntuación = apoyos + 2 × respuestas
+```
+
+Desempate: **el más antiguo primero**, que es quien abrió la conversación.
+
+**Sin decaimiento temporal** (`I-1`, resuelta). Un comentario vive bajo una publicación que ya
+tiene su propia antigüedad, así que penalizar el paso del tiempo dos veces no aporta nada y
+complica la consulta.
+
+Que una respuesta pese el doble que un apoyo es deliberado: responder cuesta más que pulsar un
+botón, y un comentario que genera conversación es más relevante que uno que solo gusta.
+
+Es una fórmula distinta —y más simple— que la del catálogo
+([`decision:0008`](../../decisions/0008-catalogue-ordering.md)), porque resuelve un problema
+distinto: ordenar cincuenta comentarios, no repartir trabajo entre miles de obras.
+
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **I-1** | ¿Cómo se calcula «Más relevantes»? ¿Qué otras opciones hay? | Sin fórmula no hay consulta. Compartido con `CM-4` |
 | I-3 | ¿Se pueden editar o eliminar los comentarios propios? | El menú «···» no tiene diseño |
 | I-4 | ¿Cuántos comentarios se cargan de inicio? | La captura muestra uno |
 | I-7 | ¿Un comentario admite adjuntos? | El compositor solo ofrece emoji |
@@ -108,7 +126,7 @@ aparte.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Lo básico está definido; `I-1` bloquea la ordenación por
-relevancia, no la funcionalidad entera.
+**Especificación:** `APPROVED` (2026-09-24). `I-1` resuelta. Las preguntas que quedan
+son detalles de interfaz.
 
 **Implementación:** `TODO`.

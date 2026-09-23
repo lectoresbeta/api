@@ -115,7 +115,7 @@ periodo.
 | CM-1 | ¿Qué diferencia exactamente "reaccionar con emoji" de dar un "like"? El documento los lista por separado | Modelo de interacción |
 | CM-2 | ¿Qué emojis están disponibles? ¿Catálogo cerrado? | Modelo de `Reaction` |
 | CM-3 | ¿Qué periodos admiten los rankings: semana, mes, año, histórico? | Read models e índices |
-| CM-4 | ¿Cómo se puntúa exactamente cada ranking? El documento dice "mejor valorados" sin definir la fórmula | **Bloqueante** para implementar rankings |
+| CM-4 | ¿Cómo se puntúa cada **ranking**? El catálogo y los comentarios ya están resueltos ([`decision:0008`](../decisions/0008-catalogue-ordering.md) y `FEAT-COM-006`); faltan los rankings | Sin fórmula no hay clasificación |
 | CM-5 | ¿El ranking de lectores se filtra por periodo? | El documento lo deja abierto |
 | CM-6 | ¿Los rankings se calculan en tiempo real o por proceso programado? (`D-5`) | Arquitectura del read model |
 | CM-7 | ¿Los mensajes directos necesitan tiempo real (WebSocket)? | Podría justificar separar `Messaging` (`BC-1`) |

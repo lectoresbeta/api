@@ -4,7 +4,7 @@ title: Activar la cuenta desde el enlace enviado por email
 context: User
 concept: Account
 actors: [Guest, User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [POST /auth/activate]
 events: [AccountActivated]
 depends_on: [FEAT-USR-001, FEAT-NOT-008, FEAT-USR-025]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-USR-020 — Activar la cuenta desde el enlace enviado por email
@@ -45,7 +45,15 @@ dispositivo o navegador.
 - Existe una cuenta en estado `PENDING_ACTIVATION`.
 - Se ha emitido un token de activación asociado a esa cuenta.
 
-## Reglas de negocio
+## Quien entra con Google no pasa por aquí
+
+**El alta con Google marca el correo como verificado** y crea la cuenta ya en `ACTIVE`
+(`OB-11`, resuelta, ver [`FEAT-USR-002`](FEAT-USR-002-register-with-google.md)). No se genera
+token ni se envía correo de activación.
+
+Esta funcionalidad aplica solo al alta con correo y contraseña.
+
+## Reglas de negocio## Reglas de negocio
 
 - `RN-1` El token es de un solo uso: al activarse la cuenta queda invalidado.
 - `RN-2` El token es largo, aleatorio y no enumerable. No se deriva del email ni del `UserId`.
@@ -167,8 +175,7 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resuelto lo esencial: qué desbloquea la activación y cuándo se
-abonan los créditos. Para llegar a `APPROVED` falta confirmar `OB-11` (si Google entra ya
-activo) y la caducidad del token (`OB-9`).
+**Especificación:** `APPROVED` (2026-09-24). `OB-11` resuelta. Lo que queda —duración del
+token, caducidad de cuentas nunca activadas— son constantes y una política posterior.
 
 **Implementación:** `TODO`.

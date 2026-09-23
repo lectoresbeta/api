@@ -17,17 +17,17 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 43 | 26 | 14 | 0 |
-| `Work` (WRK) | 17 | 6 | 1 | 0 |
+| `User` (USR) | 43 | 26 | 16 | 0 |
+| `Work` (WRK) | 17 | 6 | 3 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
-| `Feedback` (FBK) | 12 | 4 | 2 | 0 |
-| `Community` (COM) | 36 | 9 | 3 | 0 |
+| `Feedback` (FBK) | 12 | 4 | 3 | 0 |
+| `Community` (COM) | 36 | 9 | 4 | 0 |
 | `Moderation` (MOD) | 12 | 10 | 10 | 0 |
 | `Credits` (CRD) | 19 | 9 | 9 | 0 |
 | `Notification` (NOT) | 9 | 1 | 1 | 0 |
-| **Total** | **158** | **65** | **40** | **0** |
+| **Total** | **158** | **65** | **46** | **0** |
 
-Estado global: **especificación cerrada en su mayor parte**. 40 de 65 fichas están
+Estado global: **especificación cerrada en su mayor parte**. 46 de 65 fichas están
 `APPROVED` y son implementables. No hay código en `src/`.
 
 Áreas cubiertas con diseño:
@@ -58,7 +58,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-USR-001 | Registro con email y contraseña | Guest | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-001-register-with-email.md) |
-| FEAT-USR-002 | Registro con cuenta de Google | Guest | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-002-register-with-google.md) |
+| FEAT-USR-002 | Registro con cuenta de Google | Guest | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-002-register-with-google.md) |
 | FEAT-USR-003 | Registro con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-004 | Login con email y contraseña | Guest | PENDING | TODO | P0 | — |
 | FEAT-USR-005 | Login con cuenta de Google | Guest | PENDING | TODO | P0 | — |
@@ -76,7 +76,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-017 | Buscar autores por nombre o temática | User | PENDING | TODO | P1 | — |
 | FEAT-USR-018 | Invitar a personas a la plataforma por email | User | PENDING | TODO | P2 | — |
 | FEAT-USR-019 | Registro y login con LinkedIn | Guest | APPROVED | DEFERRED | P3 | [ficha](user/FEAT-USR-019-linkedin-oauth.md) |
-| FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
+| FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
 | FEAT-USR-021 | Reenviar el email de activación | Guest, User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
 | FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
 | FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
@@ -154,7 +154,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-WRK-001 | Crear obra con el editor WYSIWYG | Writer | DRAFT | TODO | P0 | [ficha](work/FEAT-WRK-001-create-work-with-editor.md) |
+| FEAT-WRK-001 | Crear obra con el editor WYSIWYG | Writer | APPROVED | TODO | P0 | [ficha](work/FEAT-WRK-001-create-work-with-editor.md) |
 | FEAT-WRK-002 | Crear obra subiendo un fichero (.doc, .pdf, .txt) | Writer | PENDING | TODO | P1 | — |
 | FEAT-WRK-003 | Estructurar la obra en fragmentos | Writer | PENDING | TODO | P0 | — |
 | FEAT-WRK-004 | Ver el contenido de una obra | Writer, BetaReader | PENDING | TODO | P0 | — |
@@ -165,7 +165,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-009 | Generar el registro de autoría | Writer | PENDING | BLOCKED | P1 | — |
 | FEAT-WRK-010 | Crear enlace público para leer y comentar sin sesión | Writer | PENDING | TODO | P2 | — |
 | FEAT-WRK-011 | Generar enlace para compartir en redes sociales y captar LB | Writer | PENDING | TODO | P2 | — |
-| FEAT-WRK-012 | Sección «Leer» — catálogo con filtros y ordenación | User | DRAFT | TODO | P1 | [ficha](work/FEAT-WRK-012-browse-catalogue.md) |
+| FEAT-WRK-012 | Sección «Leer» — catálogo con filtros y ordenación | User | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-012-browse-catalogue.md) |
 | FEAT-WRK-013 | Calcular el número de palabras y el nivel de extensión | — (sistema) | PENDING | TODO | P0 | — |
 | FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | DRAFT | TODO | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
 | FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | DRAFT | TODO | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
@@ -197,7 +197,7 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-RDG-001 | Convertirse en LB automáticamente (obra `PUBLIC`) | Reader | PENDING | TODO | P0 | — |
+| FEAT-RDG-001 | Convertirse en LB automáticamente al empezar a corregir (obra `PUBLIC`) | Reader | PENDING | TODO | P0 | — |
 | FEAT-RDG-002 | Solicitar ser LB de una obra (obra `ON_REQUEST`) | Reader | PENDING | TODO | P0 | — |
 | FEAT-RDG-003 | Aceptar o rechazar una solicitud de LB | Writer | PENDING | TODO | P0 | — |
 | FEAT-RDG-004 | Invitar a un usuario a ser LB de una obra | Writer | PENDING | TODO | P1 | — |
@@ -208,6 +208,14 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 | FEAT-RDG-009 | Aceptar o rechazar una propuesta de writing buddy | User | PENDING | TODO | P2 | — |
 | FEAT-RDG-010 | Revocar el acceso de un lector beta | Writer | PENDING | DEFERRED | P3 | — |
 
+> **`R-4` resuelta (2026-09-24):** en una obra `PUBLIC`, **empezar a corregir concede el
+> acceso**. No hay solicitud previa ni espera. `ON_REQUEST` y `PRIVATE` mantienen su flujo.
+> `FEAT-RDG-001` pasa de ser una funcionalidad aparte a ser **el mecanismo** que dispara
+> `FEAT-FBK-003`.
+>
+> El motivo es de producto: el recorrido es *descubrir → leer → corregir*, y meter una espera
+> en medio cae justo donde el lector estaba dispuesto a trabajar gratis.
+>
 > `FEAT-RDG-010` no aparece en el material de partida. Se registra porque su ausencia es
 > probablemente un olvido, no una decisión (`A-4`, `R-1`).
 
@@ -221,7 +229,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 |---|---|---|---|---|---|---|
 | FEAT-FBK-001 | Dejar feedback sobre una obra o fragmento | BetaReader | PENDING | TODO | P0 | — |
 | FEAT-FBK-002 | Valorar una obra | BetaReader | PENDING | TODO | P1 | — |
-| FEAT-FBK-003 | Responder y enviar el cuestionario de corrección | BetaReader | DRAFT | TODO | P0 | [ficha](feedback/FEAT-FBK-003-answer-correction-questionnaire.md) |
+| FEAT-FBK-003 | Responder y enviar el cuestionario de corrección | BetaReader | APPROVED | TODO | P0 | [ficha](feedback/FEAT-FBK-003-answer-correction-questionnaire.md) |
 | FEAT-FBK-004 | Ver los comentarios recibidos | Writer | PENDING | TODO | P0 | — |
 | FEAT-FBK-005 | Contestar a un comentario recibido | Writer | PENDING | TODO | P1 | — |
 | FEAT-FBK-006 | Valorar positivamente un comentario recibido | Writer | PENDING | TODO | P1 | — |
@@ -272,7 +280,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-003 | Publicar buscando lectores beta para una obra | Writer | PENDING | TODO | P1 | — |
 | FEAT-COM-004 | Publicar buscando writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | PENDING | TODO | P2 | — |
-| FEAT-COM-006 | Comentar una publicación | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-006-comment-on-post.md) |
+| FEAT-COM-006 | Comentar una publicación | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-006-comment-on-post.md) |
 | FEAT-COM-007 | Reaccionar con emoji a una publicación | User | PENDING | TODO | P2 | — |
 | FEAT-COM-008 | Apoyar una publicación con un "me gusta" | User | PENDING | TODO | P2 | — |
 | FEAT-COM-009 | Filtrar y buscar publicaciones (tipo, texto, usuario, fecha) | User | PENDING | TODO | P2 | — |
@@ -547,11 +555,10 @@ El sistema de créditos quedó cerrado el 2026-09-23 en
 [`decision:0006`](../decisions/0006-credit-system.md): ya no hay ninguna decisión de producto
 pendiente que impida implementarlo.
 
-### Las 25 fichas que siguen en `DRAFT`, y por qué
+### Las 19 fichas que siguen en `DRAFT`, y por qué
 
-El 2026-09-24 se aprobaron **40 de las 65 fichas**. Las 25 restantes están agrupadas aquí
-**por la decisión que las bloquea**, no por ficha: son **17 decisiones**, y varias desbloquean
-más de una a la vez.
+El 2026-09-24 hay **46 de 65 fichas en `APPROVED`**. Las 19 restantes están agrupadas aquí
+**por la decisión que las bloquea**: son **13 decisiones**, y varias desbloquean más de una.
 
 Criterio aplicado: una ficha se aprueba si es **implementable tal como está**. Una pregunta
 abierta que solo afecta a una constante, a un texto de interfaz o a una fase posterior no
@@ -559,39 +566,24 @@ bloquea; una que cambia **el modelo, el contrato o una regla de negocio**, sí.
 
 | # | Decisión pendiente | Bloquea |
 |---|---|---|
-| 1 | **`CM-4`** — la fórmula de relevancia | FEAT-COM-006, FEAT-COM-017, FEAT-WRK-012 |
-| 2 | **`Q-4`** — cómo se almacena el contenido de una obra | FEAT-WRK-001 |
-| 3 | **`OB-11`** — si el alta con Google crea la cuenta ya activada | FEAT-USR-002, FEAT-USR-020 |
-| 4 | **`W-9`** — si `WorkStatus` sustituye a `Visibility` | FEAT-WRK-016, y con ella FEAT-WRK-015 |
-| 5 | **`S-13`** — qué opciones tienen los desplegables de privacidad | FEAT-USR-038 |
-| 6 | **`S-11`, `S-12`** — qué tipos de aviso existen | FEAT-USR-039 |
-| 7 | **`OB-14`** — el catálogo de géneros | FEAT-USR-023 |
-| 8 | **`N-2`, `OB-7`** — si el nombre público es único y si hay edad mínima | FEAT-USR-022 |
-| 9 | **`U-3`, `V-4`** — qué pasa con obras y mensajes al anonimizar | FEAT-USR-013 |
-| 10 | **`T-1`** — dónde viven los textos legales | FEAT-USR-024 |
-| 11 | **`C-1`, `C-2`** — opciones de audiencia y si se admite vídeo | FEAT-COM-002 |
-| 12 | **`C-3`** — si un repost es un puntero o una entidad | FEAT-COM-019 |
-| 13 | **`B-2`, `B-3`** — efectos de bloquear a un usuario | FEAT-COM-034 |
-| 14 | **`W-17`, `W-12`** — alcance de cada pregunta y consulta de precio | FEAT-WRK-014 |
-| 15 | **`R-4`** — si corregir exige acceso previo de lector beta | FEAT-FBK-003 |
-| 16 | **`AF-1`, `AF-2`** — mecanismo antifraude | FEAT-FBK-012 |
-| 17 | **`F-2`** — si se conserva la foto original | FEAT-USR-037 |
-| 18 | **`N-11`** — forma de la URL de perfil | FEAT-USR-035 |
-| 19 | **`L-9`** — cómo llega la insignia al catálogo sin acoplar contextos | FEAT-WRK-012 |
-| 20 | **`R-1`** (de `FEAT-USR-021`) — si el reenvío de activación se pide sin sesión | FEAT-USR-021 |
-| 21 | **`H-8`** — qué compone el muro de quien no sigue a nadie | FEAT-COM-018 |
-| 22 | **`U-20`** — si la lista de seguidores es pública | FEAT-USR-014 |
+| 1 | **`S-13`** — qué opciones tienen los desplegables de privacidad | FEAT-USR-038 |
+| 2 | **`S-11`, `S-12`** — qué tipos de aviso existen | FEAT-USR-039 |
+| 3 | **`OB-14`** — el catálogo de géneros | FEAT-USR-023 |
+| 4 | **`N-2`, `OB-7`** — si el nombre público es único y si hay edad mínima | FEAT-USR-022 |
+| 5 | **`U-3`, `V-4`** — qué pasa con obras y mensajes al anonimizar | FEAT-USR-013 |
+| 6 | **`T-1`** — dónde viven los textos legales | FEAT-USR-024 |
+| 7 | **`W-9`** — si `WorkStatus` sustituye a `Visibility` | FEAT-WRK-016, y con ella FEAT-WRK-015 |
+| 8 | **`W-17`, `W-12`** — alcance de cada pregunta y consulta de precio | FEAT-WRK-014 |
+| 9 | **`C-1`, `C-2`** — opciones de audiencia y si se admite vídeo | FEAT-COM-002 |
+| 10 | **`C-3`** — si un repost es un puntero o una entidad | FEAT-COM-019 |
+| 11 | **`B-2`, `B-3`** — efectos de bloquear a un usuario | FEAT-COM-034 |
+| 12 | **`AF-1`, `AF-2`** — mecanismo antifraude | FEAT-FBK-012 |
+| 13 | Cinco sueltas: `F-2`, `N-11`, `R-1`, `H-8`, `U-20`, `CM-4` (rankings) | FEAT-USR-037, FEAT-USR-035, FEAT-USR-021, FEAT-COM-018, FEAT-USR-014, FEAT-COM-017 |
 
-**`CM-4` es la más rentable**: desbloquea tres fichas de golpe y además los tres rankings, que
-ni siquiera tienen ficha todavía. Es el quinto sitio donde aparece.
-
-**`Q-4` es la más urgente** si se quiere tocar `Work`: decide la persistencia, el saneado y el
-recuento de palabras, del que depende el precio de toda corrección.
-
-Resueltas recientemente: `S-1` (JWT,
-[`decision:0007`](../decisions/0007-jwt-sessions.md)), `W-20` (catálogo de etiquetas de
-contenido), `C-14`, `R-1` de créditos, `R-2`, `MOD-1` a `MOD-45` y toda la economía
-([`decision:0006`](../decisions/0006-credit-system.md)).
+Resueltas el 2026-09-24: `S-1` ([`decision:0007`](../decisions/0007-jwt-sessions.md)), `W-20`,
+`CM-4` para catálogo y comentarios más `L-9`
+([`decision:0008`](../decisions/0008-catalogue-ordering.md)), `Q-4`, `Q-1`, `Q-2`, `R-4` y
+`OB-11`.
 
 Las referencias `OB-n` están en [`../ui/account-creation.md`](../ui/account-creation.md).
 
