@@ -146,7 +146,7 @@ Solo el autor de la obra.
 ### Reglas aplicadas
 
 - Al menos una pregunta; como máximo `N` (`W-11`).
-- No altera retenciones ni correcciones en curso.
+- No altera el precio de las correcciones ya empezadas.
 - Se permite guardar aunque el autor no tenga saldo para el coste resultante: configurar no
   gasta; abrir la obra a corrección, sí.
 

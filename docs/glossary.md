@@ -28,8 +28,9 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Precio de una corrección | `CorrectionPrice` | `techo(palabras del capítulo / 1.000) + techo(palabras exigidas / 100)`, entre 2 y 20. Es a la vez lo que paga el autor y lo que cobra el lector. |
 | Palabras exigidas | `requiredWords` | Suma de los mínimos de palabras que el autor fija en las preguntas de su cuestionario. Un solo número que captura toda su exigencia, y el segundo término del precio. |
 | Propina | `CorrectionTip` | Créditos extra que el autor da **de su propio saldo** a una corrección que le ha servido. Es una transferencia, así que no altera la masa y es inmune a la colusión. |
-| Saldo negativo / descubierto | `negativeBalance` | El corrector cobra siempre; si el autor no llega, queda en negativo. Con saldo negativo no se reciben correcciones, pero **sí se pueden dar**: es como se sale. |
-| Corrección en descubierto | `OverdraftCorrection` | Corrección concedida a un autor sin saldo como gancho de reactivación. Existe, se ve que existe, pero no su contenido hasta que repone saldo. |
+| Saldo negativo / descubierto | `negativeBalance` | El corrector cobra siempre; si el autor no llega, queda en negativo. Con saldo negativo no se abren correcciones nuevas, pero **sí se pueden dar**: es como se sale. |
+| Corrección en descubierto | `OverdraftCorrection` | Corrección concedida a un autor sin saldo como gancho de reactivación, dentro de un **cupo periódico**. Se comporta como cualquier corrección bloqueada. |
+| Cupo de descubierto | `OverdraftQuota` | Número de correcciones en descubierto que la plataforma concede por periodo. Es el presupuesto de emisión del gancho de reactivación. |
 | Enlace público de corrección | `PublicCorrectionLink` | URL que el autor reparte fuera de la plataforma para que alguien corrija sin registrarse. **No cuesta créditos ni los da.** |
 | Biografía / Descripción | `bio` | Texto de presentación del usuario, **300 caracteres**. Es el mismo campo que se ve bajo la foto en «Mi perfil» y que se edita en Configuración. |
 | Cuenta anonimizada | `UserStatus: DELETED` | Cuenta eliminada: se suprimió todo dato personal y se conserva, sin autor identificable, lo que pertenece a terceros —correcciones pagadas, movimientos de créditos, comentarios—. Irreversible. |
@@ -63,8 +64,8 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Crédito | `Credit` | Unidad de la economía interna que equilibra dar y recibir feedback. |
 | Saldo de créditos | `CreditBalance` | Créditos disponibles de un usuario. |
 | Movimiento de créditos | `CreditTransaction` | Registro inmutable de una variación del saldo, con su motivo y su origen. |
-| Retención de créditos | `CreditHold` | Créditos bloqueados **al empezar una corrección**: el saldo no baja, deja de estar disponible. Se confirma al entregarse la corrección o se libera si caduca o se descarta. |
-| Saldo disponible | `availableBalance` | Saldo menos retenciones vigentes. **Es el que gobierna lo que el autor puede hacer** y el que se muestra en la interfaz. |
+| Precio anotado | `CorrectionPrice` | Importe que se fija al empezar una corrección y que se cargará y abonará al entregarla. **No bloquea créditos**: el saldo del autor sigue íntegro. |
+| Corrección bloqueada | `Correction` con `locked` | Corrección entregada que dejó el saldo del autor en negativo. El autor ve sus metadatos, no su contenido, hasta que repone saldo. |
 | Regla de créditos | `CreditRule` | Norma que traduce un hecho de negocio en una variación de créditos. |
 | ~~Clasificación del texto~~ | ~~`TextTier`~~ | **Derogado** ([`decision:0006`](decisions/0006-credit-system.md)). El precio ya no usa tramos sino una fórmula continua sobre el número de palabras. El recuento de palabras sigue existiendo; la clasificación en niveles, no. |
 | Invitación a la plataforma | `PlatformInvitation` | Invitación por email para que alguien se registre. Otorga créditos al invitador si el invitado participa. |

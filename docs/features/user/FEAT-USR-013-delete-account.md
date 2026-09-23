@@ -95,7 +95,7 @@ solicitar la supresión del contenido concreto, no cambiar la regla general (`S-
 | `U-3` | ¿Qué ocurre con las obras propias y con el feedback que otros les dedicaron? |
 | `S-33` | ¿Hay periodo de gracia para arrepentirse? |
 | `S-34` | ¿Qué pasa con los créditos del saldo? |
-| `S-35` | ¿Se puede eliminar la cuenta con retenciones vigentes? |
+| `S-35` | ¿Se puede eliminar la cuenta con **deuda** pendiente? |
 
 `S-33` gana importancia ahora: si la anonimización es irreversible —y lo es—, un clic por
 error no tiene vuelta atrás. Un periodo de gracia de unos días, durante el cual la cuenta no
@@ -113,8 +113,10 @@ Ninguna de las dos es aceptable sin más. La combinación que suele funcionar es
 obras de la circulación pero conservar las correcciones para quienes las escribieron**: el
 lector sigue viendo su trabajo en «Mis correcciones», sin acceso al texto original.
 
-`S-35` tiene respuesta clara: **no**, o hay que liberarlas primero. Una retención de una
-cuenta que ya no existe es saldo inmovilizado para siempre.
+`S-35` cambia de forma con el sistema de créditos definitivo: no hay retenciones que liberar,
+pero **sí puede haber deuda**. Una cuenta anonimizada con saldo negativo es, contablemente,
+crédito emitido que nadie va a devolver. Lo honesto es contabilizarlo como tal y no fingir que
+se cobra (`C-21`).
 
 `S-34` también apunta a una respuesta: los créditos **no tienen valor fuera de la
 plataforma**, así que se extinguen. Pero conviene decirlo, porque el usuario que se va con
@@ -177,7 +179,7 @@ Provisionales hasta resolver `U-3` y `S-32`:
 - [ ] Tras anonimizar, **ningún dato personal permanece** en la fila del usuario.
 - [ ] No existe forma de reconstruir la identidad desde los datos conservados.
 - [ ] Las correcciones y movimientos siguen resolviendo su `userId` sin romperse.
-- [ ] No quedan retenciones de créditos vivas de una cuenta eliminada.
+- [ ] La deuda de una cuenta eliminada se contabiliza como emisión, no se da por cobrada.
 - [ ] El texto de la advertencia coincide con lo que ocurre.
 
 ## Estado

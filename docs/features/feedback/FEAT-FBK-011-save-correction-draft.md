@@ -116,7 +116,7 @@ sincronizados y acaban divergiendo: enviar es una transición de estado, no una 
 | # | Pregunta | Impacto |
 |---|---|---|
 | R-7 | ¿Cuántos borradores simultáneos puede tener alguien? | Uno por capítulo ya está fijado; con la corrección por capítulo el número potencial se multiplica |
-| R-8 | ¿Caduca un borrador? | Si la obra tiene una retención asociada, retenerla indefinidamente bloquea crédito del autor |
+| R-8 | ¿Caduca un borrador? | **Ya no bloquea nada:** sin retenciones, un borrador eterno no inmoviliza saldo ajeno |
 | Q-5 | Si el autor cierra la corrección, ¿qué pasa con los borradores? | Trabajo perdido sin aviso |
 | Q-8 | ¿Se guarda solo o solo al pulsar «Guardar»? | La maqueta solo muestra el botón |
 

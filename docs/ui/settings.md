@@ -357,17 +357,14 @@ ganarle, el ajuste global sería una recomendación.
 
 ### La consecuencia en créditos
 
-Con la reserva previa
-([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)), conceder acceso
-a un lector beta **retiene créditos del autor**. Si el autor endurece después el ajuste
-global, hay lectores con acceso concedido que dejarían de poder corregir, y **retenciones que
-ya no se van a usar**.
+El sistema **no retiene créditos**
+([`decision:0006`](../decisions/0006-credit-system.md)), así que endurecer el ajuste no deja
+saldo inmovilizado. Queda una pregunta más simple: **qué pasa con quien está corrigiendo
+ahora mismo** (`S-36`).
 
-Queda por decidir qué ocurre con ellos (`S-36`). La opción que no destruye trabajo ajeno es
-**respetar los accesos ya concedidos** y aplicar la restricción solo a los nuevos: quien
-estaba a medio corregir termina, y la retención se consume como estaba previsto. La
-alternativa —revocar— obliga además a liberar la retención y a avisar al lector de que su
-trabajo ya no sirve.
+La opción que no destruye trabajo ajeno es que **quien ya empezó, termine**: entrega su
+corrección y cobra el precio anotado. Cortarla destruiría el trabajo de un tercero que no ha
+hecho nada mal.
 
 ### «¿Quién puede ver mi perfil?» tiene más alcance del que parece
 
@@ -431,7 +428,7 @@ lo primero tiene valor real. Ver `S-17`.
 | # | Pregunta | Impacto |
 |---|---|---|
 | **S-11** | ¿Se separan «corrección recibida» y «comentario en un capítulo» como avisos distintos? | Silenciar comentarios dejaría al autor sin enterarse de lo que ha pagado |
-| **S-36** | Al endurecer el ajuste global, ¿se respetan los accesos de lector beta ya concedidos? | Si se revocan, hay retenciones que liberar y trabajo a medias que se pierde |
+| **S-36** | Al endurecer el ajuste global, ¿puede terminar quien ya está corrigiendo? | Cortarlo destruiría trabajo real de un tercero |
 | **S-13** | ¿Qué opciones tienen los tres desplegables? | Definen enums usados en autorización |
 | **S-16** | ¿Qué es «actividad»? | Cambia qué se oculta y a quién |
 | **S-15** | Con el perfil restringido, ¿qué devuelve `/profile/{username}`: `403` o `404`? | Un `403` confirma que la cuenta existe |

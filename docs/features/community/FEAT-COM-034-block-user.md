@@ -43,9 +43,9 @@ tiene además un caso que otras plataformas no: **el acceso de lector beta y sus
 
 | Situación | Pregunta | Referencia |
 |---|---|---|
-| El bloqueado es **lector beta** de una obra del que bloquea | ¿Se le revoca el acceso? ¿Se libera la retención de créditos? | `B-2` |
+| El bloqueado es **lector beta** de una obra del que bloquea | ¿Se le revoca el acceso? ¿Puede terminar una corrección en curso? | `B-2` |
 | El bloqueado ya dejó **feedback** en una obra del que bloquea | ¿Se oculta? ¿Se conserva? El autor ya lo pagó | `B-3` |
-| Hay una **retención de créditos** viva por ese acceso | ¿Se libera, se confirma o se queda colgada? | `B-2` |
+| Hay una **corrección en curso** de esa persona | ¿La entrega y cobra, o se pierde su trabajo? | `B-2` |
 | Hay comentarios y respuestas cruzados en el muro | ¿Desaparecen o se conservan sin enlace? | `B-4` |
 
 `B-3` es el más delicado: el autor **ya pagó créditos** por ese feedback. Borrarlo le haría
@@ -72,7 +72,7 @@ conservarlo pero anonimizar al autor de cara al bloqueador, aunque eso también 
   consecuencias. `Community` **no** revoca accesos ni toca créditos por su cuenta.
 
 `RN-10` es lo que mantiene la arquitectura en pie: `Community` conoce relaciones sociales, no
-accesos a obras ni retenciones. Publica el hecho y cada contexto decide.
+accesos a obras ni créditos. Publica el hecho y cada contexto decide.
 
 ## Cómo se aplica sin acoplar contextos
 
@@ -81,7 +81,7 @@ Community: UserBlocked
      │
      ├──▶ Reading      ¿revoca el acceso de lector beta?        (B-2)
      ├──▶ Feedback     ¿oculta el feedback cruzado?             (B-3)
-     ├──▶ Credits      ¿libera la retención asociada?           (B-2)
+     ├──▶ Credits      ¿paga una corrección ya entregada?       (B-2)
      └──▶ Notification deja de enviar avisos entre ambos
 ```
 
@@ -135,7 +135,7 @@ ha bloqueado?», y la segunda es la que más se consulta.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **B-2** | ¿Bloquear revoca el acceso de lector beta y libera su retención de créditos? | **Económico.** Afecta a `Reading` y a `Credits` |
+| **B-2** | ¿Bloquear revoca el acceso de lector beta, y puede terminar quien ya estaba corrigiendo? | Cortarlo destruiría trabajo real de un tercero |
 | **B-3** | ¿Qué pasa con el feedback que el bloqueado ya dejó, y que el autor **ya pagó**? | Borrarlo le hace perder lo comprado; conservarlo contradice el bloqueo |
 | B-1 | ¿El perfil del que bloquea sigue siendo visible para el bloqueado? | Ocultarlo delata el bloqueo; mostrarlo lo hace parcial |
 | B-4 | ¿Qué ocurre con los comentarios cruzados ya publicados? | Hilos con huecos |

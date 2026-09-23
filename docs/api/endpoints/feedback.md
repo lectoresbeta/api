@@ -70,7 +70,7 @@ La corrección creada. **Sin importes de créditos**: el abono es asíncrono y l
 
 ### Efectos
 
-Publica `FeedbackSubmitted`. `Credits` confirma la retención del autor y abona al lector;
+Publica `FeedbackSubmitted`. `Credits` carga al autor y abona al lector;
 `Notification` avisa al autor. **Ambos efectos son asíncronos**: la respuesta HTTP confirma
 que la corrección se ha registrado, que es lo que el lector necesita saber.
 

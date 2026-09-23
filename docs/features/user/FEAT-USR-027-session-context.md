@@ -34,7 +34,7 @@ un menú lateral que no cambia.
 | `accountStatus` | `User` | Avisar si la cuenta está sin activar (`FEAT-USR-025`) |
 | `onboardingStatus` | `User` | Retomar el onboarding si quedó a medias |
 | `credits.available` | `Credits` | Bloque del menú lateral |
-| `credits.balance`, `credits.held` | `Credits` | Contexto del saldo retenido |
+| `credits.balance` | `Credits` | Un solo número, que puede ser **negativo** |
 | `unreadNotifications` | `Notification` | Punto de la campana |
 | `pendingTours` | `User` | Mostrar el tour (`FEAT-USR-026`) |
 
@@ -52,7 +52,7 @@ de ellos**. Se resuelve como composición explícita:
 GET /me/context   (Infrastructure)
         │
         ├──▶ contrato de consulta de User          → identidad y estados
-        ├──▶ contrato de consulta de Credits       → saldo, retenido, disponible
+        ├──▶ contrato de consulta de Credits       → saldo
         └──▶ contrato de consulta de Notification  → no leídas
 ```
 
@@ -85,7 +85,7 @@ forma independiente. Que no se pueda pintar el saldo no debería impedir navegar
 ## Frescura del saldo
 
 El saldo cambia por **eventos asíncronos**: alguien comenta una obra, se concede un acceso,
-se confirma una retención. Puede quedar obsoleto entre navegaciones.
+se entrega una corrección. Puede quedar obsoleto entre navegaciones.
 
 | Opción | Valoración |
 |---|---|
@@ -110,7 +110,7 @@ Respuesta `200`. Sin sesión, `401`.
 ## Criterios de aceptación
 
 - [ ] Devuelve identidad, estados, créditos, no leídas y tours pendientes en una sola llamada.
-- [ ] `credits` incluye los tres números: total, retenido y disponible.
+- [ ] `credits` es **un solo número**, que puede ser negativo.
 - [ ] No devuelve email ni fecha de nacimiento.
 - [ ] No permite consultar el contexto de otro usuario.
 - [ ] Si `Credits` no responde, devuelve el resto con el saldo marcado como no disponible.

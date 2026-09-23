@@ -15,9 +15,9 @@ Plantilla: [`../_templates/adr.md`](../_templates/adr.md).
 | [0001](0001-documentation-as-source-of-truth.md) | La documentación de `docs/` es la fuente de verdad del producto | Aceptada | 2026-09-21 |
 | [0002](0002-credits-as-isolated-bounded-context.md) | `Credits` es un bounded context aislado y solo accesible por eventos | Aceptada | 2026-09-21 |
 | [0003](0003-write-operations-require-activated-account.md) | Las operaciones de escritura exigen tener la cuenta activada | Aceptada | 2026-09-21 |
-| [0004](0004-credit-reservation-on-access-grant.md) | Los créditos se reservan al conceder acceso y se confirman al recibir el feedback | **Sustituida en parte por [0006](0006-credit-system.md)** | 2026-09-22 |
+| [0004](0004-credit-reservation-on-access-grant.md) | ~~Los créditos se reservan al conceder acceso~~ | **Sustituida por [0006](0006-credit-system.md)** | 2026-09-22 |
 | [0005](0005-username-with-temporary-aliases.md) | El nombre de usuario existe, es editable y deja un alias temporal al cambiarlo | Aceptada | 2026-09-22 |
-| [0006](0006-credit-system.md) | **Sistema de créditos: precio por esfuerzo, transferencia pura y retención al empezar la corrección** | Aceptada | 2026-09-23 |
+| [0006](0006-credit-system.md) | **Sistema de créditos: precio por esfuerzo, transferencia pura, sin retenciones y con saldo negativo como red** | Aceptada | 2026-09-23 |
 
 ## Decisiones pendientes
 

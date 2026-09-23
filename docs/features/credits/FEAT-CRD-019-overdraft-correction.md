@@ -23,8 +23,12 @@ updated: 2026-09-23
 A usuarios **seleccionados** que han dejado de participar se les permite recibir **una**
 corrección sin tener saldo.
 
-El corrector cobra con normalidad. El autor queda en negativo y **ve que la corrección existe,
-pero no su contenido**, hasta que reponga saldo. Recibe un correo avisándole.
+Lo que ocurre después no es nuevo: es exactamente lo que
+[`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md) ya describe —el corrector cobra, el autor
+queda en negativo y la corrección llega bloqueada—. **Esta ficha no añade mecánica; solo
+provoca a propósito una situación que el sistema ya sabe manejar**, y le pone un presupuesto.
+
+El autor recibe un correo avisándole.
 
 El mensaje se escribe solo, porque es la tesis de la plataforma en miniatura:
 
@@ -47,12 +51,46 @@ condiciones lo cambian por completo, y **las tres son obligatorias**:
 
 Si el autor había cerrado sus textos, no hay nada que cobrar y no hay gancho. Esa es la línea.
 
+## La selección se hace por cupo, no por antigüedad
+
+**Es la decisión que hace controlable este mecanismo.** En vez de activarlo para cada usuario
+al cumplir `N` días inactivo, se fija un **presupuesto periódico** —por ejemplo tres
+correcciones en descubierto por semana— y se eligen los mejores candidatos.
+
+| | Por plazo de cada usuario | **Por cupo periódico** |
+|---|---|---|
+| Deuda que se puede generar | Depende de cuánta gente cruce el umbral | **Acotada de antemano**: cupo × precio máximo |
+| Control | Indirecto, ajustando el umbral | **Directo**: un número |
+| A quién alcanza | A quien cumpla el plazo | **A los mejores candidatos** |
+| Apagarlo | Subir el umbral y esperar | Poner el cupo a 0 |
+
+Con tres por semana y un precio máximo de 20, la emisión no puede superar **60 créditos
+semanales**. Es la diferencia entre un mecanismo con presupuesto y uno con disparador: el
+segundo se dispara cuando le toca, el primero cuando tú decides y hasta donde tú decides.
+
+El cupo es un **techo de elegibilidad, no de deuda realizada**: la deuda solo aparece si
+alguien decide corregir a esos autores. Y la elegibilidad **caduca** al terminar el periodo:
+si no se usó, no se acumula.
+
+### Cómo se ordenan los candidatos
+
+Entre los que cumplen las condiciones obligatorias, se prefiere:
+
+| Criterio | Por qué |
+|---|---|
+| **Más correcciones dadas** | Mayor capacidad de devolver la deuda |
+| **Menos tiempo inactivo** | Más probable que vuelva. Quien lleva dos años fuera no vuelve por un correo |
+| **Obra con más interés** (lecturas, seguidores) | Más probable que alguien la corrija y el gancho llegue a existir |
+
+Y se excluye a quien **ya dejó una deuda sin saldar**: no se presta dos veces a quien no
+devolvió.
+
 ## Reglas de negocio
 
 - `RN-1` **Máximo una corrección en descubierto por autor.** Sale gratis de `RN-2` de
   [`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md): con saldo negativo no se reciben más.
-- `RN-2` Solo se concede a autores que cumplen las tres condiciones de arriba, más: llevar
-  **dormidos `N` días**, no tener ya una deuda viva y **poder recibir el correo**.
+- `RN-2` Los candidatos se seleccionan **por cupo periódico**, no por plazo individual. La
+  elegibilidad caduca al terminar el periodo.
 - `RN-3` El corrector **cobra íntegro** y no sabe que el autor estaba en descubierto. Para él
   no cambia nada.
 - `RN-4` El autor ve **metadatos**, no contenido: quién, cuándo, sobre qué capítulo y cuánto
@@ -69,13 +107,13 @@ información que no le corresponde, y saberlo podría desanimarle a corregir.
 `RN-8` evita el peor resultado posible: generar deuda a alguien que nunca va a recibir el
 aviso que la justificaba.
 
-## Por qué solo una
+## Por qué solo una por autor
 
 Tres motivos que apuntan al mismo sitio:
 
 | | |
 |---|---|
-| **Económico** | La emisión máxima es *usuarios dormidos × precio*, no ilimitada |
+| **Económico** | Junto al cupo, acota la emisión por partida doble |
 | **De producto** | El gancho ya funciona con una. Una segunda no añade curiosidad, solo deuda |
 | **Humano** | Cada corrección bloqueada es una hora de trabajo de un lector que quizá nadie lea. Una es aceptable; cinco es malgastar a tus mejores usuarios |
 
@@ -127,13 +165,18 @@ controlara la visibilidad del texto, estaría gobernando el modelo de otro conte
 - [ ] No se selecciona a quien tiene las notificaciones desactivadas.
 - [ ] El mecanismo se desactiva globalmente por configuración.
 - [ ] La tasa de recuperación es consultable.
+- [ ] En un periodo nunca se conceden más descubiertos que el cupo.
+- [ ] La elegibilidad no usada no se acumula al periodo siguiente.
+- [ ] Quien dejó una deuda sin saldar no vuelve a ser seleccionado.
+- [ ] Poner el cupo a 0 desactiva el mecanismo sin efectos colaterales.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **C-27** | ¿Cuántos días de inactividad? | Demasiado pronto molesta; demasiado tarde no reactiva |
+| **C-42** | ¿Qué cupo y con qué periodicidad? Propuesta: 3 por semana | Es el presupuesto de emisión del mecanismo |
 | C-28 | ¿Se avisa al autor **en el momento** de dejar la obra abierta, o basta con las condiciones generales? | Decide si es un trato aceptado |
+| C-43 | ¿A partir de cuántos días de inactividad entra alguien en la lista de candidatos? | Ya no dispara nada por sí solo: solo filtra quién compite por el cupo |
 | C-29 | ¿Puede el autor renunciar a este mecanismo desde Configuración? | Debería |
 | C-30 | ¿Qué pasa si el autor nunca vuelve? ¿Se desbloquea por bondad pasado un año? | Hoy no; conviene decidirlo |
 | C-31 | ¿Se le enseña al autor el saldo que le falta y cuántas correcciones son? | Un objetivo concreto motiva más que «repón saldo» |
@@ -144,7 +187,11 @@ no desbloquear, y por dejar de escribir correcciones nuevas a quien no vuelve.
 
 ## Estado
 
-**Especificación:** `DRAFT`. `C-27` y `C-28` deben cerrarse antes de `APPROVED`.
+**Especificación:** `DRAFT`. `C-27` está resuelta —la selección es **por cupo**, no por
+plazo—. Quedan `C-42` (qué cupo) y `C-28` (cómo se avisa).
+
+Lo que ha cambiado con el cupo: esto deja de ser un mecanismo cuyo coste se descubre y pasa a
+ser uno cuyo coste se decide.
 
 **Implementación:** `TODO`. Es lo último que conviene construir: no aporta nada hasta que haya
 usuarios dormidos que reactivar.

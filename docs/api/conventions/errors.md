@@ -40,7 +40,7 @@ insuficiente, o si encaja mejor un `409`. Los créditos no son dinero real.
 
 Con la reserva previa ([`decision:0004`](../../decisions/0004-credit-reservation-on-access-grant.md))
 este error aparece **al solicitar o conceder un acceso de lector beta**, no al enviar
-feedback: cuando el comentario llega, el coste ya estaba retenido.
+feedback: el corrector cobra siempre, y si el autor no llega su saldo queda en negativo.
 
 ## `403` frente a `404`
 
@@ -107,7 +107,7 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `ACCESS_REQUEST_ALREADY_EXISTS` | 409 | Ya hay una solicitud pendiente |
 | `READER_ALREADY_HAS_ACCESS` | 409 | El usuario ya es lector beta de la obra |
 | `WORK_IS_PRIVATE` | 403 | La obra no admite solicitudes de acceso |
-| `INSUFFICIENT_CREDITS` | 402 | El autor de la obra no tiene **saldo disponible** para respaldar un acceso nuevo |
+| `INSUFFICIENT_CREDITS` | 402 | El saldo del autor no cubre el precio del capítulo, así que no admite correcciones ahora mismo |
 | `DIRECT_MESSAGES_DISABLED` | 403 | El destinatario no acepta mensajes directos |
 | `PROPOSALS_DISABLED` | 403 | El destinatario no acepta propuestas |
 | `INVALID_PUBLIC_LINK` | 404 | Enlace público inexistente o revocado |

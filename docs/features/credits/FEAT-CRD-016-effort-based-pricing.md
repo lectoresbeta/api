@@ -34,7 +34,7 @@ no los crea ni los destruye ([`decision:0006`](../../decisions/0006-credit-syste
 | Término | Mide | Fuente del dato |
 |---|---|---|
 | `palabras del capítulo / 1.000` | Leer el texto con atención crítica | `Work`, vía `WorkContentUpdated` |
-| `palabras exigidas / 100` | Escribir la crítica | La suma de los mínimos de palabras de las preguntas del cuestionario, vía `QuestionnaireUpdated` |
+| `palabras exigidas / 100` | Escribir la crítica | La suma de los mínimos de palabras de las preguntas del cuestionario, vía `QuestionnaireUpdated`. Una pregunta sin mínimo cuenta como **10 palabras** |
 
 **Las «palabras exigidas» son un solo número que captura toda la exigencia del cuestionario.**
 No hace falta pesar el número de preguntas, su tipo ni su longitud por separado: el autor, al
@@ -61,9 +61,10 @@ y escribir 100 de crítica cuestan aproximadamente lo mismo.
   ([`decision:0002`](../../decisions/0002-credits-as-isolated-bounded-context.md)).
 - `RN-2` La unidad es **el capítulo**, no la obra: es lo que se corrige.
 - `RN-3` **Lo que paga el autor y lo que cobra el lector son la misma cifra.**
-- `RN-4` El precio queda **fijado en el momento de la retención**
-  ([`FEAT-CRD-009`](FEAT-CRD-009-hold-credits-on-correction-start.md)). Cambiar el
+- `RN-4` El precio queda **fijado al empezar la corrección**
+  ([`FEAT-CRD-009`](FEAT-CRD-009-balance-check-on-correction-start.md)). Cambiar el
   cuestionario o el texto después no altera lo que cobra quien ya está corrigiendo.
+- `RN-4b` Una pregunta **sin mínimo declarado cuenta como 10 palabras** (`C-14`, resuelta).
 - `RN-5` Mínimo 2, máximo 20. El mínimo evita que nada salga gratis; el máximo evita que un
   capítulo desmesurado resulte incorregible por caro.
 - `RN-6` El redondeo es **hacia arriba** en los dos términos. Un capítulo de 1.200 palabras
@@ -125,6 +126,8 @@ verdad de nada.
 - [ ] Lo que se carga al autor y lo que se abona al lector son la misma cifra.
 - [ ] Cambiar el cuestionario no altera el precio de una corrección ya retenida.
 - [ ] Las constantes se cambian por configuración, sin tocar código de dominio.
+- [ ] Una pregunta sin mínimo declarado cuenta como 10 palabras.
+- [ ] Un cuestionario sin ningún mínimo no hace que el precio caiga al suelo absoluto.
 - [ ] El precio se obtiene sin consultar tablas de `Work`.
 
 ## Preguntas abiertas
@@ -132,16 +135,35 @@ verdad de nada.
 | # | Pregunta | Impacto |
 |---|---|---|
 | C-13 | ¿Cómo se cuentan las palabras de un texto con formato enriquecido? | Debe coincidir con lo que ve el lector (`Q-4` de `FEAT-WRK-001`) |
-| C-14 | Si el autor no fija mínimos en sus preguntas, ¿qué se cuenta? | Propuesta: un mínimo por defecto por pregunta, o el precio caería al suelo |
+| C-44 | ¿Es 10 el suelo adecuado? | Con 10, diez preguntas sin mínimo suman 1 crédito de escritura |
 | C-15 | ¿Se recalcula el precio de un capítulo cuyo texto cambia mientras está abierto a corrección? | `RN-4` protege lo retenido; queda el resto |
 
-`C-14` es la más urgente: sin mínimos, el segundo término vale 0 y **un autor podría pedir
-correcciones de una novela por 2 créditos** poniendo un cuestionario sin exigencias. La
-defensa natural es que el cuestionario obligue a fijar un mínimo por pregunta.
+### El suelo de 10 palabras por pregunta
+
+**`C-14` está resuelta.** Sin suelo, el segundo término valdría 0 y un autor podría pedir
+correcciones de una novela por 2 créditos poniendo un cuestionario sin exigencias. Con suelo,
+el precio nunca se desploma:
+
+| Cuestionario | Palabras exigidas | Término de escritura |
+|---|---|---|
+| 1 pregunta sin mínimo | 10 | 1 |
+| 5 preguntas sin mínimo | 50 | 1 |
+| 11 preguntas sin mínimo | 110 | 2 |
+| 3 preguntas de 100 | 300 | 3 |
+
+Conviene saber lo que el suelo **no** resuelve: protege el precio de caer a cero, no de estar
+mal equilibrado. Un autor puede poner diez preguntas sin mínimo y pagar 1 crédito de
+escritura por diez respuestas.
+
+No hace falta defenderse de eso en el precio, porque **el lector ve la recompensa antes de
+empezar**: un cuestionario exigente y mal pagado simplemente no lo coge nadie. El mercado lo
+corrige mejor que una regla.
+
+Queda por afinar si 10 es la cifra correcta (`C-44`).
 
 ## Estado
 
-**Especificación:** `DRAFT`. La fórmula está decidida; `C-14` debe cerrarse antes de
-`APPROVED`.
+**Especificación:** `DRAFT`. La fórmula está decidida y `C-14` resuelta con el suelo de 10
+palabras. Nada bloquea `APPROVED`.
 
 **Implementación:** `TODO`. Deja de estar `BLOCKED`: ya no falta ninguna decisión de producto.

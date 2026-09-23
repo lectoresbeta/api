@@ -56,30 +56,32 @@ Work      ──▶ Credits\Application\...             PROHIBIDO
 
 | Concepto | Responsabilidad |
 |---|---|
-| `Account` | Saldo, saldo disponible y movimientos de un usuario |
-| `Reservation` | Retenciones: ciclo de vida de los créditos comprometidos y aún no gastados |
-| `Rule` | Reglas de valoración: cuánto vale cada hecho de negocio |
+| `Account` | Saldo y movimientos de un usuario. **Un solo saldo**, que puede ser negativo |
+| `Pricing` | El precio de cada capítulo y el precio anotado de cada corrección en curso |
+| `Overdraft` | Cupo periódico de correcciones en descubierto y selección de candidatos |
 | `EventProcessing` | Deduplicación e idempotencia de los eventos recibidos |
 
 ## Agregados
 
 | Agregado | Identidad | Invariantes |
 |---|---|---|
-| `CreditAccount` | `UserId` | El saldo es siempre la suma de sus movimientos. Un movimiento nunca se modifica ni se borra. |
-| `CreditReservation` | `CreditReservationId` | Transiciones `HELD → CONFIRMED` o `HELD → RELEASED`, y ninguna otra. Solo se crea si el saldo disponible la cubre por completo. |
+| `CreditAccount` | `UserId` | El saldo es siempre la suma de sus movimientos. Un movimiento nunca se modifica ni se borra. **Admite valores negativos.** |
 | `ProcessedEvent` | `eventId` | Un `eventId` se aplica como máximo una vez. |
 
-### Saldo y saldo disponible
+### Un solo saldo
 
 ```text
-saldo            = suma de los movimientos
-retenido         = suma de las retenciones en estado HELD
-saldo disponible = saldo − retenido
+saldo = suma de los movimientos
 ```
 
-**El saldo disponible es el que gobierna lo que el autor puede hacer** y el que se muestra en
-la interfaz. El total permanece para la auditoría. Toda respuesta que devuelva un saldo debe
-decir cuál de los dos es: un campo llamado `balance` a secas es una invitación a equivocarse.
+Y nada más. **No hay «saldo disponible»**, porque el sistema no retiene créditos
+([`decision:0006`](../decisions/0006-credit-system.md)): lo que el autor ve es lo que tiene.
+
+Que sea un solo número tiene una consecuencia práctica en toda la API: un campo `balance` ya
+no es ambiguo, y ninguna pantalla necesita explicar por qué dos cifras difieren.
+
+**El saldo puede ser negativo**, lo que obliga a un detalle fácil de olvidar: ninguna
+restricción de base de datos ni ningún tipo sin signo puede impedirlo.
 
 ### `CreditTransaction`
 
@@ -148,13 +150,21 @@ comportamiento honesto.
 
 ### 5. Retención y descubierto
 
-Se retiene **al empezar la corrección**
-([`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-hold-credits-on-correction-start.md)), no
-al conceder el acceso. El corrector **cobra siempre**; si el autor no llega, queda en negativo
-([`FEAT-CRD-018`](../features/credits/FEAT-CRD-018-negative-balance.md)).
+**No se retiene nada.** Un capítulo admite correcciones mientras el saldo del autor cubra su
+precio, y el cargo ocurre al entregarse
+([`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-balance-check-on-correction-start.md)).
 
-Con saldo negativo no se reciben más correcciones, pero **sí se puede corregir**: es como se
+La comprobación es **orientativa**: dos lectores pueden empezar a la vez sobre un saldo que
+solo cubre a uno, y los dos cobrarán. El corrector **cobra siempre**; el autor queda en
+negativo y la corrección llega **bloqueada** —ve que existe, no su contenido— hasta que
+reponga ([`FEAT-CRD-018`](../features/credits/FEAT-CRD-018-negative-balance.md)).
+
+Con saldo negativo no se abren correcciones nuevas, pero **sí se puede corregir**: es como se
 sale del descubierto.
+
+Esa misma regla es la que hace que el gancho de reactivación
+([`FEAT-CRD-019`](../features/credits/FEAT-CRD-019-overdraft-correction.md)) no añada lógica:
+solo provoca a propósito lo que ya ocurre por carrera.
 
 ## Lo que este rediseño deroga
 
@@ -165,8 +175,9 @@ sale del descubierto.
 | Bonificación por feedback valorado | Era un grifo abierto a que dos cuentas se valorasen en bucle. La propina lo hace mejor |
 | Margen dinámico entre coste y recompensa | Resolvía un problema —la inflación— que no existe en una transferencia pura |
 | Cuenta de sistema que absorbía el margen | Sin margen, no hay nada que absorber |
-| Versión de la regla en cada movimiento | Con precio fijado en la retención, basta con guardar el importe |
-| Compensación entre `Reading` y `Credits` | La retención vive entera aquí y la dispara un hecho de `Feedback` |
+| Versión de la regla en cada movimiento | Con el precio anotado al empezar, basta con guardar el importe |
+| Compensación entre `Reading` y `Credits` | No hay nada reservado que compensar |
+| Retenciones, saldo disponible y estados `HELD`/`CONFIRMED`/`RELEASED` | **No se retiene nada.** Hay un solo saldo y ningún estado intermedio |
 
 ## Eventos consumidos
 
@@ -174,12 +185,12 @@ sale del descubierto.
 |---|---|---|
 | `UserRegistered` | `User` | Crea `CreditAccount` **con saldo 0**. No abona nada |
 | `AccountActivated` | `User` | Abona los **+10** créditos de bienvenida |
-| `CorrectionStarted` | `Feedback` | **Retiene** el precio del capítulo, o lo rechaza |
-| `CorrectionDraftDiscarded` | `Feedback` | **Libera** la retención |
-| `FeedbackSubmitted` | `Feedback` | Confirma: **carga al autor y abona al lector** el importe retenido |
+| `CorrectionStarted` | `Feedback` | **Anota** el precio de esa corrección. No mueve saldo |
+| `CorrectionDraftDiscarded` | `Feedback` | Descarta la anotación. Nada que liberar |
+| `FeedbackSubmitted` | `Feedback` | **Carga al autor y abona al lector** el importe anotado. El saldo puede quedar negativo |
 | `CorrectionTipped` | `Feedback` | Transfiere la propina del autor al lector |
 | `WorkContentUpdated` | `Work` | Actualiza las palabras de cada capítulo en su read model de precios |
-| `QuestionnaireUpdated` | `Work` | Actualiza las palabras exigidas. **No altera retenciones ya hechas** |
+| `QuestionnaireUpdated` | `Work` | Actualiza las palabras exigidas. **No altera precios ya anotados** |
 | `InvitedUserParticipated` | `User` | Abona +5 al invitador, hasta el tope de 10 |
 | `UserDeleted` | `User` | Anonimiza la cuenta de créditos. Los movimientos permanecen (`C-21`) |
 
@@ -193,19 +204,20 @@ público está fuera de la economía.
 | Evento | Cuándo | Posibles consumidores |
 |---|---|---|
 | `CreditsAdded` | Se abonan créditos | `Notification` |
-| `CreditsSpent` | Se confirma una retención | `Notification` |
-| `CreditsHeld` | Se retiene al empezar una corrección | **`Feedback`** (abre el panel), `Notification` |
-| `CreditHoldRejected` | No hay disponible | **`Feedback`** (no abre el panel), `Notification` |
-| `CreditHoldReleased` | Caduca o se descarta el borrador | `Feedback`, `Notification` |
-| `CreditBalanceChanged` | Cambia el saldo o el retenido | Read models, `Notification` |
+| `CreditsSpent` | Se carga al autor una corrección recibida | `Notification` |
+| `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, `Work` (insignia). **Sin importes** |
+| `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` |
 | `CreditBalanceWentNegative` | El saldo cruza a negativo | `Notification` (avisa y **explica la salida**) |
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` |
 | `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback` (bloquea el contenido), `Notification` |
 | `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` |
 
-**`CreditHoldRejected` es el único del que otro contexto depende para no dejar trabajar.**
-`Feedback` debe esperarlo antes de abrir el panel de corrección, así que su publicación exige
-Outbox Pattern: perderlo dejaría a un lector escribiendo sin respaldo.
+**Ningún contexto espera a `Credits` para dejar trabajar.** Como no hay nada que reservar,
+`Feedback` abre el panel de corrección contra su propia proyección de
+`ChapterCorrectabilityChanged`. Que vaya ligeramente retrasada no importa: el peor caso es el
+descubierto, que ya está aceptado.
+
+Ese evento lleva **un booleano, no un importe**: `Feedback` no debe conocer saldos ajenos.
 
 Nótese que **`Credits` nunca oculta ni enseña el texto de una corrección**. En el descubierto
 publica el hecho económico; quien decide qué se ve es `Feedback`, que es quien posee la
@@ -238,13 +250,17 @@ existe, el evento se descarta sin efecto.
 - `RN-4` **Ningún contexto externo determina el importe de un movimiento.**
 - `RN-5` Todo movimiento registra el hecho de negocio que lo originó y es auditable.
 - `RN-6` **Lo que paga el autor y lo que cobra el lector es la misma cifra.**
-- `RN-7` El importe queda fijado **al retener**, no al entregar. Quien empezó a corregir con
-  unas condiciones las conserva aunque el autor cambie el cuestionario después.
+- `RN-7` El importe queda fijado **al empezar la corrección**, no al entregar. Quien empezó a
+  corregir con unas condiciones las conserva aunque el autor cambie el cuestionario después.
+- `RN-7b` **Nunca se apartan créditos.** En ningún momento existe un saldo distinto de la
+  suma de los movimientos.
 - `RN-8` Los créditos de bienvenida se abonan al **activar** la cuenta, no al crearla. Una
   cuenta sin verificar nunca tiene saldo
   ([`decision:0003`](../decisions/0003-write-operations-require-activated-account.md)).
 - `RN-9` **El corrector cobra siempre.** Si el autor no llega, queda en negativo.
-- `RN-10` Con saldo negativo no se reciben correcciones; **sí se pueden dar**.
+- `RN-10` Con saldo negativo no se abren correcciones nuevas; **sí se pueden dar**.
+- `RN-10b` Una corrección que deja el saldo en negativo **llega bloqueada**: el autor ve sus
+  metadatos, no su contenido, hasta que reponga.
 - `RN-11` Se cumple en todo momento la invariante contable: la suma de todos los saldos es
   igual a los grifos menos el descubierto no recuperado.
 
@@ -259,10 +275,10 @@ créditos que nadie pagó.
 |---|---|---|
 | ~~C-1~~ | ¿Qué ocurre si el autor no tiene saldo? | **Resuelta:** reserva previa. Sin saldo disponible no hay acceso. Ver [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md) |
 | ~~C-2~~ | ¿Se reservan créditos al conceder acceso? | **Resuelta:** sí |
-| **C-14** | ¿Obliga el cuestionario a fijar un mínimo de palabras por pregunta? | **Sin mínimos, una novela se corregiría por 2 créditos** (`FEAT-CRD-016`) |
-| **C-18** | ¿La comprobación de saldo al empezar es asíncrona o una consulta síncrona con contrato? | Entre pulsar «Empezar corrección» y poder escribir hay un viaje por la cola |
-| C-16 | ¿Cuánto dura una retención antes de caducar? Propuesta: 7 días | Corta castiga al lector; larga congela el saldo del autor |
-| C-17 | Al caducar la retención, ¿puede el lector recuperarla y entregar igualmente? | Sin ello se pierde trabajo real |
+| C-44 | ¿Es 10 palabras el suelo adecuado para una pregunta sin mínimo? | Con 10, diez preguntas sin mínimo suman 1 crédito de escritura |
+| C-39 | ¿Se avisa al autor de que alguien ha empezado a corregirle? | Le permitiría reponer saldo y evitar que la corrección llegue bloqueada |
+| C-41 | ¿Cuántas correcciones simultáneas admite un capítulo? | Es la palanca para acotar el descubierto por carrera **sin apartar créditos** |
+| C-42 | ¿Qué cupo de descubierto y con qué periodicidad? Propuesta: 3 por semana | Es el presupuesto de emisión |
 | C-13 | ¿Cómo se cuentan las palabras de un texto con formato enriquecido? | Debe coincidir con lo que ve el lector |
 | C-15 | ¿Qué se hace con un `FeedbackSubmitted` sin retención asociada? | `FEAT-CRD-006` |
 | C-3 | ¿Las cantidades son configurables en caliente o van en el código? | La bienvenida y las dos constantes del precio son las palancas del sistema |
@@ -276,7 +292,10 @@ créditos que nadie pagó.
 
 | # | Cómo |
 |---|---|
-| `R-1` | La retención es **por lector y por capítulo**, al empezar la corrección |
+| `R-1` | **No hay retención.** Se comprueba el saldo al empezar y se cobra al entregar |
+| `C-14` | Una pregunta sin mínimo declarado cuenta como **10 palabras** |
+| `C-16`, `C-17`, `C-18` | Desaparecen con la retención: no hay plazo que caducar ni respuesta que esperar |
+| `C-27` | El descubierto se concede **por cupo periódico**, no por plazo de cada usuario |
 | `C-4` | Una corrección por lector y capítulo; sí se pueden corregir varios capítulos |
 | `C-5` | El enlace público **no genera ni consume** créditos |
 | `C-6`, `C-7`, `C-10` | Desaparecen con el `TextTier`: el precio es continuo sobre las palabras **del capítulo** |

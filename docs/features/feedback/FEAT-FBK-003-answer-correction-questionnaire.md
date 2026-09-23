@@ -68,14 +68,17 @@ corrección es una operación de escritura.
 1. La obra está en estado `IN_CORRECTION`
    ([`FEAT-WRK-016`](../work/FEAT-WRK-016-work-status.md)).
 2. El lector tiene acceso de lector beta concedido (`FEAT-RDG-001` o `FEAT-RDG-002`).
-3. Existe una retención de créditos del autor asociada a ese acceso
-   ([`decision:0004`](../../decisions/0004-credit-reservation-on-access-grant.md)).
+3. El capítulo era **corregible** al empezar: el saldo del autor cubría su precio
+   ([`FEAT-CRD-009`](../credits/FEAT-CRD-009-balance-check-on-correction-start.md)).
 4. El autor ha configurado el cuestionario ([`FEAT-WRK-014`](../work/FEAT-WRK-014-configure-questionnaire.md)).
 
-La precondición 3 es la que hace que el envío no pueda fallar por falta de saldo: el crédito
-ya estaba comprometido cuando se concedió el acceso. Si no se hubiera reservado, el lector
-podría escribir una crítica larga y descubrir al enviarla que el autor se ha quedado sin
-saldo. Ese es exactamente el escenario que la reserva previa evita.
+**La precondición 3 es orientativa, no una garantía**, y es importante entender por qué no
+importa: el sistema **no retiene créditos**, así que entre empezar y entregar el autor puede
+quedarse sin saldo. Si ocurre, **el lector cobra igualmente** y el autor queda en negativo
+([`FEAT-CRD-018`](../credits/FEAT-CRD-018-negative-balance.md)).
+
+Nadie escribe una crítica y se queda sin cobrar. Esa es la única garantía que el lector
+necesita, y no hace falta apartar créditos para dársela.
 
 ## Reglas de negocio
 
@@ -121,7 +124,7 @@ convierte el troceo en una decisión económica del autor, no solo editorial. Me
 6. El sistema valida obligatoriedad y longitudes (`RN-4`, `RN-5`).
 7. La corrección pasa a `SUBMITTED` y el borrador desaparece.
 8. Se publica `FeedbackSubmitted`.
-9. `Credits` consume el evento, confirma la retención del autor y abona al lector.
+9. `Credits` consume el evento, carga al autor y abona al lector.
 10. `Notification` consume el evento y avisa al autor.
 
 Los pasos 9 y 10 son **asíncronos**. La respuesta HTTP no espera a que los créditos se
@@ -189,8 +192,8 @@ autor, y un evento que circula por RabbitMQ y se reintenta no es sitio para él.
 
 El hecho publicado es: **un lector beta ha entregado una corrección de una obra**.
 
-`Credits` decide qué significa: confirmar la retención del autor y abonar al lector, con los
-importes que fijó al reservar ([`FEAT-CRD-006`](../credits/FEAT-CRD-006-charge-author-for-received-feedback.md),
+`Credits` decide qué significa: cargar al autor y abonar al lector el importe anotado al
+empezar ([`FEAT-CRD-006`](../credits/FEAT-CRD-006-charge-author-for-received-feedback.md),
 [`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md)).
 
 `Feedback` no conoce ninguna de las dos cifras y no debe conocerlas.
@@ -242,29 +245,24 @@ cuestionario creado por el autor», con contador por respuesta y los botones «E
 | # | Pregunta | Impacto |
 |---|---|---|
 | **R-4** | ¿Hace falta acceso de lector beta previo, o «Empezar corrección» lo concede? | Decide si la reserva ocurre antes o al abrir el panel |
-| **R-1** | Con la corrección por capítulo, ¿la retención es por obra o **por capítulo**? | El acceso se concede por obra, pero el coste se devenga por capítulo |
+| **C-41** | ¿Cuántas correcciones simultáneas admite un capítulo? | Acota el descubierto por carrera **sin apartar créditos** |
 | **R-10** | ¿Hay tope de correcciones por obra o por capítulo? | Trocear una obra en cuarenta capítulos multiplica el coste por cuarenta |
 | Q-5 | Si el autor cierra la corrección, ¿qué pasa con los borradores en curso? | Trabajo del lector perdido |
 | Q-6 | ¿Ve el autor quién le corrigió, o es anónimo? | Cambia el payload y el modelo |
 | Q-7 | ¿Puede el lector ver después sus propias correcciones enviadas? | `FEAT-FBK-010` |
 | Q-9 | ¿Se notifica al lector cuando el autor lee o valora su corrección? | Cierra el bucle de reputación |
 
-Resueltas: `R-2` (**por capítulo**), `R-5` (el contador es en **palabras**) y `Q-3`/`Q-4`
-(habrá control antifraude, [`FEAT-FBK-012`](FEAT-FBK-012-correction-fraud-control.md)).
+Resueltas: `R-2` (**por capítulo**), `R-5` (**palabras**), `Q-3`/`Q-4` (habrá control
+antifraude, [`FEAT-FBK-012`](FEAT-FBK-012-correction-fraud-control.md)) y **`R-1`**, que
+desaparece al eliminarse la retención.
 
-**`R-1` es ahora la más urgente de esta ficha**, y es consecuencia directa de `R-2`. El
-acceso de lector beta se concede **por obra**, pero con la corrección por capítulo el coste
-se devenga **por capítulo**. Las dos granularidades ya no coinciden, así que una retención
-única al conceder el acceso no cubre lo que realmente se va a gastar:
+**`R-1` ha dejado de existir.** Preguntaba si la retención era por obra o por capítulo, y
+[`decision:0006`](../../decisions/0006-credit-system.md) elimina la retención: se comprueba el
+saldo al empezar y se cobra al entregar.
 
-| Opción | Qué implica |
-|---|---|
-| Retener por toda la obra al conceder el acceso | El autor inmoviliza el coste de *n* capítulos aunque el lector corrija uno |
-| Retener por capítulo al abrir el panel | Más preciso, pero el lector puede escribir y encontrarse sin cobertura |
-| Retener por obra y reajustar por capítulo | Lo más exacto y lo más complejo |
-
-Ninguna es obviamente correcta y la decisión afecta a `Reading`, `Feedback` y `Credits` a la
-vez. Conviene cerrarla antes de escribir código de créditos.
+Lo que queda en su lugar es `C-41`, más acotada: **cuántas correcciones simultáneas admite un
+capítulo**. Es la palanca para limitar el descubierto por carrera sin reintroducir nada de lo
+que se ha quitado.
 
 ## Estado
 

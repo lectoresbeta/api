@@ -1,6 +1,6 @@
 ---
 id: FEAT-CRD-018
-title: Saldo negativo — el corrector cobra siempre
+title: Saldo negativo y correcciones bloqueadas
 context: Credits
 concept: Balance
 actors: []
@@ -16,16 +16,21 @@ depends_on: [FEAT-CRD-009]
 updated: 2026-09-23
 ---
 
-# FEAT-CRD-018 — Saldo negativo
+# FEAT-CRD-018 — Saldo negativo y correcciones bloqueadas
 
 ## Resumen
 
-**El corrector cobra siempre.** Si el autor no llega, el autor queda en negativo; el lector
-nunca se queda sin cobrar.
+**El corrector cobra siempre.** Si el autor no llega, queda en negativo; el lector nunca se
+queda sin cobrar.
 
-Es una red de seguridad, no una mecánica habitual: la retención
-([`FEAT-CRD-009`](FEAT-CRD-009-hold-credits-on-correction-start.md)) existe precisamente para
-que casi nunca haga falta.
+Y la regla que lo cierra:
+
+> **Una corrección que deja el saldo en negativo se entrega bloqueada.** El autor ve que
+> existe —quién, cuándo, sobre qué capítulo, cuánto se ha escrito— pero no su contenido, hasta
+> que reponga saldo.
+
+Como **no se retiene nada** ([`FEAT-CRD-009`](FEAT-CRD-009-balance-check-on-correction-start.md)),
+esto no es una rareza: es el desenlace normal cuando dos lectores coinciden.
 
 ## Por qué el lector cobra por encima de todo
 
@@ -35,19 +40,26 @@ paga, **no vuelve**. Y sin correctores no hay producto.
 Frente a eso, un autor en descubierto tiene arreglo: corrige y lo salda. Por eso la asimetría
 es deliberada y el orden de prioridades está claro.
 
-## Cuándo puede ocurrir
-
-Con la retención al empezar, los casos son pocos:
+## Cuándo ocurre, y con qué frecuencia
 
 | Caso | Cómo |
 |---|---|
+| **Carrera entre lectores** | Dos o más empiezan a corregir el mismo capítulo con saldo para uno |
 | Gasto simultáneo | El autor da una propina mientras alguien corrige |
-| Carrera en el límite | Dos retenciones concedidas con saldo justo por una condición de carrera |
 | Descubierto deliberado | Gancho de reactivación ([`FEAT-CRD-019`](FEAT-CRD-019-overdraft-correction.md)) |
-| Corrección recuperada | Una retención caducada que se confirma tarde (`C-17`) |
 
-Salvo el tercero, todos son excepciones. Si aparecen con frecuencia, algo falla en la
-retención y hay que mirarlo ahí, no aquí.
+**La carrera no es un caso raro y conviene no fingir que lo es.** Escribir una corrección
+lleva horas o días, así que la ventana en la que dos lectores coinciden sobre un mismo
+capítulo es larga. Un capítulo atractivo con saldo justo para una corrección puede recibir
+tres en una semana y dejar al autor en −24.
+
+De ahí se siguen dos cosas:
+
+1. **La interfaz tiene que explicarlo bien.** Un autor que ve una corrección bloqueada sin
+   entender por qué lo vivirá como un castigo arbitrario.
+2. **Conviene medirlo por separado** del descubierto deliberado
+   ([`FEAT-CRD-012`](FEAT-CRD-012-economy-health.md)): si es alto, el saldo típico es
+   demasiado ajustado y la respuesta es subir el regalo de bienvenida, no cambiar la mecánica.
 
 ## Reglas de negocio
 
@@ -64,6 +76,12 @@ retención y hay que mirarlo ahí, no aquí.
   corrección.
 - `RN-7` Al volver a cero o más, se **desbloquea todo automáticamente** y se avisa al autor.
 - `RN-8` Un saldo negativo **no caduca ni se condona** por el paso del tiempo.
+- `RN-9` Una corrección que deja el saldo en negativo **se entrega bloqueada**: el autor ve
+  sus metadatos, no su contenido.
+- `RN-10` Al volver a saldo ≥ 0, **todas** las correcciones bloqueadas se desbloquean a la
+  vez. No hay desbloqueo parcial: es más simple y el resultado agregado es el mismo.
+- `RN-11` Una corrección **ya visible nunca vuelve a bloquearse**, aunque el autor caiga en
+  negativo más tarde. Lo que se ha leído, leído está.
 
 `RN-2` y `RN-3` juntas son el diseño entero: cierras la puerta de recibir y dejas abierta la
 de dar. No hay forma de salir del descubierto que no sea participar.
@@ -75,13 +93,18 @@ de dar. No hay forma de salir del descubierto que no sea participar.
 Acotado por construcción:
 
 - `RN-2` impide acumular más de una corrección no cubierta en circunstancias normales;
-- el descubierto deliberado está topado en **una corrección** por autor
-  (`FEAT-CRD-019`);
+- el descubierto deliberado está topado en **una corrección** por autor y con **cupo
+  periódico** (`FEAT-CRD-019`);
 - el precio máximo de una corrección es **20**
   ([`FEAT-CRD-016`](FEAT-CRD-016-effort-based-pricing.md)).
 
-En la práctica, nadie debería bajar de **−20**, y lo normal sería entre −2 y −12. Si aparecen
-deudas mayores, es señal de un fallo en la retención (`C-20`).
+En la práctica la deuda típica será de una corrección, entre −2 y −12. Puede ser mayor si
+varios lectores coinciden: `N` lectores simultáneos sobre un capítulo de precio `p` dejan al
+autor hasta en `−(N−1) × p`.
+
+Si conviene acotarlo, la palanca no es reintroducir la retención sino **limitar cuántas
+correcciones abiertas admite un capítulo a la vez** (`C-41`). Acota el problema sin apartar un
+solo crédito.
 
 ## Lo que esto le cuesta a la economía
 
@@ -129,6 +152,9 @@ Es el tipo de detalle que se descubre tarde y en producción.
 - [ ] Al llegar a cero, recibir correcciones se desbloquea solo.
 - [ ] El saldo negativo no impide leer, publicar ni comentar.
 - [ ] La suma de todos los saldos cuadra con la invariante contable.
+- [ ] Una corrección que deja al autor en negativo llega bloqueada, con sus metadatos visibles.
+- [ ] Al volver a cero, todas las bloqueadas se desbloquean a la vez.
+- [ ] Una corrección ya leída no vuelve a bloquearse.
 
 ## Preguntas abiertas
 

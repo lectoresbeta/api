@@ -1,28 +1,36 @@
 # 0004 — Los créditos se reservan al conceder acceso y se confirman al recibir el feedback
 
-- **Estado:** Sustituida parcialmente por [`0006`](0006-credit-system.md)
+- **Estado:** **Sustituida** por [`0006`](0006-credit-system.md)
 - **Fecha:** 2026-09-22
 - **Afecta a:** `Credits`, `Reading`, `Feedback`, `Work`
 - **Resuelve:** `C-1`, y con ella `C-2` y `M-1`
 
-> **Sustituida en parte por [`0006`](0006-credit-system.md) (2026-09-23).**
+> **Sustituida por [`0006`](0006-credit-system.md) (2026-09-23). No queda nada vigente de
+> esta decisión.**
 >
-> Lo que **sigue vigente** es el fondo: se retiene crédito **antes** de que el lector trabaje,
-> para que nadie escriba una crítica que después no se pueda pagar. Esa era la respuesta a
-> `C-1` y no ha cambiado.
+> Esta decisión respondía a `C-1` —cuándo se comprometen los créditos— con una **reserva
+> previa**: apartar el coste antes de que el lector trabajase. El rediseño del sistema de
+> créditos **elimina la reserva por completo**.
 >
-> Lo que **cambia** es el momento y la granularidad. La retención ya no ocurre al conceder el
-> acceso de lector beta sino **al pulsar «Empezar corrección»**, y es por capítulo. Con ello:
+> Lo que la sustituye:
 >
-> - se retiene solo por quien está escribiendo ahora, no por todo el que tenga acceso;
-> - **desaparece la compensación entre `Reading` y `Credits`**, porque la retención vive
->   entera en `Credits` y la dispara un hecho de `Feedback`;
-> - `R-1` queda resuelta.
+> | Aquí | En `0006` |
+> |---|---|
+> | Se reservan créditos al conceder el acceso | **No se reserva nada, nunca** |
+> | El saldo disponible gobierna lo que el autor puede hacer | Hay **un solo saldo** |
+> | La reserva garantiza el pago | Lo garantiza que **el corrector cobra siempre**, con saldo negativo como red |
+> | Compensación entre `Reading` y `Credits` si algo falla | No hay nada que compensar |
 >
-> Se añade además una red que esta decisión no contemplaba: **el corrector cobra siempre**, y
-> si el autor no llega queda en negativo
-> ([`FEAT-CRD-018`](../features/credits/FEAT-CRD-018-negative-balance.md)). La retención pasa
-> de ser la *garantía* del pago a ser su *prevención*.
+> El motivo del cambio no fue técnico sino de producto: **apartarle créditos al autor por una
+> corrección que todavía no existe** resultó peor que asumir algún descubierto. El coste de
+> esa elección —que dos lectores coincidan y el autor quede en negativo, con una corrección
+> bloqueada hasta que reponga— se aceptó de forma explícita.
+>
+> `C-1` queda respondida de otra manera: **los créditos se comprometen al entregarse la
+> corrección**, no antes.
+>
+> Se conserva el documento porque el razonamiento sigue siendo útil: explica qué problema
+> resolvía la reserva y, por tanto, qué se pierde al quitarla.
 
 ## Contexto
 
@@ -62,7 +70,7 @@ De ahí se derivan dos conceptos que antes no existían:
 - **Retención** (`CreditReservation`), con su propio ciclo de vida: `HELD → CONFIRMED` o
   `HELD → RELEASED`.
 
-Detalle en [`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-hold-credits-on-correction-start.md).
+Detalle en [`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-balance-check-on-correction-start.md).
 
 ## Alternativas consideradas
 
@@ -105,7 +113,7 @@ de tres contextos. Conviene cerrar además `R-1` antes de implementar.
 > Esta decisión no se invalida —la reserva previa sigue siendo la respuesta a `C-1`—, pero su
 > **granularidad queda abierta**. La opción B2 («reserva por obra») gana peso, y aparece una
 > tercera: reservar por obra y descontar por capítulo. Ver `R-1` en
-> [`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-hold-credits-on-correction-start.md).
+> [`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-balance-check-on-correction-start.md).
 
 ## La compensación
 

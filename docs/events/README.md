@@ -98,9 +98,9 @@ para calcular la retención sin consultar a `Work`
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `CorrectionStarted` | Un LB pulsa «Empezar corrección» | **`Credits`** (retiene), `Notification` | `chapterId`, `workId`, `authorId`, `readerId` |
+| `CorrectionStarted` | Un LB pulsa «Empezar corrección» | **`Credits`** (anota el precio), `Notification` | `chapterId`, `workId`, `authorId`, `readerId` |
 | `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification`, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `questionnaireVersion`, `submittedAt` |
-| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (libera) | `chapterId`, `readerId` |
+| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación) | `chapterId`, `readerId` |
 | `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` | `correctionId`, `authorId`, `readerId`, `amount` |
 | `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` NO lo consume** | `correctionId`, `workId`, `chapterId`, `authorId`, `authorLabel?` |
 | `FeedbackRatedPositively` | El autor lo valora como útil | `Notification`, `Community`. **`Credits` ya no lo consume**: la bonificación automática se sustituyó por la propina | `correctionId`, `readerId`, `authorId` |
@@ -132,20 +132,21 @@ dejaría a `Credits` sin poder calcular nada.
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
 | `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance` |
-| `CreditsSpent` | Se confirma una retención | `Notification` | `userId`, `amount`, `reason`, `balance` |
-| `CreditsHeld` | Se retiene al empezar una corrección | **`Feedback`**, `Notification` | `holdId`, `userId`, `chapterId`, `readerId`, `amount`, `expiresAt` |
-| `CreditHoldRejected` | No hay disponible | **`Feedback`**, `Notification` | `chapterId`, `readerId`, `required`, `available` |
-| `CreditHoldReleased` | Caduca o se descarta el borrador | `Feedback`, `Notification` | `holdId`, `userId`, `amount`, `reason` |
-| `CreditBalanceChanged` | Cambia el saldo o el retenido | Read models, `Notification` | `userId`, `balance`, `held`, `available` |
+| `CreditsSpent` | Se carga una corrección recibida | `Notification` | `userId`, `amount`, `reason`, `balance` |
+| `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, `Work` | `chapterId`, `correctable`. **Sin importes** |
+| `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` | `userId`, `balance` |
 | `CreditBalanceWentNegative` | El saldo cruza a negativo | `Notification` | `userId`, `balance` |
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` | `userId`, `balance` |
 | `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback`, `Notification` | `holdId`, `userId`, `chapterId`, `amount` |
 | `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` | `userId`, `correctionId` |
 
-**`CreditHoldRejected` es el evento más delicado del sistema.** Es el único del que otro
-contexto depende para **no dejar trabajar**: `Feedback` debe esperarlo antes de abrir el panel
-de corrección. Perderlo deja a un lector escribiendo sin respaldo, así que exige Outbox
-Pattern.
+**Ningún evento de `Credits` bloquea a otro contexto.** Como no se retiene nada, `Feedback`
+abre el panel de corrección contra su propia proyección de `ChapterCorrectabilityChanged`, sin
+esperar respuesta. Que la proyección vaya ligeramente retrasada solo puede producir un
+descubierto, que es un caso aceptado.
+
+`ChapterCorrectabilityChanged` lleva **un booleano, no un importe**: ningún contexto ajeno
+tiene por qué conocer saldos.
 
 `Credits` **nunca oculta ni enseña el texto de una corrección**. En el descubierto publica el
 hecho económico; qué se ve lo decide `Feedback`, que es quien posee la corrección.

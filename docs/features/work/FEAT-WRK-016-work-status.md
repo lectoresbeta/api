@@ -104,7 +104,7 @@ Propuesta, pendiente de confirmar (`W-10`):
 |---|---|---|
 | `DRAFT → VISIBLE` | Sí | Publicar |
 | `VISIBLE → IN_CORRECTION` | Sí | Abrir a feedback. Aquí se comprometen los créditos |
-| `IN_CORRECTION → VISIBLE` | Sí | Cerrar la corrección. Las retenciones sin usar se liberan |
+| `IN_CORRECTION → VISIBLE` | Sí | Cerrar la corrección. Quien ya empezó, termina y cobra |
 | `DRAFT → IN_CORRECTION` | Probablemente sí | Publicar y abrir en un solo paso |
 | `VISIBLE → DRAFT` | **Sin decidir** (`W-10`) | Despublicar algo que otros ya han visto |
 | `IN_CORRECTION → DRAFT` | **Sin decidir** | Implicaría cerrar la corrección primero |
@@ -124,12 +124,14 @@ Propuesta, pendiente de confirmar (`W-10`):
 | ¿Puede el autor saber el coste de antemano? | Solo por acceso | Sí, declarando cuántas correcciones quiere |
 | Compensación entre contextos | Necesaria | **Innecesaria**: el autor actúa y `Credits` responde antes de abrir |
 
-La última fila es la más valiosa: con la reserva por obra desaparece la compensación que
-`decision:0004` tuvo que introducir, porque el autor realiza una acción explícita y puede
-recibir un «no hay saldo» de inmediato en lugar de que se le revoque un acceso después.
+**Esa discusión quedó cerrada de otra manera.**
+[`decision:0006`](../../decisions/0006-credit-system.md) elimina la reserva por completo: no
+se aparta nada al poner una obra en corrección ni en ningún otro momento. `R-1` desaparece
+con ella.
 
-**No se cambia `decision:0004` aquí.** Pero `R-1` debería resolverse con esta pantalla
-delante, y antes de implementar el ciclo de retenciones.
+Lo que hace `IN_CORRECTION` es más simple de lo que se pensaba: **abre la puerta**. Si el
+saldo del autor cubre el precio de un capítulo, ese capítulo admite correcciones; si no, no.
+Sin declarar nada y sin comprometer nada.
 
 ## Contrato de API
 
@@ -146,9 +148,11 @@ valida que la transición es legal: el cliente no decide qué caminos existen.
 |---|---|---|
 | `WorkPublished` | `DRAFT → VISIBLE` | `Reading`, `Community`, `Notification` |
 | `WorkOpenedForCorrection` | Entra en `IN_CORRECTION` | **`Credits`**, `Reading`, `Notification` |
-| `WorkClosedForCorrection` | Sale de `IN_CORRECTION` | **`Credits`** (libera retenciones), `Reading` |
+| `WorkClosedForCorrection` | Sale de `IN_CORRECTION` | **`Credits`**, `Feedback`, `Reading`. Quien ya empezó a corregir, termina y cobra |
 
-`WorkOpenedForCorrection` sería el disparador de la reserva si se resuelve `R-1` por obra.
+`WorkOpenedForCorrection` no dispara ningún movimiento de créditos. Lo que hace es que
+`Credits` recalcule qué capítulos de esa obra son corregibles y lo publique
+(`ChapterCorrectabilityChanged`).
 
 ## Modelo de datos afectado
 

@@ -67,8 +67,8 @@ sobre esa persona.
 - `RN-4` Todo ajuste tiene un **valor por defecto explícito** al crear la cuenta.
 - `RN-5` Un usuario bloqueado ([`FEAT-COM-034`](../community/FEAT-COM-034-block-user.md)) no
   gana acceso por ninguna combinación de estos ajustes. El bloqueo es más fuerte.
-- `RN-6` Restringir «quién puede comentar» puede dejar **accesos de lector beta vigentes sin
-  efecto**. Eso tiene consecuencias en créditos: ver abajo.
+- `RN-6` Restringir «quién puede comentar» **no interrumpe las correcciones en curso**: quien
+  ya empezó, entrega y cobra.
 
 `RN-2` no es un detalle de implementación: es la regla que evita que un ajuste de privacidad
 sea ignorado silenciosamente por otro más permisivo.
@@ -107,22 +107,16 @@ relajar el perfil, nadie sabría qué modalidad tenía antes cada obra.
 
 ### La consecuencia en créditos
 
-Con la reserva previa
-([`decision:0004`](../../decisions/0004-credit-reservation-on-access-grant.md)), conceder
-acceso a un lector beta **retiene créditos del autor**. Si después el autor restringe quién
-puede comentar y ese lector deja de poder hacerlo, hay **una retención que ya no se va a
-usar**.
+El sistema **no retiene créditos**
+([`decision:0006`](../../decisions/0006-credit-system.md)), así que endurecer el ajuste no
+deja saldo inmovilizado que liberar. Queda una pregunta más simple: **qué pasa con quien está
+corrigiendo ahora mismo**.
 
-Dejarla viva inmoviliza saldo indefinidamente; liberarla sin avisar deja al lector con un
-trabajo a medias que ya no podrá entregar.
+Lo coherente con `RN-3` es que **quien ya empezó, termina**: entrega su corrección y cobra el
+precio anotado. El ajuste afecta a las correcciones nuevas.
 
-Lo coherente con `RN-3` es que **los accesos ya concedidos se respeten** y el ajuste solo
-afecte a los nuevos: quien estaba a medio corregir termina, su corrección se entrega y la
-retención se consume como estaba previsto.
-
-La alternativa —revocar los accesos vigentes— obliga a tres cosas a la vez: liberar la
-retención, avisar al lector de que su trabajo ya no sirve y decidir qué pasa con un borrador
-a medias. Ver `S-36`.
+La alternativa —cortar las correcciones en curso— destruiría trabajo real de un tercero por
+una decisión del autor, y el tercero no ha hecho nada mal. Ver `S-36`.
 
 ## Alcance de «¿Quién puede ver mi perfil?»
 
@@ -209,7 +203,7 @@ ajuste ausente no puede interpretarse como «todo permitido».
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **S-36** | Al endurecer el ajuste global, ¿se respetan los accesos ya concedidos? | Si se revocan, hay retenciones que liberar y trabajo a medias que se pierde |
+| **S-36** | Al endurecer el ajuste global, ¿puede terminar quien ya está corrigiendo? | Cortarlo destruiría trabajo real de un tercero |
 | **S-13** | ¿Qué opciones tienen los desplegables? | Definen enums de autorización |
 | **S-16** | ¿Qué es «actividad»? | Sin ello, el cuarto ajuste no se puede especificar |
 | **S-15** | Con el perfil restringido, ¿desaparece el autor del catálogo? ¿`403` o `404`? | Un `403` confirma que la cuenta existe |

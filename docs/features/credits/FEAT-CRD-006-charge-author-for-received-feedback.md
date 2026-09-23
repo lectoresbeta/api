@@ -26,38 +26,38 @@ Cuando un lector beta envía su feedback, el autor de la obra **paga créditos**
 mecanismo que hace que recibir crítica exija haberla dado antes, y por tanto el núcleo
 económico del producto.
 
-Desde [`decision:0004`](../../decisions/0004-credit-reservation-on-access-grant.md), el cargo
-**no se decide aquí**: el importe ya se retuvo al empezar la corrección (`FEAT-CRD-009`). Lo que
-ocurre al recibir el comentario es **confirmar esa retención**, convirtiéndola en un
-movimiento real.
+**Es el único momento en que los créditos se mueven.** El precio quedó anotado al empezar la
+corrección (`FEAT-CRD-009`), pero nada cambió de saldo hasta ahora: no hay retención que
+confirmar, hay un cargo que ejecutar.
 
-Ese cambio hace desaparecer el problema que bloqueaba esta ficha: cuando llega el comentario,
-el dinero ya estaba apartado.
+Y es **una transferencia**: el mismo importe que se le carga al autor se le abona al lector.
 
 ## Precondiciones
 
-- Existe una retención en `HELD` para ese acceso.
 - Se ha recibido `FeedbackSubmitted` con su `eventId` sin procesar.
+- Existe un precio anotado para esa corrección.
 
 ## Reglas de negocio
 
-- `RN-1` El importe **ya está fijado** por la retención. No se recalcula al confirmar.
-- `RN-2` Confirmar convierte la retención en un `CreditTransaction` con motivo
-  `FEEDBACK_RECEIVED`, importe negativo y referencia al `eventId` de origen.
-- `RN-3` El saldo total baja; el saldo disponible **no cambia**, porque ese importe ya estaba
-  retenido.
-- `RN-4` El mismo `eventId` nunca produce dos confirmaciones (`FEAT-CRD-011`).
-- `RN-5` Una retención `CONFIRMED` no se puede liberar ni confirmar de nuevo.
+- `RN-1` El importe es **el anotado al empezar** la corrección. No se recalcula al entregar.
+- `RN-2` Se registran **dos movimientos**: cargo al autor con motivo `FEEDBACK_RECEIVED` y
+  abono al lector con motivo `FEEDBACK_GIVEN`, ambos con el `eventId` de origen.
+- `RN-3` **El abono al lector se ejecuta siempre**, aunque el autor no tenga saldo. Si no
+  llega, su saldo queda negativo y la corrección se entrega **bloqueada**
+  ([`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md)).
+- `RN-4` El mismo `eventId` nunca produce dos cargos (`FEAT-CRD-011`).
+- `RN-5` Los dos movimientos ocurren **juntos o no ocurren**: es una sola operación.
 - `RN-6` El movimiento es inmutable. Una corrección es un movimiento nuevo.
-- `RN-7` Si llega un `FeedbackSubmitted` **sin retención asociada**, no se inventa el cargo:
-  se registra como incidencia y se publica `InsufficientCredits`. Ver `C-15`.
+- `RN-7` Si llega un `FeedbackSubmitted` **sin precio anotado**, no se inventa el importe: se
+  registra como incidencia y se recalcula a partir del capítulo y el cuestionario vigentes,
+  dejando traza de que fue una reconstrucción. Ver `C-15`.
 
-`RN-3` es la consecuencia más útil del nuevo modelo: el autor no se lleva ninguna sorpresa
-al recibir un comentario, porque su saldo disponible ya lo reflejaba.
+`RN-3` es la regla que sostiene el producto entero: **un lector nunca trabaja sin cobrar.** Lo
+que antes garantizaba la reserva lo garantiza ahora el saldo negativo, sin apartar un solo
+crédito.
 
-`RN-7` cubre un estado que no debería darse: acceso concedido sin retención. Puede ocurrir
-por un evento perdido o por una retención caducada antes de tiempo. **Cobrar a posteriori
-reintroduciría el saldo negativo**, así que no se hace.
+`RN-5` importa porque son dos apuntes que deben cuadrar: si se abona al lector y falla el
+cargo al autor, se ha creado crédito de la nada y la invariante contable se rompe.
 
 ## Cómo se calcula el importe
 
@@ -73,7 +73,7 @@ coste = créditos(textTier) + max(0, questionCount − 3)
 - Las tres primeras preguntas del cuestionario no tienen coste; cada pregunta adicional suma
   1 crédito.
 - El importe es **el que se retuvo** al empezar la corrección
-  ([`FEAT-CRD-009`](FEAT-CRD-009-hold-credits-on-correction-start.md)), no el vigente al
+  ([`FEAT-CRD-009`](FEAT-CRD-009-balance-check-on-correction-start.md)), no el vigente al
   entregar. Cambiar el texto o el cuestionario entre medias no altera lo que cobra quien ya
   estaba corrigiendo.
 

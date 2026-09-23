@@ -75,7 +75,7 @@ concreta**, no salen de un catálogo fijo.
   cuarenta respuestas y convertir la corrección en un trabajo inabordable.
 - `RN-4` Editar el cuestionario **crea una versión nueva**. Las versiones anteriores se
   conservan porque hay correcciones que las responden.
-- `RN-5` Cambiar el cuestionario **no altera las retenciones ya hechas** ni las correcciones
+- `RN-5` Cambiar el cuestionario **no altera los precios ya anotados** ni las correcciones
   en curso: quien empezó con unas condiciones las conserva
   ([`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md), `RN-3`).
 - `RN-6` El autor ve **el coste mientras configura**, no después de guardar.
