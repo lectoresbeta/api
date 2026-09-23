@@ -69,6 +69,9 @@ Nadie reclama sobre lo propio.
   y así sucesivamente.
 - `RN-6c` Un **invitado sin cuenta puede reclamar** (`MOD-10`), pero no podrá seguir la
   reclamación ni hablar con el moderador después.
+- `RN-6d` Quien esté bloqueado o sin cupo ve, **junto al botón deshabilitado, un enlace para
+  reclamar por correo** (`MOD-22`). Un moderador la registra después en su nombre. La vía es
+  más lenta, pero existe siempre.
 - `RN-7` El reclamante **no conoce la identidad del moderador** que la revisa.
 - `RN-8` Una corrección **por enlace público** no admite reclamación de créditos —no los
   movió— pero sí por contenido inapropiado (`C-46`).
@@ -109,6 +112,24 @@ El crecimiento acumulativo es lo que hace que el sistema se defienda solo: recla
 ligera es barato la primera vez y caro la cuarta. Quien reclama de buena fe rara vez acumula
 desestimaciones; quien lo usa para no pagar, sí.
 
+### Pero la puerta nunca se cierra del todo
+
+Un usuario bloqueado podría encontrarse algo genuinamente grave y no poder denunciarlo. Por
+eso, **junto al botón bloqueado hay un enlace para escribir por correo** (`MOD-22`).
+
+| | Vía normal | **Vía por correo** |
+|---|---|---|
+| Quién la usa | Cualquiera con cupo | Quien está bloqueado o ha agotado el cupo |
+| Velocidad | Inmediata | Lenta: alguien tiene que leer el correo |
+| Cómo entra al sistema | Directamente | Un moderador **la crea en nombre del usuario** desde el backoffice ([`FEAT-MOD-005`](FEAT-MOD-005-user-management.md)) |
+
+Es deliberadamente más lenta. El tope y el bloqueo siguen cumpliendo su función —desincentivar
+reclamar a la ligera— pero **nadie se queda sin forma de avisar de algo serio**.
+
+Lo que hay que decidir es si una reclamación creada por esa vía **consume cupo y cuenta para
+el bloqueo acumulativo** (`MOD-45`). Si no lo hiciera, el correo sería sencillamente la forma
+de saltarse el límite.
+
 **Y el crédito no se mueve hasta que un moderador aprueba.** Mientras la reclamación está
 pendiente, el corrector conserva lo que cobró: no hay ningún estado intermedio en el que el
 dinero esté en el aire.
@@ -131,7 +152,7 @@ dinero esté en el aire.
 | Reclama una corrección que no es de su obra | Se rechaza | `403` |
 | Reclama una corrección bloqueada | Se rechaza | `409` |
 | Supera las 3 del mes | Se rechaza, con explicación | `429` |
-| Está bloqueado por desestimaciones | Se rechaza, diciendo hasta cuándo | `429` |
+| Está bloqueado por desestimaciones | Se rechaza, diciendo hasta cuándo **y ofreciendo la vía por correo** | `429` |
 | Motivo fuera del catálogo | Se rechaza | `422` |
 | Cuenta sin activar | Se rechaza | `403` |
 | El objeto ya no existe | Se rechaza | `404` |
@@ -178,6 +199,7 @@ puede impedir que otro contexto borre lo suyo.
 - [ ] Superar las 3 del mes devuelve `429` con explicación.
 - [ ] Tras `N` desestimaciones, el bloqueo dura `N` semanas.
 - [ ] Un invitado sin cuenta puede reclamar.
+- [ ] Quien está bloqueado ve el enlace para reclamar por correo junto al botón deshabilitado.
 - [ ] Los créditos **no se mueven** mientras la reclamación está pendiente.
 - [ ] El evento publicado no contiene el texto libre del reclamante.
 - [ ] Si el objeto reclamado desaparece, la reclamación sigue siendo legible.
@@ -186,15 +208,13 @@ puede impedir que otro contexto borre lo suyo.
 
 | # | Pregunta | Impacto |
 |---|---|---|
+| **MOD-45** | Una reclamación entrada por correo, ¿consume cupo y cuenta para el bloqueo? | Si no, el correo es la forma de saltarse el límite |
 | **MOD-21** | ¿Se reinicia el contador de desestimadas en algún momento? | Sin reinicio, un error de hace dos años sigue pesando |
-| MOD-22 | ¿El tope de 3 al mes es por usuario o por tipo de reclamación? | Denunciar contenido ilegal y reclamar una corrección no deberían competir por el mismo cupo |
 | C-46 | ¿Puede el autor reclamar una corrección por enlace público? | No hay créditos que devolver, pero sí contenido que moderar |
 
-Resueltas: `MOD-2` (**3 al mes**, con bloqueo acumulativo por desestimación), `MOD-5` (**se
-agrupan**) y `MOD-10` (**sí puede** reclamar un invitado, sin seguimiento posterior).
-
-`MOD-22` no es menor: si un usuario gasta su cupo reclamando correcciones y después encuentra
-contenido gravemente inapropiado, no podría denunciarlo.
+Resueltas: `MOD-2` (**3 al mes** con bloqueo acumulativo), `MOD-5` (**se agrupan**), `MOD-10`
+(**sí puede** reclamar un invitado) y `MOD-22` (**vía alternativa por correo** cuando el botón
+está bloqueado).
 
 ## Estado
 

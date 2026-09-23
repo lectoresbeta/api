@@ -70,6 +70,27 @@ por qué.
 `RN-5` es una regla de contención: la plataforma custodia obra inédita, y un backoffice que
 permite navegarla entera es un riesgo mucho mayor que el problema que resuelve.
 
+## Reclamar en nombre de un usuario
+
+Cuando alguien tiene el botón de reclamar bloqueado, escribe por correo
+([`FEAT-MOD-001`](FEAT-MOD-001-submit-claim.md) `RN-6d`). Un moderador **registra esa
+reclamación en su nombre** desde el backoffice.
+
+- `RN-12` Una reclamación creada en nombre de otro **queda marcada como tal**, con quién la
+  registró y por qué vía. No se disfraza de reclamación ordinaria.
+- `RN-13` El usuario **la ve en su sección de reclamaciones**
+  ([`FEAT-MOD-010`](FEAT-MOD-010-my-claims.md)) y puede hablar con el moderador desde ahí, aun
+  estando bloqueado para presentar nuevas.
+- `RN-14` **Quien la registra no puede resolverla**: sigue aplicando el conflicto de interés
+  ([`FEAT-MOD-002`](FEAT-MOD-002-review-claim.md) `RN-1`).
+
+`RN-14` no es evidente y sí importante: registrar una reclamación no es una decisión, pero
+quien la ha redactado a partir de un correo **ya se ha formado una opinión**. Debe resolverla
+otro.
+
+`RN-12` mantiene honesta la trazabilidad. Si estas reclamaciones fueran indistinguibles de las
+ordinarias, nadie podría medir después cuánta moderación entra por la puerta de atrás.
+
 ## Sanciones
 
 El catálogo **no está definido** (`MOD-1`). Lo que se puede fijar ya:
@@ -98,6 +119,7 @@ Familias plausibles, a decidir en `MOD-1`:
 | Imponer sanción | `POST /admin/users/{userId}/sanctions` | `Moderator` |
 | Levantar sanción | `DELETE /admin/sanctions/{sanctionId}` | `Moderator` |
 | Ajustar créditos | `POST /admin/users/{userId}/credit-adjustment` | **`Admin`** |
+| Reclamar en nombre de un usuario | `POST /admin/claims/on-behalf` | `Moderator` |
 
 ## Criterios de aceptación
 
@@ -109,6 +131,9 @@ Familias plausibles, a decidir en `MOD-1`:
 - [ ] Las sanciones temporales caducan sin intervención.
 - [ ] El usuario sancionado recibe motivo y duración.
 - [ ] El backoffice no permite navegar obra inédita ajena fuera de lo reclamado.
+- [ ] Una reclamación creada en nombre de otro queda marcada con quién la registró.
+- [ ] Quien la registra no puede resolverla.
+- [ ] El usuario la ve en su sección aunque esté bloqueado para presentar nuevas.
 
 ## Preguntas abiertas
 
@@ -116,6 +141,7 @@ Familias plausibles, a decidir en `MOD-1`:
 |---|---|---|
 | **MOD-1** | ¿Qué catálogo de sanciones? | Sin él no hay nada que imponer |
 | MOD-18 | ¿Puede el backoffice leer el contenido de una corrección no reclamada? | Es contenido privado entre dos personas |
+| MOD-45 | Una reclamación registrada en nombre de otro, ¿consume su cupo? | Si no, el correo es la forma de saltarse el límite |
 | MOD-19 | ¿Se avisa al usuario de que su ficha ha sido consultada? | Transparencia frente a operatividad |
 | MOD-20 | ¿Hay exportación de datos de un usuario a petición suya? | Obligación legal en varias jurisdicciones |
 

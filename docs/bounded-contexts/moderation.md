@@ -81,7 +81,7 @@ convertiría en el contexto que lo sabe todo sobre todos.
 | `ClaimType` | `INAPPROPRIATE_WORK`, `INAPPROPRIATE_CHAPTER`, `FRAUDULENT_FEEDBACK`, `ABUSIVE_USER`, `MISLABELLED_CONTENT` |
 | `ClaimStatus` | `PENDING`, `UNDER_REVIEW`, `UPHELD`, `REJECTED` |
 | `ClaimReason` | Motivos por tipo. Para feedback: `NO_VALUE`, `TOO_SHORT`, `OFF_TOPIC`, `OFFENSIVE` |
-| `SanctionType` | `WARNING`, `PARTIAL_SUSPENSION`, `FULL_SUSPENSION`, `EXPULSION` |
+| `SanctionType` | `WARNING`, `PARTIAL_SUSPENSION` (solo lectura), `FULL_SUSPENSION` (indefinida), `EXPULSION` (cuenta a `BLOCKED`, **sin anonimizar**) |
 | `SuspensionDuration` | `THREE_DAYS`, `ONE_WEEK`, `ONE_MONTH` (solo parcial) |
 | `ThreadParty` | `REPORTER`, `SUBJECT` |
 
@@ -244,22 +244,25 @@ las dos piezas deben diseñarse juntas: son los dos extremos de la misma cuerda.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **MOD-27** | ¿Qué alcances tiene la suspensión parcial, y son combinables? | Sin alcance, «suspensión parcial» no significa nada |
-| **MOD-26** | Si la expulsión anonimiza, ¿cómo se impide volver a registrarse? | No se puede borrar a alguien y recordarlo a la vez |
+| **MOD-43** | Con suspensión parcial y saldo negativo, ¿cómo salda la deuda el usuario? | No puede corregir, y corregir es la única forma de saldarla |
+| **MOD-45** | Una reclamación entrada por correo, ¿consume cupo y cuenta para el bloqueo? | Si no, el correo es la forma de saltarse el límite |
 | **W-20** | ¿Qué catálogo de etiquetas de contenido sensible? | Define el filtro y el criterio del moderador |
+| **MOD-37** | Si la revisión usa IA externa, ¿sale obra inédita de la plataforma? | Es lo que la plataforma existe para custodiar |
+| MOD-44 | ¿Qué se conserva de una cuenta expulsada si esa persona pide su supresión? | Conflicto entre derecho de supresión y no readmitir |
 | MOD-21 | ¿Se reinicia el contador de reclamaciones desestimadas? | Sin reinicio, un error de hace años sigue pesando |
-| MOD-22 | ¿El tope de 3 al mes es por usuario o por tipo? | Quien gaste el cupo reclamando correcciones no podría denunciar algo grave |
-| MOD-36 | ¿Se revisa el texto en cada edición o solo al publicar? | Publicar limpio y editar después es el esquive obvio |
-| MOD-37 | Si la revisión usa IA externa, ¿sale obra inédita de la plataforma? | Es lo que la plataforma existe para custodiar |
+| MOD-46 | ¿Qué cuenta como «modificación» para disparar la revisión? | Revisar cada guardado dispararía el coste |
 | MOD-9 | ¿Qué plazos de respuesta se asumen? | Hay jurisdicciones que los imponen |
 | MOD-41 | El umbral de 3 capítulos, ¿absoluto o proporcional? | 3 de 4 y 3 de 40 no son lo mismo |
 
 **Resueltas el 2026-09-23:** `MOD-1` (cuatro familias de sanciones), `MOD-2` (3 reclamaciones
 al mes y bloqueo acumulativo), `MOD-3` (revisión automática, hoy vacía), `MOD-4` (conversación
 con el moderador), `MOD-5` (se agrupan), `MOD-6` (comando de consola), `MOD-7` (no se
-revierte lo ya pagado), `MOD-8` (recurso por correo), `MOD-10` (un invitado puede reclamar),
-`MOD-12` (se revierte la reputación), `MOD-13` (bloqueo por capítulo, umbral de 3), `MOD-15`
-(decide el `Admin`), `MOD-16` (un correo por reclamación) y `MOD-17` (segundo factor).
+revierte lo ya pagado), `MOD-8` y `MOD-40` (recurso por correo, con la dirección en el correo
+de bloqueo), `MOD-10` (un invitado puede reclamar), `MOD-12` (se revierte la reputación),
+`MOD-13` (bloqueo por capítulo, umbral de 3), `MOD-15` (decide el `Admin`), `MOD-16` (un
+correo por reclamación), `MOD-17` (segundo factor), `MOD-22` (vía por correo cuando el botón
+está bloqueado), `MOD-26` (la expulsión **bloquea, no anonimiza**), `MOD-27` (suspensión
+parcial = **solo lectura**) y `MOD-36` (**se revisa en cada modificación**).
 
 ## Persistencia
 

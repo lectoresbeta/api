@@ -67,6 +67,10 @@ más difícil será sustituir la implementación.
 - `RN-6` Si el revisor **falla o no responde**, el texto se publica y se marca para revisión
   posterior. No se bloquea a nadie por una caída de infraestructura.
 - `RN-7` El servicio es **desactivable** por configuración.
+- `RN-8` Se ejecuta **al publicar y en cada modificación del texto** (`MOD-36`). No basta con
+  revisar la publicación inicial.
+- `RN-9` Se revisa **solo lo que cambia** cuando es posible. Reprocesar una novela entera por
+  una errata corregida será caro en cuanto el revisor haga algo de verdad.
 
 `RN-5` es la regla que conviene no relajar nunca. Un sistema automático que sanciona sin
 intervención humana se equivoca en silencio y a escala, y el afectado no tiene con quién
@@ -76,10 +80,14 @@ hablar.
 correcta: hoy el revisor aprueba todo, así que bloquear ante un fallo sería impedir publicar
 por nada. Cuando exista IA de verdad, conviene revisarla.
 
-## Cuándo se ejecuta
+## Cuándo se ejecuta: en cada modificación
 
-**Al publicar**, antes de que el texto sea visible para otros. Con la implementación actual el
-veredicto es inmediato y el autor no nota nada.
+**Al publicar y en cada edición posterior** (`MOD-36`), antes de que el texto modificado sea
+visible para otros.
+
+Revisar solo al publicar dejaría abierto el esquive obvio —publicar un texto inocuo y
+editarlo después— que vaciaría de sentido cualquier revisión futura. Con la implementación
+actual el veredicto es inmediato y el autor no nota nada.
 
 Cuando la revisión tarde —la IA tardará— aparece una pregunta que hoy no es urgente pero
 conviene dejar planteada: **¿espera el autor, o se publica de forma optimista y se retira si
@@ -105,6 +113,7 @@ milisegundos. Añadirlo después, con obras publicadas, es mucho más caro.
 - [ ] Ningún veredicto automático impone una sanción por sí solo.
 - [ ] Si el revisor falla, el texto se publica igualmente.
 - [ ] El servicio se desactiva por configuración.
+- [ ] El texto se revisa también **al editarlo**, no solo al publicarlo.
 
 ## Preguntas abiertas
 
@@ -112,12 +121,13 @@ milisegundos. Añadirlo después, con obras publicadas, es mucho más caro.
 |---|---|---|
 | MOD-34 | Cuando la revisión tarde, ¿espera el autor o se publica de forma optimista? | Hoy no importa; con IA sí |
 | MOD-35 | ¿Se revisan también las **correcciones**, o solo los textos? | Una corrección ofensiva es igual de dañina |
-| MOD-36 | ¿Se revisa el texto en cada edición o solo al publicar? | Publicar limpio y editar después es el esquive obvio |
-| MOD-37 | Si se usa IA externa, ¿sale obra inédita de la plataforma? | Es exactamente lo que la plataforma existe para custodiar |
+| **MOD-37** | Si se usa IA externa, ¿sale obra inédita de la plataforma? | Es exactamente lo que la plataforma existe para custodiar |
+| MOD-46 | ¿Se revisa cada pulsación de «guardar», o hay agrupación? | Un editor que guarda solo dispararía una revisión por minuto |
 
-**`MOD-36` es un agujero real** y conviene cerrarlo cuando la revisión haga algo: publicar un
-texto inocuo y editarlo después deja sin efecto cualquier revisión que solo mire la
-publicación.
+Resuelta: `MOD-36` (**se revisa en cada modificación**, no solo al publicar).
+
+`MOD-46` nace de cerrar `MOD-36`: revisar en cada cambio es correcto, pero «cada cambio»
+necesita definición o el coste se dispara en cuanto el revisor haga algo real.
 
 `MOD-37` no es un detalle técnico. Mandar manuscritos inéditos a un servicio externo es una
 decisión de producto y probablemente de contrato, del mismo orden que la de

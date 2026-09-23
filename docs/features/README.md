@@ -362,8 +362,17 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 > reclamar en falso y criterios escritos para el moderador.
 >
 > **El catálogo de sanciones** son cuatro familias (`FEAT-MOD-006`): aviso, suspensión parcial
-> —3 días, 1 semana o 1 mes—, suspensión total **indefinida hasta que alguien la revoque**, y
-> expulsión, que **anonimiza la cuenta**.
+> —**solo lectura**: entra y lee, no publica, comenta ni corrige— de 3 días, 1 semana o 1 mes;
+> suspensión total **indefinida hasta que alguien la revoque**; y expulsión, que deja la cuenta
+> en **`BLOCKED`, sin anonimizar**.
+>
+> **La expulsión no anonimiza a propósito**: no se puede a la vez borrar a alguien y recordarlo
+> para impedirle volver. Si anonimizase, la sanción más grave del catálogo sería la más fácil
+> de esquivar. Es la diferencia con darse de baja voluntariamente, que sí anonimiza.
+>
+> **La puerta de reclamar nunca se cierra del todo** (`MOD-22`): quien tiene el botón
+> bloqueado ve un enlace para escribir por correo, y un moderador registra la reclamación en
+> su nombre. Más lenta, pero nadie se queda sin forma de avisar de algo serio.
 >
 > **El bloqueo es por capítulo**, y una obra con **3 capítulos bloqueados** queda bloqueada
 > entera (`FEAT-MOD-003`). El recurso del autor es **por correo**, no por la plataforma.

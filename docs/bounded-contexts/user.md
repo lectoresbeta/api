@@ -18,6 +18,9 @@ preferencias y presencia pública como autor.
 - Perfil público y página de autor con su personalización.
 - Invitaciones a la plataforma.
 - Eliminación de cuenta.
+- Preferencias de contenido sensible (`FEAT-USR-043`).
+- El **estado de la cuenta**, incluido `BLOCKED` por expulsión, que aplica al recibir
+  `SanctionImposed` de `Moderation`.
 
 ## Qué NO posee
 

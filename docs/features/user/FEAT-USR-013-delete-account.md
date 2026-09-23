@@ -47,6 +47,11 @@ El patrón es el mismo en todos los casos: **una parte de lo que la cuenta ha ge
 pertenece a otros o forma parte de una transacción económica**. Eliminar la cuenta no puede
 deshacer lo que otro pagó ni lo que otro escribió.
 
+> **No confundir con la expulsión.** Darse de baja **anonimiza**; ser expulsado deja la cuenta
+> en **`BLOCKED`, con sus datos intactos**, para impedir volver a registrarse
+> ([`FEAT-MOD-006`](../moderation/FEAT-MOD-006-sanctions.md)). Son dos finales distintos
+> porque responden a intereses distintos: uno protege a la persona, el otro a la plataforma.
+
 ## Anonimizar, no borrar
 
 Es la decisión de fondo, y resuelve la tensión entera: **desaparece la persona, permanece lo
