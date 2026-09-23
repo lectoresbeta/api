@@ -182,7 +182,7 @@ class Work
             throw WorkHasNoChapters::cannotBePublished($this->id);
         }
 
-        $this->changeStatus(WorkStatus::VISIBLE, $now);
+        $this->changeStatus(WorkStatus::PUBLISHED, $now);
     }
 
     public function openForCorrection(\DateTimeImmutable $now): void
@@ -201,10 +201,10 @@ class Work
     public function closeForCorrection(\DateTimeImmutable $now): void
     {
         if (WorkStatus::IN_CORRECTION !== $this->status) {
-            throw IllegalWorkTransition::from($this->status, WorkStatus::VISIBLE);
+            throw IllegalWorkTransition::from($this->status, WorkStatus::PUBLISHED);
         }
 
-        $this->changeStatus(WorkStatus::VISIBLE, $now);
+        $this->changeStatus(WorkStatus::PUBLISHED, $now);
     }
 
     public function unpublish(\DateTimeImmutable $now): void

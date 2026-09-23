@@ -39,7 +39,7 @@ una decisión distinta, que resuelve `FEAT-WRK-004`.
 
 ## Reglas de negocio
 
-- `RN-1` El catálogo incluye obras en estado `VISIBLE` e `IN_CORRECTION`. **Nunca `DRAFT`**
+- `RN-1` El catálogo incluye obras en estado `PUBLISHED` e `IN_CORRECTION`. **Nunca `DRAFT`**
   ([`FEAT-WRK-016`](FEAT-WRK-016-work-status.md)).
 - `RN-2` El filtro de estado ofrece solo esos dos valores. `DRAFT` no puede aparecer como
   opción ni por manipulación del parámetro.

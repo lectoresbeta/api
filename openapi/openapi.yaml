@@ -94,6 +94,9 @@ paths:
   /works/{workId}/chapters:
     $ref: './paths/works.yaml#/chapters'
 
+  /works/{workId}/status:
+    $ref: './paths/works.yaml#/status'
+
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'
 

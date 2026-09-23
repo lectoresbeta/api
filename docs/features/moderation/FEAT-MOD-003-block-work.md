@@ -52,7 +52,7 @@ uno seguiría publicada indefinidamente, ofreciendo una lectura llena de huecos.
 | Estado | Quién lee | Quién corrige |
 |---|---|---|
 | `DRAFT` | Solo el autor | Nadie |
-| `VISIBLE` | Todos | Nadie |
+| `PUBLISHED` | Todos | Nadie |
 | `IN_CORRECTION` | Todos | Lectores beta |
 | **`BLOCKED`** | **Solo el autor**, marcado | **Nadie** |
 

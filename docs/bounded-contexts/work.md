@@ -73,7 +73,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | Evento | Cuándo | Consumidores |
 |---|---|---|
 | `WorkCreated` | Se crea la obra | `Reading`, `Notification` |
-| `WorkPublished` | La obra pasa a `VISIBLE` | `Reading`, `Community`, `Notification` |
+| `WorkPublished` | La obra pasa a `PUBLISHED` | `Reading`, `Community`, `Notification` |
 | `WorkOpenedForCorrection` | La obra pasa a `IN_CORRECTION` | **`Credits`**, `Reading`, `Notification` |
 | `WorkClosedForCorrection` | La obra sale de `IN_CORRECTION` | **`Credits`** (libera retenciones), `Reading` |
 | `WorkContentUpdated` | Cambia el contenido y posiblemente el `TextTier` | `Credits` (referencia de coste), `Feedback` |
@@ -87,7 +87,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 - `RN-2` Un fragmento pertenece a una sola obra.
 - `RN-3` El `TextTier` se deriva siempre del número de palabras. Nunca se edita directamente.
 - `RN-4` Una obra en `DRAFT`, o un fragmento `HIDDEN`, solo son accesibles para su autor.
-- `RN-7` **Solo una obra en `IN_CORRECTION` admite feedback nuevo.** `VISIBLE` se puede leer
+- `RN-7` **Solo una obra en `IN_CORRECTION` admite feedback nuevo.** `PUBLISHED` se puede leer
   pero no comentar: el autor decide cuándo abre esa puerta, porque recibir feedback le cuesta
   créditos.
 - `RN-8` `BetaReaderAccessMode` responde «quién puede comentar» y solo tiene efecto en

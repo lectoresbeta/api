@@ -34,7 +34,7 @@ fuera. Lo que importa de esta ficha es **qué se recorta**.
 | Nombre, `@usuario`, avatar, portada, descripción | Sí |
 | Contadores: seguidos, seguidores, relatos, correcciones | Sí |
 | Muro: publicaciones y reposts | Sí |
-| Relatos | Sí, **solo los `VISIBLE` e `IN_CORRECTION`** |
+| Relatos | Sí, **solo los `PUBLISHED` e `IN_CORRECTION`** |
 | Amigos: seguidos y seguidores | Sí |
 | Obras publicadas y premios | Sí |
 | **Lista de correcciones** | **No.** No hay pestaña (`U-17`) |
@@ -57,7 +57,7 @@ el diseño podría ser un olvido.
 - `RN-1` Devuelve **solo datos públicos**. Nunca email ni fecha de nacimiento.
 - `RN-2` **Nunca devuelve borradores** ajenos. Un borrador es obra inédita que su autor no ha
   decidido enseñar (`FEAT-WRK-016` `RN-4`).
-- `RN-3` La pestaña de relatos muestra las obras en `VISIBLE` e `IN_CORRECTION`, **sin la
+- `RN-3` La pestaña de relatos muestra las obras en `PUBLISHED` e `IN_CORRECTION`, **sin la
   insignia de estado**: eso es información de gestión del autor.
 - `RN-4` **No se expone la lista de feedback** que ese usuario ha dado. Sí su contador.
 - `RN-5` Incluye el estado de la relación en **ambos sentidos**: si le sigo y si me sigue

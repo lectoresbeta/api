@@ -26,7 +26,7 @@
 | `GET /chapters/{chapterId}/questionnaire` | `getChapterQuestionnaire` | Cuestionario a responder y borrador | FEAT-FBK-003 | DRAFT |
 | `PUT /works/{workId}/questionnaire` | `updateWorkQuestionnaire` | Definir cuestionario | FEAT-WRK-014 | DRAFT |
 | `POST /works/{workId}/questionnaire/estimate` | `estimateQuestionnairePricing` | Simular coste y recompensa | FEAT-WRK-014 | DRAFT |
-| `PUT /works/{workId}/status` | `setWorkStatus` | Borrador / visible / en corrección | FEAT-WRK-016 | DRAFT |
+| `PUT /api/v1/works/{workId}/status` | `changeWorkStatus` | Publicar, abrir o cerrar la corrección | FEAT-WRK-016 | **Implementado** |
 | `POST /works/{workId}/public-link` | `createPublicLink` | Crear enlace público | FEAT-WRK-010 | PENDING |
 | `DELETE /public-links/{linkId}` | `revokePublicLink` | Revocar enlace público | FEAT-WRK-010 | PENDING |
 | `GET /public-links/{token}` | `readByPublicLink` | Leer sin sesión | FEAT-WRK-010 | PENDING |
@@ -116,6 +116,53 @@ es prosa.
 Actualiza el recuento de palabras y de capítulos de la obra. Ese recuento se calcula sobre el
 **texto plano** derivado, no sobre el marcado: de él depende el precio de toda corrección
 ([`FEAT-CRD-016`](../../features/credits/FEAT-CRD-016-effort-based-pricing.md)).
+
+---
+
+## `PUT /api/v1/works/{workId}/status`
+
+**`operationId`:** `changeWorkStatus` · **Funcionalidad:** [`FEAT-WRK-016`](../../features/work/FEAT-WRK-016-work-status.md)
+
+### Propósito
+
+Publicar la obra, abrirla a corrección o cerrar la corrección. Una sola operación con el
+destino en el cuerpo.
+
+### Autorización
+
+Sesión, cuenta activada y **ser el autor**. Una obra ajena responde `404`.
+
+### Reglas aplicadas
+
+| De | A | |
+|---|---|---|
+| `DRAFT` | `PUBLISHED` | Publicar. Exige al menos un capítulo |
+| `PUBLISHED` | `IN_CORRECTION` | Abrir a corrección |
+| `IN_CORRECTION` | `PUBLISHED` | Cerrar la corrección |
+
+**El servidor decide qué caminos existen.** Un cliente que conociera la máquina de estados
+habría que actualizarlo cada vez que cambiase, y el que no se actualizara sería el que
+hiciera la llamada ilegal.
+
+Publicar y abrir son **dos pasos**: saltárselos escondería una publicación dentro de otra
+acción, y el autor empezaría a gastar créditos sobre un texto que nadie ha visto aún como lo
+verán los demás. Volver a `DRAFT` **no se ofrece** mientras `W-10` no se decida: puede que
+alguien ya lo haya leído.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `WORK_HAS_NO_CHAPTERS` | 409 | Publicar una obra vacía |
+| `ILLEGAL_WORK_TRANSITION` | 409 | Transición no permitida, o un estado que no existe |
+| `WORK_NOT_FOUND` | 404 | La obra no existe **o no es tuya** |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | La cuenta no está activada |
+
+### Efectos
+
+Publica `WorkPublished`, `WorkOpenedForCorrection` o `WorkClosedForCorrection` según la
+transición. **Ninguno mueve créditos**: el diseño anterior reservaba al abrir la corrección, y
+[`decision:0006`](../../decisions/0006-credit-system.md) eliminó las reservas.
 
 ---
 

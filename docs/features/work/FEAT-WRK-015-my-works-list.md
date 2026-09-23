@@ -29,7 +29,7 @@ criterios de ordenación.
 |---|---|
 | **Todas** | Todas las obras del autor |
 | **En corrección** | Estado `IN_CORRECTION` |
-| **Visibles** | Estado `VISIBLE` |
+| **Visibles** | Estado `PUBLISHED` |
 | **En borrador** | Estado `DRAFT` |
 
 Los tres estados son excluyentes, así que los tres filtros **suman el total**: el perfil dice

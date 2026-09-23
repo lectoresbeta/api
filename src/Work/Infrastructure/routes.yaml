@@ -13,3 +13,8 @@ addChapter:
     path: /api/v1/works/{workId}/chapters
     controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\AddChapterController::__invoke
     methods: [POST]
+
+changeWorkStatus:
+    path: /api/v1/works/{workId}/status
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ChangeWorkStatusController::__invoke
+    methods: [PUT]

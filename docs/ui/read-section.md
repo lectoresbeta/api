@@ -51,7 +51,7 @@ Sobre la barra:
 
 ### «Estado» como filtro público
 
-Que el estado sea filtrable confirma que `VISIBLE` e `IN_CORRECTION` son distinciones
+Que el estado sea filtrable confirma que `PUBLISHED` e `IN_CORRECTION` son distinciones
 **visibles para el lector**, no solo de gestión del autor.
 
 Tiene sentido: a quien quiere ganar créditos le interesa filtrar por obras **en corrección**,

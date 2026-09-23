@@ -138,3 +138,89 @@ chapters:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+status:
+  put:
+    tags: [Works]
+    operationId: changeWorkStatus
+    summary: Publicar, abrir a corrección o cerrar la corrección
+    description: |
+      Una sola operación para todas las transiciones, con el destino en el
+      cuerpo. **El servidor decide qué caminos existen**: un cliente que
+      conociera la máquina de estados habría que actualizarlo cada vez que
+      cambiase, y el que no se actualizara sería el que hiciera la llamada
+      ilegal.
+
+      | De | A | |
+      |---|---|---|
+      | `DRAFT` | `PUBLISHED` | Publicar |
+      | `PUBLISHED` | `IN_CORRECTION` | Abrir a corrección |
+      | `IN_CORRECTION` | `PUBLISHED` | Cerrar la corrección |
+
+      **Publicar y abrir son dos pasos, no uno.** Saltar de borrador a admitir
+      correcciones escondería una publicación dentro de otra acción, y el
+      autor empezaría a gastar créditos sobre un texto que nadie ha visto aún
+      como lo verán los demás.
+
+      **Volver a `DRAFT` no se ofrece.** Puede que alguien ya lo haya leído, y
+      con correcciones en marcha es peor: quien lleva horas sobre un capítulo
+      no puede ver cómo desaparece. Sigue siendo una decisión pendiente
+      (`W-10`), y hasta que se tome la respuesta honesta es «no».
+
+      Publicar una obra **sin capítulos** se rechaza: la regla de que una obra
+      tiene contenido muerde aquí, no al crearla.
+
+      Abrir a corrección **no mueve créditos**. El diseño anterior reservaba
+      en este punto; `decision:0006` eliminó las reservas.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [status]
+            properties:
+              status:
+                type: string
+                enum: [PUBLISHED, IN_CORRECTION]
+    responses:
+      '200':
+        description: Estado resultante.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [DRAFT, PUBLISHED, IN_CORRECTION]
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'La obra no existe **o no es tuya**. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          Transición no permitida (`code: ILLEGAL_WORK_TRANSITION`) o la obra
+          no tiene capítulos (`code: WORK_HAS_NO_CHAPTERS`).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

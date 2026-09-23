@@ -5,7 +5,7 @@ context: Work
 concept: Manuscript
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - conversation:2026-09-22 (pestaña «Mis relatos»)
@@ -26,9 +26,9 @@ Una obra está en uno de tres estados, y solo en uno:
 | Estado | `WorkStatus` | ¿Se puede leer? | ¿Se puede corregir? |
 |---|---|---|---|
 | En borrador | `DRAFT` | Solo el autor | No |
-| Publicada | `PUBLISHED` | Sí, si `VISIBLE` | **No** |
+| Publicada | `PUBLISHED` | Sí | **No** |
 | En corrección | `IN_CORRECTION` | Sí | **Sí** |
-| Bloqueada | **`BLOCKED`** | **Solo el autor**, marcada | No |
+| Bloqueada | `blocked_at` | **Solo el autor**, marcada | No |
 
 `BLOCKED` no lo elige el autor: lo impone una reclamación estimada
 ([`FEAT-MOD-003`](../moderation/FEAT-MOD-003-block-work.md)) y es **terminal**.
@@ -101,7 +101,7 @@ cuando ya tiene suficiente feedback en marcha.
 - `RN-3` Solo su autor cambia el estado.
 - `RN-4` En `DRAFT`, la obra **no existe para nadie más**: no aparece en el catálogo, ni en
   recomendaciones, ni en búsquedas, y su contenido no es accesible.
-- `RN-5` En `VISIBLE` se puede leer según la modalidad de acceso, pero **no se admite
+- `RN-5` En `PUBLISHED` se puede leer según la modalidad de acceso, pero **no se admite
   feedback nuevo**.
 - `RN-6` En `IN_CORRECTION` se admite feedback según `BetaReaderAccessMode`.
 - `RN-7` Cerrar la corrección **no borra el feedback ya recibido**.
@@ -118,21 +118,31 @@ Propuesta, pendiente de confirmar (`W-10`):
 
 ```text
             publicar                abrir corrección
-  DRAFT ───────────────▶ VISIBLE ──────────────────▶ IN_CORRECTION
-    ▲                       ▲                              │
-    │                       └──────────────────────────────┘
-    │                            cerrar corrección
-    └─ ¿despublicar? (W-10)
+  DRAFT ───────────────▶ PUBLISHED ────────────────▶ IN_CORRECTION
+                            ▲                              │
+                            └──────────────────────────────┘
+                                 cerrar corrección
 ```
 
 | Transición | ¿Permitida? | Nota |
 |---|---|---|
-| `DRAFT → VISIBLE` | Sí | Publicar |
-| `VISIBLE → IN_CORRECTION` | Sí | Abrir a feedback. Aquí se comprometen los créditos |
-| `IN_CORRECTION → VISIBLE` | Sí | Cerrar la corrección. Quien ya empezó, termina y cobra |
-| `DRAFT → IN_CORRECTION` | Probablemente sí | Publicar y abrir en un solo paso |
-| `VISIBLE → DRAFT` | **Sin decidir** (`W-10`) | Despublicar algo que otros ya han visto |
-| `IN_CORRECTION → DRAFT` | **Sin decidir** | Implicaría cerrar la corrección primero |
+| `DRAFT → PUBLISHED` | Sí | Publicar. Exige al menos un capítulo |
+| `PUBLISHED → IN_CORRECTION` | Sí | Abrir a corrección. **No mueve créditos** |
+| `IN_CORRECTION → PUBLISHED` | Sí | Cerrar la corrección. Quien ya empezó, termina y cobra |
+| `DRAFT → IN_CORRECTION` | **No** | Ver abajo |
+| `PUBLISHED → DRAFT` | **No, por ahora** | Ver abajo |
+| `IN_CORRECTION → DRAFT` | **No, por ahora** | Ídem |
+
+**`W-10` resuelta en lo que hacía falta para implementar, y dejando dicho lo que no.**
+
+*Publicar y abrir son dos pasos.* Saltar de borrador a admitir correcciones escondería una
+publicación dentro de otra acción, y el autor empezaría a gastar créditos sobre un texto que
+nadie ha visto todavía como lo verán los demás. Dos llamadas no le cuestan nada al cliente.
+
+*Volver a borrador no se ofrece.* Puede que alguien ya lo haya leído, y con correcciones en
+marcha es peor: quien lleva horas sobre un capítulo no puede ver cómo desaparece. La decisión
+de producto sigue pendiente; mientras tanto, la respuesta honesta es «no», y es reversible —
+abrir un camino no rompe a nadie, cerrarlo sí.
 
 ## La relación con los créditos
 
@@ -171,7 +181,7 @@ valida que la transición es legal: el cliente no decide qué caminos existen.
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `WorkPublished` | `DRAFT → VISIBLE` | `Reading`, `Community`, `Notification` |
+| `WorkPublished` | `DRAFT → PUBLISHED` | `Reading`, `Community`, `Notification` |
 | `WorkOpenedForCorrection` | Entra en `IN_CORRECTION` | **`Credits`**, `Reading`, `Notification` |
 | `WorkClosedForCorrection` | Sale de `IN_CORRECTION` | **`Credits`**, `Feedback`, `Reading`. Quien ya empezó a corregir, termina y cobra |
 
@@ -183,7 +193,17 @@ valida que la transición es legal: el cliente no decide qué caminos existen.
 
 | Tabla | Cambio |
 |---|---|
-| `work` | `status` sustituye a `visibility`; `status_changed_at` |
+| `work` | `status` y `status_changed_at` |
+
+**`status` no sustituye a `visibility`**, pese a lo que decía una versión anterior de esta
+sección: `W-9` resolvió que son ejes distintos. Lo que ocurre es que **el eje de visibilidad
+todavía no está modelado**, porque nadie lee obras todavía y no hay de quién esconderlas. El
+estado se llama `PUBLISHED` y no `VISIBLE` precisamente para que añadirlo después no produzca
+el sinsentido de una obra `VISIBLE` y oculta a la vez.
+
+`BLOCKED` tampoco es un valor de `status` en el modelo: es una marca temporal `blocked_at`
+puesta por `Moderation`. Encaja mejor con lo que esta misma ficha dice de él —«no lo elige el
+autor»— y evita que una transición del autor pueda pisarlo.
 
 Índices: `work(author_id, status)` para la pestaña «Mis relatos», y `work(status, ...)` para
 que el catálogo y las recomendaciones **nunca** consideren borradores.
@@ -193,7 +213,9 @@ que el catálogo y las recomendaciones **nunca** consideren borradores.
 - [ ] Una obra recién creada está en `DRAFT`.
 - [ ] Una obra en `DRAFT` no aparece en catálogo, recomendaciones ni búsquedas.
 - [ ] El contenido de una obra en `DRAFT` no es accesible para nadie salvo su autor.
-- [ ] Una obra `VISIBLE` se puede leer pero **no admite feedback nuevo**.
+- [ ] Una obra `PUBLISHED` se puede leer pero **no admite feedback nuevo**.
+- [ ] Una obra sin capítulos no se puede publicar.
+- [ ] Un borrador no puede saltar directamente a `IN_CORRECTION`.
 - [ ] Una obra `IN_CORRECTION` admite feedback según su modalidad de acceso.
 - [ ] Cerrar la corrección conserva el feedback ya recibido.
 - [ ] Solo el autor puede cambiar el estado.
@@ -207,9 +229,9 @@ El segundo y tercero son los importantes: un borrador filtrado es obra inédita 
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **W-9** | ¿Se confirma que `WorkStatus` sustituye a `Visibility`? | Modelo de `Work` |
-| **R-1** | ¿La reserva de créditos se hace al entrar en corrección? | Cierra `decision:0004` y elimina la compensación |
-| W-10 | ¿Qué transiciones son legales? ¿Se puede despublicar? | Máquina de estados |
+| ~~W-9~~ | ¿`WorkStatus` sustituye a `Visibility`? | **Resuelto:** no. Son ejes distintos. El de visibilidad se modelará cuando exista quien lea obras |
+| ~~R-1~~ | ¿La reserva de créditos se hace al entrar en corrección? | **Desaparece:** `decision:0006` elimina las reservas |
+| W-10 | ¿Se puede despublicar? | Lo demás está resuelto arriba. Esta parte sigue abierta, y hoy la respuesta es «no» |
 | W-11 | ¿Se puede editar una obra en corrección mientras la comentan? | El texto cambiaría bajo los pies del lector |
 | W-14 | ¿Cuántas correcciones admite una obra a la vez? | Con reserva por obra habría que declararlo |
 | W-15 | ¿Qué pasa con los accesos concedidos al cerrar la corrección? | ¿Se revocan o caducan? |
@@ -219,4 +241,21 @@ El segundo y tercero son los importantes: un borrador filtrado es obra inédita 
 **Especificación:** `APPROVED` (2026-09-24). `W-9` resuelta: `WorkStatus` y `Visibility` conviven como ejes
 distintos. Lo que queda son detalles de transición.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL`.
+
+Hecho: `PUT /api/v1/works/{workId}/status` con las tres transiciones, la comprobación de que
+solo el autor cambia el estado, el rechazo de publicar una obra sin capítulos y los tres
+eventos. Cubierto por `tests/Functional/Work/PublishWorkTest.php`.
+
+El estado pasa a llamarse **`PUBLISHED`** y no `VISIBLE`, para no chocar con el eje de
+visibilidad que `W-9` dejó vivo.
+
+**Falta:**
+
+- el **eje de visibilidad** (`VISIBLE`/`HIDDEN`), y con él la combinación más útil que
+  describe esta ficha: `IN_CORRECTION` + `HIDDEN`, que cierra la puerta a correctores nuevos
+  sin cortar a los que ya trabajan. Se modelará cuando exista quien lea obras: hoy no hay
+  catálogo ni lectura, así que no hay de quién esconderlas;
+- despublicar (`W-10`), que es una decisión de producto, no código;
+- que `Credits` consuma `WorkOpenedForCorrection` para recalcular qué capítulos son
+  corregibles. El evento se publica y todavía no lo escucha nadie.

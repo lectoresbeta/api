@@ -77,7 +77,8 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Repost | `Repost` | Republicación de una publicación ajena en el propio muro, sin texto propio. Referencia al original; no lo copia ni amplía su audiencia. Distinto de compartir fuera de la plataforma. |
 | Compartir | `Share` | Difusión de una publicación **fuera** de Lectores Beta. |
 | Publicación guardada | `SavedPost` | Publicación que el usuario archiva para leer después. Privada. |
-| Obra en corrección | `WorkStatus: IN_CORRECTION` | **Estado** del ciclo de vida de una obra: publicada y **abierta a recibir feedback**. Distinto de `VISIBLE`, que se puede leer pero no comentar. |
+| Obra en corrección | `WorkStatus: IN_CORRECTION` | **Estado** del ciclo de vida de una obra: publicada y **abierta a recibir feedback**. Distinto de `PUBLISHED`, que se puede leer pero no comentar. |
+| Obra publicada | `WorkStatus: PUBLISHED` | **Estado**: la obra ha salido del cajón y se puede leer. **No** admite correcciones nuevas; abrirlas es una segunda decisión del autor, porque recibirlas cuesta créditos. Se llama `PUBLISHED` y no `VISIBLE` para no chocar con el eje de visibilidad (`FEAT-WRK-016`, `W-9`). |
 | Tour | `Tour` | Secuencia de globos que presenta la aplicación la primera vez. Su estado se guarda por usuario y por tour. |
 | Crédito | `Credit` | Unidad de la economía interna que equilibra dar y recibir feedback. |
 | Saldo de créditos | `CreditBalance` | Créditos disponibles de un usuario. |

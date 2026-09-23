@@ -170,14 +170,14 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-013 | Calcular el número de palabras y el nivel de extensión | — (sistema) | PENDING | TODO | P0 | — |
 | FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | APPROVED | TODO | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
 | FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
-| FEAT-WRK-016 | Estado de una obra — borrador, visible y en corrección | Writer | APPROVED | TODO | P0 | [ficha](work/FEAT-WRK-016-work-status.md) |
+| FEAT-WRK-016 | Estado de una obra — borrador, visible y en corrección | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-016-work-status.md) |
 | FEAT-WRK-017 | Clasificación de contenido sensible de una obra | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-017-content-rating.md) |
 
 > `FEAT-WRK-009` está `BLOCKED`: el documento de origen deja explícitamente abierto en qué
 > momentos se genera el registro (`W-1`).
 >
 > **`FEAT-WRK-016` resuelve qué es «una obra en corrección»**: un estado del ciclo de vida.
-> Una obra está en `DRAFT`, `VISIBLE` o `IN_CORRECTION`, y solo en `IN_CORRECTION` admite
+> Una obra está en `DRAFT`, `PUBLISHED` o `IN_CORRECTION`, y solo en `IN_CORRECTION` admite
 > feedback. Eso sustituye a `Visibility` (`W-9`) y **reabre `R-1`**: si entrar en corrección
 > es una acción explícita del autor, es el sitio natural para reservar los créditos, y la
 > compensación entre contextos de `decision:0004` dejaría de hacer falta.
@@ -505,7 +505,7 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-COM-002 | `C-2` | Si se admite vídeo, con qué límites y si se transcodifica |
 | FEAT-COM-019 | `C-3` | Si un repost es un puntero o una publicación con entidad propia |
 | FEAT-COM-006, FEAT-COM-024, rankings | `CM-4` | Una única fórmula de relevancia para el muro, los comentarios y los rankings |
-| FEAT-WRK-016 | `W-9` | Si `WorkStatus` sustituye a `Visibility` |
+| ~~FEAT-WRK-016~~ | ~~`W-9`~~ | **Resuelto:** no lo sustituye. Son ejes distintos, y el de visibilidad se modelará cuando exista quien lea obras |
 | FEAT-COM-034 | `B-2`, `B-3` | Si bloquear revoca el acceso de lector beta y si puede terminar quien ya estaba corrigiendo, y qué pasa con el feedback que el autor **ya pagó** |
 | FEAT-USR-014 | `U-17` | Si el contador de correcciones es público y la lista no, de forma deliberada |
 | **FEAT-FBK-012** | `AF-1`, `AF-2` | Qué mecanismo antifraude, y si actúa antes o después del abono |
