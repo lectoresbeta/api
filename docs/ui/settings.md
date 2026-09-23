@@ -35,38 +35,70 @@ No hay entrada «Configuración» en el menú lateral: se llega desde el **avata
 | Campo | Control | Notas |
 |---|---|---|
 | **Nombre** | Texto | Es el nombre **público** (`OB-2`) |
-| **Biografía** | Área de texto | Contador **`0 / 100`** |
+| **Nombre de usuario** | Texto | **No está en la maqueta, pero sí en la pestaña** (`S-3`, resuelta) |
+| **Biografía** | Área de texto | Contador `0 / 100` en la maqueta, **ampliado a 300** (`S-4`) |
+| **Preferencias literarias** | Selección de géneros | **No está en la maqueta, pero sí en la pestaña** (`S-18`, resuelta) |
 | **Foto de perfil** | Avatar actual + zona de arrastre | Ver abajo |
 
-### Falta el nombre de usuario
+Las capturas muestran solo tres campos; producto confirma que la pestaña incluye también el
+**nombre de usuario** y las **preferencias literarias**. Eso cierra `S-3` y `S-18`, y da
+interfaz a `FEAT-USR-034` y `FEAT-USR-009`, que hasta ahora no la tenían.
 
-La pestaña permite editar el nombre, pero **no el nombre de usuario**.
+### El nombre de usuario no es un campo de texto más
 
-Eso contradice [`FEAT-USR-034`](../features/user/FEAT-USR-034-change-username.md), que
-especifica cambiarlo con todas sus consecuencias: una vez cada 30 días, el anterior queda
-como alias, los enlaces antiguos siguen funcionando.
+Cambiarlo arrastra todo lo de
+[`FEAT-USR-034`](../features/user/FEAT-USR-034-change-username.md): solo se puede **una vez
+cada 30 días**, el anterior queda reservado como alias durante ese mes y las URL antiguas
+siguen resolviendo.
 
-El endpoint existe y está especificado —`PUT /me/username`—, así que lo que falta es
-**dónde se llama desde la interfaz**. Si no es aquí, no es en ninguna pantalla conocida. Ver
-`S-3`.
+Eso choca con el **«Guardar» único de la pestaña**. Guardar una biografía es inocuo; guardar
+un nombre de usuario **deja al usuario bloqueado 30 días**, y no hay nada en la pantalla que
+lo advierta.
 
-No es un olvido menor: el nombre de usuario gobierna la URL pública del perfil
-(`/profile/{username}`), y toda la maquinaria de alias de
-[`decision:0005`](../decisions/0005-username-with-temporary-aliases.md) existe precisamente
-para que ese cambio sea posible sin romper enlaces.
+Dos consecuencias para el backend:
 
-### La biografía cabe en 100 caracteres
+- el cambio de nombre de usuario **mantiene su propio endpoint** y sus propias validaciones,
+  aunque la pantalla lo presente junto a los demás campos;
+- si el nombre de usuario pedido no está libre, **no debe caerse el resto del guardado**: el
+  usuario espera que su biografía se haya guardado igualmente (`S-37`).
 
-Cien caracteres son unas quince palabras. Para una plataforma de escritores, donde la
-biografía es la carta de presentación del autor, es **muy poco**: no llega ni para una
-frase sobre qué escribe y qué busca.
+Conviene además que la interfaz avise antes de confirmar, y que el backend diga **cuándo
+podrá volver a cambiarlo** (`FEAT-USR-034` ya lo contempla).
 
-Conviene confirmar que el límite es deliberado y no un valor de maqueta (`S-4`). También si
-se cuenta en caracteres o en palabras: el resto del producto mide **en palabras** (`R-5`).
+### La biografía se amplía a 300 caracteres
 
-Y hay una segunda pregunta detrás: `FEAT-USR-015` describe una «página de autor» con bio,
-foto y referencias. **¿Es esta biografía la misma?** Si lo es, cien caracteres la vacían de
-sentido; si no lo es, hay dos biografías y hay que decir cuál se muestra dónde (`S-5`).
+Cien caracteres son unas quince palabras: para una plataforma de escritores no llega ni para
+decir qué escribe uno y qué busca. **Se amplía a 300** (`S-4`, resuelta).
+
+Trescientos caracteres son unas cincuenta palabras: tres o cuatro líneas bajo la foto. Da
+para una presentación real sin convertir la cabecera del perfil en un texto largo que haya
+que truncar siempre.
+
+**Se cuenta en caracteres, no en palabras**, y aquí la excepción está justificada: el resto
+del producto mide en palabras porque mide **esfuerzo** —lo que cuesta escribir una
+corrección—. Este límite no mide esfuerzo, mide **espacio**: es el texto que tiene que caber
+bajo una foto de perfil. Para eso, el carácter es la unidad correcta.
+
+### Y es el mismo texto que la descripción del perfil
+
+Producto lo confirma: la biografía es **el texto que aparece bajo la foto en «Mi perfil»**,
+es decir la «Descripción» que [`my-profile.md`](my-profile.md) documenta como editable en
+línea.
+
+Es un solo campo con **dos puntos de edición**:
+
+| Dónde | Cómo |
+|---|---|
+| Mi perfil | Edición en línea, un campo |
+| Configuración › Perfil | Junto al resto del formulario |
+
+Los dos deben escribir en el mismo sitio y compartir el mismo límite. Si la edición en línea
+admitiera más texto que el formulario, el usuario podría escribir algo que después no puede
+guardar desde Configuración.
+
+Queda un resto de `S-5`: `FEAT-USR-015` describe una «página de autor» con «bio, foto y
+referencias». Si esa bio es esta, ya está resuelto; si la página de autor tiene un texto
+largo aparte, son dos campos y hay que nombrarlos distinto.
 
 ### La foto de perfil no coincide con lo documentado
 
@@ -97,9 +129,10 @@ modal ni recorte.
 | Quién recorta | El cliente | Nadie |
 | Eliminar | Opción explícita | No aparece |
 
-O son dos caminos a la misma funcionalidad —y esta pantalla abre el mismo modal tras soltar
-el fichero—, o el diseño ha cambiado. **`S-6`, conviene resolverlo**: si el cliente deja de
-recortar, el servidor tiene que hacerlo, y eso cambia `RN-4b` de `FEAT-USR-037`.
+**Resuelto (`S-6`): es un error de maqueta.** Aquí aplica lo mismo que en
+[`profile-photo.md`](profile-photo.md) — modal con zoom, giro y desplazamiento, y **el
+recorte lo hace el cliente**. `RN-4b` de `FEAT-USR-037` sigue en pie, y la zona de arrastre
+de esta pantalla es simplemente otra forma de entrar al mismo flujo.
 
 ---
 
@@ -138,9 +171,18 @@ Dos campos: actual y nueva. Faltan dos cosas:
 - **Confirmación de la nueva contraseña.** Sin ella, una errata deja al usuario fuera.
 - **Los requisitos de la contraseña**, que `FEAT-USR-001` sí define.
 
-Y hay un caso que la pantalla no contempla: **quien se registró con Google no tiene
-contraseña** (`FEAT-USR-002`). Enseñarle «Contraseña actual» es pedirle algo que no existe.
-Lo razonable es ofrecerle *establecer* una, no *cambiarla* (`S-8`).
+Y hay un caso que la pantalla no distingue: **quien se registró con Google no tiene
+contraseña** (`FEAT-USR-002`).
+
+**Resuelto (`S-8`): deja «Contraseña actual» en blanco.** El mismo formulario sirve para
+cambiarla y para establecerla por primera vez; el backend acepta el campo vacío **solo** si
+la cuenta no tiene contraseña.
+
+Conviene saber lo que eso implica, porque es un cambio real en el nivel de protección: en una
+cuenta de Google, **cualquiera que tenga la sesión abierta puede ponerle contraseña sin
+demostrar nada**, y a partir de ahí entrar sin Google. Las dos defensas que quedan son el
+**aviso por correo** y el **cierre de las demás sesiones**, y por eso ninguna de las dos es
+opcional ([`FEAT-USR-041`](../features/user/FEAT-USR-041-change-password.md) `RN-3`, `RN-4`).
 
 ### «Eliminar cuenta» promete algo que no se puede cumplir
 
@@ -157,14 +199,20 @@ Lo razonable es ofrecerle *establecer* una, no *cambiarla* (`S-8`).
 | Comentarios en obras ajenas | Borrarlos deja conversaciones incoherentes |
 | Obras propias | ¿Se borran? ¿Y el feedback que otros dedicaron a ellas? |
 
-`FEAT-USR-013` está `BLOCKED` exactamente por esto (`V-4`, `U-3`), y la pantalla no lo
-resuelve: lo agrava, porque **promete al usuario un borrado total que el sistema no puede
-hacer**.
+**Decidido (`S-32`): eliminar una cuenta la anonimiza.** Se borra todo lo que identifica a
+la persona —nombre, nombre de usuario, correo, foto, biografía, fecha de nacimiento,
+credenciales— y se conserva lo que pertenece a otros —la corrección que un autor pagó, el
+movimiento de créditos, el comentario en una conversación ajena—, atribuido a un usuario
+eliminado.
 
-Hay una salida conocida y conviene nombrarla: **anonimizar en vez de borrar**. Se elimina
-todo lo que identifica a la persona —nombre, correo, foto, biografía— y se conserva lo que
-pertenece a otros —la corrección que un autor pagó, el movimiento de créditos—, atribuido a
-un usuario eliminado. Cumple el derecho de supresión sin destruir lo ajeno.
+Cumple el derecho de supresión sin destruir lo ajeno.
+
+**El texto de la advertencia tiene que cambiar.** Prometer que se borrarán «todos los datos
+asociados» describe algo que no va a ocurrir, y esa clase de promesa es la que después no se
+puede justificar. Ver [`FEAT-USR-013`](../features/user/FEAT-USR-013-delete-account.md).
+
+`U-3` y `V-4` siguen abiertas: la anonimización dice qué pasa con **la persona**, no qué pasa
+con **sus obras** ni con los mensajes directos que forman parte de la conversación de otro.
 
 ---
 
@@ -219,9 +267,15 @@ Eso **no puede aplicarse literalmente**. Siguen teniendo que salir:
 - los avisos de **seguridad**, como el cambio de correo o de contraseña;
 - las comunicaciones **legales** obligatorias.
 
+**Confirmado por producto:** el interruptor **no afecta a las notificaciones operativas**.
+
 Son correos **transaccionales**, no notificaciones: responden a algo que el usuario acaba de
 pedir o que afecta a la seguridad de su cuenta. La distinción tiene que existir en el modelo,
 o el interruptor dejará a alguien sin poder recuperar su cuenta.
+
+Conviene que el texto de la pantalla lo diga. Tal como está —*«No recibirás ningún tipo de
+notificación»*— describe algo que no va a pasar, y quien lo active seguirá recibiendo
+correos creyendo que los había desactivado (`S-38`).
 
 El mismo interruptor plantea otra pregunta de diseño: al activarlo, ¿se **apagan** las
 preferencias individuales o solo quedan **en suspenso**? Debe ser lo segundo. Si las
@@ -285,14 +339,35 @@ que decide quién puede acceder a una obra concreta para corregirla. Ahora apare
 | Lo decide | El perfil | El autor, obra a obra |
 | Pregunta | ¿Quién puede comentar mis textos? | ¿Quién puede ser lector beta de esta obra? |
 
-Cuando dos ajustes responden a lo mismo con distinto alcance hay que decir **cuál manda**. La
-regla habitual, y la más segura, es que gane **el más restrictivo**: si el usuario ha dicho
-«solo seguidores», una obra `PUBLIC` no debería abrir la puerta a cualquiera.
+**Decidido (`S-14`): el ajuste global es un techo.**
 
-Y hay una consecuencia económica que no se ve a simple vista: con la reserva previa
-([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)), restringir
-quién puede comentar **puede dejar retenciones sin uso**. Si alguien tenía acceso concedido y
-el ajuste global se lo quita, hay una retención que liberar. Ver `S-14`.
+| Ajuste global | Modalidad de la obra | Resultado |
+|---|---|---|
+| `Todos` | `PUBLIC` | Cualquiera |
+| `Todos` | `PRIVATE` | Solo los invitados — **la obra puede ser más restrictiva** |
+| Restrictivo | `PRIVATE` | El de la obra |
+| **Restrictivo** | **`PUBLIC`** | **Manda el global: la restricción alcanza a todas las obras** |
+
+En una frase: **una obra puede ser más restrictiva que el perfil, nunca más permisiva.** Si
+el ajuste global se endurece, la restricción se aplica a todas las obras, incluidas las que
+tengan una modalidad más abierta.
+
+Es la única lectura que mantiene el ajuste como ajuste de privacidad: si la obra pudiera
+ganarle, el ajuste global sería una recomendación.
+
+### La consecuencia en créditos
+
+Con la reserva previa
+([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)), conceder acceso
+a un lector beta **retiene créditos del autor**. Si el autor endurece después el ajuste
+global, hay lectores con acceso concedido que dejarían de poder corregir, y **retenciones que
+ya no se van a usar**.
+
+Queda por decidir qué ocurre con ellos (`S-36`). La opción que no destruye trabajo ajeno es
+**respetar los accesos ya concedidos** y aplicar la restricción solo a los nuevos: quien
+estaba a medio corregir termina, y la retención se consume como estaba previsto. La
+alternativa —revocar— obliga además a liberar la retención y a avisar al lector de que su
+trabajo ya no sirve.
 
 ### «¿Quién puede ver mi perfil?» tiene más alcance del que parece
 
@@ -355,25 +430,37 @@ lo primero tiene valor real. Ver `S-17`.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **S-3** | ¿Dónde se cambia el nombre de usuario? No está en esta pantalla | `FEAT-USR-034` se queda sin interfaz |
 | **S-11** | ¿Se separan «corrección recibida» y «comentario en un capítulo» como avisos distintos? | Silenciar comentarios dejaría al autor sin enterarse de lo que ha pagado |
-| **S-14** | Entre el ajuste global «quién puede comentar» y la modalidad de cada obra, ¿cuál manda? | Dos ajustes para la misma pregunta. Afecta a autorización y a retenciones |
+| **S-36** | Al endurecer el ajuste global, ¿se respetan los accesos de lector beta ya concedidos? | Si se revocan, hay retenciones que liberar y trabajo a medias que se pierde |
 | **S-13** | ¿Qué opciones tienen los tres desplegables? | Definen enums usados en autorización |
 | **S-16** | ¿Qué es «actividad»? | Cambia qué se oculta y a quién |
 | **S-15** | Con el perfil restringido, ¿qué devuelve `/profile/{username}`: `403` o `404`? | Un `403` confirma que la cuenta existe |
-| **S-10** | El interruptor general, ¿apaga las preferencias o las deja en suspenso? | Si las sobrescribe, el usuario pierde su configuración |
 | **S-12** | ¿Por qué no se pueden configurar los demás avisos del catálogo de eventos? | O la lista es parcial, o hay avisos obligatorios |
-| **S-8** | Una cuenta creada con Google, ¿ve «cambiar contraseña» o «establecer contraseña»? | Hoy se le pide algo que no tiene |
-| **S-7** | ¿Cambiar el correo exige la contraseña actual? | Es una operación sensible |
-| **S-4** | ¿100 caracteres de biografía es deliberado? ¿Caracteres o palabras? | Para una plataforma de escritores es muy poco |
-| **S-5** | ¿Esta biografía es la de la «página de autor» de `FEAT-USR-015`? | O hay dos biografías |
-| **S-6** | ¿Esta zona de arrastre abre el modal de recorte, o el recorte desaparece? | Si el cliente deja de recortar, el servidor tiene que hacerlo |
+| **U-3** | ¿Qué pasa con las obras propias al eliminar la cuenta? | La anonimización resuelve la persona, no su obra |
+| S-7 | ¿Cambiar el correo exige la contraseña actual? | Es una operación sensible |
+| S-37 | Si el nombre de usuario pedido está ocupado, ¿se pierde el resto del guardado? | Un «Guardar» único para campos con reglas muy distintas |
+| S-38 | ¿Se corrige el texto del interruptor general, que promete silenciar todo? | Seguirán llegando correos operativos |
 | S-1 | ¿Cada pestaña guarda por separado? ¿Cambiar de pestaña con cambios sin guardar los pierde? | Comportamiento del formulario |
 | S-2 | ¿Desde dónde se llega a Configuración? | No hay entrada en el menú lateral |
 | S-9 | ¿La asimetría entre canales es deliberada? | El modelo no debe asumir una matriz completa |
+| S-10 | El interruptor general, ¿suspende o sobrescribe las preferencias? | Si las sobrescribe, el usuario pierde su configuración |
 | S-17 | ¿Las preferencias de apariencia se guardan en el servidor? | Decide si hay endpoint |
-| S-18 | ¿Dónde se editan las preferencias literarias (`FEAT-USR-009`)? | Tampoco están aquí |
 | S-19 | ¿Y la configuración de propuestas de LB y *writing buddy* (`FEAT-USR-011`)? | No es una preferencia de aviso sino de recepción |
+| S-27 | ¿Se puede corregir la fecha de nacimiento? | Se pide en el onboarding y no reaparece |
+| S-5 | ¿La «página de autor» de `FEAT-USR-015` tiene un texto aparte de la biografía? | Si lo tiene, son dos campos y deben llamarse distinto |
+
+**Resueltas el 2026-09-23:**
+
+| # | Decisión |
+|---|---|
+| `S-3` | La pestaña «Perfil» **sí** permite cambiar el nombre de usuario |
+| `S-18` | También las **preferencias literarias** |
+| `S-4` | La biografía se amplía a **300 caracteres**, y es el texto que se ve bajo la foto en «Mi perfil» |
+| `S-6` | La ausencia del recorte es un **error de maqueta**: aplica el modal de `FEAT-USR-037` |
+| `S-8` | Una cuenta de Google cambia su contraseña **dejando la actual en blanco** |
+| `S-14` | El ajuste global de privacidad es un **techo**: una obra puede ser más restrictiva, nunca más permisiva |
+| `S-32` | Eliminar la cuenta la **anonimiza** |
+| — | El interruptor general **no afecta a las notificaciones operativas** |
 
 ## Anomalías
 
@@ -382,4 +469,6 @@ lo primero tiene valor real. Ver `S-17`.
 | A-1 | La zona de subida muestra texto por defecto de Ant Design, en inglés, hablando de «bulk upload» y con la errata «band files» | Texto de maqueta sin sustituir |
 | A-2 | «¿Quien puede comentar mis textos?» y «¿Quien puede mandarme mensajes?» sin tilde en «Quién» | Corregir |
 | A-3 | «Terms & Conditions» sigue en inglés en el menú lateral | Ya anotado como `L-5` en el layout |
-| A-4 | La advertencia de eliminar cuenta promete un borrado total que el sistema no puede hacer | No es cosmético: ver `FEAT-USR-013` |
+| A-4 | La advertencia de eliminar cuenta promete un borrado total | **Hay que reescribirla:** la cuenta se anonimiza (`S-32`) |
+| A-5 | «Desactivar todas las notificaciones» dice que no llegará «ningún tipo de notificación» | No es cierto: los correos operativos siguen llegando (`S-38`) |
+| A-6 | Las capturas no muestran el nombre de usuario ni las preferencias literarias | Están en la pestaña; la maqueta está incompleta |

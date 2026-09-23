@@ -45,7 +45,7 @@ edición, sin cajas de «Añadir».
 | Nombre | «Beatriz Alonso» — el nombre público (`FEAT-USR-022`) |
 | Identificador | **«@bealonso»** — el nombre de usuario (`FEAT-USR-033`) |
 | Compartir | Icono de compartir junto al nombre |
-| Descripción | Campo editable en línea con marcador «Añade descripcion». Si es larga, se trunca con «Ver más»: la API devuelve el texto completo y el truncado es de cliente |
+| Descripción | Campo editable en línea con marcador «Añade descripcion». Límite **300 caracteres**. Es **el mismo campo** que la «Biografía» de [Configuración](settings.md); si es larga, se trunca con «Ver más», y el truncado es de cliente |
 
 > ### El `@identificador` es el nombre de usuario
 >

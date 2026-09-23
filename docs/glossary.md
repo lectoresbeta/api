@@ -27,6 +27,10 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Borrador de corrección | `Correction` con `status: DRAFT` | Corrección empezada y no enviada. Privada del lector; el autor no sabe que existe. No mueve créditos. |
 | Margen de créditos | `CreditSpread` | Diferencia entre lo que paga el autor y lo que cobra el lector por una misma corrección. Permite regular la masa total de créditos; se acumula en una cuenta de sistema, nunca en un descuadre. |
 | Cuenta de sistema | `SystemCreditAccount` | Cuenta interna que absorbe el margen. Sin ella, la suma de saldos deja de cuadrar cuando coste y recompensa difieren. |
+| Biografía / Descripción | `bio` | Texto de presentación del usuario, **300 caracteres**. Es el mismo campo que se ve bajo la foto en «Mi perfil» y que se edita en Configuración. |
+| Cuenta anonimizada | `UserStatus: DELETED` | Cuenta eliminada: se suprimió todo dato personal y se conserva, sin autor identificable, lo que pertenece a terceros —correcciones pagadas, movimientos de créditos, comentarios—. Irreversible. |
+| Mensaje operativo | `OperationalMessage` | Correo que responde a algo que el usuario acaba de pedir o que afecta a la seguridad de su cuenta: activación, restablecimiento de contraseña, cambio de correo. **No es una notificación** y no se puede desactivar. |
+| Techo de privacidad | — | El ajuste global «quién puede comentar mis textos» fija el **máximo**; cada obra puede ser más restrictiva, nunca más permisiva. |
 | Respuesta a comentario | `FeedbackReply` | Contestación del autor de la obra a un comentario recibido. |
 | Valoración del comentario | `FeedbackRating` | Marca del autor indicando que un comentario le ha resultado útil. Otorga créditos adicionales a quien comentó. |
 | Valoración de obra | `WorkRating` | Puntuación que un lector beta otorga a una obra. Alimenta los rankings. |

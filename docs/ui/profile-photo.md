@@ -11,6 +11,10 @@ updated: 2026-09-22
 Flujo que se abre desde el lápiz del avatar en [Mi perfil](my-profile.md). Tiene dos entradas
 distintas según el usuario tenga foto o no.
 
+> También se llega desde **Configuración › Perfil**. La zona de arrastre que aparece allí es
+> otra entrada al mismo flujo: la ausencia del modal en aquellas capturas es un error de
+> maqueta (`S-6`). Ver [`settings.md`](settings.md).
+
 ## Recorrido
 
 ```text

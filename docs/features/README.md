@@ -58,12 +58,12 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-005 | Login con cuenta de Google | Guest | PENDING | TODO | P0 | — |
 | FEAT-USR-006 | Login con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-007 | Recuperar contraseña | Guest | PENDING | TODO | P0 | — |
-| FEAT-USR-008 | Editar el perfil — nombre, biografía y foto | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-008-edit-profile.md) |
-| FEAT-USR-009 | Editar preferencias literarias | User | PENDING | TODO | P2 | — |
+| FEAT-USR-008 | Editar el perfil — nombre, usuario, biografía, géneros y foto | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-008-edit-profile.md) |
+| FEAT-USR-009 | Editar preferencias literarias | User | PENDING | TODO | P2 | — *(en Configuración › Perfil)* |
 | FEAT-USR-010 | Configurar recepción de mensajes directos | User | PENDING | TODO | P2 | — |
 | FEAT-USR-011 | Configurar recepción de propuestas de LB y writing buddy | User | PENDING | TODO | P2 | — |
 | FEAT-USR-012 | ~~Configurar notificaciones por email~~ → `FEAT-USR-039` | User | PENDING | DEPRECATED | P3 | — |
-| FEAT-USR-013 | Eliminar la cuenta | User | DRAFT | BLOCKED | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
+| FEAT-USR-013 | Eliminar la cuenta — anonimización | User | DRAFT | BLOCKED | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
 | FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-014-view-public-profile.md) |
 | FEAT-USR-015 | Configurar información de la página de autor (bio, foto, referencias) | Writer | PENDING | TODO | P2 | — |
 | FEAT-USR-016 | Personalizar página de autor (fuentes, colores, fondos) | Writer | PENDING | TODO | P3 | — |
@@ -94,18 +94,20 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-041 | Cambiar o establecer la contraseña | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-041-change-password.md) |
 | FEAT-USR-042 | Preferencias de apariencia (tema) | User | PENDING | TODO | P3 | — *(sin captura)* |
 
-> `FEAT-USR-013` sigue `BLOCKED`. La pantalla de Configuración aporta el flujo pero **agrava
-> el problema**: promete al usuario que se borrarán «todos los datos asociados», y eso no
-> puede cumplirse —el nombre de usuario queda bloqueado 30 días, las correcciones que otros
-> autores **pagaron** no son suyas para borrarlas, y los movimientos de créditos son
-> inmutables—. La salida conocida es **anonimizar en vez de borrar** (`S-32`).
+> **`FEAT-USR-013`: eliminar una cuenta la anonimiza** (`S-32`, decidida). Se suprime todo
+> dato personal y se conserva, sin autor identificable, lo que pertenece a terceros: las
+> correcciones que otros autores **pagaron**, los movimientos de créditos y los comentarios
+> en conversaciones ajenas. Sigue `BLOCKED` por `U-3` —qué pasa con las obras propias— y
+> `V-4` —qué pasa con los mensajes directos—. **El texto de la advertencia hay que
+> reescribirlo**: promete un borrado total que no va a ocurrir.
 >
 > `FEAT-USR-038` a `FEAT-USR-042` salen de la pantalla de **Configuración**. `FEAT-USR-039`
 > absorbe a `FEAT-USR-012`, que solo contemplaba el correo y queda `DEPRECATED`.
 >
-> **`FEAT-USR-034` se ha quedado sin interfaz** (`S-3`): la pestaña «Perfil» permite cambiar
-> el nombre, pero **no el nombre de usuario**, que es justamente para lo que existe toda la
-> maquinaria de alias de `decision:0005`.
+> **`FEAT-USR-034` y `FEAT-USR-009` ya tienen interfaz**: la pestaña «Perfil» permite cambiar
+> también el **nombre de usuario** y las **preferencias literarias**, aunque las capturas no
+> los muestren. El nombre de usuario conserva sus reglas propias —una vez cada 30 días, alias
+> del anterior— pese a compartir el «Guardar» de la pestaña.
 >
 > `FEAT-USR-028` a `FEAT-USR-036` salen del diseño de «Mi perfil».
 >
@@ -400,10 +402,10 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-CRD-016 | `P-5`, `P-6` | Cada cuánto se ajusta el precio y dónde se acumula el margen entre lo que paga el autor y lo que cobra el lector |
 | FEAT-WRK-014 | `W-17` | Si las preguntas de obra entera se repiten en cada capítulo |
 | FEAT-WRK-012 | `L-9` | Cómo llega la insignia de créditos al catálogo sin acoplar `Work` con `Credits` |
-| **FEAT-USR-038, FEAT-WRK-016** | **`S-14`** | Si el ajuste global «quién puede comentar mis textos» manda sobre la modalidad de cada obra, y qué pasa con las retenciones vigentes |
-| FEAT-USR-013 | `U-3`, `V-4`, `S-32` | Si la cuenta se borra o se **anonimiza**. La pantalla promete un borrado total que el sistema no puede hacer |
+| FEAT-USR-013 | `U-3`, `V-4` | Qué pasa con las **obras propias** y con los mensajes directos al anonimizar la cuenta |
+| FEAT-USR-038 | `S-36` | Si endurecer el ajuste global revoca los accesos de lector beta ya concedidos, y qué se hace con sus retenciones |
+| FEAT-USR-038 | `S-13`, `S-16` | Qué opciones tienen los desplegables y qué es «visibilidad de actividad» |
 | FEAT-USR-039 | `S-11`, `S-12` | Qué tipos de aviso existen, y si corrección y comentario se separan |
-| FEAT-USR-040, FEAT-USR-041 | `S-8` | Qué ve una cuenta de Google donde se pide «contraseña actual» |
 
 **Decisiones tomadas el 2026-09-22** que cierran buena parte de lo anterior:
 
@@ -416,6 +418,18 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | `R-5` | Las longitudes de respuesta se miden **en palabras** |
 | `Q-3`/`Q-4` | Habrá **control antifraude**, con IA u otros mecanismos. Mecanismo por definir (`FEAT-FBK-012`) |
 | `L-5` | **Hay footer** en todo el layout, aunque las maquetas no lo dibujen |
+
+**Decisiones del 2026-09-23** sobre la pantalla de Configuración:
+
+| # | Decisión |
+|---|---|
+| `S-32` | Eliminar una cuenta **la anonimiza**: desaparece la persona, permanece lo que pertenece a otros |
+| `S-14` | El ajuste global de privacidad es un **techo**: una obra puede ser más restrictiva, nunca más permisiva |
+| — | «Desactivar todas las notificaciones» **no afecta a los mensajes operativos** |
+| `S-3`, `S-18` | La pestaña «Perfil» incluye también **nombre de usuario** y **preferencias literarias** |
+| `S-4` | La biografía se amplía a **300 caracteres**, y es la descripción que se ve bajo la foto |
+| `S-8` | Una cuenta de Google cambia su contraseña **dejando la actual en blanco** |
+| `S-6` | La ausencia del modal de recorte es un **error de maqueta** |
 
 Dos consecuencias que no existían antes de tomarlas:
 

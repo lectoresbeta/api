@@ -47,7 +47,10 @@ existir en un canal y no en el otro, así que el modelo es una lista de pares
 ## Hay correos que no son notificaciones
 
 «Desactivar todas las notificaciones» dice *«No recibirás ningún tipo de notificación, ni en
-el correo ni en la plataforma»*. **No puede aplicarse literalmente.**
+el correo ni en la plataforma»*.
+
+**Producto lo confirma: el interruptor no afecta a las notificaciones operativas.** El texto
+de la pantalla, por tanto, no describe lo que ocurre y conviene corregirlo (`S-38`).
 
 | Correo | ¿Se puede silenciar? | Por qué |
 |---|---|---|
@@ -58,9 +61,14 @@ el correo ni en la plataforma»*. **No puede aplicarse literalmente.**
 | Comentarios, seguidores, mensajes | Sí | Son actividad |
 | Actualizaciones, consejos de uso | Sí | Son divulgación |
 
-La distinción es **transaccional frente a notificación**, y tiene que estar en el modelo. Si
-no, el interruptor general dejará a alguien sin poder recuperar su cuenta, y el aviso de
-seguridad que más importa será justo el que no se envíe.
+La distinción es **transaccional frente a notificación**, y tiene que estar en el modelo, no
+en una lista de excepciones repartida por el código. Si no, el interruptor general dejará a
+alguien sin poder recuperar su cuenta, y el aviso de seguridad que más importa será justo el
+que no se envíe.
+
+La forma práctica: cada tipo de mensaje nace marcado como **operativo** o **notificación**, y
+solo los segundos consultan preferencias. Un tipo nuevo tiene que declarar cuál es; ninguno
+puede quedar sin clasificar.
 
 ## Reglas de negocio
 
@@ -69,8 +77,9 @@ seguridad que más importa será justo el que no se envíe.
 - `RN-2` El interruptor general **suspende** todas las notificaciones; **no borra ni
   sobrescribe** las preferencias individuales. Al desactivarlo, el usuario recupera su
   configuración tal como la dejó.
-- `RN-3` Los **correos transaccionales** quedan fuera de estas preferencias, incluido el
-  interruptor general.
+- `RN-3` Los **mensajes operativos** —activación, restablecimiento de contraseña, avisos de
+  seguridad y comunicaciones legales— quedan fuera de estas preferencias, **incluido el
+  interruptor general**. No son notificaciones.
 - `RN-4` Una preferencia ausente toma su **valor por defecto**, que es explícito por tipo.
 - `RN-5` Las preferencias **no afectan a la autorización**: silenciar un aviso no impide que
   el hecho ocurra. Quien silencia los mensajes sigue recibiéndolos, solo no se le avisa. No
@@ -162,6 +171,7 @@ posible `RN-2`.
 | **S-12** | ¿Por qué faltan los demás avisos del catálogo? | ¿Lista parcial o avisos obligatorios? |
 | S-9 | ¿La asimetría entre canales es deliberada? | El modelo no debe asumir matriz completa |
 | S-10 | El interruptor general, ¿suspende o sobrescribe? | `RN-2` propone suspender |
+| S-38 | ¿Se corrige el texto del interruptor? | Promete silenciar todo y no es lo que hace |
 | S-25 | ¿Hay resumen periódico por correo en vez de aviso por evento? | Cambiaría el modelo de entrega |
 | S-26 | ¿Los avisos de créditos se pueden silenciar? | Afectan al saldo del usuario |
 | S-19 | ¿Dónde se configura **no recibir** propuestas de LB (`FEAT-USR-011`)? | No es una preferencia de aviso |

@@ -69,6 +69,9 @@ ya se propone para los contadores de las tarjetas de autor (`FEAT-COM-016`). Ver
   EXIF**, que pueden contener geolocalización (`file-uploads.md`). El detalle del avatar está
   en [`FEAT-USR-037`](FEAT-USR-037-upload-profile-photo.md).
 - `RN-6` La descripción se sanea: no admite HTML arbitrario.
+- `RN-7` La descripción está limitada a **300 caracteres** y es **el mismo campo** que la
+  «Biografía» de Configuración ([`FEAT-USR-008`](FEAT-USR-008-edit-profile.md)). Los dos
+  puntos de edición escriben en el mismo sitio, con el mismo límite y el mismo saneado.
 - `RN-7` Solo el titular edita su propio perfil. No existe edición de perfiles ajenos.
 - `RN-8` Los contadores son informativos y **nunca se usan para autorizar** nada.
 - `RN-9` Editar el perfil requiere la cuenta activada (`FEAT-USR-025`): es escritura.
@@ -80,6 +83,9 @@ ya se propone para los contadores de las tarjetas de autor (`FEAT-COM-016`). Ver
 |---|---|---|
 | Ver mi perfil | `GET /me/profile` | `getMyProfile` |
 | Editar descripción y datos | `PATCH /me/profile` | `updateMyProfile` |
+
+Es el mismo endpoint que usa Configuración. `PATCH` y no `PUT` precisamente porque la edición
+en línea toca un solo campo.
 | Cambiar avatar | `PUT /me/profile/avatar` | `updateAvatar` |
 | Cambiar portada | `PUT /me/profile/cover` | `updateCover` |
 

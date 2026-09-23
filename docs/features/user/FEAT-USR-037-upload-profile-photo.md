@@ -32,6 +32,12 @@ subida; si ya la tiene, un concentrador con tres acciones:
 El editor permite **escalar, girar y desplazar** sobre un recorte circular. El resultado
 aparece de inmediato en el perfil, la cabecera y la caja de publicación.
 
+
+> **Dos entradas, un solo flujo.** Además del lápiz del avatar, se llega desde
+> **Configuración › Perfil** ([`settings.md`](../../ui/settings.md)). Aquellas capturas
+> muestran una zona de arrastre sin modal de recorte: es un **error de maqueta** (`S-6`).
+> `RN-4b` sigue vigente en las dos entradas.
+
 ## Actores y autorización
 
 | Actor | Puede | Condición |

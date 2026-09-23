@@ -27,6 +27,12 @@ enlaces de perfil ya compartidos siguen funcionando.
 Ese alias no solo mantiene vivos los enlaces: **impide que otra persona ocupe el nombre** y
 herede el tráfico dirigido a alguien distinto. Esa es su razón de ser principal.
 
+> **Dónde se cambia** (`S-3`, resuelta): en **Configuración › Perfil**, junto al nombre, la
+> biografía y los géneros ([`settings.md`](../../ui/settings.md)). Comparte el «Guardar» de
+> la pestaña, pero **no comparte sus reglas**: este cambio bloquea al usuario 30 días, así que
+> mantiene su propio endpoint y sus propias validaciones, y un fallo aquí no debe impedir que
+> se guarde el resto de la pestaña.
+
 ## Cómo funciona
 
 ```text

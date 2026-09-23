@@ -59,10 +59,13 @@ está abierta; la modalidad, **para quién**.
 > ([`FEAT-USR-038`](../user/FEAT-USR-038-privacy-settings.md)). Responde casi a la misma
 > pregunta que `BetaReaderAccessMode`, pero para todo lo que escribe el autor.
 >
-> Propuesta: el ajuste global actúa como **techo**. Una obra puede ser más restrictiva que el
-> perfil, nunca más permisiva. Si se permitiera lo contrario, el ajuste de privacidad sería
-> una recomendación, y un ajuste de privacidad que se puede ignorar no es un ajuste de
-> privacidad.
+> **Decidido (`S-14`): el ajuste global es un techo.** Una obra puede ser más restrictiva que
+> el perfil, **nunca más permisiva**. Si el usuario endurece su ajuste global, la restricción
+> alcanza a todas sus obras, incluidas las que tengan una modalidad más abierta.
+>
+> El ajuste global **no reescribe** `BetaReaderAccessMode`: las dos se guardan y la
+> autorización evalúa ambas, quedándose con la más restrictiva. Así, relajar el perfil
+> devuelve a cada obra la modalidad que tenía.
 
 Pendiente de confirmar (`W-9`).
 

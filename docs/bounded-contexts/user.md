@@ -51,7 +51,7 @@ preferencias y presencia pública como autor.
 
 | Agregado | Identidad | Invariantes |
 |---|---|---|
-| `User` | `UserId` | Email único. Una cuenta eliminada no autentica. El estado sigue `PENDING_ACTIVATION → ACTIVE → DELETED`. Solo `ACTIVE` puede escribir. |
+| `User` | `UserId` | Email único. Una cuenta eliminada no autentica. El estado sigue `PENDING_ACTIVATION → ACTIVE → DELETED`. Solo `ACTIVE` puede escribir. En `DELETED` **no queda ningún dato personal**: la cuenta se anonimiza y el `UserId` sobrevive como identificador vacío al que siguen apuntando correcciones y movimientos de créditos. |
 | `AuthorPage` | `UserId` | Pertenece a un único usuario |
 | `PublishedBook` | `PublishedBookId` | Libro editado **fuera** de la plataforma. Sin contenido, sin lectores beta y sin créditos. No confundir con `Work` |
 | `PlatformInvitation` | `PlatformInvitationId` | Token único. Se consume una sola vez. |
@@ -59,7 +59,7 @@ preferencias y presencia pública como autor.
 | `UsernameAlias` | `username` | Nombre de usuario reservado 30 días, por un cambio de nombre o por el borrado de la cuenta. Un alias vigente **ocupa el nombre**; uno caducado no resuelve ni ocupa, aunque su fila siga existiendo. El de un cambio de nombre resuelve al perfil y su titular puede **recuperarlo**; el de una cuenta eliminada solo bloquea. |
 | `LegalAcceptance` | `LegalAcceptanceId` | Inmutable. Registra documento, versión y fecha. |
 | `EmailChangeRequest` | `EmailChangeRequestId` | Una vigente por cuenta. Token hasheado, caduca y se consume una sola vez. **Hasta confirmarse, el correo válido sigue siendo el anterior.** |
-| `UserPrivacySettings` | `UserId` | Un registro por usuario, con valores por defecto explícitos. Un ajuste ausente **no** significa «todo permitido». |
+| `UserPrivacySettings` | `UserId` | Un registro por usuario, con valores por defecto explícitos. Un ajuste ausente **no** significa «todo permitido». Actúa como **techo**: una obra puede ser más restrictiva, nunca más permisiva. |
 
 ### Value objects y enums
 
@@ -87,7 +87,7 @@ preferencias y presencia pública como autor.
 | `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros de interés | `Community` (sugerencias y recomendaciones) |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` (+5 al invitador) |
-| `UserDeleted` | Se elimina la cuenta | Todos (limpieza y anonimización). En `User` convierte su nombre de usuario en alias bloqueado durante 30 días |
+| `UserDeleted` | Se elimina la cuenta | Todos. **Cada contexto anonimiza lo suyo**: `User` no borra filas ajenas. En `User` convierte su nombre de usuario en alias bloqueado durante 30 días |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` (read models) |
 | `UsernameChanged` | El usuario cambia su nombre de usuario | `Community` (read models que muestran el `@`) |
 | `EmailChangeRequested` | Se pide cambiar el correo | `Notification` (confirmación al nuevo, **aviso al anterior**) |

@@ -1,6 +1,6 @@
 ---
 id: FEAT-USR-013
-title: Eliminar la cuenta
+title: Eliminar la cuenta — anonimización
 context: User
 concept: Account
 actors: [User]
@@ -30,6 +30,9 @@ La pestaña «Cuenta» ofrece eliminar la cuenta con esta advertencia:
 **La primera frase no es cierta**, y no es un matiz de redacción: es una promesa que el
 sistema no puede cumplir y que además no debería intentar cumplir.
 
+**Decidido (`S-32`): eliminar una cuenta la anonimiza.** El texto de la advertencia tiene que
+reescribirse en consecuencia (`RN-7`).
+
 ## Qué no se puede borrar
 
 | Dato | Por qué no |
@@ -44,23 +47,45 @@ El patrón es el mismo en todos los casos: **una parte de lo que la cuenta ha ge
 pertenece a otros o forma parte de una transacción económica**. Eliminar la cuenta no puede
 deshacer lo que otro pagó ni lo que otro escribió.
 
-## La salida: anonimizar en vez de borrar
+## Anonimizar, no borrar
 
-Conviene nombrarla porque resuelve la tensión entera:
+Es la decisión de fondo, y resuelve la tensión entera: **desaparece la persona, permanece lo
+que pertenece a otros.**
 
-| Se elimina | Se conserva |
+| Se elimina | Se conserva, atribuido a un usuario eliminado |
 |---|---|
-| Nombre, correo, foto, biografía | Las correcciones que otros pagaron |
-| Fecha de nacimiento y datos personales | Los movimientos de créditos |
-| Credenciales y sesiones | Los comentarios, atribuidos a un usuario eliminado |
-| Mensajes directos (`V-4`) | El nombre de usuario, bloqueado 30 días |
+| Nombre y nombre de usuario | Las correcciones que otros autores pagaron |
+| Correo y credenciales | Los movimientos de créditos |
+| Foto y biografía | Los comentarios en conversaciones ajenas |
+| Fecha de nacimiento y datos personales | Las valoraciones recibidas por su feedback |
+| Sesiones abiertas | El nombre de usuario, **bloqueado 30 días** como alias |
+| Mensajes directos (`V-4`) | |
 
-Cumple el derecho de supresión —desaparece todo lo que identifica a la persona— sin destruir
-lo que pertenece a terceros.
+Cumple el derecho de supresión sin destruir lo ajeno: el autor que pagó una corrección la
+conserva, y el lector que la escribió no pierde el reconocimiento de su trabajo en los
+contadores del sistema.
 
-Tiene un límite que conviene conocer: **el texto de una corrección puede identificar a quien
-la escribió** por estilo o por contenido. La anonimización elimina el vínculo, no hace
-irreconocible el texto. Es una limitación honesta y hay que documentarla, no ocultarla.
+### Qué significa «anonimizar» en la práctica
+
+Tres condiciones, y las tres importan:
+
+1. **El vínculo se rompe de verdad.** No basta con ocultar el nombre en la interfaz: la fila
+   de usuario deja de contener datos personales. Si el nombre sigue en la base de datos
+   «pero no se muestra», no se ha anonimizado nada.
+2. **Es irreversible.** Si existiera forma de reconstruir quién era, seguiría siendo un dato
+   personal, solo que peor guardado.
+3. **Las referencias sobreviven.** `userId` sigue existiendo como identificador sin datos
+   detrás, porque hay correcciones y movimientos que apuntan a él.
+
+### Su límite, dicho abiertamente
+
+**El texto de una corrección puede identificar a quien la escribió**, por estilo, por
+contenido o porque menciona detalles de una conversación. La anonimización elimina el
+vínculo; no hace irreconocible el texto.
+
+Es una limitación real y conviene documentarla en vez de dejar que la descubra alguien
+después. Si en algún caso hiciera falta ir más lejos, la vía sería permitir al usuario
+solicitar la supresión del contenido concreto, no cambiar la regla general (`S-41`).
 
 ## Qué hay que decidir
 
@@ -68,10 +93,14 @@ irreconocible el texto. Es una limitación honesta y hay que documentarla, no oc
 |---|---|
 | `V-4` | ¿Qué ocurre con los mensajes directos? Borrarlos vacía la conversación del otro |
 | `U-3` | ¿Qué ocurre con las obras propias y con el feedback que otros les dedicaron? |
-| `S-32` | ¿Se borra de verdad o se anonimiza? |
 | `S-33` | ¿Hay periodo de gracia para arrepentirse? |
 | `S-34` | ¿Qué pasa con los créditos del saldo? |
 | `S-35` | ¿Se puede eliminar la cuenta con retenciones vigentes? |
+
+`S-33` gana importancia ahora: si la anonimización es irreversible —y lo es—, un clic por
+error no tiene vuelta atrás. Un periodo de gracia de unos días, durante el cual la cuenta no
+autentica pero aún no se ha anonimizado, es barato y evita el único caso en el que el usuario
+no puede repararlo por sí mismo.
 
 `U-3` es la más difícil. Si un autor elimina su cuenta:
 
@@ -93,8 +122,8 @@ saldo puede opinar otra cosa.
 
 ## Reglas de negocio
 
-Lo poco que ya puede fijarse:
-
+- `RN-0` Eliminar la cuenta **la anonimiza**: se suprime todo dato personal y se conserva,
+  sin autor identificable, lo que pertenece a terceros.
 - `RN-1` La eliminación **exige confirmación explícita**.
 - `RN-2` Exige **reautenticación**: contraseña actual o su equivalente en Google.
 - `RN-3` El nombre de usuario **queda bloqueado 30 días** y después se libera.
@@ -104,7 +133,15 @@ Lo poco que ya puede fijarse:
   en cascada de forma síncrona a través de seis contextos sería una transacción distribuida,
   justo lo que la arquitectura evita.
 - `RN-6` Desde que se solicita, la cuenta **deja de poder iniciar sesión**.
-- `RN-7` La advertencia de la interfaz **debe describir lo que realmente ocurre**.
+- `RN-7` La advertencia de la interfaz **debe describir lo que realmente ocurre**: que los
+  datos personales se eliminan y que las correcciones, comentarios y movimientos de créditos
+  permanecen sin autor identificable.
+- `RN-8` La anonimización es **irreversible** y **no reconstruible**: no se conserva ninguna
+  tabla desde la que recuperar la identidad.
+- `RN-9` El `userId` **sobrevive** como identificador sin datos detrás. Las correcciones y los
+  movimientos de créditos siguen apuntando a él.
+- `RN-10` Cada contexto anonimiza **lo suyo**. `User` no borra filas de `Feedback` ni de
+  `Credits`: publica el hecho y cada uno aplica su política (`RN-4`).
 
 `RN-7` no es cosmético. Una advertencia que promete un borrado total y deja rastros es un
 problema de confianza y, según la jurisdicción, de cumplimiento.
@@ -136,7 +173,10 @@ Provisionales hasta resolver `U-3` y `S-32`:
 - [ ] La cuenta deja de poder iniciar sesión inmediatamente.
 - [ ] El nombre de usuario queda bloqueado 30 días.
 - [ ] Ningún dato personal viaja en `UserDeleted`.
-- [ ] Las correcciones que otros pagaron siguen siendo accesibles para quien las escribió.
+- [ ] Las correcciones que otros pagaron siguen siendo accesibles para el autor que las pagó.
+- [ ] Tras anonimizar, **ningún dato personal permanece** en la fila del usuario.
+- [ ] No existe forma de reconstruir la identidad desde los datos conservados.
+- [ ] Las correcciones y movimientos siguen resolviendo su `userId` sin romperse.
 - [ ] No quedan retenciones de créditos vivas de una cuenta eliminada.
 - [ ] El texto de la advertencia coincide con lo que ocurre.
 
@@ -145,8 +185,19 @@ Provisionales hasta resolver `U-3` y `S-32`:
 **Especificación:** `DRAFT`. La pantalla aporta el flujo y la advertencia; **no resuelve** el
 fondo.
 
-**Implementación:** `BLOCKED` por `U-3`, `V-4` y `S-32`.
+**Implementación:** `BLOCKED` por `U-3` y `V-4`.
 
-Es de las pocas funcionalidades donde implementar antes de decidir sería irreversible por
-partida doble: los datos borrados no vuelven, y los que se conservaron después de prometer lo
+`S-32` está resuelta —se anonimiza— y con ella el fondo del asunto. Lo que falta son dos
+casos concretos:
+
+- **`U-3`, las obras propias.** La anonimización dice qué pasa con la persona, no con su
+  obra. Si las obras desaparecen, se llevan por delante las correcciones que varios lectores
+  escribieron y cobraron; si permanecen, se publica obra inédita de alguien que ha pedido
+  irse. La combinación que suele funcionar: **retirar las obras de circulación y conservar
+  las correcciones para quienes las escribieron**, sin acceso al texto original.
+- **`V-4`, los mensajes directos.** Borrarlos vacía la conversación del otro interlocutor,
+  que no ha pedido nada.
+
+Sigue siendo de las pocas funcionalidades donde implementar antes de decidir es irreversible
+por partida doble: los datos borrados no vuelven, y los conservados después de prometer lo
 contrario tampoco se pueden justificar.

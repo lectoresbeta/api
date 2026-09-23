@@ -60,8 +60,8 @@ sobre esa persona.
 ## Reglas de negocio
 
 - `RN-1` Los ajustes son **del usuario**, no de sus obras ni de sus publicaciones.
-- `RN-2` Entre un ajuste global y uno de alcance menor, **gana el más restrictivo** (ver
-  abajo, `S-14`).
+- `RN-2` El ajuste global es un **techo**: una obra puede ser más restrictiva que el perfil,
+  **nunca más permisiva** (`S-14`, resuelta).
 - `RN-3` Cambiar un ajuste **no reescribe el pasado**: no borra mensajes ya recibidos ni
   comentarios ya publicados. Afecta a lo que ocurra a partir de ese momento.
 - `RN-4` Todo ajuste tiene un **valor por defecto explícito** al crear la cuenta.
@@ -84,12 +84,26 @@ responde casi a la misma pregunta con otro alcance.
 | Alcance | Todo lo que escribe el usuario | Una obra |
 | Pregunta | ¿Quién puede comentar mis textos? | ¿Quién puede ser lector beta de esta obra? |
 
-**Propuesta: el ajuste global actúa como techo.** Una obra puede ser más restrictiva que el
-perfil, nunca más permisiva. Si el usuario dice «solo seguidores», una obra `PUBLIC` no abre
-la puerta a cualquiera.
+**Decidido (`S-14`): el ajuste global es un techo.**
 
-La alternativa —que la obra mande— convierte el ajuste global en una recomendación, y un
-ajuste de privacidad que se puede ignorar no es un ajuste de privacidad.
+| Ajuste global | Modalidad de la obra | Quién puede comentar |
+|---|---|---|
+| `Todos` | `PUBLIC` | Cualquiera |
+| `Todos` | `ON_REQUEST` | Quien lo solicite y el autor acepte |
+| `Todos` | `PRIVATE` | Solo los invitados |
+| **Restrictivo** | `PUBLIC` | **El global.** La restricción alcanza a todas las obras |
+| **Restrictivo** | `PRIVATE` | El de la obra, que ya es más estrecho |
+
+En una frase: **el perfil pone el máximo, la obra puede bajarlo.**
+
+Es la única lectura que mantiene el ajuste como ajuste de privacidad. Si la obra pudiera
+ganarle, el ajuste global sería una recomendación, y quien lo endureciera creería haber
+cerrado una puerta que sigue abierta en cada obra publicada como `PUBLIC`.
+
+Para la implementación: el ajuste global **no reescribe** la modalidad de cada obra. Las dos
+se guardan como están y **la autorización evalúa las dos**, quedándose con la más
+restrictiva. Reescribir las obras al cambiar el ajuste haría imposible volver atrás: al
+relajar el perfil, nadie sabría qué modalidad tenía antes cada obra.
 
 ### La consecuencia en créditos
 
@@ -103,8 +117,12 @@ Dejarla viva inmoviliza saldo indefinidamente; liberarla sin avisar deja al lect
 trabajo a medias que ya no podrá entregar.
 
 Lo coherente con `RN-3` es que **los accesos ya concedidos se respeten** y el ajuste solo
-afecte a los nuevos. Es la lectura que no destruye trabajo ajeno ni bloquea créditos. Ver
-`S-14`.
+afecte a los nuevos: quien estaba a medio corregir termina, su corrección se entrega y la
+retención se consume como estaba previsto.
+
+La alternativa —revocar los accesos vigentes— obliga a tres cosas a la vez: liberar la
+retención, avisar al lector de que su trabajo ya no sirve y decidir qué pasa con un borrador
+a medias. Ver `S-36`.
 
 ## Alcance de «¿Quién puede ver mi perfil?»
 
@@ -184,12 +202,14 @@ ajuste ausente no puede interpretarse como «todo permitido».
 - [ ] Los ajustes de un usuario no son consultables por otro.
 - [ ] Una cuenta nueva tiene valores por defecto explícitos.
 - [ ] Entre ajuste global y modalidad de obra se aplica el más restrictivo.
+- [ ] Endurecer el ajuste global **no modifica** la modalidad guardada de cada obra.
+- [ ] Relajarlo después devuelve a cada obra su modalidad original.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **S-14** | ¿Gana el ajuste global o la modalidad de la obra? ¿Qué pasa con las retenciones vigentes? | Autorización y créditos a la vez |
+| **S-36** | Al endurecer el ajuste global, ¿se respetan los accesos ya concedidos? | Si se revocan, hay retenciones que liberar y trabajo a medias que se pierde |
 | **S-13** | ¿Qué opciones tienen los desplegables? | Definen enums de autorización |
 | **S-16** | ¿Qué es «actividad»? | Sin ello, el cuarto ajuste no se puede especificar |
 | **S-15** | Con el perfil restringido, ¿desaparece el autor del catálogo? ¿`403` o `404`? | Un `403` confirma que la cuenta existe |
@@ -198,8 +218,7 @@ ajuste ausente no puede interpretarse como «todo permitido».
 
 ## Estado
 
-**Especificación:** `DRAFT`. `S-13`, `S-14` y `S-16` deben cerrarse antes de `APPROVED`: sin
-las opciones de los desplegables no hay enums, y sin resolver la precedencia hay dos ajustes
-contradictorios.
+**Especificación:** `DRAFT`. `S-14` resuelta: el ajuste global es un techo. Quedan `S-13`
+—sin las opciones de los desplegables no hay enums— y `S-16`, que define qué es «actividad».
 
 **Implementación:** `TODO`.
