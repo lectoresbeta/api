@@ -178,6 +178,9 @@ hecho económico; qué se ve lo decide `Feedback`, que es quien posee la correcc
 | `ClaimSubmitted` | Se presenta una reclamación | **`Notification`** (avisa a los moderadores) | `claimId`, `type`, `targetType`, `targetId`, `reporterId`, `reason`. **Sin el texto del reclamante** |
 | `ClaimUpheld` | El moderador la estima | **`Credits`**, **`Work`**, **`User`**, `Notification` | `claimId`, `type`, `targetType`, `targetId`, `subjectId` |
 | `ClaimRejected` | La desestima | `Notification` | `claimId`, `reporterId` |
+| `ClaimMessageSent` | El moderador o una parte escribe | `Notification` | `claimId`, `thread`, `authorType`. **Sin el cuerpo del mensaje** |
+| `ContentReviewPassed` | El revisor automático aprueba | **`Work`** | `workId`, `chapterId?`, `reviewerVersion` |
+| `ContentReviewFlagged` | El revisor lo marca | **`Work`**, `Notification` | `workId`, `chapterId?`, `reason`, `reviewerVersion` |
 | `SanctionImposed` | Se sanciona a un usuario | **`User`**, `Notification` | `sanctionId`, `userId`, `type`, `scope`, `expiresAt?` |
 | `SanctionLifted` | Caduca o se levanta | `User`, `Notification` | `sanctionId`, `userId` |
 | `CreditAdjustmentOrdered` | Ajuste manual desde el backoffice | **`Credits`**, `Notification` | `userId`, `amount`, `reason`, `orderedBy` |
@@ -187,8 +190,9 @@ instrucciones: dice **qué se ha estimado y sobre qué**, nunca «devuelve 6 cr�
 «bloquea la obra». `Credits` revierte el movimiento, `Work` bloquea la obra y `User` aplica la
 sanción, cada uno según su modelo.
 
-Tampoco viajan **el texto del reclamante ni la motivación del moderador**. Son material que
-acusa a alguien y que va al expediente, no a una cola con reintentos.
+Tampoco viajan **el texto del reclamante, la motivación del moderador ni el cuerpo de los
+mensajes**. Son material que acusa a alguien y que va al expediente, no a una cola con
+reintentos: `Notification` avisa de que hay algo que leer, no lo reproduce.
 
 `CreditAdjustmentOrdered` es la única vía por la que entra crédito al sistema sin ser
 transferencia ni grifo ordinario, así que **`Credits` lo contabiliza aparte** o la invariante

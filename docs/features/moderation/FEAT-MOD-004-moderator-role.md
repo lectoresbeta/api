@@ -32,7 +32,7 @@ Conviene separarlos desde el principio:
 | Rol | Puede |
 |---|---|
 | `Moderator` | Ver la cola y resolver reclamaciones |
-| `Admin` | Todo lo anterior, **más conceder y revocar el rol de moderador**, gestionar usuarios y ordenar ajustes de créditos |
+| `Admin` | Todo lo anterior, **más conceder y revocar el rol de moderador**, gestionar usuarios y ordenar ajustes de créditos. Es el «superadministrador»: resuelve lo que ningún moderador puede resolver |
 
 Si quien modera puede además nombrar moderadores, no hay forma de auditar cómo se formó el
 equipo. Es la separación mínima para que el registro de auditoría signifique algo.
@@ -53,13 +53,26 @@ equipo. Es la separación mínima para que el registro de auditoría signifique 
   ([`FEAT-MOD-002`](FEAT-MOD-002-review-claim.md) `RN-1`).
 - `RN-6` Las acciones del moderador se registran **con su identidad**, aunque las partes no la
   conozcan.
+- `RN-7` Una reclamación **que afecta a un moderador no la resuelve él**. Si no queda ningún
+  moderador elegible, **la resuelve el `Admin`** (`MOD-15`).
+- `RN-8` Se envía **un correo por cada reclamación** que entra, no un resumen periódico
+  (`MOD-16`).
+- `RN-9` El acceso al backoffice exige **segundo factor** (`MOD-17`).
+- `RN-10` El primer `Admin` se crea **por comando de consola**
+  ([`FEAT-MOD-012`](FEAT-MOD-012-bootstrap-admin.md)), nunca desde la API.
 
 `RN-2` es una excepción deliberada y hay que tenerla clara: son correos de trabajo, no
 notificaciones de producto. Someterlos a las preferencias personales significaría que el
 sistema deja de avisar de una denuncia porque alguien desactivó las notificaciones hace meses.
 
-`RN-5` tiene una consecuencia práctica incómoda: **con pocos moderadores, una reclamación
-puede no tener quién la revise** sin saltarse el conflicto de interés. Ver `MOD-15`.
+`RN-5` tenía una consecuencia incómoda —con pocos moderadores, una reclamación puede quedarse
+sin nadie elegible— y `RN-7` es la salida: **el `Admin` es el último recurso**. No es una regla
+de excepción sino parte del diseño, porque el conflicto de interés no se negocia ni siquiera
+cuando la cola aprieta.
+
+`RN-9` no es una precaución de trámite. El backoffice permite leer **obra inédita y datos
+personales de cualquier usuario**: es la cuenta más valiosa de la plataforma para quien quiera
+atacarla.
 
 ## Contrato de API
 
@@ -81,23 +94,27 @@ quién consultó los datos de un usuario importa tanto como saber quién los cam
 - [ ] Revocar el rol cierra el acceso de inmediato y devuelve sus casos a la cola.
 - [ ] Cada acción en `/admin`, incluidas las lecturas, queda registrada.
 - [ ] Un moderador sin rol no puede llamar a ningún endpoint de `/admin`.
+- [ ] Una reclamación sobre un moderador llega al `Admin` si no hay otro elegible.
+- [ ] Entra un correo por cada reclamación registrada.
+- [ ] El acceso al backoffice exige segundo factor.
+- [ ] No existe ninguna vía por API de conceder el rol de `Admin`.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **MOD-6** | ¿Cómo se crea el primer `Admin`? | No puede concedérselo nadie: hay que sembrarlo |
-| **MOD-15** | Con pocos moderadores, ¿qué pasa si todos son parte implicada? | La reclamación se queda sin quien la revise |
-| MOD-16 | ¿Se avisa de cada reclamación o hay resumen periódico? | Un correo por denuncia puede ser mucho ruido |
-| MOD-17 | ¿Exige el backoffice segundo factor? | Da acceso a contenido inédito de terceros |
+| MOD-42 | ¿Qué pasa si el propio `Admin` es parte implicada? | Es el último recurso: por encima no hay nadie |
+| MOD-16b | Con un correo por reclamación, ¿hace falta agrupar los de un mismo expediente? | Diez denuncias agrupadas no deberían ser diez correos |
 
-`MOD-17` no es una pregunta de trámite: el backoffice permite leer obra inédita y datos
-personales de cualquier usuario. Es la cuenta más valiosa de la plataforma para quien quiera
-atacarla.
+Resueltas: `MOD-6` (**comando de consola**,
+[`FEAT-MOD-012`](FEAT-MOD-012-bootstrap-admin.md)), `MOD-15` (**decide el `Admin`**),
+`MOD-16` (**un correo por reclamación**) y `MOD-17` (**segundo factor obligatorio**).
+
+`MOD-42` no tiene solución técnica limpia y conviene saberlo: si la única cuenta con el máximo
+privilegio está implicada, la salida es organizativa —otro `Admin`— no de producto.
 
 ## Estado
 
-**Especificación:** `DRAFT`. `MOD-6` bloquea la implementación: sin un primer `Admin` no hay
-forma de arrancar.
+**Especificación:** `DRAFT`. `MOD-6` resuelta: el primer `Admin` se crea por comando.
 
 **Implementación:** `TODO`.

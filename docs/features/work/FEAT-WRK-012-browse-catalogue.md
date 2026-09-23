@@ -52,6 +52,14 @@ una decisión distinta, que resuelve `FEAT-WRK-004`.
 - `RN-7` El catálogo **excluye las obras propias** del usuario (`L-6`).
 - `RN-8` Las obras de usuarios bloqueados no aparecen
   ([`FEAT-COM-034`](../community/FEAT-COM-034-block-user.md)).
+- `RN-9` El catálogo **respeta las preferencias de contenido sensible** del usuario
+  ([`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)): lo excluido **no llega al
+  cliente**, no se oculta en la interfaz.
+- `RN-10` Hay **filtro explícito por etiquetas de contenido**
+  ([`FEAT-WRK-017`](FEAT-WRK-017-content-rating.md)), además del filtrado implícito por
+  preferencias.
+- `RN-11` Las obras y capítulos **bloqueados por reclamación** nunca aparecen
+  ([`FEAT-MOD-003`](../moderation/FEAT-MOD-003-block-work.md)).
 
 `RN-1` y `RN-2` son la misma regla vista desde dentro y desde el borde. La segunda hace falta
 porque un filtro de la interfaz no es una autorización: `?status=DRAFT` debe rechazarse en el
@@ -107,7 +115,8 @@ parezca un error.
 |---|---|---|
 | Listar el catálogo | `GET /works` | `listWorks` |
 
-Parámetros: `genres[]`, `readingTime`, `status`, `sort`, `page`, `perPage`.
+Parámetros: `genres[]`, `readingTime`, `status`, `contentWarnings[]`, `sort`, `page`,
+`perPage`.
 
 La respuesta incluye `total` y `totalPages` además de los elementos. Cada elemento lleva
 portada, título, sinopsis truncada, géneros, tiempo de lectura, métricas y la insignia de
@@ -137,6 +146,8 @@ explícitamente. Hace falta un read model o un contrato de consulta (`L-9`).
 ## Criterios de aceptación
 
 - [ ] El catálogo nunca devuelve obras en `DRAFT`, ni siquiera forzando el parámetro.
+- [ ] Nunca devuelve obras ni capítulos bloqueados por reclamación.
+- [ ] El contenido excluido por preferencias **no llega al cliente**.
 - [ ] Filtrar por varias temáticas a la vez funciona.
 - [ ] El total refleja los filtros aplicados.
 - [ ] Cambiar un filtro vuelve a la página 1.

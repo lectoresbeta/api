@@ -17,15 +17,15 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 42 | 25 | 0 | 0 |
-| `Work` (WRK) | 16 | 5 | 0 | 0 |
+| `User` (USR) | 43 | 26 | 0 | 0 |
+| `Work` (WRK) | 17 | 6 | 0 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 12 | 4 | 0 | 0 |
 | `Community` (COM) | 36 | 9 | 0 | 0 |
-| `Moderation` (MOD) | 8 | 5 | 0 | 0 |
+| `Moderation` (MOD) | 12 | 9 | 0 | 0 |
 | `Credits` (CRD) | 19 | 8 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **149** | **58** | **0** | **0** |
+| **Total** | **155** | **65** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -98,6 +98,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-040 | Cambiar el correo de la cuenta | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-040-change-email.md) |
 | FEAT-USR-041 | Cambiar o establecer la contraseña | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-041-change-password.md) |
 | FEAT-USR-042 | Preferencias de apariencia (tema) | User | PENDING | TODO | P3 | — *(sin captura)* |
+| FEAT-USR-043 | Preferencias de contenido sensible | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-043-content-preferences.md) |
 
 > **`FEAT-USR-013`: eliminar una cuenta la anonimiza** (`S-32`, decidida). Se suprime todo
 > dato personal y se conserva, sin autor identificable, lo que pertenece a terceros: las
@@ -168,6 +169,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | DRAFT | TODO | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
 | FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | DRAFT | TODO | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
 | FEAT-WRK-016 | Estado de una obra — borrador, visible y en corrección | Writer | DRAFT | TODO | P0 | [ficha](work/FEAT-WRK-016-work-status.md) |
+| FEAT-WRK-017 | Clasificación de contenido sensible de una obra | Writer | DRAFT | TODO | P1 | [ficha](work/FEAT-WRK-017-content-rating.md) |
 
 > `FEAT-WRK-009` está `BLOCKED`: el documento de origen deja explícitamente abierto en qué
 > momentos se genera el registro (`W-1`).
@@ -338,9 +340,13 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 | FEAT-MOD-003 | Bloquear una obra por reclamación estimada | — (sistema) | DRAFT | TODO | P1 | [ficha](moderation/FEAT-MOD-003-block-work.md) |
 | FEAT-MOD-004 | Rol de moderador y aviso de reclamaciones | Admin, Moderator | DRAFT | TODO | P1 | [ficha](moderation/FEAT-MOD-004-moderator-role.md) |
 | FEAT-MOD-005 | Gestión de usuarios desde el backoffice | Admin, Moderator | DRAFT | TODO | P2 | [ficha](moderation/FEAT-MOD-005-user-management.md) |
-| FEAT-MOD-006 | Catálogo de sanciones y su aplicación | — (sistema) | PENDING | BLOCKED | P2 | — |
+| FEAT-MOD-006 | Catálogo de sanciones | Moderator | DRAFT | TODO | P2 | [ficha](moderation/FEAT-MOD-006-sanctions.md) |
 | FEAT-MOD-007 | Registro de auditoría de acciones administrativas | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-MOD-008 | Cola de reclamaciones con filtros y prioridad | Moderator | PENDING | TODO | P2 | — |
+| FEAT-MOD-009 | Conversación entre el moderador y las partes | Moderator, User | DRAFT | TODO | P1 | [ficha](moderation/FEAT-MOD-009-moderator-conversation.md) |
+| FEAT-MOD-010 | Mis reclamaciones — sección del usuario | User | DRAFT | TODO | P1 | [ficha](moderation/FEAT-MOD-010-my-claims.md) |
+| FEAT-MOD-011 | Revisión automática de contenido | — (sistema) | DRAFT | TODO | P1 | [ficha](moderation/FEAT-MOD-011-automated-content-review.md) |
+| FEAT-MOD-012 | Comando de creación del primer administrador | Admin | DRAFT | TODO | P1 | [ficha](moderation/FEAT-MOD-012-bootstrap-admin.md) |
 
 > **`Moderation` existe desde el 2026-09-23** y con él desaparece `V-1`, que bloqueaba las
 > denuncias desde el principio: no había moderación que las atendiera. Ahora la hay.
@@ -355,7 +361,24 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 > aprenderán a escribir elogios. Hacen falta límite de reclamaciones, consecuencia por
 > reclamar en falso y criterios escritos para el moderador.
 >
-> `FEAT-MOD-006` está `BLOCKED` por `MOD-1`: no hay catálogo de sanciones que aplicar.
+> **El catálogo de sanciones** son cuatro familias (`FEAT-MOD-006`): aviso, suspensión parcial
+> —3 días, 1 semana o 1 mes—, suspensión total **indefinida hasta que alguien la revoque**, y
+> expulsión, que **anonimiza la cuenta**.
+>
+> **El bloqueo es por capítulo**, y una obra con **3 capítulos bloqueados** queda bloqueada
+> entera (`FEAT-MOD-003`). El recurso del autor es **por correo**, no por la plataforma.
+>
+> **Hay conversación con el moderador** (`FEAT-MOD-009`), en forma de estrella: cada parte
+> tiene un hilo privado con él y **no ve el de la otra**. Poner a denunciante y denunciado a
+> discutir crearía el conflicto que la moderación existe para evitar. El usuario lo sigue todo
+> desde su sección de reclamaciones (`FEAT-MOD-010`).
+>
+> **La revisión automática se construye ahora y vacía** (`FEAT-MOD-011`): un puerto con una
+> implementación que aprueba todo, para poder sustituirla por IA sin abrir el flujo de
+> publicación. El coste hoy es casi cero y el ahorro después, grande.
+>
+> **El primer `Admin` se crea por comando** (`FEAT-MOD-012`), nunca desde la API. El `Admin`
+> es además el último recurso cuando una reclamación afecta a todos los moderadores.
 
 ---
 

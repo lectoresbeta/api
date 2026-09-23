@@ -35,7 +35,10 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Moderador | `Moderator` | Usuario con acceso al backoffice para resolver reclamaciones. Es un usuario normal en todo lo demás, de ahí la regla de conflicto de interés. |
 | Administrador | `Admin` | Rol por encima del moderador: concede el rol, gestiona usuarios y ordena ajustes de créditos. |
 | Sanción | `Sanction` | Medida impuesta a un usuario tras una reclamación estimada, con tipo, alcance, motivo y vigencia. |
-| Obra bloqueada | `WorkStatus: BLOCKED` | Obra deshabilitada permanentemente por una reclamación estimada. Sigue siendo visible **solo para su autor**, marcada como tal. Estado terminal. |
+| Obra o capítulo bloqueado | `BLOCKED` | Deshabilitado por una reclamación estimada. Sigue siendo visible **solo para su autor**, marcado como tal. Indefinido: solo lo revoca un moderador. **3 capítulos bloqueados bloquean la obra entera.** |
+| Clasificación de contenido | `ContentRating` | Etiquetas con las que el autor declara qué material sensible contiene su obra. Etiquetar bien **protege** frente a reclamaciones; etiquetar mal es reclamable. |
+| Revisión automática | `ContentReviewer` | Servicio que aprueba o marca un texto antes de publicarse. Hoy aprueba todo; es un puerto preparado para una implementación con IA. |
+| Hilo de reclamación | `ClaimThread` | Conversación privada entre el moderador y **una** de las partes. Las partes no se ven entre sí. |
 | Registro de auditoría | `AuditLog` | Registro inmutable de toda acción administrativa, **incluidas las consultas**. |
 | Enlace público de corrección | `PublicCorrectionLink` | URL que el autor reparte fuera de la plataforma para que alguien corrija sin registrarse. **No cuesta créditos ni los da.** |
 | Biografía / Descripción | `bio` | Texto de presentación del usuario, **300 caracteres**. Es el mismo campo que se ve bajo la foto en «Mi perfil» y que se edita en Configuración. |

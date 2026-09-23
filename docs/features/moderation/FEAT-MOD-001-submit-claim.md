@@ -63,10 +63,18 @@ Nadie reclama sobre lo propio.
 - `RN-4` Reclamar una **corrección** solo puede hacerlo el autor de la obra corregida.
 - `RN-5` Solo se puede reclamar una corrección **visible**: una bloqueada por descubierto aún
   no se ha leído ([`FEAT-CRD-018`](../credits/FEAT-CRD-018-negative-balance.md)).
-- `RN-6` Hay un **límite de reclamaciones por usuario y periodo** (`MOD-2`).
+- `RN-6` **Máximo 3 reclamaciones al mes** por usuario.
+- `RN-6b` Cada reclamación **desestimada bloquea el botón de reclamar**, y el bloqueo es
+  **acumulativo**: la primera desestimada bloquea una semana, la segunda dos, la tercera tres,
+  y así sucesivamente.
+- `RN-6c` Un **invitado sin cuenta puede reclamar** (`MOD-10`), pero no podrá seguir la
+  reclamación ni hablar con el moderador después.
 - `RN-7` El reclamante **no conoce la identidad del moderador** que la revisa.
 - `RN-8` Una corrección **por enlace público** no admite reclamación de créditos —no los
   movió— pero sí por contenido inapropiado (`C-46`).
+- `RN-9` Varias reclamaciones sobre **el mismo objeto se agrupan en un solo expediente**
+  (`MOD-5`). Diez denuncias del mismo texto son una decisión, no diez, y el número de
+  denunciantes es en sí mismo una señal para el moderador.
 
 `RN-5` evita una vía de abuso sutil: reclamar a ciegas una corrección que aún no se ha podido
 leer, solo para no pagarla.
@@ -83,9 +91,27 @@ Recibo una corrección → la reclamo como «no aporta valor» → recupero mis 
 Si el sistema no distingue **una crítica dura de una corrección fraudulenta**, los correctores
 aprenderán a escribir elogios, que es exactamente lo contrario del producto.
 
-De ahí `RN-6` y su pareja: **reclamar en falso de forma reiterada tiene consecuencias**
-([`FEAT-MOD-002`](FEAT-MOD-002-review-claim.md)). Un autor con muchas reclamaciones
-desestimadas debería perder temporalmente la posibilidad de reclamar.
+De ahí las dos defensas, que funcionan juntas:
+
+| Defensa | Cómo |
+|---|---|
+| **Tope** | 3 reclamaciones al mes por usuario |
+| **Coste de fallar** | Cada desestimación bloquea el botón, de forma **acumulativa** |
+
+```text
+1.ª desestimada  →  1 semana sin poder reclamar
+2.ª desestimada  →  2 semanas
+3.ª desestimada  →  3 semanas
+…
+```
+
+El crecimiento acumulativo es lo que hace que el sistema se defienda solo: reclamar a la
+ligera es barato la primera vez y caro la cuarta. Quien reclama de buena fe rara vez acumula
+desestimaciones; quien lo usa para no pagar, sí.
+
+**Y el crédito no se mueve hasta que un moderador aprueba.** Mientras la reclamación está
+pendiente, el corrector conserva lo que cobró: no hay ningún estado intermedio en el que el
+dinero esté en el aire.
 
 ## Flujo principal
 
@@ -104,7 +130,8 @@ desestimadas debería perder temporalmente la posibilidad de reclamar.
 | Reclama contenido propio | Se rechaza | `403` |
 | Reclama una corrección que no es de su obra | Se rechaza | `403` |
 | Reclama una corrección bloqueada | Se rechaza | `409` |
-| Supera el límite del periodo | Se rechaza, con explicación | `429` |
+| Supera las 3 del mes | Se rechaza, con explicación | `429` |
+| Está bloqueado por desestimaciones | Se rechaza, diciendo hasta cuándo | `429` |
 | Motivo fuera del catálogo | Se rechaza | `422` |
 | Cuenta sin activar | Se rechaza | `403` |
 | El objeto ya no existe | Se rechaza | `404` |
@@ -148,7 +175,10 @@ puede impedir que otro contexto borre lo suyo.
 - [ ] Un usuario no puede reclamar dos veces el mismo objeto.
 - [ ] Solo el autor de la obra puede reclamar sus correcciones.
 - [ ] Una corrección bloqueada no se puede reclamar.
-- [ ] Superar el límite devuelve `429` con explicación.
+- [ ] Superar las 3 del mes devuelve `429` con explicación.
+- [ ] Tras `N` desestimaciones, el bloqueo dura `N` semanas.
+- [ ] Un invitado sin cuenta puede reclamar.
+- [ ] Los créditos **no se mueven** mientras la reclamación está pendiente.
 - [ ] El evento publicado no contiene el texto libre del reclamante.
 - [ ] Si el objeto reclamado desaparece, la reclamación sigue siendo legible.
 
@@ -156,10 +186,15 @@ puede impedir que otro contexto borre lo suyo.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **MOD-2** | ¿Cuántas reclamaciones por periodo, y qué consecuencia tiene reclamar en falso? | Sin ello, reclamar es una forma gratuita de no pagar |
-| MOD-5 | ¿Se agrupan varias reclamaciones sobre el mismo objeto en un solo expediente? | Diez denuncias del mismo texto no son diez decisiones |
-| MOD-10 | ¿Puede reclamar un usuario sin cuenta, desde un enlace público? | Hoy no; sería la única vía para quien ve algo grave sin estar registrado |
+| **MOD-21** | ¿Se reinicia el contador de desestimadas en algún momento? | Sin reinicio, un error de hace dos años sigue pesando |
+| MOD-22 | ¿El tope de 3 al mes es por usuario o por tipo de reclamación? | Denunciar contenido ilegal y reclamar una corrección no deberían competir por el mismo cupo |
 | C-46 | ¿Puede el autor reclamar una corrección por enlace público? | No hay créditos que devolver, pero sí contenido que moderar |
+
+Resueltas: `MOD-2` (**3 al mes**, con bloqueo acumulativo por desestimación), `MOD-5` (**se
+agrupan**) y `MOD-10` (**sí puede** reclamar un invitado, sin seguimiento posterior).
+
+`MOD-22` no es menor: si un usuario gasta su cupo reclamando correcciones y después encuentra
+contenido gravemente inapropiado, no podría denunciarlo.
 
 ## Estado
 

@@ -62,6 +62,8 @@ convertiría en el contexto que lo sabe todo sobre todos.
 | `Review` | La decisión del moderador, su motivación y cuándo se tomó |
 | `Sanction` | Medida impuesta a un usuario, con alcance y vigencia |
 | `ModeratorRole` | Quién puede moderar y quién recibe los avisos |
+| `Conversation` | Los hilos privados entre el moderador y cada parte |
+| `ContentReview` | La revisión automática previa a la publicación |
 | `AuditLog` | Registro inmutable de toda acción administrativa |
 
 ## Agregados
@@ -76,10 +78,12 @@ convertiría en el contexto que lo sabe todo sobre todos.
 
 | Nombre | Valores |
 |---|---|
-| `ClaimType` | `INAPPROPRIATE_WORK`, `FRAUDULENT_FEEDBACK`, `ABUSIVE_USER` |
+| `ClaimType` | `INAPPROPRIATE_WORK`, `INAPPROPRIATE_CHAPTER`, `FRAUDULENT_FEEDBACK`, `ABUSIVE_USER`, `MISLABELLED_CONTENT` |
 | `ClaimStatus` | `PENDING`, `UNDER_REVIEW`, `UPHELD`, `REJECTED` |
 | `ClaimReason` | Motivos por tipo. Para feedback: `NO_VALUE`, `TOO_SHORT`, `OFF_TOPIC`, `OFFENSIVE` |
-| `SanctionType` | Por definir (`MOD-1`) |
+| `SanctionType` | `WARNING`, `PARTIAL_SUSPENSION`, `FULL_SUSPENSION`, `EXPULSION` |
+| `SuspensionDuration` | `THREE_DAYS`, `ONE_WEEK`, `ONE_MONTH` (solo parcial) |
+| `ThreadParty` | `REPORTER`, `SUBJECT` |
 
 ## El ciclo de una reclamación
 
@@ -135,7 +139,10 @@ saldo negativo no recibe correcciones, pero sí puede corregir para saldarlo.
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `ClaimSubmitted` | Se presenta una reclamación | **`Notification`** (avisa a los moderadores) |
+| `ClaimSubmitted` | Se presenta una reclamación | **`Notification`** (un correo por reclamación) |
+| `ClaimMessageSent` | El moderador o una parte escribe en su hilo | `Notification` |
+| `ContentReviewPassed` | El revisor automático aprueba un texto | **`Work`** (lo hace visible) |
+| `ContentReviewFlagged` | El revisor lo marca | **`Work`**, `Notification` |
 | `ClaimUpheld` | El moderador la estima | **`Credits`**, **`Work`**, **`User`**, `Notification` |
 | `ClaimRejected` | El moderador la desestima | `Notification` |
 | `SanctionImposed` | Se sanciona a un usuario | **`User`**, `Notification` |
@@ -179,6 +186,31 @@ cualquier cosa. Es justo el camino por el que se pierde la confianza en el siste
 `RN-7` protege a las dos partes. Quien denuncia a un usuario abusivo no debería quedar
 expuesto a él, y un moderador no debería recibir represalias por su decisión.
 
+## La revisión automática, construida vacía
+
+Todo texto pasa por un **revisor automático** antes de ser visible
+([`FEAT-MOD-011`](../features/moderation/FEAT-MOD-011-automated-content-review.md)). Hoy ese
+revisor **aprueba todo**: es un puerto con una implementación nula, preparada para sustituirse
+por IA.
+
+Se construye así a propósito. Abrir el flujo de publicación más adelante, con obras ya
+publicadas y estados que inventar, cuesta mucho más que dejar el hueco hecho desde el
+principio.
+
+## El etiquetado de contenido sensible defiende en los dos sentidos
+
+El autor declara qué contiene su obra
+([`FEAT-WRK-017`](../features/work/FEAT-WRK-017-content-rating.md)) y el lector filtra lo que
+no quiere ver ([`FEAT-USR-043`](../features/user/FEAT-USR-043-content-preferences.md)).
+
+| Situación | Qué ocurre con una reclamación |
+|---|---|
+| Contenido fuerte, **bien etiquetado** | **Se desestima** |
+| Contenido fuerte, **sin etiquetar** | **Prospera** |
+
+Con eso, el sistema deja de castigar el contenido difícil y pasa a castigar **el engaño**. La
+literatura incómoda tiene derecho a existir; lo que no lo tiene es aparecer sin avisar.
+
 ## El problema que hay que resolver antes de implementar
 
 **Una reclamación de corrección fraudulenta devuelve créditos al autor.** Eso convierte el
@@ -192,13 +224,18 @@ Si el moderador la estima, el autor recupera el dinero y el corrector pierde el 
 sistema no distingue **una crítica dura de una corrección fraudulenta**, los correctores
 aprenderán a escribir elogios, que es exactamente lo contrario del producto.
 
-Tres defensas, y conviene tener las tres:
+Tres defensas, y están las tres:
 
-1. **Límite de reclamaciones** por autor y periodo.
-2. **Consecuencia por reclamar en falso**: un autor con muchas reclamaciones desestimadas
-   pierde la posibilidad de reclamar durante un tiempo.
+1. **Tope de 3 reclamaciones al mes** por usuario.
+2. **Bloqueo acumulativo por reclamar en falso**: la primera desestimada bloquea una semana,
+   la segunda dos, la tercera tres. Reclamar a la ligera es barato la primera vez y caro la
+   cuarta.
 3. **Criterios explícitos** para el moderador, que separen «no me ha gustado lo que dice» de
    «esto no es una corrección».
+
+Y una cuarta que es estructural: **el crédito no se mueve hasta que un moderador aprueba**. No
+hay ningún estado intermedio en el que el dinero esté en el aire, así que reclamar no produce
+beneficio por sí solo.
 
 Es el mismo problema que `FEAT-FBK-012` aborda desde el otro lado —el fraude del corrector— y
 las dos piezas deben diseñarse juntas: son los dos extremos de la misma cuerda.
@@ -207,15 +244,22 @@ las dos piezas deben diseñarse juntas: son los dos extremos de la misma cuerda.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **MOD-1** | ¿Qué sanciones existen y con qué gravedad? | Sin catálogo no hay sanción que imponer |
-| **MOD-2** | ¿Qué límite de reclamaciones y qué consecuencia por reclamar en falso? | Sin ello, reclamar es una forma gratuita de no pagar |
-| MOD-3 | ¿Hay vía urgente para contenido gravemente dañino? | Hoy permanece visible hasta que alguien lo revise |
-| MOD-4 | ¿Puede el reclamado alegar antes de la decisión? | Cambia el ciclo de vida entero |
-| MOD-5 | ¿Se agrupan varias reclamaciones sobre el mismo objeto? | Diez denuncias del mismo texto no son diez expedientes |
-| MOD-6 | ¿Quién concede el rol de moderador? | Hace falta un rol por encima: `Admin` |
-| MOD-7 | ¿Qué pasa con las correcciones ya recibidas de una obra bloqueada? | Los correctores cobraron de buena fe |
-| MOD-8 | ¿Puede el autor recurrir el bloqueo permanente de su obra? | «Permanente» sin recurso es fuerte |
+| **MOD-27** | ¿Qué alcances tiene la suspensión parcial, y son combinables? | Sin alcance, «suspensión parcial» no significa nada |
+| **MOD-26** | Si la expulsión anonimiza, ¿cómo se impide volver a registrarse? | No se puede borrar a alguien y recordarlo a la vez |
+| **W-20** | ¿Qué catálogo de etiquetas de contenido sensible? | Define el filtro y el criterio del moderador |
+| MOD-21 | ¿Se reinicia el contador de reclamaciones desestimadas? | Sin reinicio, un error de hace años sigue pesando |
+| MOD-22 | ¿El tope de 3 al mes es por usuario o por tipo? | Quien gaste el cupo reclamando correcciones no podría denunciar algo grave |
+| MOD-36 | ¿Se revisa el texto en cada edición o solo al publicar? | Publicar limpio y editar después es el esquive obvio |
+| MOD-37 | Si la revisión usa IA externa, ¿sale obra inédita de la plataforma? | Es lo que la plataforma existe para custodiar |
 | MOD-9 | ¿Qué plazos de respuesta se asumen? | Hay jurisdicciones que los imponen |
+| MOD-41 | El umbral de 3 capítulos, ¿absoluto o proporcional? | 3 de 4 y 3 de 40 no son lo mismo |
+
+**Resueltas el 2026-09-23:** `MOD-1` (cuatro familias de sanciones), `MOD-2` (3 reclamaciones
+al mes y bloqueo acumulativo), `MOD-3` (revisión automática, hoy vacía), `MOD-4` (conversación
+con el moderador), `MOD-5` (se agrupan), `MOD-6` (comando de consola), `MOD-7` (no se
+revierte lo ya pagado), `MOD-8` (recurso por correo), `MOD-10` (un invitado puede reclamar),
+`MOD-12` (se revierte la reputación), `MOD-13` (bloqueo por capítulo, umbral de 3), `MOD-15`
+(decide el `Admin`), `MOD-16` (un correo por reclamación) y `MOD-17` (segundo factor).
 
 ## Persistencia
 

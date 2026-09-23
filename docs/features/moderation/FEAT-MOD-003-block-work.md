@@ -1,6 +1,6 @@
 ---
 id: FEAT-MOD-003
-title: Bloquear una obra por reclamación estimada
+title: Bloquear un capítulo o una obra por reclamación estimada
 context: Moderation
 concept: Claim
 actors: []
@@ -15,13 +15,17 @@ depends_on: [FEAT-MOD-002, FEAT-WRK-016]
 updated: 2026-09-23
 ---
 
-# FEAT-MOD-003 — Bloquear una obra por reclamación
+# FEAT-MOD-003 — Bloquear por reclamación
 
 ## Resumen
 
-Cuando se estima una reclamación sobre una obra, esta queda **deshabilitada permanentemente**:
-deja de ser accesible para todos, **salvo para su autor**, que la sigue viendo marcada como
-bloqueada por reclamación.
+**Se bloquea lo que se reclamó.** Si la reclamación era sobre un capítulo, se bloquea ese
+capítulo; si era sobre la obra, la obra entera.
+
+Y hay un umbral: **una obra con 3 capítulos bloqueados queda bloqueada por completo**.
+
+Lo bloqueado deja de ser accesible para todos **salvo para su autor**, que lo sigue viendo
+marcado como bloqueado por reclamación.
 
 ## Quién ejecuta el bloqueo
 
@@ -31,17 +35,30 @@ cambio en el ciclo de vida de la obra, que es su modelo.
 Si `Moderation` escribiese el estado directamente, tendría que conocer las reglas de
 transición de `Work`, y a partir de ahí dos contextos gobernarían el mismo dato.
 
-## El estado nuevo
+## Bloqueo por capítulo, con umbral
 
-| Estado | Quién lee la obra | Quién la corrige |
+Bloquear una novela de treinta capítulos por uno solo destruiría el trabajo de los otros
+veintinueve **y las correcciones que otros escribieron sobre ellos**. De ahí la granularidad:
+
+```text
+Reclamación sobre el capítulo 7  →  se bloquea el capítulo 7
+Reclamación sobre la obra        →  se bloquea la obra
+3 capítulos bloqueados           →  se bloquea la obra entera
+```
+
+El umbral de 3 es lo que impide el otro extremo: una obra cuyos capítulos van cayendo uno a
+uno seguiría publicada indefinidamente, ofreciendo una lectura llena de huecos.
+
+| Estado | Quién lee | Quién corrige |
 |---|---|---|
 | `DRAFT` | Solo el autor | Nadie |
 | `VISIBLE` | Todos | Nadie |
 | `IN_CORRECTION` | Todos | Lectores beta |
-| **`BLOCKED`** | **Solo el autor**, marcada | **Nadie** |
+| **`BLOCKED`** | **Solo el autor**, marcado | **Nadie** |
 
-`BLOCKED` es **terminal**: no se sale de él por ninguna transición ordinaria
-([`FEAT-WRK-016`](../work/FEAT-WRK-016-work-status.md)).
+`BLOCKED` aplica tanto a un capítulo como a una obra, y **no se sale de él por ninguna
+transición ordinaria** ([`FEAT-WRK-016`](../work/FEAT-WRK-016-work-status.md)): solo lo revoca
+un moderador.
 
 ## Reglas de negocio
 
@@ -55,7 +72,11 @@ transición de `Work`, y a partir de ahí dos contextos gobernarían el mismo da
   trabajo de buena fe antes de que existiera reclamación alguna (`MOD-7`).
 - `RN-6` El bloqueo **no borra la obra**. Borrar destruiría el contenido reclamado, que es
   justamente lo que puede hacer falta conservar si alguien discute la decisión.
-- `RN-7` El bloqueo es **permanente** salvo acción administrativa nueva y motivada (`MOD-8`).
+- `RN-7` El bloqueo es **indefinido**, y **solo un moderador puede revocarlo**.
+- `RN-8` El autor **no puede recurrir desde la plataforma**: lo hace **por correo** (`MOD-8`).
+  Sin formulario de recurso, sin cola de apelaciones, sin estado nuevo en el expediente.
+- `RN-9` Al tercer capítulo bloqueado, **la obra entera queda bloqueada** automáticamente.
+- `RN-10` Desbloquear un capítulo **no desbloquea la obra** si sigue habiendo 3 bloqueados.
 
 `RN-5` es la regla incómoda pero correcta: un lector que corrigió un texto meses antes de la
 denuncia no tiene por qué pagar la consecuencia de lo que hizo el autor.
@@ -86,20 +107,26 @@ Work  → la obra pasa a BLOCKED y publica WorkBlockedByModeration
 - [ ] Las correcciones ya pagadas **no** se revierten.
 - [ ] El contenido no se borra.
 - [ ] `BLOCKED` no se abandona por ninguna transición ordinaria.
+- [ ] Una reclamación sobre un capítulo bloquea ese capítulo, no la obra.
+- [ ] Al tercer capítulo bloqueado, la obra entera queda bloqueada.
+- [ ] Un moderador puede revocar un bloqueo.
+- [ ] No existe ningún endpoint de recurso: el recurso es por correo.
 - [ ] El cambio de estado lo ejecuta `Work`, no `Moderation`.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **MOD-8** | ¿Puede el autor recurrir un bloqueo permanente? | «Permanente» sin recurso es una medida muy fuerte para un error |
-| MOD-7 | ¿Se confirma que las correcciones ya pagadas no se revierten? | `RN-5` lo asume |
-| MOD-13 | ¿Se bloquea la obra entera o puede bloquearse un capítulo? | Una novela con un capítulo problemático se pierde entera |
 | MOD-14 | ¿Cuenta una obra bloqueada en las estadísticas del autor? | Aparecería un hueco sin explicar |
+| MOD-40 | ¿Se le dice al autor **por qué correo** puede recurrir? | Un recurso que no se sabe dónde presentar no existe |
+| MOD-41 | El umbral de 3, ¿es absoluto o proporcional a la longitud de la obra? | 3 de 4 capítulos y 3 de 40 no son lo mismo |
 
-`MOD-13` tiene más peso del que parece: bloquear una novela de treinta capítulos por uno solo
-destruye el trabajo de los otros veintinueve, y también las correcciones que otros
-escribieron sobre ellos.
+Resueltas: `MOD-13` (**por capítulo**, con umbral de 3 para la obra entera), `MOD-8`
+(**recurso por correo**, y el bloqueo lo revoca un moderador) y `MOD-7` (las correcciones ya
+pagadas **no se revierten**).
+
+`MOD-41` merece un momento: en un relato de cuatro capítulos, tres bloqueados son el 75% de la
+obra y el umbral llega tarde; en una novela de cuarenta, son el 7% y llega pronto.
 
 ## Estado
 
