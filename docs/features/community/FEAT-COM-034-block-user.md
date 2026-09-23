@@ -80,8 +80,8 @@ ajena, y conviene no disimularla:
 - **Su borrador se conserva** aunque no pueda entregarse, porque es texto suyo.
 
 Que el bloqueo pueda usarse así —dejar que alguien corrija y bloquearle antes de que entregue—
-es un abuso posible y barato. Si aparece en la práctica, la defensa natural es que bloquear a
-alguien con una corrección en curso **quede registrado** y pese en su historial (`B-4`).
+es un abuso posible, y **se asume a conciencia**: el derecho a bloquear pesa más que el caso
+raro de quien lo use de mala fe. No se registra ni se penaliza.
 
 - `RN-B1` El bloqueado pierde el acceso a las obras del bloqueador desde ese instante.
 - `RN-B2` Una corrección en curso del bloqueado **no se puede entregar**, y se le avisa.

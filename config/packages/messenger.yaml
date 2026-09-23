@@ -1,0 +1,32 @@
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            # Eventos de integración entre bounded contexts.
+            # RabbitMQ es el transporte del proyecto (AGENTS.md).
+            integration:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    exchange:
+                        name: lectoresbeta.events
+                        type: topic
+                retry_strategy:
+                    max_retries: 3
+                    delay: 1000
+                    multiplier: 3
+
+            failed:
+                dsn: 'doctrine://default?queue_name=failed'
+
+        routing:
+            # Todo evento de integración lleva el marcador y va a RabbitMQ.
+            # Los handlers viven en el contexto que consume, nunca en el que
+            # publica.
+            LectoresBeta\Shared\Domain\Event\IntegrationEvent: integration
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                integration: 'in-memory://'

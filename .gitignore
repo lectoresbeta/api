@@ -1,0 +1,18 @@
+/vendor/
+/var/
+/config/jwt/*.pem
+/public/bundles/
+
+# Secretos y configuración local
+/.env.local
+/.env.*.local
+
+# Herramientas
+/.php-cs-fixer.cache
+/.phpunit.result.cache
+/phpstan.neon.local
+
+# Editores
+/.idea/
+/.vscode/
+*.swp

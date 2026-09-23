@@ -56,9 +56,7 @@ El **nombre público** de este paso del onboarding es un texto libre y **no es �
 personas pueden llamarse «Ana García» sin que eso cree ninguna ambigüedad, porque para
 distinguirlas está el nombre de usuario.
 
-> Si lo que se quería decir es que **el nombre público también debe ser único**, esto hay que
-> cambiarlo: obligaría a validar disponibilidad en el onboarding y a pedirle a alguien que
-> cambie su nombre real porque otro llegó antes. Dímelo y lo rehago.
+Confirmado el 2026-09-24: **el nombre público no es único**, y no hace falta que lo sea.
 
 **`OB-7` resuelta.** La **fecha de nacimiento es obligatoria** y de ella se deriva la edad, que
 **filtra automáticamente el contenido** según lo que exija la ley: una cuenta que no alcance

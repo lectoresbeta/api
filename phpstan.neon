@@ -1,0 +1,15 @@
+parameters:
+    level: 7
+    paths:
+        - src
+        - tests
+    tmpDir: var/cache/phpstan
+
+    # AGENTS.md: "avoid broad mixed usage", "type collections where practical".
+    checkMissingIterableValueType: true
+    treatPhpDocTypesAsCertain: false
+
+    # Sin baseline a propósito. AGENTS.md lo dice explícitamente:
+    # "Do not introduce a PHPStan baseline entry for a new problem that can
+    # reasonably be fixed". Empezamos en cero y se queda en cero.
+    ignoreErrors: []

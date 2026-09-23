@@ -1,0 +1,20 @@
+# decision:0007 — JWT de 15 minutos, con token de refresco revocable.
+#
+# La revocación tarda hasta que caduque el token de acceso. Se asume a
+# conciencia, con una compensación: las escrituras comprueban el estado de la
+# cuenta contra la base de datos y no solo la firma.
+lexik_jwt_authentication:
+    secret_key: '%env(resolve:JWT_SECRET_KEY)%'
+    public_key: '%env(resolve:JWT_PUBLIC_KEY)%'
+    pass_phrase: '%env(JWT_PASSPHRASE)%'
+    token_ttl: '%app.jwt_ttl%'
+
+    # El token no lleva roles ni datos personales: meter roles aquí haría que
+    # un permiso retirado siguiera vigente hasta quince minutos después.
+    token_extractors:
+        authorization_header:
+            enabled: true
+            prefix: Bearer
+            name: Authorization
+        cookie:
+            enabled: false

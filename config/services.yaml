@@ -1,0 +1,26 @@
+parameters:
+    app.jwt_ttl: 900          # 15 minutos — decision:0007
+    app.welcome_credits: 10   # decision:0006
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+
+    # El autoregistro se limita a Application e Infrastructure.
+    #
+    # El dominio NO se registra como servicio: sus objetos se construyen con
+    # `new`, no se inyectan. Un agregado que el contenedor sabe crear acaba
+    # teniendo dependencias de infraestructura.
+    LectoresBeta\:
+        resource: '../src/*/*/{Application,Infrastructure}'
+        exclude:
+            - '../src/*/*/Domain'
+
+    LectoresBeta\Shared\:
+        resource: '../src/Shared/{Application,Infrastructure}'
+
+    # Los controladores son infraestructura y viven dentro de cada concepto.
+    LectoresBeta\.Controller\:
+        resource: '../src/*/*/Infrastructure/Controller'
+        tags: ['controller.service_arguments']

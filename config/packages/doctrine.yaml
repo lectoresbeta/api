@@ -1,0 +1,93 @@
+doctrine:
+    dbal:
+        url: '%env(resolve:DATABASE_URL)%'
+        use_savepoints: true
+        profiling_collect_backtrace: '%kernel.debug%'
+
+    orm:
+        auto_generate_proxy_classes: true
+        enable_lazy_ghost_objects: true
+        report_fields_where_declared: true
+        validate_xml_mapping: true
+        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+        auto_mapping: false
+
+        # Un mapeo por bounded context, con XML en Infrastructure.
+        #
+        # XML y no atributos: AGENTS.md exige que el dominio no dependa de
+        # Doctrine, y un atributo `#[ORM\Entity]` sobre un agregado es
+        # exactamente esa dependencia. El mapeo vive donde vive la
+        # persistencia.
+        mappings:
+            User:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User'
+                prefix: 'LectoresBeta\User'
+                alias: User
+            Work:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work'
+                prefix: 'LectoresBeta\Work'
+                alias: Work
+            Reading:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Reading'
+                prefix: 'LectoresBeta\Reading'
+                alias: Reading
+            Feedback:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Feedback'
+                prefix: 'LectoresBeta\Feedback'
+                alias: Feedback
+            Community:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community'
+                prefix: 'LectoresBeta\Community'
+                alias: Community
+            Credits:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Credits'
+                prefix: 'LectoresBeta\Credits'
+                alias: Credits
+            Moderation:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Moderation'
+                prefix: 'LectoresBeta\Moderation'
+                alias: Moderation
+            Notification:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Notification'
+                prefix: 'LectoresBeta\Notification'
+                alias: Notification
+
+when@test:
+    doctrine:
+        dbal:
+            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+
+when@prod:
+    doctrine:
+        orm:
+            auto_generate_proxy_classes: false
+            proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
+            query_cache_driver:
+                type: pool
+                pool: doctrine.system_cache_pool
+            result_cache_driver:
+                type: pool
+                pool: doctrine.result_cache_pool
+    framework:
+        cache:
+            pools:
+                doctrine.result_cache_pool:
+                    adapter: cache.app
+                doctrine.system_cache_pool:
+                    adapter: cache.system

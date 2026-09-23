@@ -59,9 +59,20 @@ Tres motivos, y el tercero es el que decide:
    crece cada vez que se añade una sección. **Con el prefijo `@`, el espacio de nombres de
    usuarios y el de rutas no se tocan nunca.**
 
-La alternativa conservadora es `/profile/{username}`, que también evita colisiones pero a
-costa de una URL más larga y menos compartible. Si `@` da problemas con alguna herramienta,
-es el reemplazo directo.
+**Ambas rutas resuelven** (decidido el 2026-09-24):
+
+```text
+lectoresbeta.com/@pabloblanco1        ← canónica
+lectoresbeta.com/profile/pabloblanco1 ← equivalente
+```
+
+`/@{username}` es la **canónica**: es la que se genera al compartir y la que aparece en
+`rel="canonical"`. `/profile/{username}` resuelve igual, y existe porque el `@` puede dar
+problemas en herramientas que reescriben URLs o en sistemas antiguos.
+
+Tener dos rutas para el mismo recurso tiene un coste conocido —duplicidad para los buscadores—
+que se resuelve con la etiqueta canónica. Lo que **no** conviene es que una redirija a la otra
+con un `301`: un enlace compartido debe abrir donde dice que abre.
 
 Los **alias caducados** resuelven igual que los nombres vigentes mientras duran
 ([`decision:0005`](../../decisions/0005-username-with-temporary-aliases.md)), y el `@` no
@@ -147,7 +158,7 @@ pueda acortar sin más.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| ~~N-11~~ (revisar) | ¿La URL es `/profile/{username}` o `/@{username}`? | El diseño muestra `@bealonso`; la URL del ejemplo usa `/profile/` |
+| ~~N-11~~ | ¿La URL es `/profile/{username}` o `/@{username}`? | El diseño muestra `@bealonso`; la URL del ejemplo usa `/profile/` |
 | N-12 | ¿Se indexan los perfiles en buscadores? | Un alias que caduca y cambia de titular tendría consecuencias de SEO |
 | N-13 | ¿Conviene advertir al visitante de que llegó por un enlace antiguo? | Transparencia frente a suplantación |
 | N-4 | ¿Qué límite de peticiones tiene? | Sin él permite enumerar nombres |

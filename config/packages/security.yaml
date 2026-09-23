@@ -1,0 +1,33 @@
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+    providers:
+        app_users:
+            id: LectoresBeta\User\Authentication\Infrastructure\Security\UserProvider
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        # Endpoints públicos: registro, activación, login, enlaces públicos.
+        public:
+            pattern: ^/(auth|public|legal|genres|content-warnings)
+            security: false
+
+        api:
+            pattern: ^/
+            stateless: true
+            provider: app_users
+            jwt: ~
+
+    access_control:
+        - { path: ^/admin, roles: ROLE_MODERATOR }
+        - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
+
+when@test:
+    security:
+        password_hashers:
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: plaintext

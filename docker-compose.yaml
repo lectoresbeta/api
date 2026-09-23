@@ -1,0 +1,40 @@
+# Entorno de desarrollo. Solo servicios: PHP se ejecuta en la máquina.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lectoresbeta
+      POSTGRES_PASSWORD: lectoresbeta
+      POSTGRES_DB: lectoresbeta
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lectoresbeta']
+      interval: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: lectoresbeta
+      RABBITMQ_DEFAULT_PASS: lectoresbeta
+    ports:
+      - '5672:5672'
+      - '15672:15672'   # consola de administración
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      retries: 10
+
+  # Captura todo el correo saliente en desarrollo. Sin esto, probar la
+  # activación de cuenta implicaría mandar correos de verdad.
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - '1025:1025'
+      - '8025:8025'     # http://localhost:8025
+
+volumes:
+  postgres:

@@ -1,0 +1,15 @@
+framework:
+    secret: '%env(APP_SECRET)%'
+    http_method_override: false
+    trusted_hosts: ~
+    session: false          # La sesión es JWT: no hay estado de sesión en el servidor.
+    php_errors:
+        log: true
+    serializer:
+        enable_attributes: true
+    validation:
+        email_validation_mode: html5
+
+when@test:
+    framework:
+        test: true

@@ -43,6 +43,8 @@ La especificación OpenAPI (contrato máquina-legible) **no vive aquí**: vive e
 3. [`glossary.md`](glossary.md) — lenguaje ubicuo (ES ↔ EN). Imprescindible antes de nombrar nada.
 4. [`features/README.md`](features/README.md) — qué hay que construir y en qué estado está.
 5. [`architecture/01-overview.md`](architecture/01-overview.md) — cómo se construye.
+6. [`architecture/08-development-setup.md`](architecture/08-development-setup.md) — cómo
+   levantarlo en local.
 
 ---
 

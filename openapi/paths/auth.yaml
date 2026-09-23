@@ -1,0 +1,149 @@
+# Alta, activación y reenvío. Primer corte de implementación.
+#
+# Semántica en docs/api/endpoints/user.md y en las fichas:
+#   FEAT-USR-001, FEAT-USR-002, FEAT-USR-020, FEAT-USR-021, FEAT-USR-024
+
+register:
+  post:
+    tags: [Auth]
+    operationId: registerUser
+    summary: Registrarse con correo y contraseña
+    description: |
+      Crea una cuenta en `PENDING_ACTIVATION` y envía el correo de activación.
+
+      La cuenta **no puede escribir** hasta activarse
+      (`decision:0003`) y **no tiene saldo**: los créditos de bienvenida se
+      abonan al activar (`FEAT-CRD-002`).
+
+      La respuesta es **la misma exista o no ya ese correo**. Decir «ese correo
+      ya está registrado» convertiría el formulario en un comprobador de quién
+      tiene cuenta en la plataforma.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yaml#/components/schemas/RegisterRequest'
+    responses:
+      '202':
+        description: Solicitud aceptada. Si procede, se ha enviado el correo de activación.
+      '422':
+        $ref: '../openapi.yaml#/components/responses/ValidationError'
+      '429':
+        $ref: '../openapi.yaml#/components/responses/TooManyRequests'
+
+activate:
+  post:
+    tags: [Auth]
+    operationId: activateAccount
+    summary: Activar la cuenta con el token del correo
+    description: |
+      Consume el token y pasa la cuenta a `ACTIVE`. A partir de ese momento se
+      desbloquean las operaciones de escritura y se abonan los **10 créditos**
+      de bienvenida (`decision:0006`).
+
+      El token es de un solo uso y caduca.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [token]
+            properties:
+              token:
+                type: string
+                minLength: 32
+    responses:
+      '200':
+        description: Cuenta activada.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Session'
+      '410':
+        description: El token ha caducado o ya se usó.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/ValidationError'
+
+resend:
+  post:
+    tags: [Auth]
+    operationId: resendActivationEmail
+    summary: Reenviar el correo de activación
+    description: |
+      **No requiere sesión** (`R-1`): basta con el correo. Sin esto, quien
+      cierra el navegador antes de activar se queda atrapado, porque no puede
+      entrar y tampoco pedir el reenvío.
+
+      La respuesta es **idéntica** en los tres casos posibles —el correo no
+      existe, existe sin activar, ya está activada—. Cualquier diferencia
+      observable filtraría quién tiene cuenta.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email]
+            properties:
+              email:
+                type: string
+                format: email
+    responses:
+      '202':
+        description: Solicitud aceptada. Si procedía, se ha enviado el correo.
+      '429':
+        $ref: '../openapi.yaml#/components/responses/TooManyRequests'
+
+oauthCallback:
+  post:
+    tags: [Auth]
+    operationId: completeOAuth
+    summary: Completar el alta o el acceso con un proveedor externo
+    description: |
+      Solo `google` en esta fase (`FEAT-USR-002`).
+
+      **La cuenta nace activada** (`OB-11`): Google ya ha verificado el correo,
+      así que mandar otro correo de activación sería pedirle al usuario que
+      demuestre algo ya demostrado. Los créditos de bienvenida se abonan en el
+      alta.
+
+      La **aceptación legal sigue siendo obligatoria**: sin ella no se crea la
+      cuenta, venga de donde venga (`T-4`).
+    security: []
+    parameters:
+      - name: provider
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [google]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code, acceptedLegalVersions]
+            properties:
+              code:
+                type: string
+              acceptedLegalVersions:
+                $ref: '../openapi.yaml#/components/schemas/LegalAcceptance'
+    responses:
+      '200':
+        description: Sesión iniciada.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Session'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/ValidationError'

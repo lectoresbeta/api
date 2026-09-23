@@ -1,0 +1,11 @@
+doctrine_migrations:
+    migrations_paths:
+        'LectoresBeta\Migrations': '%kernel.project_dir%/migrations'
+    enable_profiler: false
+
+    # Un esquema por bounded context (decisión P-1). Las migraciones los
+    # crean explícitamente; Doctrine no los inventa.
+    #
+    # Separar esquemas hace que un JOIN entre contextos deje de ser algo que
+    # alguien puede escribir sin darse cuenta.
+    transactional: true

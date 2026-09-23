@@ -1,0 +1,44 @@
+# Aislamiento entre bounded contexts.
+#
+# Ningún contexto puede depender de las clases internas de otro. La
+# comunicación ocurre por eventos de integración sobre Messenger, o por
+# contratos de consulta explícitos.
+#
+# `Credits` tiene aislamiento reforzado: es regla dura de AGENTS.md y de
+# docs/decisions/0002-credits-as-isolated-bounded-context.md.
+parameters:
+  paths:
+    - ./src
+  layers:
+    - name: User
+      collectors: [{ type: directory, value: src/User/.* }]
+    - name: Work
+      collectors: [{ type: directory, value: src/Work/.* }]
+    - name: Reading
+      collectors: [{ type: directory, value: src/Reading/.* }]
+    - name: Feedback
+      collectors: [{ type: directory, value: src/Feedback/.* }]
+    - name: Community
+      collectors: [{ type: directory, value: src/Community/.* }]
+    - name: Credits
+      collectors: [{ type: directory, value: src/Credits/.* }]
+    - name: Moderation
+      collectors: [{ type: directory, value: src/Moderation/.* }]
+    - name: Notification
+      collectors: [{ type: directory, value: src/Notification/.* }]
+    - name: Shared
+      collectors: [{ type: directory, value: src/Shared/.* }]
+
+  ruleset:
+    # Todos pueden usar Shared. Nadie puede usar a nadie más.
+    User: [Shared]
+    Work: [Shared]
+    Reading: [Shared]
+    Feedback: [Shared]
+    Community: [Shared]
+    Credits: [Shared]
+    Moderation: [Shared]
+    Notification: [Shared]
+
+    # Shared es genérico: no conoce ningún contexto de negocio.
+    Shared: ~

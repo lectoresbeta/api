@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    name: Calidad
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: ctype, iconv, intl, pdo_pgsql, sodium
+          coverage: none
+
+      - uses: ramsey/composer-install@v3
+
+      - name: Estilo
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Análisis estático
+        run: vendor/bin/phpstan analyse --no-progress
+
+      # Las reglas de arquitectura se comprueban en CI, no se confía en que
+      # alguien se acuerde. AGENTS.md: "If dependency validation is configured
+      # in the repository, it must run as part of normal quality checks and CI".
+      - name: Capas (Domain ← Application ← Infrastructure)
+        run: vendor/bin/deptrac analyse --config-file=deptrac.layers.yaml --fail-on-uncovered --report-uncovered
+
+      - name: Aislamiento entre bounded contexts
+        run: vendor/bin/deptrac analyse --config-file=deptrac.contexts.yaml --fail-on-uncovered --report-uncovered
+
+      - name: Documentación
+        run: python3 docs/_tools/check-docs.py
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: lectoresbeta
+          POSTGRES_PASSWORD: lectoresbeta
+          POSTGRES_DB: lectoresbeta
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U lectoresbeta"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: ctype, iconv, intl, pdo_pgsql, sodium
+          coverage: none
+
+      - uses: ramsey/composer-install@v3
+
+      - name: Claves JWT
+        run: php bin/console lexik:jwt:generate-keypair --skip-if-exists
+        env:
+          JWT_PASSPHRASE: test
+
+      - name: Base de datos de test
+        run: |
+          php bin/console --env=test doctrine:database:create --if-not-exists
+          php bin/console --env=test doctrine:migrations:migrate --no-interaction --allow-no-migration
+        env:
+          DATABASE_URL: postgresql://lectoresbeta:lectoresbeta@127.0.0.1:5432/lectoresbeta?serverVersion=16&charset=utf8
+
+      - name: PHPUnit
+        run: vendor/bin/phpunit
+        env:
+          DATABASE_URL: postgresql://lectoresbeta:lectoresbeta@127.0.0.1:5432/lectoresbeta?serverVersion=16&charset=utf8

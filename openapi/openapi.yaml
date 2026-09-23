@@ -40,11 +40,23 @@ tags:
 security:
   - bearerAuth: []
 
-paths: {}
-# Las rutas se incorporan aquí mediante $ref a openapi/paths/ conforme se especifican.
-# Ejemplo:
-#   /auth/register:
-#     $ref: './paths/auth.yaml#/register'
+paths:
+
+  # —— Primer corte de implementación ——————————————————————————————————
+  # Registro → activación → abono de bienvenida. Atraviesa User, Notification
+  # y Credits, y prueba el camino asíncrono entre contextos.
+
+  /auth/register:
+    $ref: './paths/auth.yaml#/register'
+
+  /auth/activate:
+    $ref: './paths/auth.yaml#/activate'
+
+  /auth/activation/resend:
+    $ref: './paths/auth.yaml#/resend'
+
+  /auth/oauth/{provider}/callback:
+    $ref: './paths/auth.yaml#/oauthCallback'
 
 components:
 
@@ -52,9 +64,19 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
+      bearerFormat: JWT
       description: |
-        Pendiente de decisión S-1 (docs/architecture/06-security-and-authorization.md).
-        El esquema definitivo puede ser JWT, token opaco o sesión.
+        JWT de **15 minutos** más un token de refresco revocable
+        (`decision:0007`).
+
+        Consecuencia que conviene conocer: **la revocación tarda hasta ese
+        cuarto de hora**. Se asume a cambio de no mantener estado de sesión.
+        Las operaciones de **escritura** comprueban además el estado de la
+        cuenta contra la base de datos, así que para ellas la ventana es cero:
+        nadie publica ni corrige quince minutos después de ser expulsado.
+
+        El token **no lleva roles ni datos personales**: meter roles en él
+        haría que un permiso retirado siguiera vigente hasta su caducidad.
 
   parameters:
     Limit:
@@ -86,6 +108,81 @@ components:
       type: string
       format: date-time
       examples: ['2026-09-21T10:15:30Z']
+
+    Session:
+      type: object
+      required: [accessToken, refreshToken, expiresIn]
+      properties:
+        accessToken:
+          type: string
+          description: JWT. Caduca a los 900 segundos.
+        refreshToken:
+          type: string
+          description: Revocable. Es el único elemento de la sesión con estado.
+        expiresIn:
+          type: integer
+          examples: [900]
+
+    LegalAcceptance:
+      type: object
+      description: |
+        Versiones concretas aceptadas. Se guarda **la versión**, no una
+        referencia genérica al documento: si no, la aceptación no demuestra
+        qué se aceptó (`FEAT-USR-024` `RN-T3`).
+      required: [termsOfUse, privacyPolicy]
+      properties:
+        termsOfUse:
+          type: string
+          examples: ['2026-01-15']
+        privacyPolicy:
+          type: string
+          examples: ['2026-01-15']
+
+    RegisterRequest:
+      type: object
+      required: [email, password, acceptedLegalVersions]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 4096
+          description: |
+            No se devuelve nunca, no se registra en logs y no viaja en ningún
+            evento.
+        acceptedLegalVersions:
+          $ref: '#/components/schemas/LegalAcceptance'
+
+    Problem:
+      type: object
+      description: |
+        Error según RFC 9457. **Nunca** expone trazas, SQL, nombres de clase
+        internos ni rutas de fichero (`AGENTS.md`).
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+          examples: ['https://api.lectoresbeta.com/problems/validation-error']
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field:
+                type: string
+              message:
+                type: string
 
     PageInfo:
       type: object
@@ -193,3 +290,23 @@ components:
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
+
+  responses:
+
+    ValidationError:
+      description: La petición no cumple las reglas de validación.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    TooManyRequests:
+      description: Se ha superado el límite de frecuencia.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

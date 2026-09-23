@@ -1,0 +1,64 @@
+# Reglas de capa: Domain ← Application ← Infrastructure.
+#
+# Las dependencias apuntan siempre hacia dentro. Domain no sabe que existe
+# nadie más; Application conoce Domain; Infrastructure conoce a las dos.
+#
+# Ver docs/architecture/03-layers-and-dependencies.md
+parameters:
+  paths:
+    - ./src
+  layers:
+    - name: Domain
+      collectors:
+        - type: directory
+          value: src/.*/.*/Domain/.*
+        - type: directory
+          value: src/Shared/Domain/.*
+
+    - name: Application
+      collectors:
+        - type: directory
+          value: src/.*/.*/Application/.*
+        - type: directory
+          value: src/Shared/Application/.*
+
+    - name: Infrastructure
+      collectors:
+        - type: directory
+          value: src/.*/.*/Infrastructure/.*
+        - type: directory
+          value: src/Shared/Infrastructure/.*
+
+    # Lo que el dominio no puede tocar jamás.
+    - name: Symfony
+      collectors:
+        - type: classLike
+          value: ^Symfony\\.*
+    - name: Doctrine
+      collectors:
+        - type: classLike
+          value: ^Doctrine\\.*
+    - name: Psr
+      collectors:
+        - type: classLike
+          value: ^Psr\\.*
+
+  ruleset:
+    # El dominio no depende de nada más que de sí mismo.
+    Domain: ~
+
+    # La aplicación orquesta el dominio. Nunca toca infraestructura ni el framework.
+    Application:
+      - Domain
+
+    # La infraestructura implementa los contratos de dentro.
+    Infrastructure:
+      - Domain
+      - Application
+      - Symfony
+      - Doctrine
+      - Psr
+
+    Symfony: ~
+    Doctrine: ~
+    Psr: ~
