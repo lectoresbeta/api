@@ -88,6 +88,9 @@ services:
     LectoresBeta\User\Account\Application\Contract\ActivationLinkProvider:
         alias: LectoresBeta\User\Account\Application\Service\IssueActivationLink
 
+    LectoresBeta\User\Account\Application\Contract\ReaderMaturity:
+        alias: LectoresBeta\User\Account\Application\Service\CheckReaderMaturity
+
     LectoresBeta\Notification\Delivery\Application\Handler\SendActivationEmail:
         arguments:
             # La URL es del frontend, no de la API: el enlace del correo abre

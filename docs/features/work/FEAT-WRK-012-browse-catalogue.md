@@ -217,4 +217,28 @@ parecen en nada, y la maqueta no lo aclara. Lo habitual en un catálogo de descu
 [`decision:0008`](../../decisions/0008-catalogue-ordering.md). Las preguntas que quedan son
 detalles de filtro que no afectan al modelo.
 
-**Implementación:** `TODO`.
+**Implementación:** `TODO`, y **bloqueada por datos que todavía no existen**.
+
+La ordenación por relevancia —`RN-4`, y el corazón de
+[`decision:0008`](../../decisions/0008-catalogue-ordering.md)— necesita el **saldo del autor**
+y el **precio del capítulo**. Los dos son de `Credits`, llegan por eventos, y hoy no hay quien
+los publique:
+
+```text
+Credits ──CreditBalanceChanged──────────────▶ ┐  ninguno existe
+Credits ──ChapterCorrectabilityChanged──────▶ │  ninguno existe
+Work    ──WorkOpenedForCorrection───────────▶ ├─▶ catalogue_entry
+Work    ──WorkContentUpdated────────────────▶ │  no existe
+Feedback──FeedbackSubmitted─────────────────▶ ┘  no existe
+```
+
+De los cinco, solo `WorkOpenedForCorrection` se publica. Con `price` y `authorBalance` a cero,
+`capacidad = min(saldo ÷ precio, 10)` no es una ordenación degradada: es una división por cero.
+
+La cadena real es **cuestionario → precio → catálogo**: el segundo término del precio son las
+palabras exigidas por el cuestionario ([`FEAT-WRK-014`](FEAT-WRK-014-configure-questionnaire.md),
+`P0`), sin el cual `FEAT-CRD-016` no puede calcular nada.
+
+Implementar el catálogo antes que eso obligaría a ordenar por otra cosa —fecha, por ejemplo—
+y eso **contradice la razón de ser del producto**: `decision:0008` descarta explícitamente
+cualquier orden que no reparta trabajo. Es mejor no tenerlo que tenerlo mal.

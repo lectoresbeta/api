@@ -91,11 +91,20 @@ paths:
   /works:
     $ref: './paths/works.yaml#/collection'
 
+  /works/{workId}:
+    $ref: './paths/works.yaml#/work'
+
+  /chapters/{chapterId}:
+    $ref: './paths/works.yaml#/chapter'
+
   /works/{workId}/chapters:
     $ref: './paths/works.yaml#/chapters'
 
   /works/{workId}/status:
     $ref: './paths/works.yaml#/status'
+
+  /works/{workId}/access-mode:
+    $ref: './paths/works.yaml#/accessMode'
 
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'

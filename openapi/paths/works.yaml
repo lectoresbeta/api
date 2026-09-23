@@ -224,3 +224,189 @@ status:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+work:
+  get:
+    tags: [Works]
+    operationId: getWork
+    summary: Ver una obra y el índice de sus capítulos
+    description: |
+      Metadatos e **índice**, nunca el texto. El índice de una novela es
+      información inocua y el texto no lo es: tienen audiencias distintas y
+      reglas distintas, y mezclarlos obligaría a la más estricta a gobernar
+      las dos.
+
+      **Leer no exige tener la cuenta activada**; lo que exige la activación
+      es escribir.
+
+      Quien no puede leer una obra recibe `404`, **nunca `403`**. Confirmar la
+      existencia de obra inédita ya es una fuga, así que una obra inexistente,
+      el borrador de otra persona, una obra restringida, una bloqueada y una
+      `ADULTS_ONLY` para quien no alcanza la mayoría de edad dan **la misma
+      respuesta, byte a byte**.
+
+      Los capítulos ocultos no aparecen en el índice de quien no es el autor,
+      y tampoco dejan hueco en la numeración.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: La obra y su índice.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workId, authorId, title, status, accessMode, adultsOnly, wordCount, blocked, chapters]
+              properties:
+                workId: { type: string, format: uuid }
+                authorId: { type: string, format: uuid }
+                title: { type: string }
+                synopsis: { type: [string, 'null'] }
+                status: { type: string, enum: [DRAFT, PUBLISHED, IN_CORRECTION] }
+                accessMode: { type: string, enum: [PUBLIC, ON_REQUEST, PRIVATE] }
+                adultsOnly: { type: boolean }
+                wordCount: { type: integer }
+                blocked: { type: boolean }
+                chapters:
+                  type: array
+                  items:
+                    type: object
+                    required: [chapterId, position, wordCount]
+                    properties:
+                      chapterId: { type: string, format: uuid }
+                      position: { type: integer }
+                      title: { type: [string, 'null'] }
+                      wordCount: { type: integer }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no puedes leerla. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapter:
+  get:
+    tags: [Works]
+    operationId: getChapter
+    summary: Leer el texto de un capítulo
+    description: |
+      **La obra decide.** Un capítulo nunca se autoriza por su cuenta: que
+      alguien pueda leerlo es una propiedad de la obra a la que pertenece, y
+      preguntárselo al capítulo sería preguntar lo que no toca — un capítulo
+      visible de una novela en borrador sigue siendo un borrador.
+
+      El HTML se devuelve **exactamente como está almacenado**. Se saneó al
+      escribirlo, que es el sentido de sanear en la escritura: no se guarda
+      nada que no se estuviera dispuesto a servir.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: El capítulo, con su texto.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chapterId, workId, position, content, wordCount]
+              properties:
+                chapterId: { type: string, format: uuid }
+                workId: { type: string, format: uuid }
+                position: { type: integer }
+                title: { type: [string, 'null'] }
+                content:
+                  type: string
+                  description: HTML saneado, tal y como está almacenado.
+                wordCount: { type: integer }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          No existe, está oculto, está bloqueado, o pertenece a una obra que
+          no puedes abrir. `code: CHAPTER_NOT_FOUND`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+accessMode:
+  put:
+    tags: [Works]
+    operationId: setAccessMode
+    summary: Quién puede ser lector beta de esta obra
+    description: |
+      Eje distinto del estado: el estado responde «¿se puede corregir?» y
+      esto responde «¿por parte de quién?».
+
+      Una obra **nace `ON_REQUEST`**, y es deliberado: el valor por defecto
+      de una decisión de exposición debe ser el que menos expone. Abrirla del
+      todo es un acto explícito, y esa explicitud es lo que convierte un
+      descuido en una decisión.
+
+      Se puede cambiar en cualquier estado, `DRAFT` incluido: preparar la obra
+      antes de publicarla es lo normal.
+
+      **No revoca accesos ya concedidos.** Gobierna quién puede entrar a
+      partir de ahora; cortar a alguien a mitad de una corrección le haría
+      perder su trabajo.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [accessMode]
+            properties:
+              accessMode:
+                type: string
+                enum: [PUBLIC, ON_REQUEST, PRIVATE]
+    responses:
+      '200':
+        description: Modalidad resultante.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessMode]
+              properties:
+                accessMode:
+                  type: string
+                  enum: [PUBLIC, ON_REQUEST, PRIVATE]
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'La obra no existe **o no es tuya**. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'Modalidad desconocida. `code: UNKNOWN_ACCESS_MODE`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
