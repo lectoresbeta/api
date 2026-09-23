@@ -82,6 +82,9 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Crédito | `Credit` | Unidad de la economía interna que equilibra dar y recibir feedback. |
 | Saldo de créditos | `CreditBalance` | Créditos disponibles de un usuario. |
 | Movimiento de créditos | `CreditTransaction` | Registro inmutable de una variación del saldo, con su motivo y su origen. |
+| Créditos de bienvenida | `WELCOME_GRANT` | Los **10 créditos** que se abonan una sola vez al activar la cuenta. Es uno de los dos únicos **grifos** del sistema, y por tanto el saldo medio de la plataforma. |
+| Grifo | `CreditTransactionReason::isTap()` | Motivo que **crea** créditos en vez de moverlos entre dos cuentas. Solo la bienvenida, la bonificación por invitación y el ajuste manual lo son. |
+| Evento procesado | `ProcessedEvent` | Registro de que un evento de integración ya se aplicó en `Credits`, con el que se garantiza que un crédito no se abona dos veces. La entrega duplicada hay que darla por supuesta. |
 | Precio anotado | `CorrectionPrice` | Importe que se fija al empezar una corrección y que se cargará y abonará al entregarla. **No bloquea créditos**: el saldo del autor sigue íntegro. |
 | Corrección bloqueada | `Correction` con `locked` | Corrección entregada que dejó el saldo del autor en negativo. El autor ve sus metadatos, no su contenido, hasta que repone saldo. |
 | Regla de créditos | `CreditRule` | Norma que traduce un hecho de negocio en una variación de créditos. |

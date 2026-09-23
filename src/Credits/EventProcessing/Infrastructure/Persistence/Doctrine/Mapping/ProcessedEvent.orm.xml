@@ -10,7 +10,7 @@
             table="processed_event" schema="credits_ctx">
 
         <indexes>
-            <!-- Purging old rows reads by date (`FEAT-CRD-006`). -->
+            <!-- Purging old rows reads by date (`FEAT-CRD-011`). -->
             <index name="idx_processed_event_date" columns="processed_at"/>
         </indexes>
 

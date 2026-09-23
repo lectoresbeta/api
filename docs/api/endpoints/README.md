@@ -13,7 +13,7 @@ duplica aquí.
 | `Reading` | reading.md | Por crear |
 | `Feedback` | [feedback.md](feedback.md) | Correcciones especificadas |
 | `Community` | community.md | Por crear |
-| `Credits` | credits.md | Por crear |
+| `Credits` | [credits.md](credits.md) | Saldo especificado |
 | `Notification` | notification.md | Por crear |
 
 Se crean a partir de [`../../_templates/endpoint.md`](../../_templates/endpoint.md) conforme

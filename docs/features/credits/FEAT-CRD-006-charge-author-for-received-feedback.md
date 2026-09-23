@@ -13,7 +13,7 @@ sources:
   - _sources/credit-system.pdf#p4
   - decision:0004
 endpoints: []
-events: [FeedbackSubmitted, CreditsSpent]
+events: [FeedbackSubmitted, CreditsSpent, CreditsAdded, CreditBalanceChanged, CreditBalanceWentNegative]
 depends_on: [FEAT-CRD-009, FEAT-FBK-001, FEAT-WRK-013, FEAT-CRD-011]
 updated: 2026-09-24
 ---
@@ -40,8 +40,8 @@ Y es **una transferencia**: el mismo importe que se le carga al autor se le abon
 ## Reglas de negocio
 
 - `RN-1` El importe es **el anotado al empezar** la corrección. No se recalcula al entregar.
-- `RN-2` Se registran **dos movimientos**: cargo al autor con motivo `FEEDBACK_RECEIVED` y
-  abono al lector con motivo `FEEDBACK_GIVEN`, ambos con el `eventId` de origen.
+- `RN-2` Se registran **dos movimientos**: cargo al autor con motivo `CORRECTION_CHARGED` y
+  abono al lector con motivo `CORRECTION_EARNED`, ambos con el `eventId` de origen.
 - `RN-3` **El abono al lector se ejecuta siempre**, aunque el autor no tenga saldo. Si no
   llega, su saldo queda negativo y la corrección se entrega **bloqueada**
   ([`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md)).
@@ -61,18 +61,18 @@ cargo al autor, se ha creado crédito de la nada y la invariante contable se rom
 
 ## Cómo se calcula el importe
 
-El cálculo ocurre en `FEAT-CRD-009`, al retener. Se documenta aquí porque es la regla de
-negocio central del sistema.
+El cálculo ocurre en `FEAT-CRD-009`, al empezar la corrección. Se documenta aquí porque es la
+regla de negocio central del sistema.
 
 ```text
-coste = créditos(textTier) + max(0, questionCount − 3)
+precio = techo(palabras del capítulo / 1.000) + techo(palabras exigidas / 100)
 ```
 
-- Los créditos por nivel de texto son los de la tabla de
-  [`credits.md`](../../bounded-contexts/credits.md#clasificación-por-extensión-texttier).
-- Las tres primeras preguntas del cuestionario no tienen coste; cada pregunta adicional suma
-  1 crédito.
-- El importe es **el que se retuvo** al empezar la corrección
+- El primer término es **leer**; el segundo, **escribir**. Entre **2** y **20**
+  ([`FEAT-CRD-016`](FEAT-CRD-016-effort-based-pricing.md)).
+- Las **palabras exigidas** son la suma de los mínimos que el autor fija en las preguntas de su
+  cuestionario, con un suelo de **25 palabras** por pregunta sin mínimo declarado.
+- El importe es **el anotado** al empezar la corrección
   ([`FEAT-CRD-009`](FEAT-CRD-009-balance-check-on-correction-start.md)), no el vigente al
   entregar. Cambiar el texto o el cuestionario entre medias no altera lo que cobra quien ya
   estaba corrigiendo.
@@ -96,18 +96,17 @@ lo que cabe esperar de cinco palabras de diferencia.
 
 1. `Feedback` publica `FeedbackSubmitted`.
 2. `Credits` comprueba si el `eventId` ya se procesó; si sí, descarta.
-3. Localiza la retención `HELD` del acceso correspondiente.
-4. La marca `CONFIRMED` y registra el `CreditTransaction` en la misma transacción.
+3. Localiza el **precio anotado** de esa corrección (`CorrectionPrice`).
+4. Registra los **dos** movimientos y la fila de deduplicación en la misma transacción.
 5. Publica `CreditsSpent` y `CreditBalanceChanged`.
 
 ## Flujos alternativos
 
 | Caso | Comportamiento |
 |---|---|
-| `eventId` repetido | Se descarta sin efecto |
-| Retención ya confirmada | Idempotente: no se cobra dos veces |
-| Retención caducada o liberada | No se cobra. Se publica `InsufficientCredits` y se registra la incidencia (`RN-7`) |
-| No existe retención | Igual que el caso anterior. Indica un fallo de integración que hay que investigar |
+| `eventId` repetido | Se descarta sin efecto ([`FEAT-CRD-011`](FEAT-CRD-011-deduplicate-integration-events.md)) |
+| El autor no tiene saldo | **Se cobra igualmente.** El lector cobra y el autor queda en negativo (`RN-3`) |
+| No existe precio anotado | No se inventa el importe: se recalcula dejando traza de la reconstrucción (`RN-7`) |
 
 ## Eventos
 
@@ -115,60 +114,56 @@ lo que cabe esperar de cinco palabras de diferencia.
 
 | Evento | Origen | Efecto |
 |---|---|---|
-| `FeedbackSubmitted` | `Feedback` | Confirma la retención asociada |
+| `FeedbackSubmitted` | `Feedback` | Carga al autor y abona al lector el **precio anotado** |
 
 **Publica**
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `CreditsSpent` | Cargo confirmado | `Notification` |
+| `CreditsSpent` | Cargo ejecutado al autor | `Notification` |
+| `CreditsAdded` | Abono ejecutado al lector | `Notification` |
 | `CreditBalanceChanged` | Cambia el saldo | `Reading` (proyección), read models, `Notification` |
-| `InsufficientCredits` | Llega feedback sin retención válida | `Feedback`, `Notification` |
+| `CreditBalanceWentNegative` | El cargo deja al autor por debajo de cero | `Notification`, `Feedback` ([`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md)) |
 
 ## Modelo de datos afectado
 
 | Tabla | Cambio |
 |---|---|
 | `correction_price` | Se consume la cotización de esa corrección. **No es una retención**: no hay estado que confirmar (`decision:0006`) |
-| `credit_transaction` | Nuevo movimiento negativo con `reason = FEEDBACK_RECEIVED` |
-| `credit_account` | Actualización del saldo |
-| `processed_event` | Registro del `eventId` |
+| `credit_transaction` | **Dos** movimientos: `CORRECTION_CHARGED` al autor y `CORRECTION_EARNED` al lector |
+| `credit_account` | Actualización de los **dos** saldos |
+| `processed_event` | Registro del `eventId` para este consumidor ([`FEAT-CRD-011`](FEAT-CRD-011-deduplicate-integration-events.md)) |
 
-Los cuatro cambios ocurren en **una única transacción**. Si no, una entrega duplicada puede
-cobrar dos veces.
+Todos los cambios ocurren en **una única transacción**. Si no, una entrega duplicada puede
+cobrar dos veces, o el lector puede cobrar sin que se cargue al autor: crédito creado de la
+nada.
 
 ## Criterios de aceptación
 
-- [ ] Recibir `FeedbackSubmitted` confirma la retención y genera el movimiento.
-- [ ] El importe del movimiento coincide exactamente con el de la retención.
-- [ ] El saldo total baja; el saldo disponible no cambia.
-- [ ] Procesar dos veces el mismo `eventId` produce un único movimiento.
-- [ ] Una retención ya confirmada no se cobra por segunda vez.
-- [ ] Un `FeedbackSubmitted` sin retención no genera cargo ni deja el saldo negativo.
-- [ ] Confirmación y registro del `eventId` son atómicos.
+- [ ] Recibir `FeedbackSubmitted` genera **dos** movimientos por el mismo importe.
+- [ ] El importe coincide exactamente con el precio anotado al empezar la corrección.
+- [ ] La suma de los dos movimientos es **cero**: la operación no crea ni destruye créditos.
+- [ ] Procesar dos veces el mismo `eventId` produce un único par de movimientos.
+- [ ] El lector cobra aunque el autor no tenga saldo, y el autor queda en negativo.
+- [ ] Movimientos y registro del `eventId` son atómicos.
 - [ ] El saldo resultante coincide con la suma de todos los movimientos.
 - [ ] `Credits` no llama a `Work` ni a `Feedback` en todo el proceso.
-- [ ] Una retención de 15 créditos sigue cobrando 15 aunque la obra haya crecido entretanto.
+- [ ] Un precio anotado de 15 créditos sigue cobrando 15 aunque la obra haya crecido
+      entretanto.
 
-El último criterio es el que da sentido a la reserva: el precio se fija cuando se adquiere el
+El último criterio es el que da sentido a anotar el precio: se fija cuando se adquiere el
 compromiso, no cuando se cumple.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| ~~C-1~~ | ¿Qué ocurre si el autor no tiene saldo? | **Resuelto** por [`decision:0004`](../../decisions/0004-credit-reservation-on-access-grant.md): sin saldo no hay acceso, así que no llega a haber comentario |
-| ~~C-2~~ | ¿Se reservan créditos al conceder acceso? | **Resuelto:** sí (`FEAT-CRD-009`) |
-| ~~M-1~~ | ¿Se paga por adelantado? | **Resuelto:** sí, con retención |
-| R-1 | ¿La reserva es por lector o por obra? | Variante pendiente en `FEAT-CRD-009` |
-| C-4 | ¿Un mismo lector beta puede comentar varias veces y cobrar cada vez? | Con una retención por acceso, el segundo comentario no tendría respaldo |
-| C-6 | ¿Cuánto cuesta un texto de más de 75.000 palabras? | Tramo no cubierto por la tabla |
-| C-9 | ¿Se devuelven créditos si el autor oculta el comentario por abusivo? | Protección frente a feedback malicioso |
-| C-10 | ¿El nivel se calcula sobre la obra completa o sobre el fragmento comentado? | Con novelas cambia radicalmente el coste |
-| **C-15** | ¿Qué se hace con un `FeedbackSubmitted` sin retención asociada? | `RN-7` propone no cobrar y registrar la incidencia. Confirmar |
-
-`C-4` gana importancia con este modelo: si una retención cubre un comentario, un segundo
-comentario del mismo lector quedaría sin respaldo y caería en `RN-7`.
+| ~~C-1~~ | ¿Qué ocurre si el autor no tiene saldo? | **Resuelto** por [`decision:0006`](../../decisions/0006-credit-system.md): el lector cobra igualmente y el autor queda en negativo ([`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md)) |
+| ~~C-2~~, ~~M-1~~, ~~R-1~~ | Todo lo relativo a reservar o retener créditos | **Desaparecen** con `decision:0006`: no se retiene nada |
+| ~~C-6~~, ~~C-10~~ | Tramos por extensión y nivel del texto | **Desaparecen** con el `TextTier`. El precio es una fórmula continua sobre las palabras **del capítulo** ([`FEAT-CRD-016`](FEAT-CRD-016-effort-based-pricing.md)) |
+| C-4 | ¿Un mismo lector puede corregir varias veces el mismo capítulo y cobrar cada vez? | **Una corrección por lector y capítulo**; queda confirmar qué ocurre con una corrección rehecha |
+| C-9 | ¿Se devuelven créditos si el autor oculta la corrección por abusiva? | Protección frente a feedback malicioso. Es una reversión, con sus motivos `CLAIM_REVERSAL_*` |
+| **C-15** | ¿Qué se hace con un `FeedbackSubmitted` sin precio anotado? | `RN-7` propone recalcular dejando traza. Confirmar |
 
 ## Estado
 
