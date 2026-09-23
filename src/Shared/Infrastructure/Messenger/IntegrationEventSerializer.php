@@ -92,7 +92,7 @@ final readonly class IntegrationEventSerializer implements SerializerInterface
     }
 
     /**
-     * @return array<string, string|int|float|bool|null>
+     * @return array<string, string|int|float|bool|list<string|int|float|bool>|null>
      */
     private static function decodePayload(mixed $body): array
     {
@@ -113,14 +113,47 @@ final readonly class IntegrationEventSerializer implements SerializerInterface
         $payload = [];
 
         foreach ($decoded as $key => $value) {
-            if (!\is_string($key) || (null !== $value && !\is_scalar($value))) {
-                throw new MessageDecodingFailedException('An integration event payload must be flat scalars.');
+            if (!\is_string($key)) {
+                throw new MessageDecodingFailedException('An integration event payload must be an object.');
             }
 
-            $payload[$key] = $value;
+            $payload[$key] = \is_array($value) ? self::decodeList($value) : self::decodeScalar($value);
         }
 
         return $payload;
+    }
+
+    private static function decodeScalar(mixed $value): bool|float|int|string|null
+    {
+        if (null !== $value && !\is_scalar($value)) {
+            throw new MessageDecodingFailedException('An integration event payload takes scalars or lists of scalars, never a nested object.');
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param array<array-key, mixed> $value
+     *
+     * @return list<string|int|float|bool>
+     */
+    private static function decodeList(array $value): array
+    {
+        if (!array_is_list($value)) {
+            throw new MessageDecodingFailedException('An integration event payload takes scalars or lists of scalars, never a nested object.');
+        }
+
+        $items = [];
+
+        foreach ($value as $item) {
+            if (!\is_scalar($item)) {
+                throw new MessageDecodingFailedException('A list in an integration event payload holds scalars only.');
+            }
+
+            $items[] = $item;
+        }
+
+        return $items;
     }
 
     private static function occurredAt(mixed $raw): \DateTimeImmutable

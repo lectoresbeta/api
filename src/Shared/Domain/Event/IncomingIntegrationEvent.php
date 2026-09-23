@@ -32,7 +32,7 @@ interface IncomingIntegrationEvent extends IntegrationEvent
     public static function subscribesTo(): string;
 
     /**
-     * @param array<string, string|int|float|bool|null> $payload
+     * @param array<string, string|int|float|bool|list<string|int|float|bool>|null> $payload
      */
     public static function fromPayload(string $eventId, \DateTimeImmutable $occurredAt, array $payload): self;
 }

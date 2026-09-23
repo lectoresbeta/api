@@ -5,7 +5,7 @@ context: User
 concept: Onboarding
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P0
 sources:
   - figma:1800-13778 (1470:9581, nota 1679:9226)
@@ -88,32 +88,26 @@ cada usuario, y cambiarlo después obliga a migrar datos.
 - `RN-7` El paso es obligatorio para completar el onboarding.
 - `RN-8` Este paso funciona con la cuenta en `PENDING_ACTIVATION` (`FEAT-USR-025`, `RN-5`).
 
-## Catálogo de géneros
+## En qué se aparta del diseño
 
-Visibles en el diseño, con el identificador propuesto:
+El catálogo vigente es el de [arriba](#el-catálogo-de-géneros), que es el que siembra la
+migración `Version20260923174500`. El diseño de Figma mostraba trece chips más cuatro
+`Sample`, lo que ya indicaba que la lista no estaba cerrada. Diferencias que conviene tener
+presentes:
 
-| Español | `Genre` |
-|---|---|
-| Aventura | `ADVENTURE` |
-| Ciencia Ficción | `SCIENCE_FICTION` |
-| Comedia | `COMEDY` |
-| Drama | `DRAMA` |
-| Fantasía | `FANTASY` |
-| Histórico | `HISTORICAL` |
-| Infantil | `CHILDREN` |
-| Misterio | `MYSTERY` |
-| Poesía | `POETRY` |
-| Policíaco | `CRIME` |
-| Romance | `ROMANCE` |
-| Terror | `HORROR` |
-| Thriller | `THRILLER` |
+| Diseño | Catálogo | Por qué |
+|---|---|---|
+| «Poeta» | `POETRY` — Poesía | Era el único chip que nombraba a la persona y no a la obra |
+| Comedia | `HUMOUR` — Humor | En narrativa el término es «humor»; «comedia» es teatro o cine |
+| Drama | `DRAMA` — **Teatro** | **Mismo código, significado distinto.** Aquí `DRAMA` es la forma teatral, no el tono |
+| Misterio | — | Absorbido por `CRIME` y `THRILLER` |
+| — | `LITERARY_FICTION`, `ESSAY`, `MEMOIR`, `NARRATIVE_NONFICTION`, `SHORT_STORY`, `YOUNG_ADULT` | El diseño no cubría la no ficción ni las formas breves |
 
-El diseño escribe «Poeta»; se corrige a **«Poesía»**, que es el género. Era el único chip
-que nombraba a la persona y no a la obra.
+La fila de `DRAMA` es la que merece confirmación de producto: un cliente que asuma el
+significado del diseño mostrará «Drama» donde el catálogo dice «Teatro».
 
-El diseño muestra además cuatro chips `Sample`, lo que confirma que la lista está
-incompleta. El catálogo debe servirse desde el backend con su nombre presentable, no
-mantenerse como un enum cerrado en el cliente.
+El catálogo se sirve desde el backend con su nombre presentable (`GET /genres`), no se
+mantiene como un enum cerrado en el cliente.
 
 Este mismo catálogo se usa en la búsqueda de obras (`FEAT-WRK-012`), en la búsqueda de
 autores (`FEAT-USR-017`) y en los filtros de los rankings (`FEAT-COM-013`, `FEAT-COM-014`).
@@ -195,4 +189,19 @@ clasifican con otro vocabulario, ninguna recomendación funcionará.
 **Especificación:** `APPROVED` (2026-09-24). `OB-14` resuelta con un catálogo de 18 géneros, pendiente de
 tu revisión. Lo que queda son detalles de presentación.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE`.
+
+`GET /api/v1/genres` y `PUT /api/v1/me/onboarding/genres`, con el mínimo de tres, el rechazo
+nombrado de los géneros desconocidos, el orden de los pasos y la publicación de
+`LiteraryPreferencesUpdated` con la selección entera. Cubierto por
+`tests/Functional/User/OnboardingTest.php`.
+
+Dos decisiones que la ficha dejaba abiertas y que la implementación cierra:
+
+- **los duplicados se normalizan, no se rechazan** (`RN-4`). Enviar dos veces el mismo género
+  es un fallo del cliente, no una decisión de la persona, y el conjunto que quería decir no es
+  ambiguo. Como consecuencia, `['DRAMA','drama','DRAMA']` **no** llega al mínimo de tres, que
+  es lo correcto: son un género;
+- la selección **sustituye** a la anterior en vez de acumularse.
+
+**Falta:** `RN-2` sigue sin máximo definido, así que no hay ninguno.

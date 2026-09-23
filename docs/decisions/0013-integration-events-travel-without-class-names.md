@@ -50,11 +50,19 @@ descubrimiento automático, una suscripción nueva aparecería porque alguien a�
 
 ### El payload es plano
 
-Solo escalares, sin anidar. El serializador rechaza un payload anidado en lugar de aceptarlo.
+Escalares, o **listas de escalares**. Nunca un objeto anidado: el serializador lo rechaza en
+lugar de aceptarlo.
 
-Es una restricción incómoda a propósito: una estructura anidada es donde acaba colándose un
+Es una restricción incómoda a propósito: un objeto anidado es donde acaba colándose un
 agregado entero, y un payload plano se lee en un navegador de colas y se compara en una
 revisión.
+
+> **Matiz (2026-09-23):** la regla original decía «solo escalares». Se amplía a listas de
+> escalares al aparecer el primer caso legítimo —los géneros que alguien elige
+> ([`FEAT-USR-023`](../features/user/FEAT-USR-023-onboarding-select-genres.md))—. Una lista de
+> códigos no esconde nada y se lee igual de bien; la alternativa era unirlos en una cadena, que
+> solo sirve para inventar un separador que algún día estará dentro de un valor. Lo que sigue
+> prohibido, que es lo que la regla protegía, es el objeto anidado.
 
 ## Alternativas consideradas
 

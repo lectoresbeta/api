@@ -27,3 +27,27 @@ logout:
     path: /api/v1/auth/logout
     controller: LectoresBeta\User\Authentication\Infrastructure\Controller\LogOutController::__invoke
     methods: [POST]
+
+# Onboarding (FEAT-USR-022, FEAT-USR-023). Los dos PUT son escrituras y
+# funcionan **sin la cuenta activada**: es la excepción que da sentido a
+# dejar entrar antes de seguir el enlace del correo (FEAT-USR-025 RN-5).
+
+getOnboardingState:
+    path: /api/v1/me/onboarding
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\GetOnboardingStateController::__invoke
+    methods: [GET]
+
+submitOnboardingProfile:
+    path: /api/v1/me/onboarding/profile
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\SubmitOnboardingProfileController::__invoke
+    methods: [PUT]
+
+submitOnboardingGenres:
+    path: /api/v1/me/onboarding/genres
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\SubmitOnboardingGenresController::__invoke
+    methods: [PUT]
+
+listGenres:
+    path: /api/v1/genres
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\ListGenresController::__invoke
+    methods: [GET]

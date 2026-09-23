@@ -17,11 +17,11 @@
 | `POST /api/v1/auth/logout` | `logout` | Cerrar sesión | FEAT-USR-004 | **Implementado** |
 | `POST /auth/password-reset` | `requestPasswordReset` | Solicitar recuperación | FEAT-USR-007 | PENDING |
 | `POST /auth/password-reset/{token}` | `confirmPasswordReset` | Fijar nueva contraseña | FEAT-USR-007 | PENDING |
-| `GET /me/onboarding` | `getOnboardingState` | Paso en el que se retoma el onboarding | FEAT-USR-022 | DRAFT |
-| `PUT /me/onboarding/profile` | `submitOnboardingProfile` | Paso 1: nombre y fecha de nacimiento | FEAT-USR-022 | DRAFT |
-| `PUT /me/onboarding/genres` | `submitOnboardingGenres` | Paso 2: géneros de interés | FEAT-USR-023 | DRAFT |
+| `GET /api/v1/me/onboarding` | `getOnboardingState` | Paso en el que se retoma el onboarding | FEAT-USR-022 | **Implementado** |
+| `PUT /api/v1/me/onboarding/profile` | `submitOnboardingProfile` | Paso 1: nombre y fecha de nacimiento | FEAT-USR-022 | **Implementado** |
+| `PUT /api/v1/me/onboarding/genres` | `submitOnboardingGenres` | Paso 2: géneros de interés | FEAT-USR-023 | **Implementado** |
 | `POST /me/onboarding/complete` | `completeOnboarding` | Cerrar el onboarding | FEAT-COM-016 | DRAFT |
-| `GET /genres` | `listGenres` | Catálogo de géneros | FEAT-USR-023 | DRAFT |
+| `GET /api/v1/genres` | `listGenres` | Catálogo de géneros. **Público** | FEAT-USR-023 | **Implementado** |
 | `GET /legal/documents` | `getLegalDocuments` | Documentos legales vigentes | FEAT-USR-024 | DRAFT |
 | `GET /me/legal-acceptances` | `getMyLegalAcceptances` | Qué aceptó el usuario y cuándo | FEAT-USR-024 | DRAFT |
 | `GET /me/context` | `getSessionContext` | Contexto de sesión para el layout | FEAT-USR-027 | DRAFT |
@@ -159,6 +159,62 @@ solo revela algo a quien ya tenía un enlace válido.
 
 Publica `AccountActivated`, que desencadena el abono de los **10 créditos de bienvenida**
 (`FEAT-CRD-002`) y habilita todas las operaciones de escritura (`FEAT-USR-025`).
+
+---
+
+## `PUT /api/v1/me/onboarding/profile`
+
+**`operationId`:** `submitOnboardingProfile` · **Funcionalidad:** [`FEAT-USR-022`](../../features/user/FEAT-USR-022-onboarding-profile-data.md)
+
+### Autorización
+
+Sesión iniciada. **No exige cuenta activada**: es una de las dos escrituras exentas de
+[`FEAT-USR-025`](../../features/user/FEAT-USR-025-block-writes-until-activation.md), y es la
+razón de dejar entrar a alguien antes de que siga el enlace del correo.
+
+### Entrada
+
+`name` es **público** y `birthDate` es **privado**. Es la pareja de campos con visibilidad más
+opuesta de toda la API, y conviene no mezclarlos nunca: ningún endpoint accesible por terceros
+devuelve la fecha de nacimiento.
+
+`birthDate` viaja como `YYYY-MM-DD` y debe ser una fecha **real y pasada**. `2000-02-30` se
+rechaza: aceptarla la convertiría en el 1 de marzo y guardaría una fecha que nadie escribió.
+
+### Respuesta
+
+`204`. El onboarding avanza a `GENRES_PENDING`.
+
+---
+
+## `PUT /api/v1/me/onboarding/genres`
+
+**`operationId`:** `submitOnboardingGenres` · **Funcionalidad:** [`FEAT-USR-023`](../../features/user/FEAT-USR-023-onboarding-select-genres.md)
+
+### Reglas aplicadas
+
+Mínimo **tres** géneros, todos del catálogo vigente. La validación es de servidor: que el
+botón esté deshabilitado en el cliente es una cortesía, no una garantía.
+
+### Entrada
+
+La selección **sustituye** a la anterior. Los duplicados se normalizan —dos veces el mismo
+género es un fallo del cliente, no una decisión— y por tanto **no cuentan para el mínimo**:
+`['DRAMA','drama','DRAMA']` es un género, no tres.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `NOT_ENOUGH_GENRES` | 422 | Menos de tres géneros distintos |
+| `UNKNOWN_GENRE` | 422 | Alguno no está en el catálogo. **Se nombra**, no se ignora |
+| `ONBOARDING_STEP_OUT_OF_ORDER` | 409 | Falta el paso 1. La edad decide qué se le puede enseñar a esa persona |
+
+### Efectos
+
+Publica `LiteraryPreferencesUpdated` con la **selección entera**, no con lo que cambió: un
+consumidor que aplicase deltas acabaría con un conjunto equivocado el primer mensaje que se
+perdiera, y sin forma de notarlo.
 
 ---
 

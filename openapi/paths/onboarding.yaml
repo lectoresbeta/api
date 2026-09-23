@@ -1,0 +1,172 @@
+# Onboarding (FEAT-USR-022, FEAT-USR-023) y catálogo de géneros.
+#
+# Los dos pasos funcionan **sin la cuenta activada**: es la excepción que da
+# sentido a dejar entrar antes de seguir el enlace del correo
+# (FEAT-USR-025 RN-5).
+
+state:
+  get:
+    tags: [Account]
+    operationId: getOnboardingState
+    summary: En qué paso se retoma el onboarding
+    description: |
+      El onboarding se puede abandonar y retomar (`FEAT-USR-022` `RN-5`), así
+      que el cliente necesita saber dónde quedó en vez de adivinarlo.
+
+      Devuelve además el **nombre de usuario**, porque la primera pantalla
+      saluda por él y pedirlo aparte serían dos llamadas para una pantalla.
+    responses:
+      '200':
+        description: Estado del onboarding.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status, username, completed]
+              properties:
+                status:
+                  type: string
+                  enum: [PROFILE_PENDING, GENRES_PENDING, SUGGESTIONS_PENDING, COMPLETED]
+                username:
+                  type: string
+                completed:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+profile:
+  put:
+    tags: [Account]
+    operationId: submitOnboardingProfile
+    summary: Paso 1 — nombre y fecha de nacimiento
+    description: |
+      Dos datos con visibilidad **opuesta**:
+
+      - `name` es **público**. Al no haber nombre visible aparte, es el
+        referente con el que se identifica a una persona en perfiles,
+        catálogo, muro, comentarios y rankings;
+      - `birthDate` es **privado**. No se devuelve en ninguna respuesta
+        dirigida a terceros. Se recoge porque de la edad depende el filtrado
+        de contenido `ADULTS_ONLY`, no para decorar el perfil.
+
+      `PUT` y no `POST`: el paso es idempotente.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name, birthDate]
+            properties:
+              name:
+                type: string
+                maxLength: 80
+              birthDate:
+                type: string
+                format: date
+                description: |
+                  `YYYY-MM-DD`. Debe ser una fecha **real y pasada**: se
+                  rechaza `2000-02-30`, que de otro modo se convertiría
+                  silenciosamente en el 1 de marzo.
+    responses:
+      '204':
+        description: Paso guardado. El onboarding avanza a `GENRES_PENDING`.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '409':
+        description: 'El onboarding ya está terminado. `code: ONBOARDING_ALREADY_COMPLETED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/ValidationError'
+
+genres:
+  put:
+    tags: [Account]
+    operationId: submitOnboardingGenres
+    summary: Paso 2 — elegir al menos tres géneros
+    description: |
+      La selección **sustituye** a la anterior: elegir géneros es elegir un
+      conjunto, y quien quita uno espera que desaparezca.
+
+      Se guarda en el mismo sitio que las preferencias literarias editables
+      después (`FEAT-USR-009`), no en dos.
+
+      Un género que no esté en el catálogo **se rechaza y se nombra**, nunca
+      se ignora en silencio: si no, alguien terminaría el paso creyendo que
+      eligió cinco cosas cuando se guardaron tres.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [genres]
+            properties:
+              genres:
+                type: array
+                minItems: 3
+                items:
+                  type: string
+                  examples: ['ADVENTURE']
+    responses:
+      '204':
+        description: Paso guardado. El onboarding avanza a `SUGGESTIONS_PENDING`.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '409':
+        description: |
+          El paso anterior está sin completar, o el onboarding ya terminó.
+          `code: ONBOARDING_STEP_OUT_OF_ORDER` o `ONBOARDING_ALREADY_COMPLETED`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          Menos de tres géneros (`code: NOT_ENOUGH_GENRES`) o alguno que no
+          existe (`code: UNKNOWN_GENRE`).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+catalogue:
+  get:
+    tags: [Account]
+    operationId: listGenres
+    summary: Catálogo de géneros
+    description: |
+      **Público**, y se consulta en vez de codificarse en el cliente
+      (`FEAT-USR-023` `RN-5`): el mismo catálogo alimenta el onboarding, la
+      búsqueda de obras, la de autores y los filtros de los rankings, así que
+      un género añadido o retirado tiene que llegar a todos sin desplegar
+      nada.
+
+      Solo devuelve los activos. Retirar un género no lo borra: hay obras y
+      personas apuntando a su código, y esas referencias tienen que seguir
+      resolviendo.
+    security: []
+    responses:
+      '200':
+        description: Géneros activos, en el orden en que deben mostrarse.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [genres]
+              properties:
+                genres:
+                  type: array
+                  items:
+                    type: object
+                    required: [code, name]
+                    properties:
+                      code:
+                        type: string
+                        examples: ['SCIENCE_FICTION']
+                      name:
+                        type: string
+                        examples: ['Ciencia Ficción']

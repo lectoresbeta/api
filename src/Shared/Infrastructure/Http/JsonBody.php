@@ -56,6 +56,26 @@ final readonly class JsonBody
     }
 
     /**
+     * A field holding a list of strings, such as the chosen genres.
+     *
+     * Anything that is not a string is dropped rather than coerced: turning
+     * `{"a":1}` into `"Array"` would send nonsense into a use case that then
+     * has to reject it with a confusing message.
+     *
+     * @return list<string>
+     */
+    public function stringList(string $field): array
+    {
+        $value = $this->values[$field] ?? null;
+
+        if (!\is_array($value)) {
+            return [];
+        }
+
+        return array_values(array_filter($value, \is_string(...)));
+    }
+
+    /**
      * A field that is itself an object, such as `acceptedLegalVersions`.
      */
     public function nested(string $field): self

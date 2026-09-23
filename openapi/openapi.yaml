@@ -76,6 +76,18 @@ paths:
   /auth/logout:
     $ref: './paths/auth.yaml#/logout'
 
+  /me/onboarding:
+    $ref: './paths/onboarding.yaml#/state'
+
+  /me/onboarding/profile:
+    $ref: './paths/onboarding.yaml#/profile'
+
+  /me/onboarding/genres:
+    $ref: './paths/onboarding.yaml#/genres'
+
+  /genres:
+    $ref: './paths/onboarding.yaml#/catalogue'
+
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'
 

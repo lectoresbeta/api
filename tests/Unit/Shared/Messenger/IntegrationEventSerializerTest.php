@@ -67,12 +67,37 @@ final class IntegrationEventSerializerTest extends TestCase
         ]);
     }
 
-    public function testANestedPayloadIsRejected(): void
+    public function testANestedObjectIsRejected(): void
     {
         $this->expectException(MessageDecodingFailedException::class);
 
         $this->serializer()->decode([
             'body' => '{"user":{"id":"u-1"}}',
+            'headers' => ['X-Event-Name' => 'AccountActivated', 'X-Event-Id' => 'e-1', 'X-Occurred-At' => '2026-09-23T10:00:00+00:00'],
+        ]);
+    }
+
+    /**
+     * Una lista de escalares sí pasa: no esconde un agregado y se lee igual
+     * de bien en un navegador de colas (`decision:0013`).
+     */
+    public function testAListOfScalarsSurvivesTheRoundTrip(): void
+    {
+        $decoded = $this->serializer()->decode([
+            'body' => '{"userId":"u-1","genres":["ADVENTURE","DRAMA"]}',
+            'headers' => ['X-Event-Name' => 'AccountActivated', 'X-Event-Id' => 'e-1', 'X-Occurred-At' => '2026-09-23T10:00:00+00:00'],
+        ])->getMessage();
+
+        self::assertInstanceOf(ConsumedFact::class, $decoded);
+        self::assertSame('u-1', $decoded->userId);
+    }
+
+    public function testAListOfObjectsIsRejected(): void
+    {
+        $this->expectException(MessageDecodingFailedException::class);
+
+        $this->serializer()->decode([
+            'body' => '{"genres":[{"code":"DRAMA"}]}',
             'headers' => ['X-Event-Name' => 'AccountActivated', 'X-Event-Id' => 'e-1', 'X-Occurred-At' => '2026-09-23T10:00:00+00:00'],
         ]);
     }
@@ -136,7 +161,9 @@ final class ConsumedFact implements IncomingIntegrationEvent
 
     public static function fromPayload(string $eventId, \DateTimeImmutable $occurredAt, array $payload): self
     {
-        return new self((string) ($payload['userId'] ?? ''), $eventId, $occurredAt);
+        $userId = $payload['userId'] ?? null;
+
+        return new self(\is_string($userId) ? $userId : '', $eventId, $occurredAt);
     }
 
     public function eventId(): string

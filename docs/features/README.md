@@ -78,8 +78,8 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-019 | Registro y login con LinkedIn | Guest | APPROVED | DEFERRED | P3 | [ficha](user/FEAT-USR-019-linkedin-oauth.md) |
 | FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
 | FEAT-USR-021 | Reenviar el email de activación | Guest, User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
-| FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
-| FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
+| FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
+| FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
 | FEAT-USR-024 | Aceptar condiciones de uso y política de privacidad | Guest | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-024-accept-terms-and-privacy.md) |
 | FEAT-USR-025 | Bloquear las operaciones de escritura hasta activar la cuenta | User | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-025-block-writes-until-activation.md) |
 | FEAT-USR-026 | Tour de bienvenida de la Home | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-026-welcome-tour.md) |
@@ -582,7 +582,7 @@ presentación o fases posteriores, y por eso no bloquean:
 |---|---|---|
 | `V-4` | Qué ocurre con los mensajes directos al anonimizar una cuenta | `FEAT-USR-013` |
 | `OB-15` | Edad mínima para registrarse, distinta de la mayoría de edad | `FEAT-USR-022` |
-| `OB-14` | **Revisar el catálogo de géneros** que se ha propuesto | `FEAT-USR-023` |
+| ~~`OB-14`~~ | **Revisar el catálogo de géneros** | **Resuelto:** 18 géneros, los que siembra `Version20260923174500`. Queda confirmar con producto que `DRAMA` es «Teatro» y no «Drama» |
 | `N-11` | **Confirmar `/@{username}`** como forma de la URL | `FEAT-USR-035` |
 | `N-2` | Confirmar que el nombre **público** no necesita ser único | `FEAT-USR-022` |
 | `S-16` | Qué se considera «visibilidad de actividad» | `FEAT-USR-038` |

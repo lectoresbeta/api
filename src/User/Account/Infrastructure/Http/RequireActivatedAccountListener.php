@@ -56,6 +56,10 @@ final readonly class RequireActivatedAccountListener
      * with a token.
      */
     private const ALLOWED_WITHOUT_ACTIVATION = [
+        // The onboarding, which is why somebody is let in before activating.
+        'submitOnboardingProfile',
+        'submitOnboardingGenres',
+
         // Managing the session you are already in.
         'login',
         'logout',

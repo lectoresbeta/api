@@ -5,7 +5,7 @@ context: User
 concept: Onboarding
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P0
 sources:
   - figma:1800-13778 (1470:9456, error en 1679:8998)
@@ -186,4 +186,20 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 usuario y la fecha de nacimiento es obligatoria y filtra contenido. Queda `OB-15`, la edad
 mínima de registro, que no impide implementar el paso.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE`.
+
+`GET /api/v1/me/onboarding` y `PUT /api/v1/me/onboarding/profile`, cubiertos por
+`tests/Functional/User/OnboardingTest.php`.
+
+El detalle que merece recordarse: la fecha se valida **ida y vuelta**, no con un simple
+`DateTimeImmutable`. Ese conversor acepta `2000-02-30` y lo convierte en el 1 de marzo, con lo
+que se guardaría una fecha que nadie escribió y esa persona sería un día mayor de lo que dijo,
+sin que nada lo delatase. Hay test.
+
+Los dos pasos son además la **primera comprobación de extremo a extremo** de
+[`FEAT-USR-025`](FEAT-USR-025-block-writes-until-activation.md): son escrituras que una cuenta
+en `PENDING_ACTIVATION` sí puede hacer, y hasta ahora esa excepción existía en una lista y nada
+la ejercía.
+
+**Lo que este paso no incluye:** la edad mínima para registrarse (`OB-15`) sigue sin fijarse,
+así que no se comprueba. La fecha solo tiene que ser real y pasada.

@@ -42,13 +42,17 @@ interface IntegrationEvent
     /**
      * The fact itself, as flat scalars.
      *
-     * Flat and scalar on purpose. The payload is a **published contract**
-     * read by contexts that do not share a single class with this one, so it
-     * has to be inspectable in a queue browser and diffable in a review. A
-     * nested structure is where a whole aggregate quietly ends up, which is
-     * the thing this interface's docblock forbids.
+     * Scalars, or lists of scalars. **Never a nested object.**
      *
-     * @return array<string, string|int|float|bool|null>
+     * The payload is a **published contract** read by contexts that do not
+     * share a single class with this one, so it has to be inspectable in a
+     * queue browser and diffable in a review. A nested object is where a
+     * whole aggregate quietly ends up, which is what this rule exists to
+     * stop; a list of codes —the genres somebody chose— hides nothing and
+     * encoding it as a joined string would only invent a separator to get
+     * wrong later.
+     *
+     * @return array<string, string|int|float|bool|list<string|int|float|bool>|null>
      */
     public function payload(): array;
 }
