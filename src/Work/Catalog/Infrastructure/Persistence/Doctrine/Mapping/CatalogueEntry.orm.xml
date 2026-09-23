@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!--
+        Read model. Rebuilt by replaying events, so it carries no foreign key
+        and nothing else depends on it.
+
+        `genres` and `content_warnings` are JSONB arrays, which the migration
+        covers with GIN indexes: the catalogue filter is «any of these»
+        (`FEAT-WRK-012`), and that is what GIN answers.
+    -->
+    <entity name="LectoresBeta\Work\Catalog\Domain\Entity\CatalogueEntry"
+            table="catalogue_entry" schema="work_ctx">
+
+        <indexes>
+            <index name="idx_catalogue_correctable" columns="correctable,opened_at"/>
+            <!-- The three factors of `decision:0008` are computed in the query
+                 over these columns, after the hard filter. -->
+            <index name="idx_catalogue_ranking" columns="correctable,corrections_received,opened_at">
+                <options>
+                    <option name="where">correctable</option>
+                </options>
+            </index>
+            <!-- Declared here so the schema and the mapping agree; the
+                 migration creates them as GIN, which Doctrine's schema model
+                 cannot express. The comparator only looks at name and
+                 columns, so it leaves them alone. -->
+            <index name="idx_catalogue_genres" columns="genres"/>
+            <index name="idx_catalogue_warnings" columns="content_warnings"/>
+            <index name="idx_catalogue_author" columns="author_id"/>
+            <index name="idx_catalogue_work" columns="work_id"/>
+        </indexes>
+
+        <id name="chapterId" column="chapter_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="workId" column="work_id" type="guid"/>
+        <field name="authorId" column="author_id" type="guid"/>
+        <field name="workTitle" column="work_title" type="string" length="180"/>
+        <field name="chapterTitle" column="chapter_title" type="string" length="180" nullable="true"/>
+        <field name="chapterPosition" column="chapter_position" type="smallint"/>
+        <field name="wordCount" column="word_count" type="integer"/>
+        <field name="price" type="smallint"/>
+        <field name="authorBalance" column="author_balance" type="integer"/>
+        <field name="correctionsReceived" column="corrections_received" type="integer"/>
+        <field name="openCorrections" column="open_corrections" type="smallint"/>
+        <field name="correctable" type="boolean"/>
+        <field name="adultsOnly" column="adults_only" type="boolean"/>
+        <field name="genres" type="json">
+            <options>
+                <option name="jsonb">true</option>
+            </options>
+        </field>
+        <field name="contentWarnings" column="content_warnings" type="json">
+            <options>
+                <option name="jsonb">true</option>
+            </options>
+        </field>
+        <field name="openedAt" column="opened_at" type="datetime_immutable"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Work\Questionnaire\Domain\Entity\Question"
+            table="question" schema="work_ctx">
+
+        <indexes>
+            <index name="idx_question_questionnaire" columns="questionnaire_id,position"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="questionnaireId" column="questionnaire_id" type="guid"/>
+        <field name="position" type="smallint"/>
+        <field name="statement" type="text"/>
+        <field name="example" type="text" nullable="true"/>
+        <field name="required" type="boolean"/>
+        <field name="minWords" column="min_words" type="smallint" nullable="true"/>
+        <field name="maxWords" column="max_words" type="smallint" nullable="true"/>
+        <field name="scope" type="string" length="16"
+               enum-type="LectoresBeta\Work\Questionnaire\Domain\Enum\QuestionScope"/>
+
+    </entity>
+
+</doctrine-mapping>

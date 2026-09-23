@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- One live access per (reader, work). The constraint is a partial
+         unique index added by the migration, over the rows that have not been
+         revoked: a plain unique key would make re-granting impossible. -->
+    <entity name="LectoresBeta\Reading\BetaReaderAccess\Domain\Entity\BetaReaderAccess"
+            table="beta_reader_access" schema="reading_ctx">
+
+        <indexes>
+            <index name="idx_access_reader" columns="reader_id,revoked_at"/>
+            <index name="idx_access_work" columns="work_id,revoked_at"/>
+        </indexes>
+
+        <unique-constraints>
+            <!--
+                `RN-2`: one live access per (reader, work). A plain unique key
+                would make re-granting a revoked access impossible.
+
+                The predicate is written the way PostgreSQL stores it, down to
+                the brackets, and not in the tidier form a person would type.
+                Doctrine compares the mapped predicate against the one it reads
+                back from the database, so any other spelling makes
+                `schema:validate` report a difference for ever and
+                `migrations:diff` propose dropping and recreating the index on
+                every run.
+            -->
+            <unique-constraint name="uniq_beta_reader_access_live" columns="work_id,reader_id">
+                <options>
+                    <option name="where">(revoked_at IS NULL)</option>
+                </options>
+            </unique-constraint>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="workId" column="work_id" type="guid"/>
+        <field name="readerId" column="reader_id" type="guid"/>
+        <field name="authorId" column="author_id" type="guid"/>
+        <field name="source" type="string" length="24"
+               enum-type="LectoresBeta\Reading\BetaReaderAccess\Domain\Enum\AccessSource"/>
+        <field name="grantedAt" column="granted_at" type="datetime_immutable"/>
+        <field name="revokedAt" column="revoked_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

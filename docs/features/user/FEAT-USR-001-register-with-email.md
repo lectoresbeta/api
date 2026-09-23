@@ -27,7 +27,7 @@ condiciones de uso y la política de privacidad. La cuenta se crea en estado
 `PENDING_ACTIVATION` y se le envía un correo para activarla, pero el usuario pasa
 directamente al onboarding sin esperar a ese correo.
 
-**No se abonan créditos en el registro.** Los 20 créditos de bienvenida se abonan al activar
+**No se abonan créditos en el registro.** Los 10 créditos de bienvenida se abonan al activar
 la cuenta (`FEAT-USR-020`), y hasta entonces la cuenta no puede ejecutar ninguna operación de
 escritura (`FEAT-USR-025`). Si el registro procede de una invitación, se conserva el vínculo
 con quien invitó para recompensarle cuando la persona invitada participe (`FEAT-CRD-005`).
@@ -76,7 +76,7 @@ usuario** recién asignado, que por defecto es la parte del email anterior a la 
 - `RN-8` La cuenta se crea en `PENDING_ACTIVATION` y se emite el correo de activación
   (`FEAT-NOT-008`).
 - `RN-9` El usuario accede al onboarding inmediatamente, sin esperar a activar la cuenta.
-- `RN-10` **El registro no abona créditos.** Los 20 créditos de bienvenida se abonan cuando
+- `RN-10` **El registro no abona créditos.** Los 10 créditos de bienvenida se abonan cuando
   la cuenta se activa: `Credits` los aplica al consumir `AccountActivated`, no
   `UserRegistered`. `User` no conoce la cantidad. Ver [`decision:0003`](../../decisions/0003-write-operations-require-activated-account.md).
 - `RN-15` Mientras la cuenta esté en `PENDING_ACTIVATION`, todas las operaciones de escritura
@@ -148,7 +148,7 @@ sesión entre el registro y el paso 1, que no es lo que muestran las pantallas.
 El hecho publicado es `UserRegistered`. `Credits` lo interpreta **creando la cuenta de
 créditos con saldo cero**. No abona nada.
 
-El abono de los 20 créditos de bienvenida se produce al consumir `AccountActivated`
+El abono de los 10 créditos de bienvenida se produce al consumir `AccountActivated`
 (`FEAT-CRD-002`). Es una barrera deliberada contra el registro masivo de cuentas falsas, que
 es justo lo que el crédito por invitación (`FEAT-CRD-005`) incentiva a intentar.
 

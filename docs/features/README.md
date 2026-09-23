@@ -433,7 +433,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 > ([`decision:0006`](../decisions/0006-credit-system.md)). Nueve reglas:
 >
 > 1. **El precio mide esfuerzo**: `techo(palabras/1.000) + techo(palabras exigidas/100)`, por
->    capítulo, entre 2 y 20, con suelo de 10 palabras por pregunta sin mínimo
+>    capítulo, entre 2 y 20, con suelo de 25 palabras por pregunta sin mínimo
 >    (`FEAT-CRD-016`).
 > 2. **Coste = recompensa.** Una corrección mueve créditos, no los crea ni los destruye.
 > 3. **No se retiene nada**: se comprueba el saldo al empezar y se cobra al entregar

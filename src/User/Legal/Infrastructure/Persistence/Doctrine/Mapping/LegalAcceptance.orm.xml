@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Append-only: there is no update path in the entity either. -->
+    <entity name="LectoresBeta\User\Legal\Domain\Entity\LegalAcceptance"
+            table="legal_acceptance" schema="user_ctx">
+
+        <indexes>
+            <index name="idx_legal_acceptance_user" columns="user_id,document_type"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="userId" column="user_id" type="guid"/>
+        <field name="documentType" column="document_type" type="string" length="24"
+               enum-type="LectoresBeta\User\Legal\Domain\Enum\LegalDocumentType"/>
+        <field name="version" type="string" length="32"/>
+        <field name="acceptedAt" column="accepted_at" type="datetime_immutable"/>
+        <field name="ipAddress" column="ip_address" type="string" length="45" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

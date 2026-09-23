@@ -1,4 +1,18 @@
+includes:
+    # Sin la extensión de Doctrine, PHPStan no sabe que una propiedad que
+    # hidrata el ORM se lee, y reporta ciento y pico falsos «never read, only
+    # written». Además comprueba el DQL y los nombres de campo de findBy().
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-doctrine/rules.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-symfony/rules.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+
 parameters:
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+
     level: 7
     paths:
         - src

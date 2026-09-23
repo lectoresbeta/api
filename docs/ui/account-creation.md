@@ -111,7 +111,7 @@ mail para completar el registro en la plataforma.»*
 > plataforma. La baja sigue existiendo en los correos de aviso y novedades, que sí son
 > opcionales.
 
-Este correo es el único camino para desbloquear la cuenta: de él dependen los 20 créditos de
+Este correo es el único camino para desbloquear la cuenta: de él dependen los 10 créditos de
 bienvenida y todas las operaciones de escritura.
 
 ---
@@ -252,7 +252,7 @@ alcance de este documento.
 | C-3 | Registro en una sola pantalla | Nota del propio Figma: «Login con email: 01 → Introducir email, 02 → Contraseña» | Probablemente la nota describe el **login**, no el registro. Confirmar |
 | C-4 | Paso 3 sin botón de saltar | Nota del propio Figma: «(opcional, CTA para saltar)» | **Resuelta:** se añade «Saltar» |
 | C-5 | Chip «Poeta» | El resto de chips nombran géneros | **Resuelta:** se corrige a «Poesía» |
-| C-6 | Home muestra «12 Créditos» | `credit-system.pdf`: la cuenta nueva recibe **+20** | Dato de maqueta. Además, una cuenta sin activar tiene **saldo 0**: el Home debe reflejar el saldo real |
+| C-6 | Home muestra «12 Créditos» | `credit-system.pdf`: la cuenta nueva recibe **+10** | Dato de maqueta. Además, una cuenta sin activar tiene **saldo 0**: el Home debe reflejar el saldo real |
 
 Queda abierta `C-3`; el resto se han resuelto.
 

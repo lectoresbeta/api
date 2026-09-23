@@ -2,49 +2,85 @@
 
 ## Qué hace falta
 
-| | Versión | Por qué |
-|---|---|---|
-| PHP | **8.4.1 o superior** | `composer.json` lo exige, y no es arbitrario: ver abajo |
-| Extensiones | `ctype`, `iconv`, `intl`, `pdo_pgsql`, `sodium`, **`amqp`** | `amqp` es la que más falta: sin ella `symfony/amqp-messenger` no instala |
-| Composer | 2.x | |
-| Docker | Cualquiera reciente | Solo para PostgreSQL, RabbitMQ y Mailpit |
+**Docker y nada más.** La aplicación se ejecuta dentro de un contenedor, así que no hace
+falta PHP en la máquina ni acertar con las extensiones.
 
-PHP se ejecuta **en la máquina**, no en un contenedor. Docker levanta únicamente los
-servicios. Es más rápido para desarrollar y evita el problema clásico de depurar dentro de un
-contenedor.
+| | Versión |
+|---|---|
+| Docker | Cualquiera reciente, con `docker compose` |
+| GNU Make | El que traiga el sistema |
+
+Si prefieres ejecutar PHP en la máquina —es más cómodo para depurar—, necesitas **PHP 8.4.1 o
+superior** con `amqp`, `ctype`, `iconv`, `intl`, `pdo_pgsql` y `sodium`, y Composer 2.x. Todos
+los comandos de calidad aceptan salirse del contenedor vaciando `EXEC`:
+
+```bash
+make stan EXEC=      # ejecuta vendor/bin/phpstan en la máquina
+```
+
+`amqp` es la extensión que más falta: sin ella `symfony/amqp-messenger` ni siquiera instala.
 
 ## Arrancar
 
 ```bash
-make install
+make build && make up
 ```
 
-Ese comando instala dependencias, levanta los servicios, genera las claves JWT y aplica las
-migraciones. Cuando termina:
+`make up` levanta los servicios, espera a que la aplicación responda, genera las claves JWT y
+aplica las migraciones. Cuando termina:
 
 | Servicio | Dónde |
 |---|---|
-| PostgreSQL | `localhost:5432` |
-| RabbitMQ | `localhost:5672`, consola en <http://localhost:15672> |
+| **API** | <http://localhost:8000> |
 | **Mailpit** | <http://localhost:8025> |
+| RabbitMQ | `localhost:5672`, consola en <http://localhost:15672> |
+| PostgreSQL | `localhost:5432` |
+
+Las credenciales de desarrollo son `lectoresbeta` / `lectoresbeta` en todo.
 
 **Mailpit importa más de lo que parece.** El primer corte de implementación es
 registro → activación → créditos, y toda la activación pasa por un correo. Sin un buzón local,
 probarla implicaría mandar correos de verdad a direcciones reales.
 
+## Qué levanta `make up`
+
+| Servicio | Qué es |
+|---|---|
+| `app` | PHP-FPM con el código montado por volumen: editar un fichero se ve en la siguiente petición |
+| `web` | nginx, que sirve `public/` y habla con `app` |
+| `worker` | `messenger:consume integration`, en marcha permanente |
+| `postgres`, `rabbitmq`, `mailpit` | Los servicios |
+
+**El `worker` va aparte a propósito.** Sin un consumidor corriendo, `AccountActivated` se
+queda en la cola y los créditos de bienvenida no se abonan nunca. Es la primera confusión de
+cualquiera que arranque el proyecto, y por eso el worker se levanta solo con `make up` en vez
+de dejarlo a que alguien se acuerde.
+
 ## Comandos
 
 ```bash
-make check      # lo mismo que ejecuta CI: estilo, PHPStan, Deptrac y tests
-make fix        # corrige el estilo
-make test-unit  # solo dominio: sin Symfony, sin base de datos, en milisegundos
-make consume    # consume los eventos de integración de RabbitMQ
-make docs       # valida docs/
+make help            # la lista entera
+
+make up / down       # levantar y parar
+make destroy         # parar y BORRAR los volúmenes, base de datos incluida
+make logs            # seguir los registros
+make sh              # una shell dentro del contenedor
+make console CMD="debug:router"
+
+make migrate         # aplicar migraciones pendientes
+make migration       # generar una a partir del mapeo
+make schema-validate # ¿el mapeo y el esquema dicen lo mismo?
+make db-reset        # rehacer la base de datos desde cero
+make psql            # psql contra la base de datos de desarrollo
+
+make check           # lo que ejecuta CI: estilo, PHPStan, Deptrac, tests y docs
+make fix             # corregir el estilo
+make test-unit       # solo dominio: sin Symfony, sin base de datos, en milisegundos
+make docs            # validar docs/
 ```
 
-`make consume` hace falta en cuanto se prueba algo que cruce contextos: sin un consumidor
-corriendo, `AccountActivated` se queda en la cola y los créditos de bienvenida no se abonan.
-Es la primera confusión de cualquiera que arranque el proyecto.
+`make schema-validate` merece un sitio en la cabeza: si alguna vez responde que el esquema y
+el mapeo no coinciden, o falta una migración, o alguien ha tocado la base de datos a mano.
 
 ## Secretos
 
@@ -88,9 +124,28 @@ el centro del sistema. Symfony es infraestructura y se nota en dónde está su c
 exactamente la dependencia que `AGENTS.md` prohíbe. El mapeo vive en `Infrastructure`, junto a
 la persistencia que describe.
 
-**El dominio no se registra en el contenedor.** `config/services.yaml` autoregistra `src/`
-entero pero **excluye todos los `Domain/`**: los agregados se construyen con `new`. Un agregado
-que el contenedor sabe crear acaba teniendo dependencias de infraestructura.
+**Del dominio solo se registra lo que no tiene estado.** `config/services.yaml` autoregistra
+`src/` entero y excluye `Domain/{Entity,ValueObject,Enum,Exception,Event}`: los agregados se
+construyen con `new`, porque uno que el contenedor sabe crear acaba teniendo dependencias de
+infraestructura.
+
+Lo que sí se registra son los **contratos de repositorio** y los servicios de dominio sin
+estado. Registrar la interfaz junto a su implementación es además lo que hace que Symfony las
+enlace sola, sin una lista de alias que mantener a mano.
+
+**Los repositorios nunca hacen `flush()`.** Registran el cambio y nada más; quien decide
+cuándo se cierra una transacción es el caso de uso, a través del puerto
+`Shared\Domain\Persistence\TransactionalSession`. Importa sobre todo en `Credits`: anotar
+que un evento se ha procesado y aplicar el movimiento que provoca tienen que confirmarse
+juntos, o una caída entre ambos pierde el movimiento o deja aplicar el evento dos veces.
+
+**Un esquema de PostgreSQL por contexto**
+([`decision:0009`](../decisions/0009-one-postgresql-schema-per-bounded-context.md)), sin
+claves foráneas entre ellos. El esquema hace que un `JOIN` entre contextos deje de escribirse
+sin querer, y los índices únicos parciales son la única garantía real de varias reglas bajo
+concurrencia. El ADR explica los detalles que parecen errores y no lo son: por qué la tabla
+de cuentas se llama `account`, y por qué los predicados de esos índices están escritos con la
+grafía exacta de PostgreSQL.
 
 **No hay baseline de PHPStan.** `AGENTS.md` lo dice explícitamente, y además un baseline
 creado el primer día es un permiso indefinido para no arreglar nada.
@@ -122,8 +177,11 @@ propiedades privadas, renombrar una clase rompe a los consumidores.
 
 ## Lo que todavía no existe
 
-- No hay entidades ni migraciones: `migrations/` está vacío.
-- No hay controladores: las rutas de `openapi/` describen lo que habrá.
+- **No hay casos de uso ni controladores.** Hay persistencia —66 tablas, sus entidades, sus
+  mapeos y sus repositorios— pero nada que los orqueste todavía. Las rutas de `openapi/`
+  describen lo que habrá.
+- No hay publicación ni consumo de eventos de integración: el transporte está configurado y el
+  worker corre, pero no hay nada que enviar.
 - El proveedor de usuarios de Symfony Security es un `memory: ~` provisional. Se sustituye por
   `LectoresBeta\User\Authentication\Infrastructure\Security\UserProvider` cuando exista
   `FEAT-USR-001`. Hasta entonces el contenedor arranca, pero nadie puede autenticarse.

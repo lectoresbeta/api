@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- The pair is stored sorted, so (A,B) and (B,A) are one row and the
+         partial unique index over the live ones means what it says. -->
+    <entity name="LectoresBeta\Reading\WritingBuddy\Domain\Entity\WritingBuddyLink"
+            table="writing_buddy_link" schema="reading_ctx">
+
+        <indexes>
+            <index name="idx_writing_buddy_one" columns="member_one,status"/>
+            <index name="idx_writing_buddy_two" columns="member_two,status"/>
+        </indexes>
+
+        <unique-constraints>
+            <!-- One live link per pair. The pair is stored sorted, so (A,B)
+                 and (B,A) are the same row. -->
+            <unique-constraint name="uniq_writing_buddy_live" columns="member_one,member_two">
+                <options>
+                    <option name="where">((status)::text = ANY (ARRAY[('PROPOSED'::character varying)::text, ('ACCEPTED'::character varying)::text]))</option>
+                </options>
+            </unique-constraint>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="memberOne" column="member_one" type="guid"/>
+        <field name="memberTwo" column="member_two" type="guid"/>
+        <field name="proposedBy" column="proposed_by" type="guid"/>
+        <field name="status" type="string" length="16"
+               enum-type="LectoresBeta\Reading\WritingBuddy\Domain\Enum\WritingBuddyStatus"/>
+        <field name="proposedAt" column="proposed_at" type="datetime_immutable"/>
+        <field name="resolvedAt" column="resolved_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

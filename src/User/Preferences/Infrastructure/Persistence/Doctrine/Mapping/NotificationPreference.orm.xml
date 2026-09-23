@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- (user, topic, channel) is the whole identity. Only choices that
+         differ from the default are stored, so a new topic needs no
+         migration (`FEAT-USR-039`). -->
+    <entity name="LectoresBeta\User\Preferences\Domain\Entity\NotificationPreference"
+            table="notification_preference" schema="user_ctx">
+
+        <id name="userId" column="user_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="topic" column="topic" type="string" length="48">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="channel" column="channel" type="string" length="16">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="enabled" type="boolean"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

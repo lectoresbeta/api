@@ -20,6 +20,7 @@ Plantilla: [`../_templates/adr.md`](../_templates/adr.md).
 | [0006](0006-credit-system.md) | **Sistema de créditos: precio por esfuerzo, transferencia pura, sin retenciones y con saldo negativo como red** | Aceptada | 2026-09-23 |
 | [0007](0007-jwt-sessions.md) | **La sesión de la API se resuelve con JWT**, asumiendo hasta 15 minutos de retardo en la revocación | Aceptada | 2026-09-24 |
 | [0008](0008-catalogue-ordering.md) | **El catálogo reparte trabajo, no premia popularidad**: ordena por capacidad del autor, desatención y frescura | Aceptada | 2026-09-24 |
+| [0009](0009-one-postgresql-schema-per-bounded-context.md) | **Un esquema de PostgreSQL por bounded context**, sin claves foráneas entre ellos | Aceptada | 2026-09-24 |
 
 ## Decisiones pendientes
 
@@ -30,7 +31,6 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 | `CM-4` | Fórmula de puntuación de los **rankings**. Catálogo y comentarios ya resueltos ([0008](0008-catalogue-ordering.md)) | `FEAT-COM-013/014/015`, `FEAT-COM-017` |
 | `V-4` | Qué ocurre con los mensajes directos al anonimizar una cuenta | `FEAT-USR-013`, anotado dentro de la ficha |
 | `W-1` | En qué momentos se genera el registro de autoría | `FEAT-WRK-009` |
-| `P-1` | Un esquema de PostgreSQL por contexto, o uno solo | La primera migración |
 | `AF-1`, `AF-2` | Qué mecanismo antifraude y si actúa antes o después del abono | `FEAT-FBK-012` |
 | `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia | `FEAT-USR-002`, `FEAT-USR-024` |
 

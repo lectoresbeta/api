@@ -1,0 +1,14 @@
+.git
+.github
+docs
+openapi
+tests
+var
+vendor
+node_modules
+.env.local
+.env.*.local
+config/jwt/*.pem
+.php-cs-fixer.cache
+.phpunit.result.cache
+.deptrac.cache

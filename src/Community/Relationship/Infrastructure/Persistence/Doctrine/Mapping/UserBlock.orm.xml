@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Community\Relationship\Domain\Entity\UserBlock"
+            table="user_block" schema="community_ctx">
+
+        <indexes>
+            <!-- Both directions are needed. «Who has blocked me» is the one
+                 asked on every read, so it gets its own index
+                 (`FEAT-COM-034`). -->
+            <index name="idx_user_block_blocked" columns="blocked_id"/>
+            <index name="idx_user_block_blocker" columns="blocker_id"/>
+        </indexes>
+
+        <unique-constraints>
+            <unique-constraint name="uniq_user_block" columns="blocker_id,blocked_id"/>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="blockerId" column="blocker_id" type="guid"/>
+        <field name="blockedId" column="blocked_id" type="guid"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

@@ -10,7 +10,7 @@ funcionalidades que faltan. Cada paso enlaza (o enlazará) con su ficha en
 
 ## J-1. Un escritor consigue feedback de su relato
 
-1. Se registra y completa el onboarding → recibe **+20 créditos** de bienvenida
+1. Se registra y completa el onboarding → recibe **+10 créditos** de bienvenida
    (`FEAT-CRD-002`). Recorrido detallado en `J-0`.
 2. Crea la obra con el editor o subiendo un fichero (`FEAT-WRK-001`, `FEAT-WRK-002`).
 3. El sistema clasifica el texto por extensión y calcula su nivel (`FEAT-WRK-013`).
@@ -56,7 +56,7 @@ Recorrido completamente especificado a partir del diseño:
 7. Llega al Home, en modo vacío si no sigue a nadie.
 8. Activa la cuenta desde el correo (`FEAT-USR-020`), o pide que se lo reenvíen
    (`FEAT-USR-021`). **Hasta ese momento no tiene créditos ni puede escribir nada.**
-9. Al activar se abonan los **+20 créditos** y se desbloquea la plataforma entera.
+9. Al activar se abonan los **+10 créditos** y se desbloquea la plataforma entera.
 
 **Punto crítico:** los pasos 3 a 7 y el paso 8 transcurren en paralelo. La activación es la
 frontera real del producto: sin ella el usuario ve la plataforma pero no participa en ella.
@@ -96,7 +96,7 @@ identificarse de algún modo, y qué protege el enlace frente a abuso. Ver `A-3`
 
 1. Un usuario invita por email a alguien a la plataforma (`FEAT-USR-017`).
 2. La persona invitada se registra usando el enlace (`FEAT-USR-001`) y, **al activar su
-   cuenta**, recibe sus +20 créditos de bienvenida.
+   cuenta**, recibe sus +10 créditos de bienvenida.
 3. Cuando la persona invitada **deja su primer comentario**, el invitador recibe
    **+5 créditos** (`FEAT-CRD-005`).
 

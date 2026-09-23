@@ -27,7 +27,7 @@ La activación es la frontera real de la plataforma. **No bloquea el onboarding*
 aparece como panel informativo mientras el usuario rellena su perfil— pero sí todo lo demás:
 hasta que se activa, la cuenta no puede escribir nada (`FEAT-USR-025`) y no tiene créditos.
 
-Al activarse se abonan los **20 créditos de bienvenida** y se desbloquea la plataforma
+Al activarse se abonan los **10 créditos de bienvenida** y se desbloquea la plataforma
 entera. Ver [`decision:0003`](../../decisions/0003-write-operations-require-activated-account.md).
 
 ## Actores y autorización
@@ -65,7 +65,7 @@ Esta funcionalidad aplica solo al alta con correo y contraseña.
 - `RN-6` La activación no forma parte del onboarding: son dos procesos independientes que
   transcurren en paralelo y pueden completarse en cualquier orden.
 - `RN-7` Al activarse la cuenta se publica `AccountActivated`.
-- `RN-8` `AccountActivated` es el hecho que dispara el abono de los 20 créditos de bienvenida
+- `RN-8` `AccountActivated` es el hecho que dispara el abono de los 10 créditos de bienvenida
   (`FEAT-CRD-002`). `User` no conoce la cantidad.
 - `RN-9` Al activarse, todas las operaciones de escritura quedan habilitadas de inmediato.
 
@@ -74,7 +74,7 @@ Esta funcionalidad aplica solo al alta con correo y contraseña.
 | Estado | Cuándo | Qué permite |
 |---|---|---|
 | `PENDING_ACTIVATION` | Tras el registro | Onboarding completo y lectura. **Ninguna operación de escritura** y **sin créditos** (`FEAT-USR-025`) |
-| `ACTIVE` | Tras seguir el enlace | Todo. Se abonan los 20 créditos de bienvenida |
+| `ACTIVE` | Tras seguir el enlace | Todo. Se abonan los 10 créditos de bienvenida |
 | `DELETED` | Tras eliminar la cuenta | Nada |
 
 ## Flujo principal
@@ -85,7 +85,7 @@ Esta funcionalidad aplica solo al alta con correo y contraseña.
 4. La cuenta pasa a `ACTIVE`.
 5. El token se invalida.
 6. Se publica `AccountActivated`.
-7. `Credits` abona los 20 créditos de bienvenida.
+7. `Credits` abona los 10 créditos de bienvenida.
 8. Las operaciones de escritura quedan habilitadas.
 9. El usuario continúa donde estuviera: en el onboarding si no lo ha terminado, o en el Home.
 
@@ -121,7 +121,7 @@ extrae y lo envía.
 
 ## Efectos en créditos
 
-**`AccountActivated` es el hecho que abona los 20 créditos de bienvenida** (`FEAT-CRD-002`).
+**`AccountActivated` es el hecho que abona los 10 créditos de bienvenida** (`FEAT-CRD-002`).
 `UserRegistered` solo crea la cuenta de créditos, con saldo cero.
 
 Esto ata el saldo a una dirección de correo real y encarece el registro masivo de cuentas
@@ -156,7 +156,7 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 - [ ] La activación funciona sin sesión iniciada.
 - [ ] Se publica `AccountActivated` exactamente una vez por activación.
 - [ ] Tras procesarse el evento, el saldo del usuario es 20.
-- [ ] Reprocesar el mismo `AccountActivated` no abona 20 créditos por segunda vez.
+- [ ] Reprocesar el mismo `AccountActivated` no abona 10 créditos por segunda vez.
 - [ ] Antes de activar, el saldo es 0.
 - [ ] Antes de activar, una operación de escritura devuelve `403 ACCOUNT_NOT_ACTIVATED`.
 - [ ] Justo después de activar, esa misma operación funciona.

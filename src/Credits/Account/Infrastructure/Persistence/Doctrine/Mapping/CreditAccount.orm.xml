@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!--
+        `user_id` is the key and there is no foreign key to `user_ctx.user`:
+        it is an opaque value that arrived in `UserRegistered`. A foreign key
+        here would be the relational version of the dependency that
+        `decision:0002` forbids.
+
+        `balance` is a signed integer, and no CHECK constraint keeps it
+        positive. That is deliberate (`FEAT-CRD-018`): the corrector is always
+        paid, so the author can go negative.
+    -->
+    <entity name="LectoresBeta\Credits\Account\Domain\Entity\CreditAccount"
+            table="credit_account" schema="credits_ctx">
+
+        <id name="userId" column="user_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="balance" type="integer"/>
+        <field name="invitationRewards" column="invitation_rewards" type="smallint"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+        <field name="anonymisedAt" column="anonymised_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

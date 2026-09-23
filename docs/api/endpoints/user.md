@@ -136,7 +136,7 @@ extrae y lo envía.
 
 ### Efectos
 
-Publica `AccountActivated`, que desencadena el abono de los **20 créditos de bienvenida**
+Publica `AccountActivated`, que desencadena el abono de los **10 créditos de bienvenida**
 (`FEAT-CRD-002`) y habilita todas las operaciones de escritura (`FEAT-USR-025`).
 
 ---

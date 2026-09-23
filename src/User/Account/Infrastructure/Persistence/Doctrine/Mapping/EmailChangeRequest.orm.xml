@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!--
+        Only one request may be open per account (`FEAT-USR-040` `RN-6`). A
+        plain unique index on user_id would forbid ever asking twice, so the
+        constraint is a partial unique index over the pending ones, added by
+        the migration: Doctrine's XML mapping cannot express a WHERE clause.
+    -->
+    <entity name="LectoresBeta\User\Account\Domain\Entity\EmailChangeRequest"
+            table="email_change_request" schema="user_ctx">
+
+        <indexes>
+            <index name="idx_email_change_user" columns="user_id"/>
+        </indexes>
+
+        <unique-constraints>
+            <unique-constraint name="uniq_email_change_token_hash" columns="token_hash"/>
+            <!-- Only one request open per account (`FEAT-USR-040` `RN-6`).
+                 Partial, because without the WHERE nobody could ever change
+                 their address a second time. -->
+            <unique-constraint name="uniq_email_change_pending" columns="user_id">
+                <options>
+                    <option name="where">(consumed_at IS NULL)</option>
+                </options>
+            </unique-constraint>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="userId" column="user_id" type="guid"/>
+        <field name="newEmail" column="new_email" type="string" length="254"/>
+        <field name="tokenHash" column="token_hash" type="string" length="64"/>
+        <field name="requestedAt" column="requested_at" type="datetime_immutable"/>
+        <field name="expiresAt" column="expires_at" type="datetime_immutable"/>
+        <field name="consumedAt" column="consumed_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

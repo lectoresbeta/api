@@ -1,77 +1,139 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
 
-## —— Puesta en marcha ————————————————————————————————————————————————
+# Todo se ejecuta dentro del contenedor. Para ejecutarlo en la máquina —útil
+# si ya tienes PHP 8.4 instalado— basta con vaciar EXEC:
+#
+#     make stan EXEC=
+#
+DC       = docker compose
+SERVICE  = app
+EXEC     = $(DC) exec -T $(SERVICE)
+PHP      = $(EXEC) php
+COMPOSER = $(EXEC) composer
+CONSOLE  = $(PHP) bin/console
 
-install: ## Instala dependencias y levanta los servicios
-	composer install
-	docker compose up -d
-	@echo "Esperando a PostgreSQL…"
-	@until docker compose exec -T postgres pg_isready -U lectoresbeta >/dev/null 2>&1; do sleep 1; done
+## —— Ciclo de vida ———————————————————————————————————————————————————
+
+build: ## Construye las imágenes
+	$(DC) build
+
+up: ## Levanta todo y deja la base de datos migrada
+	$(DC) up -d
+	@echo "Esperando a que la aplicación responda…"
+	@until $(DC) exec -T $(SERVICE) php -r 'exit(0);' >/dev/null 2>&1; do sleep 1; done
 	$(MAKE) jwt-keys
 	$(MAKE) migrate
-	@echo "Listo. Mailpit en http://localhost:8025 — RabbitMQ en http://localhost:15672"
+	@echo
+	@echo "  API        http://localhost:8000"
+	@echo "  Mailpit    http://localhost:8025"
+	@echo "  RabbitMQ   http://localhost:15672  (lectoresbeta / lectoresbeta)"
+	@echo "  PostgreSQL localhost:5432          (lectoresbeta / lectoresbeta)"
 
-up: ## Levanta PostgreSQL, RabbitMQ y Mailpit
-	docker compose up -d
+down: ## Para los servicios y conserva los datos
+	$(DC) down
 
-down: ## Para los servicios
-	docker compose down
+destroy: ## Para los servicios y BORRA los volúmenes (base de datos incluida)
+	$(DC) down -v
 
-jwt-keys: ## Genera el par de claves para firmar los JWT
-	@mkdir -p config/jwt
-	@if [ ! -f config/jwt/private.pem ]; then \
-		php bin/console lexik:jwt:generate-keypair --skip-if-exists; \
-		echo "Claves generadas en config/jwt/ (ignoradas por git)"; \
-	fi
+restart: ## Reinicia los servicios
+	$(DC) restart
+
+ps: ## Estado de los servicios
+	$(DC) ps
+
+logs: ## Sigue los registros de todos los servicios
+	$(DC) logs -f
+
+logs-worker: ## Sigue solo el consumidor de eventos
+	$(DC) logs -f worker
+
+sh: ## Abre una shell en el contenedor de la aplicación
+	$(DC) exec $(SERVICE) bash
+
+console: ## Ejecuta un comando de Symfony: make console CMD="debug:router"
+	$(CONSOLE) $(CMD)
+
+install: build up ## Construye, levanta y deja el entorno listo
 
 ## —— Base de datos ———————————————————————————————————————————————————
 
 migrate: ## Aplica las migraciones pendientes
-	php bin/console doctrine:migrations:migrate --no-interaction
+	$(CONSOLE) doctrine:migrations:migrate --no-interaction --allow-no-migration
 
 migration: ## Genera una migración a partir del mapeo
-	php bin/console doctrine:migrations:diff
+	$(CONSOLE) doctrine:migrations:diff
+
+migration-status: ## Qué migraciones hay y cuáles se han aplicado
+	$(CONSOLE) doctrine:migrations:status
+
+schema-validate: ## Comprueba que el mapeo y el esquema coinciden
+	$(CONSOLE) doctrine:schema:validate
+
+db-reset: ## Rehace la base de datos desde cero. DESTRUYE los datos
+	$(CONSOLE) doctrine:database:drop --force --if-exists
+	$(CONSOLE) doctrine:database:create
+	$(MAKE) migrate
 
 db-test: ## Prepara la base de datos de test
-	php bin/console --env=test doctrine:database:create --if-not-exists
-	php bin/console --env=test doctrine:migrations:migrate --no-interaction
+	$(CONSOLE) --env=test doctrine:database:create --if-not-exists
+	$(CONSOLE) --env=test doctrine:migrations:migrate --no-interaction --allow-no-migration
+
+psql: ## Abre psql contra la base de datos de desarrollo
+	$(DC) exec postgres psql -U lectoresbeta -d lectoresbeta
 
 ## —— Calidad —————————————————————————————————————————————————————————
 
-check: cs stan deptrac test ## Ejecuta todo lo que ejecuta CI
+check: cs stan deptrac test docs ## Lo mismo que ejecuta CI
 
 cs: ## Comprueba el estilo sin modificar nada
-	vendor/bin/php-cs-fixer fix --dry-run --diff
+	$(EXEC) vendor/bin/php-cs-fixer fix --dry-run --diff
 
 fix: ## Corrige el estilo
-	vendor/bin/php-cs-fixer fix
+	$(EXEC) vendor/bin/php-cs-fixer fix
 
 stan: ## Análisis estático (nivel 7)
-	vendor/bin/phpstan analyse
+	$(EXEC) vendor/bin/phpstan analyse
 
 deptrac: ## Comprueba capas y aislamiento entre contextos
-	vendor/bin/deptrac analyse --config-file=deptrac.layers.yaml --fail-on-uncovered --report-uncovered
-	vendor/bin/deptrac analyse --config-file=deptrac.contexts.yaml --fail-on-uncovered --report-uncovered
+	$(EXEC) vendor/bin/deptrac analyse --config-file=deptrac.layers.yaml --fail-on-uncovered --report-uncovered
+	$(EXEC) vendor/bin/deptrac analyse --config-file=deptrac.contexts.yaml --fail-on-uncovered --report-uncovered
 
 test: ## Toda la batería
-	vendor/bin/phpunit
+	$(EXEC) vendor/bin/phpunit
 
-test-unit: ## Solo tests de dominio: sin Symfony, sin base de datos
-	vendor/bin/phpunit --testsuite=Unit
+test-unit: ## Solo tests de dominio: sin Symfony, sin base de datos, en milisegundos
+	$(EXEC) vendor/bin/phpunit --testsuite=Unit
 
-docs: ## Valida la documentación
+docs: ## Valida docs/
 	python3 docs/_tools/check-docs.py
+
+## —— Seguridad y dependencias ————————————————————————————————————————
+
+jwt-keys: ## Genera el par de claves para firmar los JWT
+	$(CONSOLE) lexik:jwt:generate-keypair --skip-if-exists
+
+composer-install: ## Instala dependencias dentro del contenedor
+	$(COMPOSER) install
+
+audit: ## Avisos de seguridad de las dependencias
+	$(COMPOSER) audit
 
 ## —— Mensajería ——————————————————————————————————————————————————————
 
-consume: ## Consume los eventos de integración
-	php bin/console messenger:consume integration -vv
+consume: ## Consume los eventos de integración en primer plano
+	$(CONSOLE) messenger:consume integration -vv
+
+failed: ## Mensajes que han agotado los reintentos
+	$(CONSOLE) messenger:failed:show
 
 ## ————————————————————————————————————————————————————————————————————
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
-		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
+		| awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: install up down jwt-keys migrate migration db-test check cs fix stan deptrac test test-unit docs consume help
+.PHONY: build up down destroy restart ps logs logs-worker sh console install \
+        migrate migration migration-status schema-validate db-reset db-test psql \
+        check cs fix stan deptrac test test-unit docs \
+        jwt-keys composer-install audit consume failed help

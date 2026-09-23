@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Moderation\Sanction\Domain\Entity\Sanction"
+            table="sanction" schema="moderation_ctx">
+
+        <indexes>
+            <!-- «Is this person sanctioned right now» is asked on every
+                 write, and temporary ones expire on their own. -->
+            <index name="idx_sanction_user" columns="user_id,lifted_at,expires_at"/>
+            <index name="idx_sanction_claim" columns="claim_id"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="userId" column="user_id" type="guid"/>
+        <field name="type" type="string" length="24"
+               enum-type="LectoresBeta\Moderation\Sanction\Domain\Enum\SanctionType"/>
+        <field name="duration" type="string" length="16" nullable="true"
+               enum-type="LectoresBeta\Moderation\Sanction\Domain\Enum\SuspensionDuration"/>
+        <field name="reason" type="text"/>
+        <field name="claimId" column="claim_id" type="guid" nullable="true"/>
+        <field name="imposedBy" column="imposed_by" type="guid"/>
+        <field name="imposedAt" column="imposed_at" type="datetime_immutable"/>
+        <field name="expiresAt" column="expires_at" type="datetime_immutable" nullable="true"/>
+        <field name="liftedAt" column="lifted_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Community\Interaction\Domain\Entity\PostRepost"
+            table="post_repost" schema="community_ctx">
+
+        <indexes>
+            <!-- Composing somebody's own wall (`FEAT-COM-019`). -->
+            <index name="idx_post_repost_member" columns="member_id,created_at"/>
+        </indexes>
+
+        <unique-constraints>
+            <unique-constraint name="uniq_post_repost" columns="post_id,member_id"/>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="postId" column="post_id" type="guid"/>
+        <field name="memberId" column="member_id" type="guid"/>
+        <field name="comment" type="text" nullable="true"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

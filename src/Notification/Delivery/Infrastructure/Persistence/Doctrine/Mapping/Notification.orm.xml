@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Notification\Delivery\Domain\Entity\Notification"
+            table="notification" schema="notification_ctx">
+
+        <indexes>
+            <!-- The in-app inbox: unread first, newest first. -->
+            <index name="idx_notification_recipient" columns="recipient_id,read_at,created_at"/>
+        </indexes>
+
+        <unique-constraints>
+            <!-- Idempotent delivery (`RN-3`): the same event redelivered by
+                 RabbitMQ must not produce a second identical notice. -->
+            <unique-constraint name="uniq_notification_source"
+                               columns="recipient_id,kind,source_event_id"/>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="recipientId" column="recipient_id" type="guid"/>
+        <field name="kind" type="string" length="48"
+               enum-type="LectoresBeta\Notification\Delivery\Domain\Enum\NotificationKind"/>
+        <field name="payload" type="json">
+            <options>
+                <option name="jsonb">true</option>
+            </options>
+        </field>
+        <field name="sourceEventId" column="source_event_id" type="guid" nullable="true"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+        <field name="readAt" column="read_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

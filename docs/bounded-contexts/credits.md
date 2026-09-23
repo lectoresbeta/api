@@ -239,8 +239,10 @@ existe, el evento se descarta sin efecto.
 | `credit_account` | Un registro por usuario: saldo actual y metadatos |
 | `credit_transaction` | Movimientos inmutables, indexados por `user_id` y fecha |
 | `processed_event` | `event_id` procesados, con marca temporal y política de purga |
-| `credit_reservation` | Retenciones con su estado, importe y caducidad |
-| `credit_rule` | Reglas vigentes, si se decide hacerlas configurables (`C-3`) |
+| `correction_price` | La cotización de cada corrección en curso. **No es una retención**: no participa en el saldo (`FEAT-CRD-009`) |
+| `chapter_price` | Read model del precio de cada capítulo (`FEAT-CRD-016`) |
+| `overdraft_grant` | Descubiertos concedidos y su cupo semanal (`FEAT-CRD-019`) |
+| `credit_rule` | Reglas vigentes, si se decide hacerlas configurables (`C-3`). **Todavía no existe** |
 
 ## Reglas de negocio
 
@@ -275,7 +277,7 @@ créditos que nadie pagó.
 |---|---|---|
 | ~~C-1~~ | ¿Qué ocurre si el autor no tiene saldo? | **Resuelta:** reserva previa. Sin saldo disponible no hay acceso. Ver [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md) |
 | ~~C-2~~ | ¿Se reservan créditos al conceder acceso? | **Resuelta:** sí |
-| C-44 | ¿Es 10 palabras el suelo adecuado para una pregunta sin mínimo? | Con 10, diez preguntas sin mínimo suman 1 crédito de escritura |
+| C-44 | ¿Son 25 palabras el suelo adecuado para una pregunta sin mínimo? | Con 25, diez preguntas sin mínimo suman 3 créditos de escritura |
 | C-39 | ¿Se avisa al autor de que alguien ha empezado a corregirle? | Le permitiría reponer saldo y evitar que la corrección llegue bloqueada |
 | C-41 | ¿Cuántas correcciones simultáneas admite un capítulo? | Es la palanca para acotar el descubierto por carrera **sin apartar créditos** |
 | C-42 | ¿Qué cupo de descubierto y con qué periodicidad? Propuesta: 3 por semana | Es el presupuesto de emisión |

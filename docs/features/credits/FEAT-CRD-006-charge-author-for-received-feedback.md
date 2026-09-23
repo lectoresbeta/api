@@ -129,7 +129,7 @@ lo que cabe esperar de cinco palabras de diferencia.
 
 | Tabla | Cambio |
 |---|---|
-| `credit_reservation` | `status` pasa a `CONFIRMED` |
+| `correction_price` | Se consume la cotización de esa corrección. **No es una retención**: no hay estado que confirmar (`decision:0006`) |
 | `credit_transaction` | Nuevo movimiento negativo con `reason = FEEDBACK_RECEIVED` |
 | `credit_account` | Actualización del saldo |
 | `processed_event` | Registro del `eventId` |

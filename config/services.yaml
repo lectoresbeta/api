@@ -7,19 +7,42 @@ services:
         autowire: true
         autoconfigure: true
 
-    # Autoregistro de todo el código propio, con dos exclusiones.
+    # Autoregistro de todo el código propio, con tres exclusiones.
     #
-    # El dominio NO se registra como servicio: sus objetos se construyen con
-    # `new`, no se inyectan. Un agregado que el contenedor sabe crear acaba
-    # teniendo dependencias de infraestructura.
+    # Lo que se excluye del dominio son las cosas **con estado**: agregados,
+    # entidades, value objects, enums, excepciones y eventos. Se construyen
+    # con `new`; un agregado que el contenedor sabe crear acaba teniendo
+    # dependencias de infraestructura.
     #
-    # Los controladores son servicios normales: llevan el atributo
+    # Lo que sí se registra del dominio son los **contratos de repositorio** y
+    # los servicios de dominio sin estado. Registrar la interfaz junto a su
+    # implementación es además lo que hace que Symfony las enlace sola, sin
+    # una lista de alias que hay que mantener a mano.
+    #
+    # Los controladores no se registran aparte: llevan el atributo
     # #[AsController] de Symfony, que ya les pone la etiqueta
-    # `controller.service_arguments`. No hace falta registrarlos aparte, y
-    # así el atributo se queda donde debe estar, en Infrastructure.
+    # `controller.service_arguments`. Así el atributo se queda donde debe
+    # estar, en Infrastructure.
     LectoresBeta\:
         resource: '../src/'
         exclude:
-            - '../src/*/*/Domain/'
-            - '../src/Shared/Domain/'
+            - '../src/*/*/Domain/{Entity,ValueObject,Enum,Exception,Event}/'
+            - '../src/Shared/Domain/{ValueObject,Exception,Event}/'
             - '../src/Shared/Infrastructure/Symfony/Kernel.php'
+
+when@test:
+    services:
+        _defaults:
+            autowire: true
+            autoconfigure: true
+            # En test todo es público. Sin esto el contenedor elimina los
+            # servicios que todavía no inyecta nadie —que ahora mismo son casi
+            # todos— y un test de integración no puede pedírselos.
+            public: true
+
+        LectoresBeta\:
+            resource: '../src/'
+            exclude:
+                - '../src/*/*/Domain/{Entity,ValueObject,Enum,Exception,Event}/'
+                - '../src/Shared/Domain/{ValueObject,Exception,Event}/'
+                - '../src/Shared/Infrastructure/Symfony/Kernel.php'

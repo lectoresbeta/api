@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Moderation\Review\Domain\Entity\ClaimReview"
+            table="claim_review" schema="moderation_ctx">
+
+        <indexes>
+            <index name="idx_claim_review_claim" columns="claim_id"/>
+            <index name="idx_claim_review_moderator" columns="moderator_id,reviewed_at"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="claimId" column="claim_id" type="guid"/>
+        <field name="moderatorId" column="moderator_id" type="guid"/>
+        <field name="decision" type="string" length="16"
+               enum-type="LectoresBeta\Moderation\Review\Domain\Enum\ReviewDecision"/>
+        <field name="motivation" type="text"/>
+        <field name="reviewedAt" column="reviewed_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Credits\Pricing\Domain\Entity\ChapterPrice"
+            table="chapter_price" schema="credits_ctx">
+
+        <indexes>
+            <index name="idx_chapter_price_work" columns="work_id"/>
+            <index name="idx_chapter_price_author" columns="author_id"/>
+        </indexes>
+
+        <id name="chapterId" column="chapter_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="workId" column="work_id" type="guid"/>
+        <field name="authorId" column="author_id" type="guid"/>
+        <field name="wordCount" column="word_count" type="integer"/>
+        <field name="requiredWords" column="required_words" type="integer"/>
+        <field name="price" type="smallint"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

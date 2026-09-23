@@ -85,7 +85,7 @@ preferencias y presencia pública como autor.
 | Evento | Cuándo | Consumidores |
 |---|---|---|
 | `UserRegistered` | Se crea una cuenta | `Credits` (crea la cuenta con **saldo 0**), `Notification` (correo de activación) |
-| `AccountActivated` | El usuario activa su cuenta desde el correo | **`Credits`** (abona +20), `Notification`, `Feedback` (habilita recibir comentarios) |
+| `AccountActivated` | El usuario activa su cuenta desde el correo | **`Credits`** (abona +10), `Notification`, `Feedback` (habilita recibir comentarios) |
 | `ActivationEmailRequested` | Se pide reenviar el correo de activación | `Notification` |
 | `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros de interés | `Community` (sugerencias y recomendaciones) |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models |

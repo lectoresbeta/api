@@ -112,7 +112,7 @@ La opción B además distingue de forma natural el alta del login, que es justo 
 7. Con la aceptación presente: se crea la cuenta, se registra la aceptación con versión y
    fecha, y se publica `UserRegistered`.
 8. Si se confirma `RN-8`, la cuenta nace `ACTIVE` y se publica también `AccountActivated`,
-   que abona los 20 créditos de bienvenida.
+   que abona los 10 créditos de bienvenida.
 9. El usuario entra en el onboarding.
 
 ## Flujos alternativos y errores
@@ -144,7 +144,7 @@ el contrato cuando se retomen. Cada uno tiene su adaptador en `Infrastructure` t
 | Evento | Cuándo | Consumidores |
 |---|---|---|
 | `UserRegistered` | Se crea la cuenta | `Credits` (cuenta con saldo 0), `Notification` |
-| `AccountActivated` | Si la cuenta nace activa por `RN-8` | `Credits` (+20), `Notification`, `Feedback` |
+| `AccountActivated` | Si la cuenta nace activa por `RN-8` | `Credits` (+10), `Notification`, `Feedback` |
 
 ## Modelo de datos afectado
 

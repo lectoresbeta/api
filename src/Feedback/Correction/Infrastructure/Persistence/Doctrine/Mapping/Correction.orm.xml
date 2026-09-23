@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!--
+        The unique index on (chapter_id, reader_id) is not an optimisation: it
+        is the only real guarantee of `RN-2` under concurrency
+        (`FEAT-FBK-003`). It is added by the migration as a **partial** index,
+        because public-link corrections have no reader and several of them may
+        exist for the same chapter (`FEAT-FBK-008`).
+    -->
+    <entity name="LectoresBeta\Feedback\Correction\Domain\Entity\Correction"
+            table="correction" schema="feedback_ctx">
+
+        <indexes>
+            <!-- The author reads their feedback by work, not chapter by
+                 chapter: they want the whole novel's corrections together. -->
+            <index name="idx_correction_work" columns="work_id,submitted_at"/>
+            <index name="idx_correction_reader" columns="reader_id,status"/>
+            <index name="idx_correction_chapter" columns="chapter_id,status"/>
+            <index name="idx_correction_owner" columns="owner_id,submitted_at"/>
+        </indexes>
+
+        <unique-constraints>
+            <!-- `RN-2`: one correction per reader and chapter. This is not an
+                 optimisation — under concurrency it is the only real
+                 guarantee of the rule.
+
+                 Partial because it does not apply to public-link corrections
+                 (`FEAT-FBK-008`): those have no identified reader and several
+                 people may correct the same chapter. -->
+            <unique-constraint name="uniq_correction_reader_chapter" columns="chapter_id,reader_id">
+                <options>
+                    <option name="where">(reader_id IS NOT NULL)</option>
+                </options>
+            </unique-constraint>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="workId" column="work_id" type="guid"/>
+        <field name="chapterId" column="chapter_id" type="guid"/>
+        <field name="readerId" column="reader_id" type="guid" nullable="true"/>
+        <field name="authorLabel" column="author_label" type="string" length="80" nullable="true"/>
+        <field name="ownerId" column="owner_id" type="guid"/>
+        <field name="questionnaireVersion" column="questionnaire_version" type="smallint"/>
+        <field name="status" type="string" length="16"
+               enum-type="LectoresBeta\Feedback\Correction\Domain\Enum\CorrectionStatus"/>
+        <field name="origin" type="string" length="16"
+               enum-type="LectoresBeta\Feedback\Correction\Domain\Enum\CorrectionOrigin"/>
+        <field name="visibility" type="string" length="24"
+               enum-type="LectoresBeta\Feedback\Correction\Domain\Enum\CorrectionVisibility"/>
+        <field name="helpful" type="boolean" nullable="true"/>
+        <field name="ratedAt" column="rated_at" type="datetime_immutable" nullable="true"/>
+        <field name="tipAmount" column="tip_amount" type="smallint" nullable="true"/>
+        <field name="tippedAt" column="tipped_at" type="datetime_immutable" nullable="true"/>
+        <field name="startedAt" column="started_at" type="datetime_immutable"/>
+        <field name="submittedAt" column="submitted_at" type="datetime_immutable" nullable="true"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

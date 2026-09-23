@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Reading\BetaReaderGroup\Domain\Entity\BetaReaderGroupMember"
+            table="beta_reader_group_member" schema="reading_ctx">
+
+        <indexes>
+            <index name="idx_group_member_reader" columns="reader_id"/>
+        </indexes>
+
+        <id name="groupId" column="group_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="readerId" column="reader_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="addedAt" column="added_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

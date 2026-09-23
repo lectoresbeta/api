@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Notification\Delivery\Domain\Entity\NotificationDelivery"
+            table="notification_delivery" schema="notification_ctx">
+
+        <indexes>
+            <index name="idx_delivery_status" columns="status,updated_at"/>
+        </indexes>
+
+        <id name="notificationId" column="notification_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="channel" column="channel" type="string" length="16">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="status" type="string" length="16"
+               enum-type="LectoresBeta\Notification\Delivery\Domain\Enum\DeliveryStatus"/>
+        <field name="attempts" type="smallint"/>
+        <field name="failureReason" column="failure_reason" type="string" length="255" nullable="true"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+        <field name="deliveredAt" column="delivered_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

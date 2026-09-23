@@ -1,5 +1,75 @@
-# Entorno de desarrollo. Solo servicios: PHP se ejecuta en la máquina.
+# Entorno completo de desarrollo: la aplicación y sus servicios.
+#
+# `make up` levanta esto. PHP ya no hace falta en la máquina.
+name: lectoresbeta
+
 services:
+  # PHP-FPM. En desarrollo el código llega por volumen, así que editar un
+  # fichero se ve en la siguiente petición sin reconstruir nada.
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: dev
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: '1'
+      DATABASE_URL: 'postgresql://lectoresbeta:lectoresbeta@postgres:5432/lectoresbeta?serverVersion=16&charset=utf8'
+      MESSENGER_TRANSPORT_DSN: 'amqp://lectoresbeta:lectoresbeta@rabbitmq:5672/%2f/messages'
+      MAILER_DSN: 'smtp://mailpit:1025'
+      DEFAULT_URI: 'http://localhost:8000'
+    volumes:
+      - .:/app
+      - jwt:/app/config/jwt
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - '8000:80'
+    volumes:
+      - ./public:/app/public:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+
+  # Consumidor de los eventos de integración. Va aparte a propósito: sin un
+  # worker corriendo, `AccountActivated` se queda en la cola y los créditos de
+  # bienvenida no se abonan nunca.
+  worker:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+      target: dev
+    command:
+      - php
+      - bin/console
+      - messenger:consume
+      - integration
+      - --time-limit=3600
+      - --memory-limit=256M
+      - -vv
+    environment:
+      APP_ENV: dev
+      APP_DEBUG: '1'
+      DATABASE_URL: 'postgresql://lectoresbeta:lectoresbeta@postgres:5432/lectoresbeta?serverVersion=16&charset=utf8'
+      MESSENGER_TRANSPORT_DSN: 'amqp://lectoresbeta:lectoresbeta@rabbitmq:5672/%2f/messages'
+      MAILER_DSN: 'smtp://mailpit:1025'
+      DEFAULT_URI: 'http://localhost:8000'
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - jwt:/app/config/jwt
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -38,3 +108,6 @@ services:
 
 volumes:
   postgres:
+  # Las claves JWT se generan una vez y las comparten app y worker. En un
+  # volumen y no en el repositorio: nunca se commitean.
+  jwt:

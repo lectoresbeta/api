@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Projections. Rebuilt from events; nothing depends on them. -->
+    <entity name="LectoresBeta\Community\Ranking\Domain\Entity\AuthorStats"
+            table="author_stats" schema="community_ctx">
+
+        <indexes>
+            <index name="idx_author_stats_followers" columns="followers"/>
+            <index name="idx_author_stats_corrections" columns="corrections_delivered"/>
+        </indexes>
+
+        <id name="authorId" column="author_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="displayName" column="display_name" type="string" length="80" nullable="true"/>
+        <field name="avatarUrl" column="avatar_url" type="string" length="512" nullable="true"/>
+        <field name="followers" type="integer"/>
+        <field name="posts" type="integer"/>
+        <field name="publishedWorks" column="published_works" type="integer"/>
+        <field name="correctionsDelivered" column="corrections_delivered" type="integer"/>
+        <field name="tipsReceived" column="tips_received" type="integer"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

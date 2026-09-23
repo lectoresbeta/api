@@ -58,7 +58,7 @@ La mejora evidente —«crea tu cuenta y te los abonamos»— abre un agujero:
 1. Publico un texto con el cuestionario más exigente posible → precio 20.
 2. Abro un enlace público, **que no me cuesta nada**.
 3. Me corrijo a mí mismo desde una ventana de incógnito.
-4. Me registro con otra cuenta → 20 créditos de la nada.
+4. Me registro con otra cuenta → 10 créditos de la nada.
 5. Repito.
 
 El enlace público es gratis para el autor **y el precio lo fija su propio cuestionario**: esas
