@@ -88,6 +88,12 @@ paths:
   /genres:
     $ref: './paths/onboarding.yaml#/catalogue'
 
+  /works:
+    $ref: './paths/works.yaml#/collection'
+
+  /works/{workId}/chapters:
+    $ref: './paths/works.yaml#/chapters'
+
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'
 

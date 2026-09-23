@@ -5,7 +5,7 @@ context: Work
 concept: Manuscript
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - _sources/use-cases.pdf#p1
@@ -98,9 +98,11 @@ ella su principal ventaja.
 - `RN-1` Toda obra tiene exactamente un autor: el usuario autenticado.
 - `RN-2` Una obra tiene al menos un fragmento. Una obra sin contenido no es válida.
 - `RN-3` El número de palabras se calcula a partir del contenido de todos sus fragmentos.
-- `RN-4` El `TextTier` se deriva del número de palabras según la tabla de
-  [`credits.md`](../../bounded-contexts/credits.md#clasificación-por-extensión-texttier).
-  Nunca lo fija el usuario.
+- `RN-4` ~~El `TextTier` se deriva del número de palabras.~~ **Derogado** por
+  [`decision:0006`](../../decisions/0006-credit-system.md): no hay tramos. El precio es una
+  fórmula continua sobre las palabras del capítulo
+  ([`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md)). Lo que sigue en pie es
+  que **el recuento lo calcula el servidor y nunca lo fija el usuario**.
 - `RN-5` Por defecto la obra se crea con `Visibility: HIDDEN` y
   `BetaReaderAccessMode: ON_REQUEST`. *(Pendiente de confirmar, `Q-1`.)*
 - `RN-6` El título es obligatorio y no puede estar vacío.
@@ -113,11 +115,11 @@ ella su principal ventaja.
 2. Opcionalmente divide la obra en varios fragmentos (`FEAT-WRK-003`).
 3. Opcionalmente indica temática, sinopsis y otros metadatos.
 4. Envía la obra.
-5. El sistema valida título y contenido.
-6. El sistema calcula el número de palabras y deriva el `TextTier` (`FEAT-WRK-013`).
-7. El sistema persiste la obra y sus fragmentos.
-8. El sistema genera el registro de autoría (`FEAT-WRK-009`).
-9. El sistema publica `WorkCreated`.
+5. El sistema valida el título.
+6. El sistema persiste la obra, **vacía y en `DRAFT`**, y publica `WorkCreated`.
+7. Por cada capítulo, el sistema sanea su contenido, cuenta sus palabras y actualiza los
+   totales de la obra.
+8. El registro de autoría se genera cuando lo decida `W-1` (`FEAT-WRK-009`).
 10. Se devuelve la obra creada.
 
 ## Flujos alternativos y errores
@@ -127,6 +129,9 @@ ella su principal ventaja.
 | Título vacío o ausente | Se rechaza | `422` con detalle del campo |
 | Sin contenido en ningún fragmento | Se rechaza (`RN-2`) | `422` |
 | Contenido con HTML no permitido | Se sanea, no se rechaza | `201` con el contenido saneado |
+| Contenido que tras sanear se queda sin texto | Se rechaza | `422` con `code: EMPTY_CHAPTER` |
+| Capítulo sobre una obra ajena | Se rechaza **como si no existiera** | `404` con `code: WORK_NOT_FOUND` |
+| Cuenta sin activar | Se rechaza | `403` con `code: ACCOUNT_NOT_ACTIVATED` |
 | Contenido que supera las 75.000 palabras | Sin definir (`C-6`) | Pendiente |
 | Sin sesión | Se rechaza | `401` |
 | Fallo al generar el registro de autoría | Sin definir: ¿falla la creación o se reintenta? (`Q-3`) | Pendiente |
@@ -152,9 +157,14 @@ incremental.
 
 | Evento | Cuándo | Payload relevante |
 |---|---|---|
-| `WorkCreated` | Tras persistir la obra | `workId`, `authorId`, `title`, `wordCount`, `textTier`, `accessMode`, `visibility` |
+| `WorkCreated` | Tras persistir la obra | `workId`, `authorId`, `title`, `accessMode`, `status`, `createdAt` |
 
-El contenido de la obra **no viaja en el evento**.
+El contenido de la obra **no viaja en el evento**, y tampoco nada derivado de leerlo. Una obra
+nace en `DRAFT`: es obra inédita, y una cola que persiste, reintenta y aparca mensajes es el
+último sitio donde debe estar.
+
+Sin `wordCount`: al crearse la obra es cero, y quien necesite el recuento lo tendrá cuando
+exista un evento de capítulo añadido. Sin `textTier`, que ya no existe.
 
 **Consume**: ninguno.
 
@@ -185,14 +195,13 @@ a después.
 
 ## Criterios de aceptación
 
-- [ ] Un usuario autenticado crea una obra con título y contenido y recibe `201` con su `workId`.
+- [ ] Un usuario autenticado y **con la cuenta activada** crea una obra y recibe `201` con su `workId`.
+- [ ] Una cuenta sin activar recibe `403` con `ACCOUNT_NOT_ACTIVATED`.
 - [ ] La obra creada tiene como autor al usuario autenticado, aunque la petición incluya otro `authorId`.
 - [ ] Una obra sin título se rechaza con `422`.
-- [ ] Una obra sin contenido se rechaza con `422`.
+- [ ] Un capítulo que tras sanear se queda sin texto se rechaza con `422`.
 - [ ] El `wordCount` devuelto coincide con el número de palabras del contenido.
-- [ ] El `textTier` devuelto corresponde al tramo del `wordCount` según la tabla.
-- [ ] El usuario no puede fijar `wordCount` ni `textTier` en la petición.
-- [ ] Se genera un `AuthorshipRecord` asociado a la obra.
+- [ ] El usuario no puede fijar `wordCount` en la petición.
 - [ ] Se publica `WorkCreated` y su payload no contiene el contenido de la obra.
 - [ ] Una petición sin sesión recibe `401`.
 - [ ] El contenido enriquecido se almacena saneado frente a inyección de HTML y scripts.
@@ -209,7 +218,7 @@ a después.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| Q-3 | ¿Qué ocurre si falla la generación del registro de autoría? | ¿Es parte de la transacción o asíncrono? |
+| Q-3 | ¿Qué ocurre si falla la generación del registro de autoría? | Sigue abierta, y **bloquea a `W-1`**: hasta saber *cuándo* se genera no tiene sentido decidir qué pasa si falla |
 | Q-5 | ¿Hay borradores con guardado automático? | Cambia el ciclo de vida de la obra (`W-5`) |
 | Q-6 | ¿Qué metadatos son obligatorios: temática, sinopsis, portada? | Validación y búsqueda |
 
@@ -219,4 +228,25 @@ a después.
 —registro de autoría, guardado automático, metadatos obligatorios— no impide implementar
 la creación de una obra.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL`.
+
+Hecho: `POST /api/v1/works` y `POST /api/v1/works/{workId}/chapters`, con el saneado contra
+lista blanca, el recuento sobre texto plano y la publicación de `WorkCreated`. Cubierto por
+`tests/Functional/Work/CreateWorkTest.php` y `tests/Unit/Work/ContentSanitiserTest.php`.
+
+Es además la primera escritura **no exenta** del proyecto, así que sus tests son los que por
+fin comprueban que la barrera de
+[`FEAT-USR-025`](../user/FEAT-USR-025-block-writes-until-activation.md) **bloquea**, y no solo
+que deja pasar lo que debe.
+
+El detalle que más caro habría salido: el saneador, por defecto, tira un elemento
+desconocido **con sus hijos**. Un pegado desde un procesador de textos —todo `span` y `div`—
+habría llegado vacío mientras la petición respondía «creado». Por eso `ContentPolicy` tiene
+dos listas: la de lo que se conserva y la de lo que **pierde el marcado y conserva el texto**.
+
+**Falta:**
+
+- el **registro de autoría** (`RN-7`): depende de `W-1`, que sigue sin decidir **cuándo** se
+  genera, y generarlo al crear una obra vacía no significaría nada;
+- reordenar, editar y borrar capítulos (`FEAT-WRK-003`);
+- el límite superior de extensión (`C-6`) y los metadatos obligatorios (`Q-6`).

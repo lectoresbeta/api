@@ -6,6 +6,7 @@ namespace LectoresBeta\Work\Chapter\Domain\Entity;
 
 use LectoresBeta\Work\Chapter\Domain\Enum\ChapterVisibility;
 use LectoresBeta\Work\Chapter\Domain\Service\WordCounter;
+use LectoresBeta\Work\Chapter\Domain\ValueObject\ChapterContent;
 use LectoresBeta\Work\Chapter\Domain\ValueObject\ChapterId;
 use LectoresBeta\Work\Manuscript\Domain\ValueObject\WorkId;
 
@@ -32,7 +33,15 @@ class Chapter
 
     private ?string $title = null;
 
-    private string $content = '';
+    private string $contentHtml = '';
+
+    /**
+     * The plain text derived from the HTML, and **the source of truth for the
+     * word count**. Stored rather than derived on read: deriving it would tie
+     * the count to whatever the stripping code does today, so changing that
+     * code would silently reprice every chapter.
+     */
+    private string $contentText = '';
 
     private int $wordCount = 0;
 
@@ -81,9 +90,9 @@ class Chapter
         return $this->title;
     }
 
-    public function content(): string
+    public function content(): ChapterContent
     {
-        return $this->content;
+        return new ChapterContent($this->contentHtml, $this->contentText);
     }
 
     public function wordCount(): int
@@ -104,11 +113,16 @@ class Chapter
     /**
      * The word count is recomputed here and never passed in: it is derived
      * from the content, and the whole price depends on it.
+     *
+     * It takes a `ChapterContent`, which can only be built by the sanitiser.
+     * Raw input has no way into this method, and that is the point: the
+     * platform never stores what it would not be willing to serve.
      */
-    public function replaceContent(string $content, WordCounter $counter, \DateTimeImmutable $now): void
+    public function replaceContent(ChapterContent $content, WordCounter $counter, \DateTimeImmutable $now): void
     {
-        $this->content = $content;
-        $this->wordCount = $counter->count($content);
+        $this->contentHtml = $content->html;
+        $this->contentText = $content->text;
+        $this->wordCount = $counter->count($content->text);
         $this->updatedAt = $now;
     }
 

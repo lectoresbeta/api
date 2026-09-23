@@ -17,12 +17,15 @@ namespace LectoresBeta\Work\Chapter\Domain\Service;
  */
 final class WordCounter
 {
-    public function count(string $content): int
+    /**
+     * Takes **plain text**, already derived by the sanitiser. It does not
+     * strip markup: if it did, there would be two places deciding what counts
+     * as a word, and the day they disagreed the price would depend on which
+     * one ran.
+     */
+    public function count(string $plainText): int
     {
-        $plain = strip_tags($content);
-        $plain = html_entity_decode($plain, \ENT_QUOTES | \ENT_HTML5, 'UTF-8');
-        $plain = (string) preg_replace('/\s+/u', ' ', $plain);
-        $plain = trim($plain);
+        $plain = trim((string) preg_replace('/\s+/u', ' ', $plainText));
 
         if ('' === $plain) {
             return 0;

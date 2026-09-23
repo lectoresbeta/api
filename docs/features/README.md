@@ -155,7 +155,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-WRK-001 | Crear obra con el editor WYSIWYG | Writer | APPROVED | TODO | P0 | [ficha](work/FEAT-WRK-001-create-work-with-editor.md) |
+| FEAT-WRK-001 | Crear obra con el editor WYSIWYG | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-001-create-work-with-editor.md) |
 | FEAT-WRK-002 | Crear obra subiendo un fichero (.doc, .pdf, .txt) | Writer | PENDING | TODO | P1 | — |
 | FEAT-WRK-003 | Estructurar la obra en fragmentos | Writer | PENDING | TODO | P0 | — |
 | FEAT-WRK-004 | Ver el contenido de una obra | Writer, BetaReader | PENDING | TODO | P0 | — |

@@ -6,7 +6,7 @@
 
 | Método y ruta | `operationId` | Propósito | Funcionalidad | Estado |
 |---|---|---|---|---|
-| `POST /works` | `createWork` | Crear obra | FEAT-WRK-001 | DRAFT |
+| `POST /api/v1/works` | `createWork` | Crear obra. Nace vacía y en `DRAFT` | FEAT-WRK-001 | **Implementado** |
 | `POST /works/uploads` | `uploadManuscript` | Crear obra desde fichero | FEAT-WRK-002 | PENDING |
 | `GET /works/{workId}` | `getWork` | Metadatos de la obra | FEAT-WRK-004 | PENDING |
 | `GET /works/{workId}/content` | `getWorkContent` | Contenido completo | FEAT-WRK-004 | PENDING |
@@ -14,7 +14,7 @@
 | `DELETE /works/{workId}` | `deleteWork` | Eliminar obra | FEAT-WRK-006 | PENDING |
 | `GET /works` | `listWorks` | Catálogo: sección «Leer» | FEAT-WRK-012 | DRAFT |
 | `GET /me/works` | `listMyWorks` | Obras propias | FEAT-WRK-004 | PENDING |
-| `POST /works/{workId}/chapters` | `addChapter` | Añadir fragmento | FEAT-WRK-003 | PENDING |
+| `POST /api/v1/works/{workId}/chapters` | `addChapter` | Añadir capítulo. El contenido se sanea al guardarlo | FEAT-WRK-001 | **Implementado** |
 | `GET /works/{workId}/chapters` | `listChapters` | Listar fragmentos | FEAT-WRK-003 | PENDING |
 | `GET /chapters/{chapterId}` | `getChapter` | Leer un fragmento | FEAT-WRK-004 | PENDING |
 | `PUT /chapters/{chapterId}` | `updateChapter` | Editar fragmento | FEAT-WRK-005 | PENDING |
@@ -35,44 +35,87 @@
 
 ---
 
-## `POST /works`
+## `POST /api/v1/works`
 
 **`operationId`:** `createWork` · **Funcionalidad:** [`FEAT-WRK-001`](../../features/work/FEAT-WRK-001-create-work-with-editor.md)
 
 ### Propósito
 
-Crear una obra con el editor. El autor es siempre el usuario autenticado.
+Crear una obra. El autor es siempre el usuario autenticado.
 
 ### Autorización
 
-Requiere sesión. Cualquier usuario autenticado puede crear obras propias.
-
-### Reglas aplicadas
-
-`RN-1` a `RN-8` de `FEAT-WRK-001`.
+Requiere sesión **y cuenta activada**. Es la primera escritura del producto sujeta a
+[`FEAT-USR-025`](../../features/user/FEAT-USR-025-block-writes-until-activation.md): una
+cuenta en `PENDING_ACTIVATION` recibe `403` con `ACCOUNT_NOT_ACTIVATED`, que la interfaz
+distingue para poder ofrecer el reenvío del correo.
 
 ### Entrada
 
-Título, contenido (uno o varios fragmentos) y metadatos opcionales.
+Solo `title` y, opcionalmente, `synopsis`. **La obra nace vacía**: los capítulos se añaden
+después (`Q-2`, resuelta). Una novela de cuarenta capítulos no cabe en una petición, y
+obligar a ello convertiría cada guardado en un envío completo.
 
-**No se aceptan:** `authorId`, `wordCount` ni `textTier`. Los tres los determina el servidor;
-aceptarlos permitiría falsear la autoría o el coste en créditos de la obra.
-
-Pendiente (`Q-2`): si los fragmentos se envían en esta misma petición o se añaden después.
+**No se acepta `authorId`**, y un `wordCount` enviado se ignora: aceptarlos permitiría
+falsear la autoría o el coste en créditos de la obra. `textTier` ya no existe
+([`decision:0006`](../../decisions/0006-credit-system.md)).
 
 ### Respuesta
 
-`201 Created` con la obra, incluyendo `wordCount` y `textTier` calculados.
+`201 Created` con el `workId`. La obra nace en **`DRAFT`**: nacer visible expondría obra
+inédita por un descuido.
 
 ### Errores específicos
 
 | `code` | HTTP | Cuándo |
 |---|---|---|
-| `VALIDATION_FAILED` | 422 | Título vacío o sin contenido |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | La cuenta no está activada |
+| `INVALID_VALUE` | 422 | Título vacío |
 
 ### Efectos
 
-Publica `WorkCreated`. Genera un `AuthorshipRecord`. **No mueve créditos.**
+Publica `WorkCreated`, **sin el contenido de la obra ni nada derivado de leerlo**. No mueve
+créditos: los créditos se mueven al entregarse una corrección, no al publicar.
+
+El `AuthorshipRecord` **todavía no se genera**: depende de `W-1`, que no ha decidido en qué
+momento se crea, y hacerlo sobre una obra vacía no significaría nada.
+
+---
+
+## `POST /api/v1/works/{workId}/chapters`
+
+**`operationId`:** `addChapter` · **Funcionalidad:** [`FEAT-WRK-001`](../../features/work/FEAT-WRK-001-create-work-with-editor.md)
+
+### Autorización
+
+Requiere sesión, cuenta activada y **ser el autor de la obra**. Una obra ajena responde `404`,
+no `403`: confirmar que una obra inédita existe ya es una fuga.
+
+### Entrada
+
+`content` es HTML y **se sanea al guardarlo, nunca al servirlo**. Lo almacenado puede no ser
+exactamente lo enviado, y el cliente debe rehidratar el editor con lo guardado.
+
+La lista blanca es `p`, `br`, `strong`, `em`, `blockquote`, `h2`, `h3`, `hr`, sin ningún
+atributo. **Sin enlaces ni imágenes.**
+
+Lo que no está en la lista **pierde el marcado y conserva el texto**: un pegado desde Word
+llega lleno de `span`, y tirar las palabras con ellos sería una pésima bienvenida. Solo
+`script`, `style`, `iframe` y compañía se eliminan con su contenido, porque su contenido no
+es prosa.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `WORK_NOT_FOUND` | 404 | La obra no existe **o no es tuya** |
+| `EMPTY_CHAPTER` | 422 | Tras sanear no queda texto |
+
+### Efectos
+
+Actualiza el recuento de palabras y de capítulos de la obra. Ese recuento se calcula sobre el
+**texto plano** derivado, no sobre el marcado: de él depende el precio de toda corrección
+([`FEAT-CRD-016`](../../features/credits/FEAT-CRD-016-effort-based-pricing.md)).
 
 ---
 

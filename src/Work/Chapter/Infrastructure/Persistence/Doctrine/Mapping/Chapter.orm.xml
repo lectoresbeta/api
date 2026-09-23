@@ -17,7 +17,10 @@
         <field name="workId" column="work_id" type="guid"/>
         <field name="position" type="smallint"/>
         <field name="title" type="string" length="180" nullable="true"/>
-        <field name="content" type="text"/>
+        <field name="contentHtml" column="content_html" type="text"/>
+        <!-- Derivado del HTML saneado y fuente de verdad del recuento, del
+             que depende el precio de toda corrección (`FEAT-CRD-016`). -->
+        <field name="contentText" column="content_text" type="text"/>
         <field name="wordCount" column="word_count" type="integer"/>
         <field name="visibility" type="string" length="16"
                enum-type="LectoresBeta\Work\Chapter\Domain\Enum\ChapterVisibility"/>

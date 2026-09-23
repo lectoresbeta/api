@@ -1,0 +1,140 @@
+# Obras y capítulos (FEAT-WRK-001).
+#
+# Son las primeras escrituras que exigen **cuenta activada**: una cuenta en
+# PENDING_ACTIVATION recibe 403 con ACCOUNT_NOT_ACTIVATED (FEAT-USR-025).
+
+collection:
+  post:
+    tags: [Works]
+    operationId: createWork
+    summary: Crear una obra
+    description: |
+      La obra nace en **`DRAFT`** y **sin contenido**. Es deliberado por dos
+      razones distintas:
+
+      - nacer visible expondría obra inédita por un descuido, y esta
+        plataforma existe para custodiarla;
+      - la creación es **incremental**: los capítulos se añaden después. Una
+        novela de cuarenta capítulos no cabe en una petición, y obligar a ello
+        convertiría cada guardado en un envío completo.
+
+      **El autor es siempre quien llama.** Un `authorId` en el cuerpo se
+      ignora: aceptarlo sería una vía directa a crear obras en nombre de otro.
+
+      Crear una obra **no cuesta créditos**. Los créditos se mueven al
+      entregarse una corrección, no al publicar.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [title]
+            properties:
+              title:
+                type: string
+                maxLength: 180
+              synopsis:
+                type: string
+    responses:
+      '201':
+        description: Obra creada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workId]
+              properties:
+                workId:
+                  type: string
+                  format: uuid
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/ValidationError'
+
+chapters:
+  post:
+    tags: [Works]
+    operationId: addChapter
+    summary: Añadir un capítulo
+    description: |
+      El contenido llega como HTML y **se sanea al guardarlo, nunca al
+      servirlo**. Lo que queda almacenado puede no ser exactamente lo que se
+      envió, y el cliente debe rehidratar el editor con lo guardado.
+
+      La lista blanca es corta: `p`, `br`, `strong`, `em`, `blockquote`,
+      `h2`, `h3`, `hr`, y ningún atributo. **Sin enlaces ni imágenes**: la
+      literatura no los necesita, y quitarlos elimina de golpe el vector de
+      spam más obvio y la mitad de la complejidad del saneado.
+
+      Lo que no está en la lista **pierde el marcado pero conserva el texto**:
+      un pegado desde Word llega lleno de `span`, y tirar las palabras con
+      ellos sería una pésima bienvenida para un autor. Un contenido que tras
+      sanear se queda sin texto se rechaza con `EMPTY_CHAPTER`.
+
+      El recuento de palabras se hace sobre el texto plano derivado, no sobre
+      el marcado: de ese número depende el precio de toda corrección
+      (`FEAT-CRD-016`).
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [content]
+            properties:
+              content:
+                type: string
+                description: HTML. Se sanea contra la lista blanca antes de guardarse.
+              title:
+                type: string
+                maxLength: 180
+    responses:
+      '201':
+        description: Capítulo añadido.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chapterId]
+              properties:
+                chapterId:
+                  type: string
+                  format: uuid
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          La obra no existe **o no es tuya**. Los dos casos son la misma
+          respuesta: confirmar que una obra inédita existe ya es una fuga.
+          `code: WORK_NOT_FOUND`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'El capítulo se queda sin texto tras sanear. `code: EMPTY_CHAPTER`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

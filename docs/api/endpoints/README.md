@@ -9,7 +9,7 @@ duplica aquí.
 | Contexto | Documento | Estado |
 |---|---|---|
 | `User` | [user.md](user.md) | Esqueleto |
-| `Work` | [work.md](work.md) | Catálogo y cuestionario especificados |
+| `Work` | [work.md](work.md) | Crear obra y capítulos implementados |
 | `Reading` | reading.md | Por crear |
 | `Feedback` | [feedback.md](feedback.md) | Correcciones especificadas |
 | `Community` | community.md | Por crear |
