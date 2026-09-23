@@ -56,6 +56,11 @@ La última fila es el precio de las otras cuatro, y se acepta a conciencia
 - `RN-6` Con saldo **negativo**, ningún capítulo del autor es corregible, salvo el descubierto
   deliberado ([`FEAT-CRD-019`](FEAT-CRD-019-overdraft-correction.md)).
 - `RN-7` Un autor no corrige su propia obra, así que no hay caso.
+- `RN-8` Un capítulo admite **como máximo 3 correcciones abiertas a la vez** (`C-41`). Al
+  llegar al tope deja de admitir nuevas hasta que alguna se entregue o se descarte.
+- `RN-9` **No se notifica al autor** que alguien ha empezado a corregirle (`C-39`). Lo que sí
+  se muestra es una **nota silenciosa en la tarjeta del texto** dentro de «Mis relatos»:
+  *«Alguien está corrigiendo este texto ahora…»*. Nunca por correo.
 
 `RN-4` es una consecuencia directa de `RN-3`: sin nada bloqueado, un lector lento no perjudica
 a nadie. Con retención hacía falta una caducidad para que no congelase el saldo del autor;
@@ -156,13 +161,22 @@ saldo y no hay ningún estado que reconciliar. Es una cotización.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| C-39 | ¿Se avisa al autor de que alguien ha empezado a corregirle? | Le permitiría reponer saldo a tiempo y evitar el bloqueo |
-| C-40 | ¿Se le enseña al lector que el autor va justo de saldo? | Sería transparente y podría desanimar sin motivo: él cobra igual |
-| C-41 | ¿Cuántas correcciones simultáneas admite un mismo capítulo? | Un tope acotaría el descubierto por carrera sin reintroducir la retención |
+| C-40 | ¿Se le enseña al lector que el autor va justo de saldo? | Sería transparente y podría desanimarle sin motivo: él cobra igual |
+| C-45 | La nota silenciosa, ¿dice cuántas correcciones hay abiertas o solo que las hay? | «3 personas están corrigiendo» informa más y presiona más |
 
-`C-41` es la palanca que queda si el descubierto por carrera resulta más frecuente de lo
-tolerable: limitar cuántas correcciones abiertas admite un capítulo a la vez acota el problema
-**sin apartar un solo crédito**.
+Resueltas: `C-39` (**no se notifica**; solo nota silenciosa en la tarjeta) y `C-41` (**3
+correcciones simultáneas** por capítulo).
+
+### Por qué el tope de 3 y no otro
+
+| Tope | Deuda máxima por carrera |
+|---|---|
+| Sin tope | Ilimitada |
+| 3 simultáneas | −2 correcciones |
+| 2 simultáneas | −1 corrección |
+
+Con 3 la deuda queda acotada a un par de correcciones sin frenar un capítulo popular. Un tope
+más bajo sería frustrante para el lector que llega y no puede empezar.
 
 ## Estado
 

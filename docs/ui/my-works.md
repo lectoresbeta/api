@@ -41,6 +41,7 @@ ambigüedad: valoración, fecha y lecturas.
 | Géneros | `YoungAdult` `Ficción` |
 | Tiempo de lectura | «20 min lectura» |
 | **Estado** | Insignia de color según el estado |
+| **Corrección en curso** | Nota silenciosa: «Alguien está corrigiendo este texto ahora…». **Nunca por correo** (`C-39`) |
 
 Es la misma tarjeta del carrusel de la Home (`FEAT-COM-017`), **más la insignia de estado**,
 que solo tiene sentido para el autor.

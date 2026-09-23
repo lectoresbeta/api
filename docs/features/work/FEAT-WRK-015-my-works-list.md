@@ -57,9 +57,26 @@ de los comentarios. Aquí no hace falta definir ninguna fórmula.
 | Lecturas | Agregado. **Concepto sin definir** (`H-3`) |
 | Tiempo de lectura | Derivado del número de palabras |
 | **Estado** | `FEAT-WRK-016` |
+| **Nota de corrección en curso** | `Credits` / `Feedback`. Ver abajo |
 
 La insignia de estado **solo se muestra al autor**: es información de gestión, no del
 catálogo público.
+
+### «Alguien está corrigiendo este texto ahora…»
+
+Nota silenciosa en la tarjeta cuando hay al menos una corrección abierta sobre esa obra.
+
+**Solo aparece aquí. No se notifica nunca por correo** (`C-39`). Es información que el autor
+encuentra si entra a mirar, no un aviso que le persigue.
+
+La distinción no es cosmética: notificar por correo que alguien ha empezado a corregirle
+crearía una expectativa que puede no cumplirse —el lector abandona— y convertiría cada intento
+de corrección en un evento. La nota, en cambio, le da contexto justo cuando está gestionando
+sus textos, que es cuando le sirve.
+
+Un efecto secundario útil: un autor con poco saldo que vea la nota puede corregir a otro y
+evitar que la corrección le llegue **bloqueada**
+([`FEAT-CRD-018`](../credits/FEAT-CRD-018-negative-balance.md)).
 
 ## Reglas de negocio
 

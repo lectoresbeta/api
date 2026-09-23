@@ -34,7 +34,7 @@ no los crea ni los destruye ([`decision:0006`](../../decisions/0006-credit-syste
 | Término | Mide | Fuente del dato |
 |---|---|---|
 | `palabras del capítulo / 1.000` | Leer el texto con atención crítica | `Work`, vía `WorkContentUpdated` |
-| `palabras exigidas / 100` | Escribir la crítica | La suma de los mínimos de palabras de las preguntas del cuestionario, vía `QuestionnaireUpdated`. Una pregunta sin mínimo cuenta como **10 palabras** |
+| `palabras exigidas / 100` | Escribir la crítica | La suma de los mínimos de palabras de las preguntas del cuestionario, vía `QuestionnaireUpdated`. Una pregunta sin mínimo cuenta como **25 palabras** |
 
 **Las «palabras exigidas» son un solo número que captura toda la exigencia del cuestionario.**
 No hace falta pesar el número de preguntas, su tipo ni su longitud por separado: el autor, al
@@ -64,13 +64,21 @@ y escribir 100 de crítica cuestan aproximadamente lo mismo.
 - `RN-4` El precio queda **fijado al empezar la corrección**
   ([`FEAT-CRD-009`](FEAT-CRD-009-balance-check-on-correction-start.md)). Cambiar el
   cuestionario o el texto después no altera lo que cobra quien ya está corrigiendo.
-- `RN-4b` Una pregunta **sin mínimo declarado cuenta como 10 palabras** (`C-14`, resuelta).
+- `RN-4b` Una pregunta **sin mínimo declarado cuenta como 25 palabras** (`C-14` y `C-44`,
+  resueltas).
 - `RN-5` Mínimo 2, máximo 20. El mínimo evita que nada salga gratis; el máximo evita que un
   capítulo desmesurado resulte incorregible por caro.
 - `RN-6` El redondeo es **hacia arriba** en los dos términos. Un capítulo de 1.200 palabras
   cuesta 2, no 1.
-- `RN-7` Las dos constantes —1.000 y 100— son **configuración**, no literales repartidos por
-  el código.
+- `RN-7` Las constantes —1.000, 100 y el suelo de 25— son **configuración en caliente**
+  (`C-3`), no literales repartidos por el código. Son las palancas del sistema: si hay que
+  desplegar para moverlas, no son palancas.
+- `RN-8` Las palabras se cuentan sobre el **texto plano** (`C-13`): sin marcado, sin títulos
+  de capítulo y sin notas. El editor muestra el recuento en vivo para que el autor no se lleve
+  sorpresas con el precio.
+- `RN-9` Si el autor cambia el texto de un capítulo, su precio **se recalcula para las
+  correcciones futuras** y se le avisa (`C-15`). Ampliar un capítulo lo encarece, y es
+  correcto que así sea. Lo ya empezado conserva su precio anotado (`RN-4`).
 
 `RN-4` es la que hace el sistema honesto en las dos direcciones: el lector ve antes de empezar
 lo que va a ganar, y el autor sabe que lo retenido es lo que pagará.
@@ -126,7 +134,9 @@ verdad de nada.
 - [ ] Lo que se carga al autor y lo que se abona al lector son la misma cifra.
 - [ ] Cambiar el cuestionario no altera el precio de una corrección ya retenida.
 - [ ] Las constantes se cambian por configuración, sin tocar código de dominio.
-- [ ] Una pregunta sin mínimo declarado cuenta como 10 palabras.
+- [ ] Una pregunta sin mínimo declarado cuenta como 25 palabras.
+- [ ] Las palabras se cuentan sobre el **texto plano**, sin marcado ni títulos.
+- [ ] Cambiar el texto de un capítulo recalcula su precio **para las correcciones futuras**.
 - [ ] Un cuestionario sin ningún mínimo no hace que el precio caiga al suelo absoluto.
 - [ ] El precio se obtiene sin consultar tablas de `Work`.
 
@@ -134,11 +144,8 @@ verdad de nada.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| C-13 | ¿Cómo se cuentan las palabras de un texto con formato enriquecido? | Debe coincidir con lo que ve el lector (`Q-4` de `FEAT-WRK-001`) |
-| C-44 | ¿Es 10 el suelo adecuado? | Con 10, diez preguntas sin mínimo suman 1 crédito de escritura |
-| C-15 | ¿Se recalcula el precio de un capítulo cuyo texto cambia mientras está abierto a corrección? | `RN-4` protege lo retenido; queda el resto |
 
-### El suelo de 10 palabras por pregunta
+### El suelo de 25 palabras por pregunta
 
 **`C-14` está resuelta.** Sin suelo, el segundo término valdría 0 y un autor podría pedir
 correcciones de una novela por 2 créditos poniendo un cuestionario sin exigencias. Con suelo,
@@ -146,10 +153,14 @@ el precio nunca se desploma:
 
 | Cuestionario | Palabras exigidas | Término de escritura |
 |---|---|---|
-| 1 pregunta sin mínimo | 10 | 1 |
-| 5 preguntas sin mínimo | 50 | 1 |
-| 11 preguntas sin mínimo | 110 | 2 |
+| 1 pregunta sin mínimo | 25 | 1 |
+| 3 preguntas sin mínimo | 75 | 1 |
+| 5 preguntas sin mínimo | 125 | 2 |
+| 10 preguntas sin mínimo | 250 | 3 |
 | 3 preguntas de 100 | 300 | 3 |
+
+Con 25 el suelo **sí se nota**: un cuestionario descuidado de diez preguntas cuesta 3 créditos
+de escritura. Con el suelo de 10 que se barajó primero, apenas cambiaba nada.
 
 Conviene saber lo que el suelo **no** resuelve: protege el precio de caer a cero, no de estar
 mal equilibrado. Un autor puede poner diez preguntas sin mínimo y pagar 1 crédito de
@@ -159,7 +170,7 @@ No hace falta defenderse de eso en el precio, porque **el lector ve la recompens
 empezar**: un cuestionario exigente y mal pagado simplemente no lo coge nadie. El mercado lo
 corrige mejor que una regla.
 
-Queda por afinar si 10 es la cifra correcta (`C-44`).
+**`C-44` resuelta: 25 palabras.**
 
 ## Estado
 

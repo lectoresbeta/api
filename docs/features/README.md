@@ -22,9 +22,10 @@ verdad sobre el alcance.**
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 12 | 4 | 0 | 0 |
 | `Community` (COM) | 36 | 9 | 0 | 0 |
+| `Moderation` (MOD) | 8 | 5 | 0 | 0 |
 | `Credits` (CRD) | 19 | 8 | 0 | 0 |
 | `Notification` (NOT) | 9 | 1 | 0 | 0 |
-| **Total** | **141** | **53** | **0** | **0** |
+| **Total** | **149** | **58** | **0** | **0** |
 
 Estado global: **especificación inicial**. No hay código en `src/`.
 
@@ -223,7 +224,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-006 | Valorar positivamente un comentario recibido | Writer | PENDING | TODO | P1 | — |
 | FEAT-FBK-007 | Ocultar un comentario recibido | Writer | PENDING | TODO | P2 | — |
 | FEAT-FBK-008 | Corregir por enlace público sin cuenta | Guest | DRAFT | TODO | P1 | [ficha](feedback/FEAT-FBK-008-public-link-correction.md) |
-| FEAT-FBK-009 | Denunciar un comentario abusivo | User | PENDING | DEFERRED | P3 | — |
+| FEAT-FBK-009 | Denunciar una corrección abusiva → `FEAT-MOD-001` | User | PENDING | TODO | P2 | — |
 | FEAT-FBK-010 | Mis correcciones — listado del feedback que he dado | User | PENDING | TODO | P2 | — |
 | FEAT-FBK-011 | Guardar un borrador de corrección | BetaReader | DRAFT | TODO | P1 | [ficha](feedback/FEAT-FBK-011-save-correction-draft.md) |
 | FEAT-FBK-012 | Control antifraude de las correcciones | — (sistema) | PENDING | BLOCKED | P0 | [ficha](feedback/FEAT-FBK-012-correction-fraud-control.md) |
@@ -297,7 +298,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-032 | Menciones a usuarios | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-032-mentions.md) |
 | FEAT-COM-033 | Silenciar a un usuario | User | PENDING | TODO | P3 | — |
 | FEAT-COM-034 | Bloquear a un usuario | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-034-block-user.md) |
-| FEAT-COM-035 | Denunciar a un usuario | User | PENDING | DEFERRED | P3 | — |
+| FEAT-COM-035 | Denunciar a un usuario → `FEAT-MOD-001` | User | PENDING | TODO | P2 | — |
 | FEAT-COM-036 | Interacciones sociales sobre un capítulo (like, comentario, compartir) | User | PENDING | TODO | P1 | — |
 
 > Los tres rankings están `BLOCKED` por `CM-4`: el material de partida dice "mejor valorados"
@@ -323,6 +324,38 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 > `FEAT-COM-017` a `FEAT-COM-025` salen del diseño de la Home. **Repostear, compartir,
 > guardar y denunciar son interacciones nuevas** que el documento de casos de uso no
 > contemplaba. La búsqueda global está marcada como backlog en el propio diseño.
+
+---
+
+## `Moderation` — reclamaciones, sanciones y backoffice
+
+Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/moderation.md)
+
+| ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
+|---|---|---|---|---|---|---|
+| FEAT-MOD-001 | Presentar una reclamación | User, Writer | DRAFT | TODO | P1 | [ficha](moderation/FEAT-MOD-001-submit-claim.md) |
+| FEAT-MOD-002 | Revisar y resolver una reclamación | Moderator | DRAFT | TODO | P1 | [ficha](moderation/FEAT-MOD-002-review-claim.md) |
+| FEAT-MOD-003 | Bloquear una obra por reclamación estimada | — (sistema) | DRAFT | TODO | P1 | [ficha](moderation/FEAT-MOD-003-block-work.md) |
+| FEAT-MOD-004 | Rol de moderador y aviso de reclamaciones | Admin, Moderator | DRAFT | TODO | P1 | [ficha](moderation/FEAT-MOD-004-moderator-role.md) |
+| FEAT-MOD-005 | Gestión de usuarios desde el backoffice | Admin, Moderator | DRAFT | TODO | P2 | [ficha](moderation/FEAT-MOD-005-user-management.md) |
+| FEAT-MOD-006 | Catálogo de sanciones y su aplicación | — (sistema) | PENDING | BLOCKED | P2 | — |
+| FEAT-MOD-007 | Registro de auditoría de acciones administrativas | — (sistema) | PENDING | TODO | P1 | — |
+| FEAT-MOD-008 | Cola de reclamaciones con filtros y prioridad | Moderator | PENDING | TODO | P2 | — |
+
+> **`Moderation` existe desde el 2026-09-23** y con él desaparece `V-1`, que bloqueaba las
+> denuncias desde el principio: no había moderación que las atendiera. Ahora la hay.
+>
+> **La reclamación no produce ningún efecto inmediato.** Ni oculta el contenido, ni congela
+> créditos, ni avisa al reclamado. Lo contrario convertiría el botón de denunciar en un arma.
+> El coste es que un contenido dañino permanece visible hasta que alguien lo revise (`MOD-3`).
+>
+> **El riesgo que hay que cerrar antes de implementar** es `MOD-2`: estimar una reclamación de
+> corrección devuelve créditos al autor, así que reclamar es **una forma de no pagar**. Si el
+> sistema no distingue una crítica dura de una corrección fraudulenta, los correctores
+> aprenderán a escribir elogios. Hacen falta límite de reclamaciones, consecuencia por
+> reclamar en falso y criterios escritos para el moderador.
+>
+> `FEAT-MOD-006` está `BLOCKED` por `MOD-1`: no hay catálogo de sanciones que aplicar.
 
 ---
 
@@ -435,6 +468,9 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | FEAT-WRK-014 | `W-17` | Si las preguntas de obra entera se repiten en cada capítulo |
 | FEAT-WRK-012 | `L-9` | Cómo llega la insignia de créditos al catálogo sin acoplar `Work` con `Credits` |
 | FEAT-CRD-019 | `C-42`, `C-28` | Qué cupo de descubierto por periodo, y cómo se avisa al autor de que puede quedar en deuda |
+| **FEAT-MOD-001, FEAT-MOD-002** | **`MOD-2`** | Límite de reclamaciones y consecuencia de reclamar en falso. Sin ello, reclamar es una forma gratuita de no pagar una corrección |
+| FEAT-MOD-005, FEAT-MOD-006 | `MOD-1` | Catálogo de sanciones: qué existe y con qué gravedad |
+| FEAT-MOD-004 | `MOD-6` | Cómo se crea el primer `Admin`. Sin él no hay forma de arrancar el backoffice |
 | FEAT-USR-013 | `U-3`, `V-4` | Qué pasa con las **obras propias** y con los mensajes directos al anonimizar la cuenta |
 | FEAT-USR-038 | `S-36` | Si endurecer el ajuste global permite terminar a quien ya estaba corrigiendo |
 | FEAT-USR-038 | `S-13`, `S-16` | Qué opciones tienen los desplegables y qué es «visibilidad de actividad» |
@@ -506,7 +542,7 @@ Las referencias `OB-n` están en [`../ui/account-creation.md`](../ui/account-cre
 
 Áreas que la plataforma necesitará y que ni los PDFs ni esta documentación detallan todavía:
 
-- administración y moderación de la plataforma (`V-1`);
+- ~~administración y moderación de la plataforma~~ → **`Moderation`** (`V-1` resuelta);
 - verificación de email y políticas antifraude (`S-3`);
 - límites de uso y protección frente al scraping del catálogo (`S-4`, `S-5`);
 - exportación o descarga de obras y de feedback;

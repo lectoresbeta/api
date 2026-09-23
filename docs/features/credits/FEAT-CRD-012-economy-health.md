@@ -44,7 +44,9 @@ Conviene comprobarla de forma automática y periódica, no solo en los tests.
 | **Capítulos corregibles por corrector activo** | Los lectores no tienen dónde ganar | Subir el regalo de bienvenida |
 | **% de usuarios a cero o en negativo** | Concentración de saldo | Considerar el tope de saldo |
 | **Tiempo hasta la primera corrección recibida** | Es lo que el usuario siente | Mirar las dos anteriores |
-| **Tasa de recuperación del descubierto** | Si es baja, el gancho de reactivación es emisión pura | Restringir a quién se ofrece, o apagarlo |
+| **Tasa de recuperación del descubierto** | Si es baja, el gancho de reactivación es emisión pura | Bajar el cupo, o ponerlo a 0 |
+| **Descubierto por carrera** | Si es alto, el saldo típico es demasiado ajustado | Subir el regalo de bienvenida, o bajar el tope de correcciones simultáneas |
+| **Ajustes manuales** | Es la única vía de crédito que no es transferencia ni grifo | Revisar por qué hacen falta tantos |
 
 La tercera es la única que un usuario notaría, y por eso es la que conviene vigilar a diario.
 Las otras tres explican por qué se mueve.
@@ -89,13 +91,14 @@ manifestarse y son caras de revertir, porque para entonces los saldos ya están 
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| C-32 | ¿Existe rol `Admin` y pantalla de administración? | Hoy no hay administración documentada (`V-1`) |
+| MOD-1 | ¿Qué umbral de deuda dispara alerta? | `RN-12` de `FEAT-CRD-018` propone −40 |
 | C-33 | ¿Con qué frecuencia se comprueba la invariante? | Diaria parece razonable |
 | C-34 | ¿Qué umbrales disparan alerta en cada métrica? | Sin umbral, una métrica es decorativa |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Depende de que exista administración (`C-32`).
+**Especificación:** `DRAFT`. `C-32` resuelta: el backoffice existe
+([`Moderation`](../../bounded-contexts/moderation.md)) y el panel de economía vive en él.
 
 **Implementación:** `TODO`. La invariante puede —y debería— implementarse desde el primer día,
 aunque el panel llegue después.

@@ -31,6 +31,12 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Saldo negativo / descubierto | `negativeBalance` | El corrector cobra siempre; si el autor no llega, queda en negativo. Con saldo negativo no se abren correcciones nuevas, pero **sí se pueden dar**: es como se sale. |
 | Corrección en descubierto | `OverdraftCorrection` | Corrección concedida a un autor sin saldo como gancho de reactivación, dentro de un **cupo periódico**. Se comporta como cualquier corrección bloqueada. |
 | Cupo de descubierto | `OverdraftQuota` | Número de correcciones en descubierto que la plataforma concede por periodo. Es el presupuesto de emisión del gancho de reactivación. |
+| Reclamación / Denuncia | `Claim` | Señalamiento de contenido ajeno para que un moderador lo revise: una obra inapropiada, una corrección que no aporta valor, un usuario abusivo. **No produce ningún efecto hasta que se resuelve.** |
+| Moderador | `Moderator` | Usuario con acceso al backoffice para resolver reclamaciones. Es un usuario normal en todo lo demás, de ahí la regla de conflicto de interés. |
+| Administrador | `Admin` | Rol por encima del moderador: concede el rol, gestiona usuarios y ordena ajustes de créditos. |
+| Sanción | `Sanction` | Medida impuesta a un usuario tras una reclamación estimada, con tipo, alcance, motivo y vigencia. |
+| Obra bloqueada | `WorkStatus: BLOCKED` | Obra deshabilitada permanentemente por una reclamación estimada. Sigue siendo visible **solo para su autor**, marcada como tal. Estado terminal. |
+| Registro de auditoría | `AuditLog` | Registro inmutable de toda acción administrativa, **incluidas las consultas**. |
 | Enlace público de corrección | `PublicCorrectionLink` | URL que el autor reparte fuera de la plataforma para que alguien corrija sin registrarse. **No cuesta créditos ni los da.** |
 | Biografía / Descripción | `bio` | Texto de presentación del usuario, **300 caracteres**. Es el mismo campo que se ve bajo la foto en «Mi perfil» y que se edita en Configuración. |
 | Cuenta anonimizada | `UserStatus: DELETED` | Cuenta eliminada: se suprimió todo dato personal y se conserva, sin autor identificable, lo que pertenece a terceros —correcciones pagadas, movimientos de créditos, comentarios—. Irreversible. |
@@ -150,7 +156,7 @@ El diseño escribe «Poeta»; se corrige a «Poesía» (`POETRY`), que es el gé
 |---|---|---|
 | `Book`, `Novel`, `Story` | `Work` | Una obra puede ser cualquiera de las tres cosas. |
 | `Comment` a secas para la crítica de una obra | `Correction` | Tres conceptos distintos conviven: `PostComment` (muro), `ChapterComment` (bajo un capítulo) y `Correction` (el cuestionario respondido). Solo el tercero mueve créditos. |
-| `Review` | `Feedback` | Evita confusión con las revisiones de código y con reseñas públicas. |
+| `Review` para la crítica de una obra | `Correction` | `Review` se reserva para la **decisión de un moderador** sobre una reclamación. |
 | `Page`, `Section`, `Part` | `Chapter` | Un único nombre para la subdivisión de la obra. |
 | `Points`, `Tokens`, `Coins` | `Credit` | El documento de producto habla de créditos. |
 | `Nickname`, `Handle` | `Username` | Un único nombre para el concepto. |

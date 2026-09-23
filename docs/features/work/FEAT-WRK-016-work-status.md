@@ -23,11 +23,15 @@ updated: 2026-09-22
 
 Una obra está en uno de tres estados, y solo en uno:
 
-| Estado | `WorkStatus` | ¿Se puede leer? | ¿Se puede comentar? |
+| Estado | `WorkStatus` | ¿Se puede leer? | ¿Se puede corregir? |
 |---|---|---|---|
 | En borrador | `DRAFT` | Solo el autor | No |
 | Visible | `VISIBLE` | Sí | **No** |
 | En corrección | `IN_CORRECTION` | Sí | **Sí** |
+| Bloqueada | **`BLOCKED`** | **Solo el autor**, marcada | No |
+
+`BLOCKED` no lo elige el autor: lo impone una reclamación estimada
+([`FEAT-MOD-003`](../moderation/FEAT-MOD-003-block-work.md)) y es **terminal**.
 
 El estado responde a **dos preguntas distintas** que hasta ahora estaban mezcladas: si la
 obra se puede leer y si se puede comentar. Una obra publicada puede estar cerrada a la

@@ -13,6 +13,7 @@
 | `Feedback` | Comentarios sobre obras, respuestas al cuestionario, valoraciones | `FBK` | [feedback.md](../bounded-contexts/feedback.md) |
 | `Community` | Muro, publicaciones, reacciones, suscripciones, mensajes directos, rankings | `COM` | [community.md](../bounded-contexts/community.md) |
 | `Credits` | Economía de créditos, aislada por decisión arquitectónica | `CRD` | [credits.md](../bounded-contexts/credits.md) |
+| `Moderation` | Reclamaciones, decisiones de moderación, sanciones y backoffice | `MOD` | [moderation.md](../bounded-contexts/moderation.md) |
 | `Notification` | Entrega de avisos in-app y por email, y sus preferencias | `NOT` | [notification.md](../bounded-contexts/notification.md) |
 | `Shared` | Primitivos técnicos genéricos. **Sin lógica de negocio.** | — | [shared.md](../bounded-contexts/shared.md) |
 
@@ -78,16 +79,21 @@ síncrona entre contextos en el diseño actual.
 | `User` | todos | Evento `UserRegistered` | Crear la cuenta de créditos, el perfil, las preferencias |
 | `Work` | `Reading` | Evento `WorkPublished`, `WorkAccessModeChanged` | Conocer qué obras admiten accesos y en qué modalidad |
 | `Reading` | `Feedback` | Evento `BetaReaderAccessGranted` / `Revoked` | Saber quién puede comentar |
-| `Work` | `Feedback` | Evento con `TextTier` y `questionCount` | Contexto necesario para el feedback y su coste |
-| `Feedback` | `Credits` | Eventos `FeedbackSubmitted`, `FeedbackRatedPositively` | Hechos que mueven créditos |
-| `Credits` | `Feedback` / `Work` | Eventos `CreditsSpent`, `InsufficientCredits` | Reaccionar a la economía |
+| `Work` | `Credits` | Eventos `WorkContentUpdated`, `QuestionnaireUpdated` | Las palabras del capítulo y las exigidas, que fijan el precio |
+| `Feedback` | `Credits` | Eventos `CorrectionStarted`, `FeedbackSubmitted`, `CorrectionTipped` | Hechos que mueven créditos |
+| `Credits` | `Feedback` / `Work` | Evento `ChapterCorrectabilityChanged` | Saber si un capítulo admite correcciones ahora |
+| `Moderation` | `Credits`, `Work`, `User` | Evento `ClaimUpheld` | Aplicar, cada uno en su modelo, lo que la decisión significa |
 | cualquiera | `Notification` | Eventos de negocio | Avisar al usuario |
 | `Feedback`, `Community` | `Community` (rankings) | Eventos | Alimentar los read models de ranking |
 
-> El flujo de "recibir feedback cuesta créditos" es el más delicado del sistema: implica
-> `Feedback` y `Credits` en contextos separados con comunicación asíncrona. Su diseño
-> detallado está en [credits.md](../bounded-contexts/credits.md) y es una decisión
-> arquitectónica pendiente (`C-1`).
+> El flujo de «recibir feedback cuesta créditos» es el más delicado del sistema: implica
+> `Feedback` y `Credits` en contextos separados con comunicación asíncrona. Está resuelto en
+> [`decision:0006`](../decisions/0006-credit-system.md) y detallado en
+> [credits.md](../bounded-contexts/credits.md).
+>
+> `ClaimUpheld` es el evento que más contextos moviliza a la vez —`Credits`, `Work` y `User`
+> reaccionan al mismo hecho—, y precisamente por eso **no lleva instrucciones**: dice qué se ha
+> estimado, no qué debe hacer cada uno.
 
 ## Lo que un contexto nunca hace
 

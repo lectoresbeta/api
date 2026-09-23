@@ -91,12 +91,25 @@ devolvió.
   [`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md): con saldo negativo no se reciben más.
 - `RN-2` Los candidatos se seleccionan **por cupo periódico**, no por plazo individual. La
   elegibilidad caduca al terminar el periodo.
+- `RN-2b` El cupo por defecto es **3 por semana** (`C-42`). Con un precio máximo de 20, la
+  emisión no puede superar 60 créditos semanales.
+- `RN-2c` Entran en la lista de candidatos quienes lleven **entre 30 y 180 días** inactivos
+  (`C-43`). Por debajo de 30 no están dormidos; por encima de 180 la probabilidad de volver
+  cae tanto que el cupo rinde más en gente más reciente.
+- `RN-2d` El autor puede **renunciar a este mecanismo** desde Configuración (`C-29`). Quien lo
+  desactive no entra en la lista.
 - `RN-3` El corrector **cobra íntegro** y no sabe que el autor estaba en descubierto. Para él
   no cambia nada.
-- `RN-4` El autor ve **metadatos**, no contenido: quién, cuándo, sobre qué capítulo y cuánto
-  se ha escrito.
+- `RN-4` El autor ve **metadatos y un objetivo concreto**, no contenido: quién, cuándo, sobre
+  qué capítulo, cuántas palabras y **cuántos créditos le faltan** para desbloquearla (`C-31`).
+  Una meta concreta motiva mucho más que «repón saldo».
 - `RN-5` Al volver a saldo ≥ 0, la corrección **se desbloquea automáticamente**.
-- `RN-6` La corrección bloqueada **no se borra nunca**. Es trabajo de otra persona.
+- `RN-6` La corrección bloqueada **no se borra nunca** y **no se desbloquea por el paso del
+  tiempo** (`C-30`). Desbloquear al año regalaría lo que no se pagó y enseñaría que esperar
+  funciona.
+- `RN-6b` A quien no volvió con un descubierto **no se le concede otro**. Si no funcionó con
+  uno, no funcionará con dos, y cada intento es una hora de trabajo de un lector que nadie
+  leerá.
 - `RN-7` El mecanismo **se puede desactivar** globalmente sin afectar a nada más.
 - `RN-8` Quien tiene notificaciones desactivadas **no se selecciona**: sin correo no hay
   gancho, solo deuda.
@@ -174,16 +187,19 @@ controlara la visibilidad del texto, estaría gobernando el modelo de otro conte
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **C-42** | ¿Qué cupo y con qué periodicidad? Propuesta: 3 por semana | Es el presupuesto de emisión del mecanismo |
-| C-28 | ¿Se avisa al autor **en el momento** de dejar la obra abierta, o basta con las condiciones generales? | Decide si es un trato aceptado |
-| C-43 | ¿A partir de cuántos días de inactividad entra alguien en la lista de candidatos? | Ya no dispara nada por sí solo: solo filtra quién compite por el cupo |
-| C-29 | ¿Puede el autor renunciar a este mecanismo desde Configuración? | Debería |
-| C-30 | ¿Qué pasa si el autor nunca vuelve? ¿Se desbloquea por bondad pasado un año? | Hoy no; conviene decidirlo |
-| C-31 | ¿Se le enseña al autor el saldo que le falta y cuántas correcciones son? | Un objetivo concreto motiva más que «repón saldo» |
+| # | Pregunta | Impacto |
+|---|---|---|
+| C-28 | ¿Se avisa al autor **en el momento** de dejar la obra abierta, o basta con las condiciones generales? | Decide si es un trato aceptado o una sorpresa |
 
-`C-30` tiene doble filo: desbloquear por bondad al año regala lo que no se pagó y enseña que
-esperar funciona; no hacerlo deja una corrección escrita que nadie leerá jamás. Me inclino por
-no desbloquear, y por dejar de escribir correcciones nuevas a quien no vuelve.
+Resueltas: `C-42` (**3 por semana**), `C-43` (**30 a 180 días** de inactividad), `C-29` (**sí,
+renunciable** desde Configuración), `C-30` (**no se desbloquea** por el paso del tiempo) y
+`C-31` (se muestran metadatos **y el objetivo concreto**).
+
+`C-30` tenía doble filo y conviene dejar razonado por qué se resuelve así: no desbloquear deja
+una corrección escrita que nadie leerá jamás, lo cual es feo. Pero desbloquearla regalaría lo
+que no se pagó y enseñaría que esperar funciona. La respuesta al problema de fondo no es
+desbloquear, es **no volver a conceder descubierto a quien no volvió** (`RN-6b`): así no se
+acumulan correcciones perdidas.
 
 ## Estado
 

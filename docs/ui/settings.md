@@ -296,6 +296,15 @@ cubre dos hechos muy distintos:
 Meterlos en la misma casilla significa que quien silencie los comentarios **dejará de
 enterarse de las correcciones que ha pagado**. Conviene separarlos (`S-11`).
 
+### El descubierto se puede desactivar
+
+Entre las preferencias debe estar la de **no recibir correcciones en descubierto**
+([`FEAT-CRD-019`](../features/credits/FEAT-CRD-019-overdraft-correction.md) `RN-2d`). Quien la
+desactive no entra en la lista de candidatos del cupo semanal.
+
+No es una preferencia de aviso sino de **mecánica**, así que probablemente su sitio no sea
+esta pestaña (`S-40`). Pero tiene que existir en alguna.
+
 ### Faltan la mitad de los avisos
 
 El [catálogo de eventos](../events/README.md) prevé notificaciones que esta pantalla no

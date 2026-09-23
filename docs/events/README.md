@@ -171,4 +171,29 @@ hecho económico; qué se ve lo decide `Feedback`, que es quien posee la correcc
 | Entrega al menos una vez | Sí |
 | Entrega exactamente una vez | **No.** Los handlers deben ser idempotentes |
 | Orden de llegada | **No.** El diseño no puede depender del orden |
-| Publicación atómica con el cambio en base de datos | Solo con Outbox Pattern. **Obligatorio** para los eventos que afectan a créditos |
+| Publicación atómica con el cambio en base de datos | Solo con Outbox Pattern. **Obligatorio** para los eventos que afectan a créditos |## `Moderation`
+
+| Evento | Cuándo | Consumidores | Payload |
+|---|---|---|---|
+| `ClaimSubmitted` | Se presenta una reclamación | **`Notification`** (avisa a los moderadores) | `claimId`, `type`, `targetType`, `targetId`, `reporterId`, `reason`. **Sin el texto del reclamante** |
+| `ClaimUpheld` | El moderador la estima | **`Credits`**, **`Work`**, **`User`**, `Notification` | `claimId`, `type`, `targetType`, `targetId`, `subjectId` |
+| `ClaimRejected` | La desestima | `Notification` | `claimId`, `reporterId` |
+| `SanctionImposed` | Se sanciona a un usuario | **`User`**, `Notification` | `sanctionId`, `userId`, `type`, `scope`, `expiresAt?` |
+| `SanctionLifted` | Caduca o se levanta | `User`, `Notification` | `sanctionId`, `userId` |
+| `CreditAdjustmentOrdered` | Ajuste manual desde el backoffice | **`Credits`**, `Notification` | `userId`, `amount`, `reason`, `orderedBy` |
+
+**`ClaimUpheld` es el evento que más contextos moviliza**, y justo por eso no lleva
+instrucciones: dice **qué se ha estimado y sobre qué**, nunca «devuelve 6 créditos» ni
+«bloquea la obra». `Credits` revierte el movimiento, `Work` bloquea la obra y `User` aplica la
+sanción, cada uno según su modelo.
+
+Tampoco viajan **el texto del reclamante ni la motivación del moderador**. Son material que
+acusa a alguien y que va al expediente, no a una cola con reintentos.
+
+`CreditAdjustmentOrdered` es la única vía por la que entra crédito al sistema sin ser
+transferencia ni grifo ordinario, así que **`Credits` lo contabiliza aparte** o la invariante
+contable empezará a fallar sin explicación.
+
+---
+
+

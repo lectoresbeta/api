@@ -82,6 +82,10 @@ De ahí se siguen dos cosas:
   vez. No hay desbloqueo parcial: es más simple y el resultado agregado es el mismo.
 - `RN-11` Una corrección **ya visible nunca vuelve a bloquearse**, aunque el autor caiga en
   negativo más tarde. Lo que se ha leído, leído está.
+- `RN-12` Bajar de **−40** dispara una **alerta de operaciones** (`C-20`). No es un castigo al
+  usuario: es la señal de que el tope de correcciones simultáneas no está funcionando.
+- `RN-13` La deuda de una cuenta eliminada se **contabiliza como emisión** en la invariante
+  contable (`C-21`). No se da por cobrada.
 
 `RN-2` y `RN-3` juntas son el diseño entero: cierras la puerta de recibir y dejas abierta la
 de dar. No hay forma de salir del descubierto que no sea participar.
@@ -160,13 +164,14 @@ Es el tipo de detalle que se descubre tarde y en producción.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| C-20 | ¿Se alerta a operaciones si alguien baja de un umbral? | Una deuda grande es señal de fallo en la retención |
-| C-21 | ¿Qué ocurre con la deuda si el usuario elimina su cuenta? | Anonimizar no cobra la deuda. Ligado a `S-34` |
 | C-22 | ¿Puede un autor «cerrar» sus obras para no seguir generando deuda? | Con `RN-2` no hace falta, pero conviene confirmarlo |
+
+Resueltas: `C-20` (**alerta a partir de −40**) y `C-21` (la deuda de una cuenta eliminada se
+**contabiliza como emisión**).
 
 `C-21` conecta con la eliminación de cuenta
 ([`FEAT-USR-013`](../user/FEAT-USR-013-delete-account.md)): una cuenta anonimizada con deuda
-es, contablemente, emisión. Lo honesto es contabilizarla como tal y no fingir que se cobra.
+es, contablemente, emisión. Se registra como tal y no se finge que se cobra.
 
 ## Estado
 

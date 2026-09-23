@@ -57,9 +57,10 @@ precio = techo(palabras del capítulo / 1.000) + techo(palabras exigidas / 100)
 - El segundo es **escribir**: la suma de los mínimos de palabras que el autor exige en las
   preguntas de su cuestionario.
 
-Mínimo **2** créditos, máximo **20**.
+Mínimo **2** créditos, máximo **20**. Las palabras se cuentan sobre el **texto plano**, sin
+marcado ni títulos.
 
-**Suelo por pregunta:** una pregunta sin mínimo declarado cuenta como **10 palabras**. Sin ese
+**Suelo por pregunta:** una pregunta sin mínimo declarado cuenta como **25 palabras**. Sin ese
 suelo, un cuestionario sin exigencias valdría 0 en el segundo término y **una novela entera se
 corregiría por 2 créditos**.
 
@@ -95,7 +96,7 @@ Cuando el lector pulsa «Empezar corrección»:
 
 1. se comprueba que el saldo del autor **cubre el precio** de ese capítulo;
 2. se **anota el precio** de esa corrección, que queda fijado;
-3. el lector escribe, sin plazo;
+3. el lector escribe, sin plazo. Un capítulo admite **3 correcciones abiertas a la vez**;
 4. al entregar, se carga al autor y se abona al lector **ese importe anotado**.
 
 Anotar el precio no es retener: **no bloquea nada**. Sirve para que el lector sepa de antemano
@@ -191,8 +192,8 @@ corrección sin tener saldo. Lo que ocurre después ya lo describe la regla 4: e
 cobra, el autor queda en negativo y la corrección llega bloqueada.
 
 **La selección se hace por cupo, no por antigüedad.** En vez de activarlo para cada usuario al
-cumplir `N` días inactivo, se fija un **presupuesto periódico** —por ejemplo tres correcciones
-en descubierto por semana— y se eligen los mejores candidatos.
+cumplir `N` días inactivo, se fija un **presupuesto periódico** —**tres correcciones en descubierto
+por semana**— y se eligen los mejores candidatos.
 
 | | Por plazo de cada usuario | **Por cupo periódico** |
 |---|---|---|

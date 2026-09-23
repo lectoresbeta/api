@@ -47,7 +47,13 @@ créditos significa mucho más que uno que no cuesta nada.
 - `RN-1` La propina sale del **saldo disponible** del autor. Sin disponible, no hay propina:
   a diferencia del pago de una corrección, esto **no** genera descubierto.
 - `RN-2` Solo el **autor de la obra** puede propinar, y solo sobre correcciones de su obra.
-- `RN-3` El importe está acotado (`C-23`). Propuesta: entre 1 y 5.
+- `RN-3` El importe está **entre 1 y 5 créditos**. Por encima de 5 la propina se parece al
+  precio de la corrección y deja de leerse como un extra.
+- `RN-3b` **Sin tope** de propinas por autor o periodo: es su saldo y el sistema no pierde
+  nada (es neto cero).
+- `RN-3c` La propina es **visible para el corrector** y se agrega en su perfil («142 créditos
+  recibidos en propinas»), pero **no se publica corrección a corrección**: exponer quién
+  recibe reconocimiento y quién no desanima al corrector novato.
 - `RN-4` Es **opcional** y **única** por corrección: no se propina dos veces la misma.
 - `RN-5` Es **irrevocable**. Como cualquier movimiento, no se deshace: se compensa con otro,
   y aquí no hay compensación posible.
@@ -119,10 +125,13 @@ Cargo al autor y abono al lector por el mismo importe. Masa constante.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| C-23 | ¿Qué rango tiene la propina? | Propuesta: 1 a 5 |
-| C-24 | ¿Se ve públicamente qué correcciones han sido propinadas? | Sería una señal de calidad fuerte, y también de exposición |
-| C-25 | ¿Cuenta la propina para la reputación del corrector, y cuánto? | Ligado a `CM-4` |
-| C-26 | ¿Hay un tope de propinas por autor y periodo? | Sin tope no hay fraude —es neto cero— pero sí ruido |
+| CM-4 | ¿Cuánto pesa la propina en la fórmula de relevancia? | Es la señal de calidad más fiable del sistema |
+
+Resueltas: `C-23` (**1 a 5**), `C-24` (visible al corrector y **agregada** en su perfil),
+`C-25` (**sí, y es la señal principal** de reputación) y `C-26` (**sin tope**).
+
+`C-25` merece subrayarse: la propina es la única métrica de calidad que alguien ha **pagado de
+su bolsillo**, así que es mucho más difícil de falsear que un «me gusta».
 
 ## Estado
 

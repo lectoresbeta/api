@@ -50,6 +50,7 @@ Formato: `FEAT-<CTX>-<NNN>`
 | `FBK` | `Feedback` | Comentarios, valoraciones, respuestas al cuestionario |
 | `COM` | `Community` | Muro, publicaciones, reacciones, mensajes directos, rankings |
 | `CRD` | `Credits` | Sistema de créditos |
+| `MOD` | `Moderation` | Reclamaciones, moderación, sanciones y backoffice |
 | `NOT` | `Notification` | Notificaciones in-app y por email |
 
 Reglas:

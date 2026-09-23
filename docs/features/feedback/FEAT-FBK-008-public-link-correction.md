@@ -82,7 +82,9 @@ registrados le corrijan gratis: él se ahorraría los créditos y ellos perderí
 
 - `RN-2` Una corrección por enlace público **no mueve créditos en ninguna dirección**.
 - `RN-3` El enlace es **revocable** por el autor en cualquier momento.
-- `RN-4` El enlace admite un **tope de correcciones** y una caducidad opcional.
+- `RN-4` El enlace admite **10 correcciones por defecto** (`C-36`), configurable por el autor,
+  y una caducidad opcional. Diez cubre el caso real —repartirlo a tu grupo de escritura— y
+  limita el daño si circula más de la cuenta.
 - `RN-5` Las páginas servidas por el enlace llevan **`noindex`**: es obra inédita y no puede
   acabar en un buscador.
 - `RN-6` El formulario pide un **nombre, opcional y sin verificar**. «Sin identificarse» no
@@ -92,8 +94,12 @@ registrados le corrijan gratis: él se ahorraría los créditos y ellos perderí
   un texto propio sin haber aceptado nada.
 - `RN-8` Estas correcciones **se marcan** en la bandeja del autor como recibidas por enlace
   público.
-- `RN-9` **No admiten propina ni valoración**: no hay cuenta a la que abonar
-  ([`FEAT-CRD-017`](../credits/FEAT-CRD-017-author-tip.md)).
+- `RN-9` **No admiten propina, valoración ni respuesta del autor** (`C-37`): no hay cuenta al
+  otro lado ([`FEAT-CRD-017`](../credits/FEAT-CRD-017-author-tip.md)). Si el autor quiere
+  contestar, tiene a esa persona en su agenda: es de ahí de donde la sacó.
+- `RN-11` **No cuentan en el contador público** de correcciones recibidas del perfil (`C-38`):
+  quien tenga una agenda grande parecería mucho más corregido que quien no la tiene. Sí se ven
+  en la bandeja del autor.
 - `RN-10` Hay **limitación de frecuencia** por enlace y por origen. Un formulario público sin
   límite es una invitación al abuso.
 
@@ -174,14 +180,14 @@ varias personas pueden corregir el mismo capítulo por el mismo enlace.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| C-35 | ¿Se puede vincular después esa corrección a la cuenta si el corrector se registra? | Sería un gran remate —«aquí está lo que escribiste»— pero exige guardar un correo, con lo que eso implica |
-| C-36 | ¿Cuántas correcciones admite un enlace por defecto? | Sin tope, un enlace filtrado es un problema |
-| C-37 | ¿Puede el autor responder a una corrección pública? | No hay cuenta a la que responder |
-| C-38 | ¿Cuenta para el contador de correcciones recibidas del perfil? | Distorsionaría la comparación entre autores |
+| C-46 | ¿Puede el autor denunciar una corrección pública fraudulenta? | No mueve créditos, así que no hay nada que devolver; pero sí puede ser contenido hiriente |
 
-`C-35` es tentadora y hay que mirarla con cuidado: pedir el correo mejora la conversión y
-convierte un flujo anónimo en uno que recoge datos personales de alguien que no es usuario.
-Si se hace, con casilla explícita y su base legal.
+Resueltas: `C-36` (**10 correcciones** por defecto), `C-35` (**no se vincula** en la primera
+versión), `C-37` (**el autor no responde**) y `C-38` (**no cuentan** en el contador público).
+
+`C-35` se descarta de momento a conciencia: recoger el correo de alguien que **no es usuario**
+para mejorar una conversión es un compromiso que conviene tomar a propósito, con casilla
+explícita y base legal, no de pasada. La idea es buena y puede volver más adelante.
 
 ## Estado
 
