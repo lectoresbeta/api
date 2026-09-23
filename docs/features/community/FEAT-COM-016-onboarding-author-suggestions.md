@@ -4,7 +4,7 @@ title: Onboarding paso 3 — sugerencias de autores a seguir
 context: Community
 concept: Subscription
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /onboarding/author-suggestions, POST /authors/{userId}/subscription]
 events: [AuthorSubscribed, OnboardingCompleted]
 depends_on: [FEAT-USR-023, FEAT-COM-010]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-COM-016 — Onboarding paso 3: sugerencias de autores a seguir
@@ -235,8 +235,8 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resueltos el criterio de sugerencia, el comportamiento con
-catálogo insuficiente y qué nombre se muestra. Para llegar a `APPROVED` falta confirmar el
-número máximo de sugerencias (`C-1`) y qué cuenta como «publicación» (`S-1`).
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

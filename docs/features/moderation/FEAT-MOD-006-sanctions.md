@@ -4,7 +4,7 @@ title: Catálogo de sanciones
 context: Moderation
 concept: Sanction
 actors: [Moderator]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -12,7 +12,7 @@ sources:
 endpoints: []
 events: [SanctionImposed, SanctionLifted]
 depends_on: [FEAT-MOD-002]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-MOD-006 — Catálogo de sanciones
@@ -83,6 +83,9 @@ es una decisión que conviene tomar con criterio legal, no de diseño.
   anonimizar, no destruye nada que impida volver atrás.
 - `RN-7b` Una cuenta en `BLOCKED` **no autentica** y su correo **no se puede reutilizar** para
   registrarse.
+- `RN-7c` Con JWT, una sanción tarda hasta **15 minutos** en cortar las lecturas
+  ([`decision:0007`](../../decisions/0007-jwt-sessions.md)). Las **escrituras se bloquean de
+  inmediato**, porque comprueban el estado de la cuenta y no solo la firma del token.
 - `RN-8` Un usuario suspendido **sigue debiendo lo que debía**: la sanción no salda deudas ni
   las condona.
 - `RN-9` Durante una **suspensión parcial**, la deuda del usuario queda **congelada** (`MOD-43`):
@@ -168,7 +171,8 @@ Resueltas: `MOD-27` (**solo lectura**), `MOD-26` (la expulsión **bloquea, no an
 
 ## Estado
 
-**Especificación:** `DRAFT`. Nada bloquea `APPROVED` salvo `MOD-44`, que es una consulta
-legal, no de diseño.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

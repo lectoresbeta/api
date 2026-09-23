@@ -4,7 +4,7 @@ title: Salud de la economía de créditos
 context: Credits
 concept: Monitoring
 actors: [Admin]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -14,7 +14,7 @@ endpoints:
   - GET /admin/credits/health
 events: []
 depends_on: [FEAT-CRD-008]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-CRD-012 — Salud de la economía de créditos
@@ -97,8 +97,9 @@ manifestarse y son caras de revertir, porque para entonces los saldos ya están 
 
 ## Estado
 
-**Especificación:** `DRAFT`. `C-32` resuelta: el backoffice existe
-([`Moderation`](../../bounded-contexts/moderation.md)) y el panel de economía vive en él.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`. La invariante puede —y debería— implementarse desde el primer día,
 aunque el panel llegue después.

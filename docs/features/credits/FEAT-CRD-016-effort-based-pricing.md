@@ -4,7 +4,7 @@ title: Precio de una corrección según el esfuerzo
 context: Credits
 concept: Pricing
 actors: []
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: []
 events: [QuestionnaireUpdated, WorkContentUpdated]
 depends_on: [FEAT-WRK-014]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-CRD-016 — Precio de una corrección según el esfuerzo
@@ -174,7 +174,8 @@ corrige mejor que una regla.
 
 ## Estado
 
-**Especificación:** `DRAFT`. La fórmula está decidida y `C-14` resuelta con el suelo de 10
-palabras. Nada bloquea `APPROVED`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`. Deja de estar `BLOCKED`: ya no falta ninguna decisión de producto.

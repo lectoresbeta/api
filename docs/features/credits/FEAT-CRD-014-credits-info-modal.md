@@ -4,7 +4,7 @@ title: Modal informativo del sistema de créditos
 context: Credits
 concept: Account
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: []
 events: []
 depends_on: [FEAT-CRD-001]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-CRD-014 — Modal informativo del sistema de créditos
@@ -102,7 +102,8 @@ documentar sus transiciones (`M-2`, y `W-5` de `Work`).
 
 ## Estado
 
-**Especificación:** `DRAFT`. El contenido está completo. Lo que bloquea no es el modal sino
-`M-1`, que es una decisión de producto de mucho mayor alcance.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

@@ -4,7 +4,7 @@ title: Conversación entre el moderador y las partes
 context: Moderation
 concept: Review
 actors: [Moderator, User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -15,7 +15,7 @@ endpoints:
   - POST /me/claims/{claimId}/messages
 events: [ClaimMessageSent]
 depends_on: [FEAT-MOD-002, FEAT-MOD-010]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-MOD-009 — Conversación con el moderador
@@ -131,6 +131,8 @@ intenten leer el hilo ajeno.
 
 ## Estado
 
-**Especificación:** `DRAFT`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

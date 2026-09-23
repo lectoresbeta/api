@@ -4,7 +4,7 @@ title: Comprobar el saldo al empezar una corrección
 context: Credits
 concept: Pricing
 actors: []
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: []
 events: [CorrectionStarted, ChapterCorrectabilityChanged]
 depends_on: [FEAT-CRD-016]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-CRD-009 — Comprobar el saldo al empezar una corrección
@@ -180,6 +180,8 @@ más bajo sería frustrante para el lector que llega y no puede empezar.
 
 ## Estado
 
-**Especificación:** `DRAFT`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

@@ -4,7 +4,7 @@ title: Registro y login con LinkedIn
 context: User
 concept: Authentication
 actors: [Guest]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: DEFERRED
 priority: P3
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /auth/oauth/linkedin, POST /auth/oauth/linkedin/callback]
 events: [UserRegistered]
 depends_on: [FEAT-USR-001]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-USR-019 — Registro y login con LinkedIn
@@ -99,7 +99,9 @@ cuál está en uso.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Suficiente para retomarla cuando llegue el momento.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `DEFERRED`. Fuera del alcance de esta fase: solo se implementa Google.
 Se retomará junto con Facebook (`FEAT-USR-003`, `FEAT-USR-006`), y entonces habrá que

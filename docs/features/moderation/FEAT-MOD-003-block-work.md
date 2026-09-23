@@ -4,7 +4,7 @@ title: Bloquear un capítulo o una obra por reclamación estimada
 context: Moderation
 concept: Claim
 actors: []
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -12,7 +12,7 @@ sources:
 endpoints: []
 events: [ClaimUpheld, WorkBlockedByModeration]
 depends_on: [FEAT-MOD-002, FEAT-WRK-016]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-MOD-003 — Bloquear por reclamación
@@ -149,6 +149,8 @@ obra y el umbral llega tarde; en una novela de cuarenta, son el 7% y llega pront
 
 ## Estado
 
-**Especificación:** `DRAFT`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

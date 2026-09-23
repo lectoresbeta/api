@@ -4,7 +4,7 @@ title: Propina del autor a una buena corrección
 context: Credits
 concept: Transaction
 actors: [Writer]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -14,7 +14,7 @@ endpoints:
   - POST /corrections/{correctionId}/tip
 events: [CorrectionTipped]
 depends_on: [FEAT-CRD-016]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-CRD-017 — Propina del autor
@@ -135,6 +135,8 @@ su bolsillo**, así que es mucho más difícil de falsear que un «me gusta».
 
 ## Estado
 
-**Especificación:** `DRAFT`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

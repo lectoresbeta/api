@@ -4,7 +4,7 @@ title: Cambiar el nombre de usuario y alias temporal
 context: User
 concept: Profile
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [PUT /me/username]
 events: [UsernameChanged]
 depends_on: [FEAT-USR-033]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-034 — Cambiar el nombre de usuario y alias temporal
@@ -271,7 +271,8 @@ predecible, a costa de bloquear nombres algo más de tiempo.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resueltas `N-6`, `N-9` y `N-17`. Para llegar a `APPROVED` falta
-confirmar si el plazo es de 30 días corridos o de mes natural (`N-7`).
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

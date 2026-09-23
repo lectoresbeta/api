@@ -18,6 +18,7 @@ Plantilla: [`../_templates/adr.md`](../_templates/adr.md).
 | [0004](0004-credit-reservation-on-access-grant.md) | ~~Los créditos se reservan al conceder acceso~~ | **Sustituida por [0006](0006-credit-system.md)** | 2026-09-22 |
 | [0005](0005-username-with-temporary-aliases.md) | El nombre de usuario existe, es editable y deja un alias temporal al cambiarlo | Aceptada | 2026-09-22 |
 | [0006](0006-credit-system.md) | **Sistema de créditos: precio por esfuerzo, transferencia pura, sin retenciones y con saldo negativo como red** | Aceptada | 2026-09-23 |
+| [0007](0007-jwt-sessions.md) | **La sesión de la API se resuelve con JWT**, asumiendo hasta 15 minutos de retardo en la revocación | Aceptada | 2026-09-24 |
 
 ## Decisiones pendientes
 
@@ -26,12 +27,10 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 | Ref | Decisión | Bloquea |
 |---|---|---|
 | `W-9` | Si `WorkStatus` sustituye a `Visibility` en la obra | `Work`, catálogo, recomendaciones |
-| `S-1` | Mecanismo de sesión de la API | Todo `User` y toda la autorización |
 | `CM-4` | Fórmula de puntuación de los rankings | `FEAT-COM-013/014/015` |
 | `W-1` | En qué momentos se genera el registro de autoría | `FEAT-WRK-009` |
 | `P-1` | Un esquema de PostgreSQL por contexto, o uno solo | La primera migración |
 | `V-4`, `U-3` | Qué pasa con los mensajes directos y con las obras propias al **anonimizar** una cuenta | `FEAT-USR-013` |
-| `C-14` | Si el cuestionario obliga a fijar un mínimo de palabras por pregunta. Sin mínimos, una novela se corregiría por 2 créditos | `FEAT-CRD-016` |
 | `AF-1`, `AF-2` | Qué mecanismo antifraude y si actúa antes o después del abono | `FEAT-FBK-012` |
 | `OB-11` | Si el alta con Google crea la cuenta ya activada, dado que Google ya verifica el correo | `FEAT-USR-002`, `FEAT-USR-020` |
 | `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia | `FEAT-USR-002`, `FEAT-USR-024` |

@@ -4,7 +4,7 @@ title: Rol de moderador y aviso de reclamaciones
 context: Moderation
 concept: ModeratorRole
 actors: [Admin, Moderator]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -14,7 +14,7 @@ endpoints:
   - PUT /admin/users/{userId}/moderator-role
 events: [ModeratorRoleGranted, ModeratorRoleRevoked]
 depends_on: []
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-MOD-004 — Rol de moderador
@@ -115,6 +115,8 @@ privilegio está implicada, la salida es organizativa —otro `Admin`— no de p
 
 ## Estado
 
-**Especificación:** `DRAFT`. `MOD-6` resuelta: el primer `Admin` se crea por comando.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

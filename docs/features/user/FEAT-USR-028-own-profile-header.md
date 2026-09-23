@@ -4,7 +4,7 @@ title: Mi perfil — cabecera, datos y contadores
 context: User
 concept: Profile
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /me/profile, PATCH /me/profile, PUT /me/profile/avatar, PUT /me/profile/cover]
 events: [UserProfileUpdated]
 depends_on: [FEAT-USR-022]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-028 — Mi perfil: cabecera, datos y contadores
@@ -133,7 +133,8 @@ Las imágenes se guardan con el puerto `FileStorage`, nunca en la base de datos.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resuelta `P-1`. Para llegar a `APPROVED` falta decidir si los
-contadores se componen por petición o viven en un read model (`P-12`).
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

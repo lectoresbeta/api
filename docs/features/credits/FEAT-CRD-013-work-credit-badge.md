@@ -4,7 +4,7 @@ title: Créditos asociados a una obra
 context: Credits
 concept: Rule
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P3
 sources:
@@ -14,7 +14,7 @@ sources:
 endpoints: []
 events: []
 depends_on: [FEAT-WRK-013]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-CRD-013 — Créditos asociados a una obra
@@ -120,7 +120,9 @@ cada carga de la Home.
 
 ## Estado
 
-**Especificación:** `DRAFT`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `DEFERRED`. Se retomará con la documentación detallada del sistema de
 créditos, que fijará las cifras y su significado. Implementarla antes produciría una cifra

@@ -4,7 +4,7 @@ title: Revisión automática de contenido
 context: Moderation
 concept: ContentReview
 actors: []
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -12,7 +12,7 @@ sources:
 endpoints: []
 events: [ContentReviewPassed, ContentReviewFlagged]
 depends_on: []
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-MOD-011 — Revisión automática de contenido
@@ -135,7 +135,9 @@ decisión de producto y probablemente de contrato, del mismo orden que la de
 
 ## Estado
 
-**Especificación:** `DRAFT`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`. Es de las primeras cosas que conviene construir, precisamente
 porque no hace nada.

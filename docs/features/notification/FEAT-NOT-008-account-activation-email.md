@@ -4,7 +4,7 @@ title: Enviar el email de activación de cuenta
 context: Notification
 concept: Delivery
 actors: []
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: []
 events: [UserRegistered, ActivationEmailRequested]
 depends_on: [FEAT-USR-001, FEAT-USR-020]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-NOT-008 — Enviar el email de activación de cuenta
@@ -94,6 +94,8 @@ cuenta no funciona no es una suscripción.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Falta el asunto del correo y elegir proveedor.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

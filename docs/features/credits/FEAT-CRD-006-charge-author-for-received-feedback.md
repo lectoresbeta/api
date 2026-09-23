@@ -4,7 +4,7 @@ title: Confirmar el cargo al autor cuando recibe un comentario
 context: Credits
 concept: Account
 actors: []
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -15,7 +15,7 @@ sources:
 endpoints: []
 events: [FeedbackSubmitted, CreditsSpent]
 depends_on: [FEAT-CRD-009, FEAT-FBK-001, FEAT-WRK-013, FEAT-CRD-011]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-CRD-006 — Confirmar el cargo al autor cuando recibe un comentario
@@ -172,7 +172,8 @@ comentario del mismo lector quedaría sin respaldo y caería en `RN-7`.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Desbloqueada: el cálculo y el momento del cobro están definidos.
-Para llegar a `APPROVED` faltan `R-1`, `C-4` y `C-15`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`. Depende de `FEAT-CRD-009`.

@@ -4,7 +4,7 @@ title: Presentar una reclamación
 context: Moderation
 concept: Claim
 actors: [User, Writer]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -14,7 +14,7 @@ endpoints:
   - POST /claims
 events: [ClaimSubmitted]
 depends_on: []
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-MOD-001 — Presentar una reclamación
@@ -220,6 +220,8 @@ vía **consume cupo** igualmente).
 
 ## Estado
 
-**Especificación:** `DRAFT`. `MOD-2` debe cerrarse antes de `APPROVED`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

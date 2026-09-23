@@ -4,7 +4,7 @@ title: Menciones a usuarios
 context: Community
 concept: Interaction
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: []
 events: [UserMentioned]
 depends_on: [FEAT-COM-006, FEAT-USR-034]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-COM-032 — Menciones a usuarios
@@ -119,7 +119,8 @@ cadena.
 
 ## Estado
 
-**Especificación:** `DRAFT`. La regla de almacenamiento está clara; falta saber si existe la
-mención manual (`I-5`).
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

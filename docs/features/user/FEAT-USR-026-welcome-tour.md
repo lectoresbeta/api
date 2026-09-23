@@ -4,7 +4,7 @@ title: Tour de bienvenida de la Home
 context: User
 concept: Onboarding
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /me/tour, POST /me/tour/completion]
 events: []
 depends_on: [FEAT-COM-017]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-026 — Tour de bienvenida de la Home
@@ -113,6 +113,8 @@ Ver [`../../ui/home.md`](../../ui/home.md).
 
 ## Estado
 
-**Especificación:** `DRAFT`. El contenido está completo; faltan detalles de comportamiento.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

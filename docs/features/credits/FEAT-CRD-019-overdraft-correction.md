@@ -4,7 +4,7 @@ title: Corrección en descubierto como gancho de reactivación
 context: Credits
 concept: Reservation
 actors: []
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: []
 events: [OverdraftCorrectionGranted, CorrectionUnlocked]
 depends_on: [FEAT-CRD-009, FEAT-CRD-018]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-CRD-019 — Corrección en descubierto
@@ -203,11 +203,9 @@ acumulan correcciones perdidas.
 
 ## Estado
 
-**Especificación:** `DRAFT`. `C-27` está resuelta —la selección es **por cupo**, no por
-plazo—. Quedan `C-42` (qué cupo) y `C-28` (cómo se avisa).
-
-Lo que ha cambiado con el cupo: esto deja de ser un mecanismo cuyo coste se descubre y pasa a
-ser uno cuyo coste se decide.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`. Es lo último que conviene construir: no aporta nada hasta que haya
 usuarios dormidos que reactivar.

@@ -4,7 +4,7 @@ title: Purga programada de alias de nombre de usuario caducados
 context: User
 concept: Profile
 actors: []
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: []
 events: []
 depends_on: [FEAT-USR-034]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-036 — Purga programada de alias caducados
@@ -132,7 +132,8 @@ comportamiento correcto.
 
 ## Estado
 
-**Especificación:** `DRAFT`. El comando está definido; falta elegir el mecanismo real de
-programación.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

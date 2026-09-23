@@ -4,7 +4,7 @@ title: Cambiar o establecer la contraseña
 context: User
 concept: Account
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -14,7 +14,7 @@ endpoints:
   - PUT /me/password
 events: [PasswordChanged]
 depends_on: [FEAT-USR-001, FEAT-USR-002]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-041 — Cambiar o establecer la contraseña
@@ -71,8 +71,10 @@ confirmación con el proveedor antes de guardar (`S-40`).
   portátil desbloqueado se quede con la cuenta.
 - `RN-2` La nueva contraseña cumple las mismas reglas que en el registro (`FEAT-USR-001`
   `RN-3`).
-- `RN-3` Al cambiarla, **se cierran las demás sesiones**. Si el motivo del cambio es una
-  sospecha, dejarlas abiertas anula el gesto.
+- `RN-3` Al cambiarla, **se invalidan los tokens de refresco** de las demás sesiones. Con
+  JWT eso significa que dejan de valer **en cuanto caduque su token de acceso, hasta 15
+  minutos** ([`decision:0007`](../../decisions/0007-jwt-sessions.md)). Las operaciones de
+  escritura, en cambio, se cortan de inmediato.
 - `RN-4` Se **avisa por correo** del cambio. Es un aviso de seguridad, así que **no se puede
   desactivar** ([`FEAT-USR-039`](FEAT-USR-039-notification-preferences.md) `RN-3`).
 - `RN-5` La contraseña se guarda **hasheada** con el algoritmo del proyecto. Nunca se registra
@@ -119,7 +121,8 @@ contraseña solo añade superficie a una respuesta que puede acabar en un log.
 ## Criterios de aceptación
 
 - [ ] Sin la contraseña actual, el cambio se rechaza.
-- [ ] Tras el cambio, las demás sesiones dejan de ser válidas.
+- [ ] Tras el cambio, los tokens de refresco de las demás sesiones quedan invalidados.
+- [ ] Una escritura con un token de acceso anterior al cambio se rechaza de inmediato.
 - [ ] Se envía aviso por correo aunque el usuario tenga las notificaciones desactivadas.
 - [ ] Los requisitos incumplidos vienen en la respuesta de error.
 - [ ] Una cuenta creada con Google puede **establecer** contraseña dejando la actual en blanco.
@@ -140,6 +143,8 @@ Resuelta: `S-8` (**campo vacío** en cuentas sin contraseña).
 
 ## Estado
 
-**Especificación:** `DRAFT`. `S-8` resuelta; nada bloquea `APPROVED`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

@@ -4,7 +4,7 @@ title: Guardar un borrador de corrección
 context: Feedback
 concept: Correction
 actors: [BetaReader]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -15,7 +15,7 @@ endpoints:
   - DELETE /chapters/{chapterId}/correction/draft
 depends_on: [FEAT-FBK-003]
 events: []
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-FBK-011 — Guardar un borrador de corrección
@@ -131,6 +131,8 @@ correcciones que quizá nunca envíe.
 
 ## Estado
 
-**Especificación:** `DRAFT`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

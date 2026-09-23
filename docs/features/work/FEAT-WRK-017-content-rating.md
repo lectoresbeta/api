@@ -4,7 +4,7 @@ title: Clasificación de contenido sensible de una obra
 context: Work
 concept: Manuscript
 actors: [Writer]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -13,7 +13,7 @@ endpoints:
   - PUT /works/{workId}/content-rating
 events: [WorkContentRatingSet]
 depends_on: [FEAT-WRK-001]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-WRK-017 — Clasificación de contenido sensible
@@ -52,8 +52,8 @@ que no lo tiene es aparecer sin avisar.
   la obra se etiqueta por lo más fuerte que contiene.
 - `RN-3` Una obra **no apta para menores** no se muestra a cuentas que no cumplan la edad
   mínima, cuando exista dato de edad (`OB-7`).
-- `RN-4` Las etiquetas son un **catálogo cerrado** (`W-20`), no texto libre: si fueran libres
-  no se podría filtrar por ellas.
+- `RN-4` Las etiquetas son un **catálogo cerrado** de cinco valores más el indicador
+  `ADULTS_ONLY` (`W-20`), no texto libre: si fueran libres no se podría filtrar por ellas.
 - `RN-5` Cambiar la clasificación **no afecta a las correcciones en curso**.
 - `RN-6` Una reclamación por contenido sensible sobre una obra **correctamente etiquetada se
   desestima** ([`FEAT-MOD-002`](../moderation/FEAT-MOD-002-review-claim.md) `RN-12`).
@@ -69,19 +69,34 @@ novela entera cargue con la etiqueta de un solo capítulo.
 
 ## El catálogo
 
-**Por definir** (`W-20`). Lo que debe cumplir:
+**Decidido** (`W-20`):
 
-- **Corto.** Cuantas más etiquetas, menos se usan bien.
+| Etiqueta | Qué declara |
+|---|---|
+| `SEXUAL_CONTENT` | Contenido sexual explícito |
+| `GRAPHIC_VIOLENCE` | Violencia explícita |
+| `SELF_HARM` | Autolesión, suicidio, trastornos alimentarios |
+| `SUBSTANCE_USE` | Consumo de drogas o alcohol como tema |
+| `STRONG_LANGUAGE` | Lenguaje soez sostenido |
+
+Y un **indicador aparte**, que no es una temática sino un público:
+
+| Indicador | Qué declara |
+|---|---|
+| `ADULTS_ONLY` | No apto para menores |
+
+Tres criterios explican por qué el catálogo es así:
+
+- **Corto.** Cuantas más etiquetas haya, peor se usan. Cinco caben en la cabeza de quien
+  publica.
 - **Descriptivo, no valorativo.** «Violencia explícita» dice qué hay; «contenido perturbador»
   no dice nada y depende de quién lea.
-- **Con un eje aparte para la edad.** «No apto para menores» no es una temática, es un
-  público.
-
-Punto de partida razonable: `SEXUAL_CONTENT`, `GRAPHIC_VIOLENCE`, `SELF_HARM`,
-`SUBSTANCE_USE`, `STRONG_LANGUAGE`, más el indicador `ADULTS_ONLY`.
+- **La edad va por su propio eje.** Una obra puede ser `ADULTS_ONLY` por acumulación sin que
+  ninguna etiqueta concreta sea determinante, y al revés.
 
 `SELF_HARM` merece atención propia: es la etiqueta que más gente necesita para **evitar** un
-texto, y la que peor se lleva con el silencio.
+texto, y la que peor se lleva con el silencio. Conviene que la advertencia sea explícita y no
+un icono ambiguo.
 
 ## Contrato de API
 
@@ -112,8 +127,7 @@ Va en el flujo de publicación, no en un ajuste aparte: **si se puede omitir, se
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **W-20** | ¿Qué catálogo de etiquetas? | Define el filtro, la advertencia y el criterio del moderador |
-| **W-19** | ¿La clasificación es por obra o por capítulo? | Una novela entera cargando la etiqueta de un capítulo |
+| W-19 | ¿La clasificación es por obra o por capítulo? | Hoy **por obra** (`RN-2`); por capítulo sería más preciso y más trabajo para el autor |
 | OB-7 | ¿Hay edad mínima y fecha de nacimiento fiable? | Sin dato de edad, `ADULTS_ONLY` no se puede aplicar |
 | W-21 | ¿Se etiqueta también el **muro** y los comentarios? | Una publicación puede ser igual de fuerte que una obra |
 | W-22 | ¿Qué pasa con las obras ya publicadas cuando se añade esta funcionalidad? | Nadie las etiquetó |
@@ -124,6 +138,8 @@ existe.
 
 ## Estado
 
-**Especificación:** `DRAFT`. `W-20` bloquea `APPROVED`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

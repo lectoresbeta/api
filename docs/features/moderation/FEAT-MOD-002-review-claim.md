@@ -4,7 +4,7 @@ title: Revisar y resolver una reclamación
 context: Moderation
 concept: Review
 actors: [Moderator]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -15,7 +15,7 @@ endpoints:
   - POST /admin/claims/{claimId}/review
 events: [ClaimUpheld, ClaimRejected]
 depends_on: [FEAT-MOD-001, FEAT-MOD-004]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-MOD-002 — Revisar y resolver una reclamación
@@ -209,6 +209,8 @@ decide el administrador).
 
 ## Estado
 
-**Especificación:** `DRAFT`. `MOD-1` y `MOD-2` bloquean `APPROVED`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

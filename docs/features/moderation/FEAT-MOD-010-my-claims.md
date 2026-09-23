@@ -4,7 +4,7 @@ title: Mis reclamaciones — sección del usuario
 context: Moderation
 concept: Claim
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -14,7 +14,7 @@ endpoints:
   - GET /me/claims/{claimId}
 events: []
 depends_on: [FEAT-MOD-001]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-MOD-010 — Mis reclamaciones
@@ -107,6 +107,8 @@ expediente o no lo cierra.
 
 ## Estado
 
-**Especificación:** `DRAFT`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

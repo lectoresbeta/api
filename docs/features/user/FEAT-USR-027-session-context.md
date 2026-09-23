@@ -4,7 +4,7 @@ title: Contexto de sesión para el layout
 context: User
 concept: Account
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /me/context]
 events: []
 depends_on: [FEAT-CRD-001, FEAT-NOT-009, FEAT-USR-020, FEAT-USR-026]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-027 — Contexto de sesión para el layout
@@ -129,6 +129,8 @@ Respuesta `200`. Sin sesión, `401`.
 
 ## Estado
 
-**Especificación:** `DRAFT`. El contenido está definido; falta la estrategia de frescura.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

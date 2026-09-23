@@ -4,7 +4,7 @@ title: Preferencias de contenido sensible
 context: User
 concept: Preferences
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -14,7 +14,7 @@ endpoints:
   - PUT /me/content-preferences
 events: [ContentPreferencesChanged]
 depends_on: [FEAT-WRK-017]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-USR-043 — Preferencias de contenido sensible
@@ -97,6 +97,8 @@ real lo hace el servidor** en cada consulta.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Depende de que exista el catálogo de etiquetas (`W-20`).
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

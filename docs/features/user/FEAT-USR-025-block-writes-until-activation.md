@@ -4,7 +4,7 @@ title: Bloquear las operaciones de escritura hasta activar la cuenta
 context: User
 concept: Account
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -14,7 +14,7 @@ sources:
 endpoints: []
 events: [AccountActivated]
 depends_on: [FEAT-USR-020]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-USR-025 — Bloquear las operaciones de escritura hasta activar la cuenta
@@ -116,7 +116,8 @@ consultando las tablas de `User`.
 
 ## Estado
 
-**Especificación:** `DRAFT`. El alcance del bloqueo está decidido; falta el diseño de cómo se
-comunica al usuario (`A-2`).
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

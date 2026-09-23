@@ -4,7 +4,7 @@ title: Comando de creación del primer administrador
 context: Moderation
 concept: ModeratorRole
 actors: [Admin]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -12,7 +12,7 @@ sources:
 endpoints: []
 events: [ModeratorRoleGranted]
 depends_on: [FEAT-MOD-004]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-MOD-012 — Primer administrador
@@ -70,6 +70,8 @@ El comando exige una acción deliberada, sobre una cuenta real, en el entorno co
 
 ## Estado
 
-**Especificación:** `DRAFT`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

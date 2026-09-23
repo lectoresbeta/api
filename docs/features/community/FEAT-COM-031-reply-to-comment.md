@@ -4,7 +4,7 @@ title: Responder a un comentario
 context: Community
 concept: Interaction
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [POST /comments/{commentId}/replies, GET /comments/{commentId}/replies]
 events: [PostCommented]
 depends_on: [FEAT-COM-006, FEAT-COM-032]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-COM-031 — Responder a un comentario
@@ -103,6 +103,8 @@ El tercer y cuarto criterio son los que sostienen la invariante de `RN-2`.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Falta confirmar `I-2`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

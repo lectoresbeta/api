@@ -4,7 +4,7 @@ title: Registro con email y contraseña
 context: User
 concept: Account
 actors: [Guest]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -15,7 +15,7 @@ sources:
 endpoints: [POST /auth/register]
 events: [UserRegistered]
 depends_on: [FEAT-USR-024, FEAT-USR-025]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-USR-001 — Registro con email y contraseña
@@ -213,8 +213,8 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resueltos el alias, el nombre de usuario, el nombre público, la
-política de contraseña, la aceptación de términos y el momento del abono de créditos. Para
-llegar a `APPROVED` falta `S-1` (mecanismo de sesión).
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

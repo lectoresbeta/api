@@ -4,7 +4,7 @@ title: Gestión de usuarios desde el backoffice
 context: Moderation
 concept: Administration
 actors: [Admin, Moderator]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -16,7 +16,7 @@ endpoints:
   - POST /admin/users/{userId}/credit-adjustment
 events: [SanctionImposed, SanctionLifted, CreditAdjustmentOrdered]
 depends_on: [FEAT-MOD-004]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-MOD-005 — Gestión de usuarios desde el backoffice
@@ -149,6 +149,8 @@ Familias plausibles, a decidir en `MOD-1`:
 
 ## Estado
 
-**Especificación:** `DRAFT`. `MOD-1` bloquea la parte de sanciones.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

@@ -36,7 +36,8 @@ Si falta un término, se añade aquí antes de usarlo en una ficha o en el códi
 | Administrador | `Admin` | Rol por encima del moderador: concede el rol, gestiona usuarios y ordena ajustes de créditos. |
 | Sanción | `Sanction` | Medida impuesta a un usuario tras una reclamación estimada, con tipo, alcance, motivo y vigencia. |
 | Obra o capítulo bloqueado | `BLOCKED` | Deshabilitado por una reclamación estimada. Sigue siendo visible **solo para su autor**, marcado como tal. Indefinido: solo lo revoca un moderador. **3 capítulos bloqueados bloquean la obra entera.** |
-| Clasificación de contenido | `ContentRating` | Etiquetas con las que el autor declara qué material sensible contiene su obra. Etiquetar bien **protege** frente a reclamaciones; etiquetar mal es reclamable. |
+| Clasificación de contenido | `ContentRating` | Etiquetas con las que el autor declara qué material sensible contiene su obra: `SEXUAL_CONTENT`, `GRAPHIC_VIOLENCE`, `SELF_HARM`, `SUBSTANCE_USE`, `STRONG_LANGUAGE`, más el indicador `ADULTS_ONLY`. Etiquetar bien **protege** frente a reclamaciones; etiquetar mal es reclamable. |
+| Sesión | `AccessToken` + `RefreshToken` | JWT de 15 minutos más un token de refresco revocable ([`decision:0007`](decisions/0007-jwt-sessions.md)). **La revocación tarda hasta 15 minutos**, salvo en operaciones de escritura, que comprueban el estado de la cuenta. |
 | Revisión automática | `ContentReviewer` | Servicio que aprueba o marca un texto antes de publicarse. Hoy aprueba todo; es un puerto preparado para una implementación con IA. |
 | Hilo de reclamación | `ClaimThread` | Conversación privada entre el moderador y **una** de las partes. Las partes no se ven entre sí. |
 | Registro de auditoría | `AuditLog` | Registro inmutable de toda acción administrativa, **incluidas las consultas**. |

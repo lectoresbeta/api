@@ -4,7 +4,7 @@ title: Cambiar el correo de la cuenta
 context: User
 concept: Account
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -15,7 +15,7 @@ endpoints:
   - POST /me/email-change/confirm
 events: [EmailChangeRequested, EmailChanged]
 depends_on: [FEAT-USR-020, FEAT-USR-033]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-040 — Cambiar el correo de la cuenta
@@ -59,8 +59,9 @@ Todo lo que sigue existe para cerrar ese camino.
 - `RN-6` Solo puede haber **una solicitud de cambio vigente**. Una nueva anula la anterior.
 - `RN-7` El cambio **no re-deriva el nombre de usuario**. Ya está asignado y es estable; el
   correo solo lo originó la primera vez.
-- `RN-8` Al confirmarse, **se cierran las demás sesiones**. Si el cambio no lo pidió el
-  titular, esto se lo quita de encima al atacante.
+- `RN-8` Al confirmarse, **se invalidan los tokens de refresco** de las demás sesiones. Con
+  JWT el corte completo tarda hasta 15 minutos
+  ([`decision:0007`](../../decisions/0007-jwt-sessions.md)); las escrituras se cortan ya.
 - `RN-9` El cambio **no altera el estado de activación** de la cuenta: quien ya estaba
   activado sigue estándolo. La verificación del correo nuevo es parte del propio flujo.
 
@@ -142,7 +143,7 @@ garantizar `RN-6` bajo concurrencia.
 - [ ] El correo anterior recibe aviso de la solicitud.
 - [ ] Ese aviso se envía **aunque el usuario tenga todas las notificaciones desactivadas**.
 - [ ] Sin la contraseña actual, la solicitud se rechaza.
-- [ ] Al confirmar se cierran las demás sesiones.
+- [ ] Al confirmar se invalidan los tokens de refresco de las demás sesiones.
 - [ ] El nombre de usuario no cambia.
 - [ ] Un correo ya registrado no se revela como tal.
 - [ ] El token está hasheado en base de datos, caduca y es de un solo uso.
@@ -163,6 +164,8 @@ pero no puede hacer nada por sí mismo.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Solo `S-8` bloquea `APPROVED`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

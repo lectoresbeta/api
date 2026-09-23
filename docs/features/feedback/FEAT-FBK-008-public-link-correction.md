@@ -4,7 +4,7 @@ title: Corregir por enlace público sin cuenta
 context: Feedback
 concept: Correction
 actors: [Guest]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -15,7 +15,7 @@ endpoints:
   - POST /public/{token}/corrections
 events: [PublicCorrectionSubmitted]
 depends_on: [FEAT-WRK-010, FEAT-FBK-003]
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # FEAT-FBK-008 — Corregir por enlace público
@@ -191,7 +191,8 @@ explícita y base legal, no de pasada. La idea es buena y puede volver más adel
 
 ## Estado
 
-**Especificación:** `DRAFT`. Deja de estar `BLOCKED`: `A-3`, `C-5` y `F-6` están resueltas
-—el corrector se identifica con una etiqueta opcional y la operación **no** mueve créditos—.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

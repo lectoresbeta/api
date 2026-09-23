@@ -4,7 +4,7 @@ title: Editar el perfil — nombre, nombre de usuario, biografía, géneros y fo
 context: User
 concept: Profile
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -15,7 +15,7 @@ endpoints:
   - PATCH /me/profile
 events: [UserProfileUpdated]
 depends_on: [FEAT-USR-022, FEAT-USR-034, FEAT-USR-009, FEAT-USR-037]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-008 — Editar el perfil
@@ -214,6 +214,8 @@ literarias también) y `S-4` (**300 caracteres**, y es la descripción del perfi
 
 ## Estado
 
-**Especificación:** `DRAFT`.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

@@ -4,7 +4,7 @@ title: Obras publicadas del autor
 context: User
 concept: AuthorPage
 actors: [Writer]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -14,7 +14,7 @@ sources:
 endpoints: [GET /users/{userId}/published-books, POST /me/published-books, PATCH /me/published-books/{id}, DELETE /me/published-books/{id}]
 events: []
 depends_on: [FEAT-USR-028]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-029 — Obras publicadas del autor
@@ -139,7 +139,8 @@ El listado es público: no requiere sesión, igual que el resto del perfil.
 
 ## Estado
 
-**Especificación:** `DRAFT`. La estructura está clara; faltan validación (`P-9`) y orden
-(`P-15`).
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.

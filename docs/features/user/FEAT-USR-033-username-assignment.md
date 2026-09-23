@@ -4,7 +4,7 @@ title: Nombre de usuario — formato, asignación automática y unicidad
 context: User
 concept: Profile
 actors: [Guest, User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -14,7 +14,7 @@ sources:
 endpoints: [GET /usernames/{username}/availability]
 events: [UserRegistered]
 depends_on: [FEAT-USR-001]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-033 — Nombre de usuario: formato, asignación y unicidad
@@ -137,7 +137,8 @@ de baja. Conviene tenerlo presente al especificar `FEAT-USR-013`.
 
 ## Estado
 
-**Especificación:** `DRAFT`. El mecanismo está definido; faltan la lista de reservados y el
-tratamiento del borrado de cuenta.
+**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
+afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
+implementación.
 
 **Implementación:** `TODO`.
