@@ -1,0 +1,19 @@
+# Rutas del bounded context `Community`. Todavía ninguna.
+#
+# El fichero existe vacío a propósito: quien añada el primer endpoint de
+# `Community` no tiene que averiguar dónde va, y `config/routes.yaml` —que lo
+# importa— sigue siendo el censo de contextos que exponen API.
+#
+# El nombre de cada ruta es su `operationId` de OpenAPI. No es cosmético: es
+# lo que permite comprobar de forma mecánica que lo implementado y el contrato
+# publicado no se han separado, y hay un test que lo hace
+# (`tests/Unit/Architecture/RoutingConventionTest.php`).
+#
+# Formato:
+#
+#     <operationId>:
+#         path: /api/v1/...
+#         controller: LectoresBeta\Community\<Concepto>\Infrastructure\Controller\<Algo>Controller::__invoke
+#         methods: [POST]
+#
+# Convención completa: docs/api/conventions/routing.md

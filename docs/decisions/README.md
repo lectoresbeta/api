@@ -21,7 +21,8 @@ Plantilla: [`../_templates/adr.md`](../_templates/adr.md).
 | [0007](0007-jwt-sessions.md) | **La sesión de la API se resuelve con JWT**, asumiendo hasta 15 minutos de retardo en la revocación | Aceptada | 2026-09-24 |
 | [0008](0008-catalogue-ordering.md) | **El catálogo reparte trabajo, no premia popularidad**: ordena por capacidad del autor, desatención y frescura | Aceptada | 2026-09-24 |
 | [0009](0009-one-postgresql-schema-per-bounded-context.md) | **Un esquema de PostgreSQL por bounded context**, sin claves foráneas entre ellos | Aceptada | 2026-09-24 |
-| [0010](0010-routes-declared-in-yaml-per-context.md) | **Las rutas se declaran en YAML**, un fichero por bounded context, nunca con atributos | Aceptada | 2026-09-24 |
+| [0010](0010-routes-declared-in-yaml-per-context.md) | **Las rutas se declaran en YAML**, un fichero por bounded context, nunca con atributos | Aceptada, ubicación modificada por [0011](0011-route-files-live-inside-their-context.md) | 2026-09-24 |
+| [0011](0011-route-files-live-inside-their-context.md) | Los ficheros de rutas viven **dentro de su contexto**, en `src/<Contexto>/Infrastructure/` | Aceptada | 2026-09-24 |
 
 ## Decisiones pendientes
 

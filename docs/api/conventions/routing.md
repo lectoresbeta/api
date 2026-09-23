@@ -1,31 +1,52 @@
 # Enrutado
 
 **Las rutas se declaran en YAML, nunca con atributos ni anotaciones sobre el controlador.**
-El porqué está en [`decision:0010`](../../decisions/0010-routes-declared-in-yaml-per-context.md);
-aquí está el cómo.
+El porqué está en [`decision:0010`](../../decisions/0010-routes-declared-in-yaml-per-context.md)
+y [`decision:0011`](../../decisions/0011-route-files-live-inside-their-context.md); aquí está
+el cómo.
 
 ## Dónde va cada ruta
 
-Un fichero por bounded context:
+Un fichero por bounded context, **dentro del propio contexto**:
 
 ```text
-config/routes.yaml          vacío, solo punto de entrada de Symfony
-config/routes/user.yaml
-config/routes/work.yaml
-config/routes/reading.yaml
-config/routes/feedback.yaml
-config/routes/community.yaml
-config/routes/credits.yaml
-config/routes/moderation.yaml
-config/routes/notification.yaml
-config/routes/shared.yaml
+config/routes.yaml                        índice: importa, no declara
+src/User/Infrastructure/routes.yaml
+src/Work/Infrastructure/routes.yaml
+src/Reading/Infrastructure/routes.yaml
+src/Feedback/Infrastructure/routes.yaml
+src/Community/Infrastructure/routes.yaml
+src/Credits/Infrastructure/routes.yaml
+src/Moderation/Infrastructure/routes.yaml
+src/Notification/Infrastructure/routes.yaml
+src/Shared/Infrastructure/routes.yaml
 ```
 
-Symfony los importa todos solos: no hay que registrar nada al crear uno.
+Así un contexto se lee entero sin salir de su carpeta, igual que ocurre con el mapeo de
+Doctrine. Si algún día hay que extraer uno, sus rutas viajan con él.
 
-Cada contexto tiene su fichero **aunque todavía no exponga nada**. Un fichero vacío con su
-cabecera cuesta cero y hace que listar el directorio sea el mapa de la API; además, quien
-añada el primer endpoint de un contexto no tiene que averiguar dónde va.
+Cada contexto tiene su fichero **aunque todavía no exponga nada**: quien añada el primer
+endpoint no tiene que averiguar dónde va.
+
+### Al crear un contexto, dos pasos
+
+1. `src/<Contexto>/Infrastructure/routes.yaml`, aunque quede vacío.
+2. Una entrada en `config/routes.yaml` que lo importe.
+
+Los imports están escritos uno a uno **y no con un glob**, a propósito: un glob no se queja
+cuando un fichero se renombra o desaparece —las rutas dejan de existir sin ningún error— y
+eso se descubre en producción. El olvido del paso 2 lo detecta el test.
+
+### Esa carpeta es solo para el YAML
+
+`src/<Contexto>/Infrastructure/` es el único sitio del árbol donde una carpeta con nombre de
+capa vive al nivel del concepto de negocio, y está ahí para un fichero de configuración.
+**No contiene código.** El de infraestructura pertenece a su concepto:
+`src/<Contexto>/<Concepto>/Infrastructure/`.
+
+Si esa carpeta pudiera contener código, el segundo nivel dejaría de ser el concepto —que es
+la regla que sostiene toda la estructura— y nadie sabría si `src/Work/Infrastructure/` es
+configuración o una capa más. Hay un test que lo impide.
 
 ## Formato
 
@@ -77,8 +98,11 @@ el contrato siga siendo cierto.
 `RoutingConventionTest` falla si:
 
 - algún fichero de `src/` usa el atributo `#[Route]`;
-- `config/routes.yaml` declara alguna ruta;
+- `config/routes.yaml` declara una ruta en vez de importarla;
 - un bounded context se ha quedado sin fichero de rutas;
+- **un fichero de rutas existe y nadie lo importa** —el fallo silencioso que justifica no
+  usar un glob—;
+- `src/<Contexto>/Infrastructure/` contiene algo que no es `routes.yaml`;
 - una ruta apunta a una clase o a un método que no existe;
 - una ruta no tiene su `operationId` en `openapi/`.
 

@@ -653,23 +653,32 @@ A controller should be small enough that its complete behavior is obvious at a g
 
 **Routes are declared in YAML, never with attributes or annotations on the controller.**
 
-Each bounded context owns one file:
+**Each bounded context owns one file, and it lives inside the context:**
 
 ```text
-config/routes.yaml          empty; it only exists as Symfony's entry point
-config/routes/user.yaml
-config/routes/work.yaml
-config/routes/reading.yaml
-config/routes/feedback.yaml
-config/routes/community.yaml
-config/routes/credits.yaml
-config/routes/moderation.yaml
-config/routes/notification.yaml
-config/routes/shared.yaml
+config/routes.yaml                        an index; it imports and declares nothing
+src/User/Infrastructure/routes.yaml
+src/Work/Infrastructure/routes.yaml
+src/Reading/Infrastructure/routes.yaml
+src/Feedback/Infrastructure/routes.yaml
+src/Community/Infrastructure/routes.yaml
+src/Credits/Infrastructure/routes.yaml
+src/Moderation/Infrastructure/routes.yaml
+src/Notification/Infrastructure/routes.yaml
+src/Shared/Infrastructure/routes.yaml
 ```
 
-Every context has a file even when it exposes nothing yet. Listing that directory is how
-anyone finds out what the API is made of.
+A context is read without leaving its folder, and if one is ever extracted its routes travel
+with it. Every context has a file even when it exposes nothing yet.
+
+`config/routes.yaml` imports the nine files **one by one, never with a glob**: a glob does not
+complain when a file is renamed or disappears — the routes simply stop existing, with no
+error, and that is found out in production.
+
+`src/<Context>/Infrastructure/` is the one place in the tree where a layer folder sits at the
+business-concept level, and it is there for a configuration file. **Nothing but `routes.yaml`
+goes in it.** Infrastructure code belongs to its concept:
+`src/<Context>/<Concept>/Infrastructure/`.
 
 Format:
 
@@ -683,14 +692,15 @@ registerUser:
 - **The route name is the OpenAPI `operationId`.** It is what makes "the implementation and
   the specification must not diverge" checkable rather than aspirational.
 - A route that belongs to a context goes in that context's file. Never in
-  `config/routes.yaml`, and never in another context's file.
+  `config/routes.yaml`, which only imports, and never in another context's file.
 - `#[AsController]` on the controller class is fine and expected: it is service configuration,
   not routing.
 
 Why YAML and not attributes: with attributes, the map of the API is scattered across every
 controller, and answering "what does this context expose?" means grepping. With one file per
 context, it is a file. See
-[`decision:0010`](docs/decisions/0010-routes-declared-in-yaml-per-context.md) and
+[`decision:0010`](docs/decisions/0010-routes-declared-in-yaml-per-context.md),
+[`decision:0011`](docs/decisions/0011-route-files-live-inside-their-context.md) and
 [`docs/api/conventions/routing.md`](docs/api/conventions/routing.md).
 
 `tests/Unit/Architecture/RoutingConventionTest.php` enforces all of this. Do not weaken it.

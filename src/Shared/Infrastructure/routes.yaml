@@ -3,7 +3,7 @@
 # El nombre de cada ruta es el `operationId` de OpenAPI. No es cosmético: es
 # lo que permite comprobar de forma mecánica que lo implementado y el contrato
 # publicado no se han separado, y hay un test que lo hace
-# (`tests/Unit/Shared/Routing/RoutingConventionTest.php`).
+# (`tests/Unit/Architecture/RoutingConventionTest.php`).
 
 checkReadiness:
     path: /health

@@ -196,8 +196,9 @@ servicio —le pone la etiqueta `controller.service_arguments`— y por eso no h
 registrarlos aparte en `config/services.yaml`.
 
 **Las rutas, en cambio, no van en el controlador.** Se declaran en YAML, un fichero por
-bounded context en `config/routes/`
-([`decision:0010`](../decisions/0010-routes-declared-in-yaml-per-context.md)). El nombre de
+bounded context y dentro del propio contexto, en `src/<Contexto>/Infrastructure/routes.yaml`
+([`decision:0010`](../decisions/0010-routes-declared-in-yaml-per-context.md) y
+[`decision:0011`](../decisions/0011-route-files-live-inside-their-context.md)). El nombre de
 cada ruta es su `operationId` de OpenAPI, y hay un test que comprueba que ninguna se queda
 sin documentar.
 

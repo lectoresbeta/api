@@ -84,6 +84,23 @@ src/Work/Manuscript/
         Storage/          S3FileStorage.php
 ```
 
+Un nivel por encima, el contexto tiene una carpeta más que **no es una capa**:
+
+```text
+src/Work/
+    Infrastructure/
+        routes.yaml       las rutas del contexto, y nada más
+    Manuscript/
+    Chapter/
+    Questionnaire/
+    …
+```
+
+`src/<Contexto>/Infrastructure/` existe solo para ese fichero
+([`decision:0011`](../decisions/0011-route-files-live-inside-their-context.md)). **No
+contiene código**: si lo contuviera, el segundo nivel dejaría de ser el concepto de negocio.
+Un test lo comprueba.
+
 Se crean **solo las carpetas necesarias**. Una carpeta vacía no aporta estructura.
 
 ## Errores frecuentes que esta arquitectura previene

@@ -4,6 +4,11 @@
 - **Fecha:** 2026-09-24
 - **Afecta a:** todos los contextos
 
+> **La ubicación de los ficheros cambió en
+> [0011](0011-route-files-live-inside-their-context.md)**: viven dentro de cada contexto, en
+> `src/<Contexto>/Infrastructure/routes.yaml`, no en `config/routes/`. Todo lo demás de esta
+> decisión sigue vigente.
+
 ## Contexto
 
 Symfony ofrece dos formas de declarar una ruta: un atributo sobre el método del controlador,

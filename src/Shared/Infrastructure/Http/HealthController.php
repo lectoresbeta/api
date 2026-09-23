@@ -18,7 +18,7 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
  * by people who are not reading release notes. It must not move when the API
  * version does.
  *
- * Two routes —declared in `config/routes/shared.yaml`, like every route in
+ * Two routes —declared in `src/Shared/Infrastructure/routes.yaml`, like every route in
  * this project— because they answer questions with different consequences:
  *
  * - `/health/live` says «this process is alive». It touches nothing.
@@ -44,7 +44,7 @@ final readonly class HealthController
      * Liveness. No I/O: a probe that can fail for a reason other than «this
      * process is stuck» is not a liveness probe.
      *
-     * Routed from `config/routes/shared.yaml` as `checkLiveness`. Routes are
+     * Routed from `src/Shared/Infrastructure/routes.yaml` as `checkLiveness`. Routes are
      * never declared with attributes in this project
      * (`decision:0010`).
      */
@@ -61,7 +61,7 @@ final readonly class HealthController
      * the interesting part of a failed health check is **which** dependency
      * broke, and that fits badly in a shape designed to describe one error.
      *
-     * Routed from `config/routes/shared.yaml` as `checkReadiness`.
+     * Routed from `src/Shared/Infrastructure/routes.yaml` as `checkReadiness`.
      */
     public function ready(): JsonResponse
     {

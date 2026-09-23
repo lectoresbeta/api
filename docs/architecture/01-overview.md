@@ -60,7 +60,12 @@ src/
             Infrastructure/
 ```
 
-El **concepto de negocio es el segundo nivel**, antes que las capas. Ejemplo:
+El **concepto de negocio es el segundo nivel**, antes que las capas. La única excepción es
+`src/<BoundedContext>/Infrastructure/routes.yaml`, que declara las rutas del contexto
+([`decision:0011`](../decisions/0011-route-files-live-inside-their-context.md)): esa carpeta
+no contiene código, y hay un test que lo comprueba.
+
+Ejemplo:
 
 ```text
 src/
