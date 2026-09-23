@@ -6,6 +6,7 @@ namespace LectoresBeta\Tests\Functional\Credits;
 
 use LectoresBeta\Credits\Pricing\Domain\Repository\ChapterPriceRepository;
 use LectoresBeta\Credits\Pricing\Domain\ValueObject\ChapterId;
+use LectoresBeta\Tests\Functional\Support\EconomyScenario;
 
 /**
  * El precio de una corrección, de punta a punta (`FEAT-CRD-016`).
@@ -15,7 +16,7 @@ use LectoresBeta\Credits\Pricing\Domain\ValueObject\ChapterId;
  * capítulo y cuánto exige un cuestionario, y `Credits` decide por su cuenta
  * lo que eso vale. Ninguna de las dos mitades importa una clase de la otra.
  */
-final class ChapterPricingFlowTest extends CreditsScenario
+final class ChapterPricingFlowTest extends EconomyScenario
 {
     /**
      * Los dos términos de la fórmula, cada uno llegando de un hecho distinto:

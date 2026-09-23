@@ -5,7 +5,7 @@ context: Feedback
 concept: Correction
 actors: [BetaReader]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - conversation:2026-09-22 (formulario de corrección)
@@ -13,11 +13,12 @@ sources:
   - _sources/use-cases.pdf
 endpoints:
   - GET /chapters/{chapterId}/questionnaire
+  - POST /chapters/{chapterId}/corrections/start
   - POST /chapters/{chapterId}/corrections
   - PUT /chapters/{chapterId}/correction/draft
 depends_on: [FEAT-WRK-014, FEAT-RDG-001, FEAT-CRD-016]
 events: [FeedbackSubmitted]
-updated: 2026-09-24
+updated: 2026-09-23
 ---
 
 # FEAT-FBK-003 — Responder y enviar el cuestionario de corrección
@@ -182,8 +183,17 @@ corrección responde a un cuestionario anterior.
 | Operación | Método y ruta | `operationId` |
 |---|---|---|
 | Obtener el cuestionario y el borrador | `GET /chapters/{chapterId}/questionnaire` | `getChapterQuestionnaire` |
+| **Empezar la corrección** | `POST /chapters/{chapterId}/corrections/start` | `startCorrection` |
 | Guardar borrador | `PUT /chapters/{chapterId}/correction/draft` | `saveCorrectionDraft` |
 | Enviar corrección | `POST /chapters/{chapterId}/corrections` | `submitCorrection` |
+
+**`startCorrection` se añade al implementar.** La ficha daba por hecho que abrir el panel era
+leer el cuestionario, y abrir el panel tiene dos efectos reales: ocupa uno de los tres sitios
+del capítulo y fija el precio. Ponerlos detrás de un `GET` —que HTTP define como seguro—
+significa que recargar la página cierra el capítulo para el siguiente lector, que el guardián
+de cuenta activada no los cubre (solo vigila métodos de escritura) y que un prefetch del
+navegador empieza correcciones solo. Ver
+[`docs/api/endpoints/feedback.md`](../../api/endpoints/feedback.md).
 
 Las rutas cuelgan del **capítulo**, que es la unidad que se corrige. El cuestionario lo sigue
 definiendo el autor para la obra (`FEAT-WRK-014`), pero se sirve por capítulo porque es ahí
@@ -256,18 +266,22 @@ cuestionario creado por el autor», con contador por respuesta y los botones «E
 
 ## Criterios de aceptación
 
-- [ ] Un lector beta con acceso puede enviar una corrección de un capítulo de una obra `IN_CORRECTION`.
-- [ ] El mismo lector puede corregir varios capítulos de la misma obra.
-- [ ] En una obra `PUBLIC`, empezar una corrección concede el acceso sin pasos previos.
-- [ ] En `ON_REQUEST` y `PRIVATE`, quien no tiene acceso recibe `403` y no ve el cuestionario.
-- [ ] El autor no puede corregir su propia obra.
-- [ ] Enviar dos veces la misma corrección no crea dos correcciones ni dos abonos.
-- [ ] Una respuesta por debajo del mínimo **de palabras** se rechaza con `422` indicando la pregunta.
-- [ ] El envío publica exactamente un `FeedbackSubmitted` con `eventId` estable.
-- [ ] El evento **no contiene importes ni el texto de las respuestas**.
-- [ ] Una corrección enviada no puede modificarse ni borrarse.
-- [ ] Guardar un borrador no publica ningún evento ni mueve créditos.
-- [ ] Existe un índice único `(chapterId, readerId)`.
+- [x] Un lector beta con acceso puede enviar una corrección de un capítulo de una obra `IN_CORRECTION`.
+- [x] El mismo lector puede corregir varios capítulos de la misma obra.
+- [x] En una obra `PUBLIC`, empezar una corrección concede el acceso sin pasos previos. *El
+      acto no encuentra puerta cerrada; **el registro de acceso en `Reading` todavía no se
+      crea**, porque eso es `FEAT-RDG-001` y su especificación sigue `PENDING`.*
+- [x] En `ON_REQUEST` y `PRIVATE`, quien no tiene acceso recibe `403` y no ve el cuestionario.
+- [x] El autor no puede corregir su propia obra.
+- [x] Enviar dos veces la misma corrección no crea dos correcciones ni dos abonos.
+- [x] Una respuesta por debajo del mínimo **de palabras** se rechaza con `422` indicando la pregunta.
+- [x] El envío publica exactamente un `FeedbackSubmitted` con `eventId` estable.
+- [x] El evento **no contiene importes ni el texto de las respuestas**.
+- [x] Una corrección enviada no puede modificarse ni borrarse.
+- [ ] Guardar un borrador no publica ningún evento ni mueve créditos. *El borrador existe como
+      estado —la corrección nace en `DRAFT`— pero guardarlo a medias es
+      [`FEAT-FBK-011`](FEAT-FBK-011-save-correction-draft.md).*
+- [x] Existe un índice único `(chapterId, readerId)`.
 
 ## Preguntas abiertas
 
@@ -299,4 +313,50 @@ que se ha quitado.
 concede el propio acto de empezar. Es la ficha central del producto y ya no depende de
 ninguna decisión pendiente.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-23). **El ciclo del producto se cierra**: una autora
+abre su obra, una lectora la corrige, y los créditos se mueven.
+
+### Hecho
+
+- Las tres operaciones: ver el cuestionario del capítulo, empezar y enviar.
+- Toda la autorización de la tabla de actores, con el orden pensado: lo que no existe y lo que
+  no es tuyo dan la misma respuesta, al autor se le para antes de mirar el cuestionario, y una
+  obra `ADULTS_ONLY` es **invisible** —no prohibida— para quien no tiene edad, porque un `403`
+  ahí confirmaría lo que la obra es.
+- Validación de `RN-4` y `RN-5` con un código por caso —`MISSING_REQUIRED_ANSWER`,
+  `ANSWER_TOO_SHORT`, `ANSWER_TOO_LONG`, `UNKNOWN_QUESTION`— y **diciendo qué pregunta falló**.
+- `FeedbackSubmitted` sin importes y sin una palabra de las respuestas, comprobado buscando en
+  el payload el nombre del protagonista de la maqueta.
+- La proyección de corregibilidad, alimentada por `ChapterCorrectabilityChanged`: abrir el
+  panel es **una consulta a la base de datos de este contexto**, sin esperar a `Credits`.
+
+### Tres contextos responden, y ninguno enseña su modelo
+
+`Feedback` no conoce una obra, un acceso ni una fecha de nacimiento. Pregunta por contrato
+publicado ([`decision:0014`](../../decisions/0014-published-contracts-between-contexts.md)):
+
+| Contrato | Contexto | Qué responde |
+|---|---|---|
+| `CorrectionBriefs` | `Work` | Qué se pregunta en **este** capítulo, de quién es la obra y si la puerta está abierta |
+| `BetaReaderAccessCheck` | `Reading` | Un booleano: ¿es lector beta de esta obra? |
+| `ReaderMaturity` | `User` | Un booleano: ¿tiene edad? |
+
+El de `Work` existe porque **los enunciados son texto del autor** y `QuestionnaireUpdated`
+deliberadamente no los lleva: una cola que persiste y reintenta no es sitio para contenido. Y
+quien abre el panel los necesita ahora, que es exactamente el caso para el que ADR 0014
+permite una consulta síncrona.
+
+### Falta
+
+- **El registro de acceso en `PUBLIC`.** Corregir funciona, pero empezar no deja constancia en
+  `Reading` de que quien corrigió es ya lector beta de la obra. Es `FEAT-RDG-001`, cuya
+  especificación está **`PENDING`**: no se implementa una ficha sin aprobar.
+- **Guardar el borrador a medias** ([`FEAT-FBK-011`](FEAT-FBK-011-save-correction-draft.md)).
+  Hoy una corrección se empieza y se entrega; lo escrito solo se guarda al enviar.
+- **`Idempotency-Key`** (`RN-6`). Ninguna operación del proyecto lo implementa todavía, así que
+  un segundo envío responde `409` en lugar de devolver la corrección existente. Se prefiere el
+  error claro a aceptar en silencio un juego de respuestas distinto como si fuera un reintento.
+- **Consumir `WorkClosedForCorrection`** (`Q-5`): hoy el cierre se nota igualmente, porque el
+  envío vuelve a preguntar si la obra sigue abierta, pero el borrador no se marca.
+- **`Notification`**: el evento sale y nadie avisa todavía al autor.
+- `R-10` —un tope de correcciones por obra— sigue abierta.

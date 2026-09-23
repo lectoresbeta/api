@@ -1,8 +1,4 @@
-# Rutas del bounded context `Feedback`. Todavía ninguna.
-#
-# El fichero existe vacío a propósito: quien añada el primer endpoint de
-# `Feedback` no tiene que averiguar dónde va, y `config/routes.yaml` —que lo
-# importa— sigue siendo el censo de contextos que exponen API.
+# Rutas del bounded context `Feedback`.
 #
 # El nombre de cada ruta es su `operationId` de OpenAPI. No es cosmético: es
 # lo que permite comprobar de forma mecánica que lo implementado y el contrato
@@ -17,3 +13,18 @@
 #         methods: [POST]
 #
 # Convención completa: docs/api/conventions/routing.md
+
+getChapterQuestionnaire:
+    path: /api/v1/chapters/{chapterId}/questionnaire
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\GetCorrectionPanelController::__invoke
+    methods: [GET]
+
+startCorrection:
+    path: /api/v1/chapters/{chapterId}/corrections/start
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\StartCorrectionController::__invoke
+    methods: [POST]
+
+submitCorrection:
+    path: /api/v1/chapters/{chapterId}/corrections
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\SubmitCorrectionController::__invoke
+    methods: [POST]

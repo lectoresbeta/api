@@ -171,8 +171,9 @@ compromiso, no cuando se cumple.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `PARTIAL` (2026-09-23). **La economía funciona de punta a punta**, y lo
-único que le falta es quien pulse el botón.
+**Implementación:** `PARTIAL` (2026-09-23). **La economía funciona de punta a punta y está
+en uso**: desde que [`FEAT-FBK-003`](../feedback/FEAT-FBK-003-answer-correction-questionnaire.md)
+publica `FeedbackSubmitted`, entregar una corrección mueve créditos de verdad.
 
 ### Hecho
 
@@ -211,10 +212,6 @@ el que bloquea la corrección recién llegada
 
 ### Falta
 
-- **Quien publique `FeedbackSubmitted`.** `Feedback` no existe todavía como código
-  ([`FEAT-FBK-003`](../feedback/FEAT-FBK-003-answer-correction-questionnaire.md)): las
-  pruebas fabrican el hecho con el payload del catálogo y lo pasan por el serializador real.
-  Es lo único que separa esto de estar vivo.
 - **La corrección bloqueada** de [`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md): `Credits`
   publica el hecho económico, pero decidir qué se ve es de `Feedback`.
 - **`CreditDebtCleared`**, cuando el autor vuelve a cero o más: nada lo publica todavía.

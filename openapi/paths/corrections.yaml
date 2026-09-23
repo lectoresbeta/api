@@ -1,0 +1,294 @@
+# Correcciones (FEAT-FBK-003).
+#
+# Es la operación central del producto: enviar una corrección es **el único
+# hecho que mueve créditos**. Todo lo demás —descubrir obras, pedir acceso,
+# leer— existe para que esto ocurra.
+#
+# Las rutas cuelgan del **capítulo**, que es la unidad que se corrige. El
+# cuestionario lo define el autor para la obra (FEAT-WRK-014), pero se
+# responde capítulo a capítulo.
+#
+# Ninguna respuesta de este fichero lleva una cifra de créditos. El abono es
+# asíncrono y lo decide `Credits`; devolver un importe aquí obligaría a
+# `Feedback` a conocer sus reglas (decision:0002).
+
+questionnaire:
+  get:
+    tags: [Corrections]
+    operationId: getChapterQuestionnaire
+    summary: Cuestionario a responder y borrador del lector
+    description: |
+      Lo que el autor pregunta sobre **este** capítulo, y lo que quien llama
+      hubiera escrito ya.
+
+      Es la otra mitad de `getWorkQuestionnaire`, que es la vista del autor.
+      Las dos describen el mismo objeto y no son la misma representación: el
+      autor ve cómo está configurado el formulario; el lector, lo que necesita
+      para responderlo.
+
+      **Las preguntas vienen filtradas por capítulo.** Una de alcance
+      `LAST_CHAPTER` no aparece en el capítulo 3, porque allí no tiene
+      respuesta posible y el autor no debe pagarla (`FEAT-WRK-014` `W-17`).
+
+      Es una lectura pura: abrir el cuestionario **no ocupa** ninguno de los
+      tres sitios de corrección del capítulo ni fija precio alguno. Para eso
+      está `startCorrection`.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: El cuestionario y lo escrito hasta ahora.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chapterId, workId, questionnaireVersion, status, questions]
+              properties:
+                chapterId:
+                  type: string
+                  format: uuid
+                workId:
+                  type: string
+                  format: uuid
+                questionnaireVersion:
+                  type: integer
+                  description: |
+                    La versión que se está respondiendo. Una corrección ya
+                    empezada conserva la suya aunque el autor publique otra.
+                correctionId:
+                  type: string
+                  format: uuid
+                  nullable: true
+                status:
+                  type: string
+                  enum: [NOT_STARTED, DRAFT, SUBMITTED]
+                questions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PanelQuestion'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          No puede corregir esta obra. `code: NOT_A_BETA_READER` si la obra no
+          es `PUBLIC` y no tiene acceso concedido, `AUTHOR_CANNOT_CORRECT` si
+          es su propia obra.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '409':
+        description: |
+          La obra no admite correcciones. `code: WORK_NOT_IN_CORRECTION` o
+          `WORK_WITHOUT_QUESTIONNAIRE`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+start:
+  post:
+    tags: [Corrections]
+    operationId: startCorrection
+    summary: Empezar una corrección
+    description: |
+      «Empezar corrección». **Ocupa uno de los tres sitios del capítulo y fija
+      el precio** que se cobrará y se abonará al entregarla
+      ([`FEAT-CRD-009`](../../docs/features/credits/FEAT-CRD-009-balance-check-on-correction-start.md)),
+      por eso es una escritura y no un efecto lateral de leer el cuestionario:
+      un `GET` que hiciera esto convertiría recargar la página en cerrar un
+      capítulo.
+
+      **No retiene créditos.** El saldo del autor sigue intacto y disponible;
+      lo que queda escrito es una cotización que no caduca. El lector no tiene
+      plazo para entregar.
+
+      En una obra `PUBLIC`, esta llamada **es** el permiso: concede el acceso
+      de lector beta sin solicitud previa ni espera (`R-4`). En `ON_REQUEST` y
+      `PRIVATE` hace falta tenerlo de antes.
+
+      Llamarla dos veces devuelve la misma corrección: es el lector volviendo
+      a un panel que dejó abierto.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '201':
+        description: Corrección empezada, en estado `DRAFT`.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correctionId]
+              properties:
+                correctionId:
+                  type: string
+                  format: uuid
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: NOT_A_BETA_READER`, `AUTHOR_CANNOT_CORRECT` o
+          `ACCOUNT_NOT_ACTIVATED`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '409':
+        description: |
+          `code: WORK_NOT_IN_CORRECTION`, `WORK_WITHOUT_QUESTIONNAIRE`,
+          `CHAPTER_NOT_TAKING_CORRECTIONS` —el capítulo ya tiene todas las
+          correcciones que admite a la vez, o su autor no puede pagarlas— o
+          `CORRECTION_ALREADY_SUBMITTED`.
+
+          **No se dice cuál de los dos motivos** en el caso de
+          `CHAPTER_NOT_TAKING_CORRECTIONS`: distinguirlos contaría a un
+          desconocido cómo va el saldo del autor.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+collection:
+  post:
+    tags: [Corrections]
+    operationId: submitCorrection
+    summary: Enviar una corrección
+    description: |
+      **El hecho que mueve los créditos.** Al enviarse se publica
+      `FeedbackSubmitted`, y `Credits` carga al autor y abona al lector el
+      importe anotado al empezar.
+
+      La respuesta **no espera** a que eso ocurra ni incluye cifra alguna: lo
+      que el lector necesita saber es que su trabajo ha quedado registrado.
+
+      Se valida lo que el autor pidió: las preguntas obligatorias tienen que
+      estar respondidas y cada respuesta respeta el mínimo y el máximo de
+      palabras de su pregunta. El mínimo es la primera defensa contra cobrar
+      por «ok, muy bueno»; no es un control antifraude
+      ([`FEAT-FBK-012`](../../docs/features/feedback/FEAT-FBK-012-correction-fraud-control.md)).
+
+      Una corrección enviada es **inmutable**: no se edita ni se borra,
+      porque el autor ya ha pagado por ella.
+
+      Enviar sin haber llamado antes a `startCorrection` funciona: la
+      corrección se abre y se entrega en el mismo acto.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [answers]
+            properties:
+              answers:
+                type: array
+                items:
+                  type: object
+                  required: [questionId, text]
+                  properties:
+                    questionId:
+                      type: string
+                      format: uuid
+                    text:
+                      type: string
+    responses:
+      '201':
+        description: Corrección entregada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correctionId, status]
+              properties:
+                correctionId:
+                  type: string
+                  format: uuid
+                status:
+                  type: string
+                  enum: [SUBMITTED]
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: NOT_A_BETA_READER`, `AUTHOR_CANNOT_CORRECT` o
+          `ACCOUNT_NOT_ACTIVATED`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '409':
+        description: |
+          `code: CORRECTION_ALREADY_SUBMITTED` —ya envió una corrección de
+          este capítulo— o `WORK_NOT_IN_CORRECTION`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          Las respuestas no cumplen lo que el autor pidió.
+          `code: MISSING_REQUIRED_ANSWER`, `ANSWER_TOO_SHORT`,
+          `ANSWER_TOO_LONG` o `UNKNOWN_QUESTION`. El `detail` dice **qué
+          pregunta**: un formulario que solo dice «algo está mal» manda al
+          lector a buscar entre veinte campos.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+components:
+  schemas:
+    PanelQuestion:
+      type: object
+      required: [questionId, position, statement, required, minWords, answer]
+      properties:
+        questionId:
+          type: string
+          format: uuid
+        position:
+          type: integer
+        statement:
+          type: string
+        example:
+          type: string
+          nullable: true
+          description: Texto de ayuda que el lector ve como marcador.
+        required:
+          type: boolean
+        minWords:
+          type: integer
+          description: |
+            Palabras. **Cero significa que el autor no declaró mínimo**, algo
+            que un cuestionario creado hoy no puede producir: declararlo es
+            obligatorio desde `C-14`.
+        maxWords:
+          type: integer
+          nullable: true
+        answer:
+          type: string
+          description: Lo escrito hasta ahora. Cadena vacía si no hay nada.

@@ -82,6 +82,7 @@ services:
                 - LectoresBeta\Credits\Pricing\Application\Event\CorrectionStarted
                 - LectoresBeta\Credits\Pricing\Application\Event\CorrectionDraftDiscarded
                 - LectoresBeta\Credits\Account\Application\Event\FeedbackSubmitted
+                - LectoresBeta\Feedback\Correction\Application\Event\ChapterCorrectabilityChanged
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
 
     # Los consumidores de eventos se etiquetan aquí y no con
@@ -109,6 +110,12 @@ services:
 
     LectoresBeta\User\Account\Application\Contract\ReaderMaturity:
         alias: LectoresBeta\User\Account\Application\Service\CheckReaderMaturity
+
+    LectoresBeta\Work\Chapter\Application\Contract\CorrectionBriefs:
+        alias: LectoresBeta\Work\Chapter\Application\Service\ResolveCorrectionBriefs
+
+    LectoresBeta\Reading\BetaReaderAccess\Application\Contract\BetaReaderAccessCheck:
+        alias: LectoresBeta\Reading\BetaReaderAccess\Application\Service\CheckBetaReaderAccess
 
     LectoresBeta\Notification\Delivery\Application\Handler\SendActivationEmail:
         arguments:
@@ -156,6 +163,10 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\Credits\Account\Application\Handler\ChargeCorrectionOnFeedbackSubmitted:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Feedback\Correction\Application\Handler\TrackChapterCorrectability:
         tags:
             - { name: messenger.message_handler }
 

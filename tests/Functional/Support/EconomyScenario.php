@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LectoresBeta\Tests\Functional\Credits;
+namespace LectoresBeta\Tests\Functional\Support;
 
 use Doctrine\Persistence\ManagerRegistry;
 use LectoresBeta\Credits\Account\Domain\Repository\CreditAccountRepository;
@@ -26,7 +26,7 @@ use Symfony\Component\Messenger\Transport\InMemory\InMemoryTransport;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
 /**
- * Lo que comparten las pruebas de la economía: una persona con la cuenta
+ * Lo que comparten las pruebas del ciclo económico —`Credits` y `Feedback`—: una persona con la cuenta
  * activada, una obra con capítulos, y **la cola**.
  *
  * Cada hecho se codifica y se vuelve a decodificar con el serializador real
@@ -35,7 +35,7 @@ use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
  * ([`decision:0013`](../../../docs/decisions/0013-integration-events-travel-without-class-names.md)),
  * que es la afirmación central de la arquitectura.
  */
-abstract class CreditsScenario extends WebTestCase
+abstract class EconomyScenario extends WebTestCase
 {
     protected const PASSWORD = 'Valida1!';
 
@@ -51,6 +51,7 @@ abstract class CreditsScenario extends WebTestCase
         'CorrectionStarted',
         'CorrectionDraftDiscarded',
         'FeedbackSubmitted',
+        'ChapterCorrectabilityChanged',
     ];
 
     protected KernelBrowser $client;
@@ -312,6 +313,31 @@ abstract class CreditsScenario extends WebTestCase
         $this->capture();
 
         return ['token' => $token, 'userId' => $user->id()->value()];
+    }
+
+    /**
+     * Alguien que ha iniciado sesión pero **no ha activado la cuenta**, que
+     * es lo que separa leer de escribir (`FEAT-USR-025`).
+     */
+    protected function signedInWithoutActivating(string $local): string
+    {
+        $email = $this->address($local);
+
+        $this->client->request('POST', '/api/v1/auth/register', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'email' => $email,
+            'password' => self::PASSWORD,
+            'acceptedLegalVersions' => ['termsOfUse' => '2026-01-15', 'privacyPolicy' => '2026-01-15'],
+        ], \JSON_THROW_ON_ERROR));
+
+        $this->client->request('POST', '/api/v1/auth/login', server: [
+            'CONTENT_TYPE' => 'application/json',
+            'REMOTE_ADDR' => \sprintf('198.51.%d.%d', random_int(0, 255), random_int(1, 254)),
+        ], content: json_encode(['email' => $email, 'password' => self::PASSWORD], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseIsSuccessful();
+        $this->capture();
+
+        return (string) $this->payload()['accessToken'];
     }
 
     protected function address(string $local): string

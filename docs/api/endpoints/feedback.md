@@ -7,7 +7,9 @@
 
 | Método y ruta | `operationId` | Propósito | Funcionalidad | Estado |
 |---|---|---|---|---|
-| `POST /chapters/{chapterId}/corrections` | `submitCorrection` | Enviar la corrección | FEAT-FBK-003 | DRAFT |
+| `GET /api/v1/chapters/{chapterId}/questionnaire` | `getChapterQuestionnaire` | Cuestionario a responder y lo ya escrito | FEAT-FBK-003 | **Implementado** |
+| `POST /api/v1/chapters/{chapterId}/corrections/start` | `startCorrection` | Empezar: ocupa sitio y fija el precio | FEAT-FBK-003 | **Implementado** |
+| `POST /api/v1/chapters/{chapterId}/corrections` | `submitCorrection` | Enviar la corrección | FEAT-FBK-003 | **Implementado** |
 | `PUT /chapters/{chapterId}/correction/draft` | `saveCorrectionDraft` | Guardar borrador | FEAT-FBK-011 | DRAFT |
 | `DELETE /chapters/{chapterId}/correction/draft` | `discardCorrectionDraft` | Descartar borrador | FEAT-FBK-011 | DRAFT |
 | `GET /works/{workId}/corrections` | `listWorkCorrections` | Correcciones recibidas | FEAT-FBK-004 | PENDING |
@@ -17,9 +19,9 @@
 | `GET /me/corrections` | `listMyCorrections` | Mis correcciones | FEAT-FBK-010 | PENDING |
 | `POST /works/{workId}/rating` | `rateWork` | Valorar la obra | FEAT-FBK-002 | PENDING |
 
-Las rutas cuelgan del **capítulo**: la corrección es por capítulo (`R-2`). El cuestionario se
-lee desde `Work` (`GET /chapters/{chapterId}/questionnaire`): las preguntas son del autor,
-las respuestas son de `Feedback`.
+Las rutas cuelgan del **capítulo**: la corrección es por capítulo (`R-2`). Las preguntas son
+del autor y viven en `Work`; las respuestas son de `Feedback`, y el cuestionario del lector
+lo sirve este contexto porque tiene que venir con el borrador dentro.
 
 ---
 
@@ -49,7 +51,12 @@ no puede corregir su propia obra.
 
 ### Entrada
 
-Respuestas, cada una referida a su pregunta. Admite `Idempotency-Key`.
+Respuestas, cada una referida a su pregunta.
+
+`Idempotency-Key` **todavía no se implementa** (no lo hace ninguna operación del proyecto).
+Mientras tanto, un segundo envío del mismo capítulo responde `409` en vez de devolver la
+corrección existente: se prefiere un error claro a aceptar en silencio un juego de respuestas
+distinto como si fuera un reintento.
 
 ### Respuesta
 
@@ -66,7 +73,7 @@ La corrección creada. **Sin importes de créditos**: el abono es asíncrono y l
 | El autor intenta corregir su obra | `403` |
 | La obra ya no está en corrección | `409` |
 | Ya envió una corrección de ese capítulo | `409` |
-| Reintento con la misma `Idempotency-Key` | `200` con la corrección existente |
+| Reintento con la misma `Idempotency-Key` | `200` con la corrección existente. **Pendiente**: hoy `409` |
 
 ### Efectos
 
@@ -76,6 +83,93 @@ que la corrección se ha registrado, que es lo que el lector necesita saber.
 
 El evento **no transporta el texto de las respuestas**. Es material privado entre lector y
 autor, y una cola con reintentos no es sitio para él.
+
+---
+
+## `POST /api/v1/chapters/{chapterId}/corrections/start`
+
+**`operationId`:** `startCorrection` · **Funcionalidad:** [`FEAT-FBK-003`](../../features/feedback/FEAT-FBK-003-answer-correction-questionnaire.md)
+
+### Propósito
+
+«Empezar corrección»: **ocupa uno de los tres sitios del capítulo y fija el precio** que se
+cobrará y se abonará al entregarla
+([`FEAT-CRD-009`](../../features/credits/FEAT-CRD-009-balance-check-on-correction-start.md)).
+
+### Por qué existe, si la ficha listaba tres operaciones
+
+Porque **empezar es una escritura**. La ficha hacía coincidir «abrir el panel» con leer el
+cuestionario, y eso pone dos efectos reales —consumir uno de los tres sitios del capítulo y
+cotizar un precio— detrás de un método que HTTP define como seguro. Las consecuencias no son
+teóricas:
+
+- recargar la página cerraría el capítulo para el tercer lector que llegara;
+- el guardián de cuenta activada solo cubre los métodos de escritura
+  ([`FEAT-USR-025`](../../features/user/FEAT-USR-025-block-writes-until-activation.md)), así
+  que una cuenta sin activar podría ocupar sitio;
+- un prefetch del navegador empezaría correcciones solo.
+
+Separarlo deja el `GET` como lo que es —una lectura— y hace explícito el momento en que el
+lector se compromete.
+
+### Autorización
+
+Cuenta activada. En obra `PUBLIC`, **esta llamada es el permiso**: concede el acceso de lector
+beta sin solicitud previa (`R-4`). En `ON_REQUEST` y `PRIVATE` hace falta tenerlo de antes.
+
+### Reglas aplicadas
+
+- No retiene créditos: el saldo del autor sigue íntegro y la cotización no caduca.
+- El capítulo debe estar admitiendo correcciones, que es lo que dice la proyección de
+  `ChapterCorrectabilityChanged`.
+- Llamarla dos veces devuelve la misma corrección.
+
+### Errores específicos
+
+| Caso | Código |
+|---|---|
+| Sin acceso de lector beta, o es el autor | `403` |
+| Cuenta sin activar | `403` |
+| La obra no está en corrección o no tiene cuestionario | `409` |
+| El capítulo no admite correcciones ahora mismo | `409` con `CHAPTER_NOT_TAKING_CORRECTIONS` |
+| Ya envió una corrección de ese capítulo | `409` |
+
+`CHAPTER_NOT_TAKING_CORRECTIONS` **no dice si es por saldo o por cupo**: distinguirlos
+contaría a un desconocido cómo va el saldo del autor.
+
+### Efectos
+
+Publica `CorrectionStarted`. `Credits` anota el precio; nada más ocurre, y nadie espera.
+
+---
+
+## `GET /api/v1/chapters/{chapterId}/questionnaire`
+
+**`operationId`:** `getChapterQuestionnaire` · **Funcionalidad:** [`FEAT-FBK-003`](../../features/feedback/FEAT-FBK-003-answer-correction-questionnaire.md)
+
+### Propósito
+
+Lo que el autor pregunta sobre **este** capítulo y lo que quien llama hubiera escrito ya, en
+una sola llamada: qué preguntas aplican depende del capítulo y el borrador es de ese
+capítulo, así que separarlas haría que abrir el panel pudiera llegar a medias.
+
+Es la otra mitad de `getWorkQuestionnaire`, que es la vista del autor. Describen el mismo
+objeto y no son la misma representación.
+
+### Autorización
+
+La misma que `startCorrection`, y por el mismo motivo: los enunciados nombran personajes y
+suelen adelantar el final, así que quien no puede corregir tampoco los ve.
+
+### Reglas aplicadas
+
+- Las preguntas vienen **filtradas por capítulo**: una de alcance `LAST_CHAPTER` no aparece en
+  el capítulo 3 ([`FEAT-WRK-014`](../../features/work/FEAT-WRK-014-configure-questionnaire.md), `W-17`).
+- Es una **lectura pura**: no ocupa sitio ni fija precio.
+
+### Efectos
+
+Ninguno.
 
 ---
 

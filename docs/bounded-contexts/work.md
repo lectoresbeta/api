@@ -81,6 +81,21 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | `WorkDeleted` | Se elimina la obra | `Reading`, `Feedback`, `Community` |
 | `QuestionnaireUpdated` | Cambia el cuestionario: nueva versión | **`Credits`** (recalcula coste **y** recompensa de esa obra) |
 
+## Contratos publicados
+
+| Contrato | Responde | Quién pregunta |
+|---|---|---|
+| `CorrectionBriefs` | Qué pregunta el autor en **un capítulo concreto**, de quién es la obra, si admite correcciones y bajo qué modalidad | `Feedback` |
+
+Es síncrono a conciencia: los enunciados del cuestionario son **texto del autor**, y por eso
+`QuestionnaireUpdated` no los transporta. Quien abre el panel de corrección los necesita en
+ese momento, que es el caso para el que
+[`decision:0014`](../decisions/0014-published-contracts-between-contexts.md) permite un
+contrato.
+
+Filtra las preguntas por capítulo antes de entregarlas: cuál es el último capítulo solo lo
+sabe este contexto.
+
 ## Reglas de negocio
 
 - `RN-1` Una obra tiene un único autor.

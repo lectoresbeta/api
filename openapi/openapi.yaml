@@ -109,6 +109,15 @@ paths:
   /works/{workId}/questionnaire:
     $ref: './paths/works.yaml#/questionnaire'
 
+  /chapters/{chapterId}/questionnaire:
+    $ref: './paths/corrections.yaml#/questionnaire'
+
+  /chapters/{chapterId}/corrections:
+    $ref: './paths/corrections.yaml#/collection'
+
+  /chapters/{chapterId}/corrections/start:
+    $ref: './paths/corrections.yaml#/start'
+
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'
 

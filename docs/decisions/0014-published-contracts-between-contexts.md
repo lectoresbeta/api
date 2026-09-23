@@ -36,6 +36,18 @@ src/User/Account/Application/Contract/
     ActivationLink.php           los datos que devuelve
 ```
 
+Los publicados hasta ahora:
+
+| Contrato | Contexto | Responde |
+|---|---|---|
+| `ActivationLinkProvider` | `User` | El enlace de activación, en el momento de enviar el correo |
+| `ReaderMaturity` | `User` | Un booleano: ¿tiene edad? |
+| `CorrectionBriefs` | `Work` | Qué se pregunta en un capítulo, de quién es la obra y si admite correcciones |
+| `BetaReaderAccessCheck` | `Reading` | Un booleano: ¿es lector beta de esta obra? |
+
+Tres de los cuatro devuelven **un booleano o poco más**, y no es casualidad: un contrato que
+devuelve mucho suele ser un modelo compartido con otro nombre.
+
 Tres reglas, y las tres importan:
 
 1. **Un contrato pregunta, no ordena.** Devuelve información. Un contrato que dejase a otro

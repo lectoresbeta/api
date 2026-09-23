@@ -110,6 +110,17 @@ se lo dice `Credits`.
 | **`CreditReservationRejected`** | `Credits` | **Revoca el acceso concedido**: el autor no puede pagarlo |
 | `CreditBalanceChanged` | `Credits` | Actualiza la proyección del saldo disponible del autor |
 
+## Contratos publicados
+
+| Contrato | Responde | Quién pregunta |
+|---|---|---|
+| `BetaReaderAccessCheck` | **Un booleano**: ¿tiene esta persona acceso vigente a esta obra? | `Feedback` |
+
+Un booleano y nada más: quién lo concedió, cuándo y por qué vía no le hacen falta a nadie de
+fuera, y entregarlos convertiría la forma de un registro de acceso en asunto ajeno. Responde
+solo por accesos **vivos**, que es lo que hace que revocar tenga efecto en todas partes a la
+vez.
+
 ## Reglas de negocio
 
 - `RN-1` El autor de una obra no puede ser lector beta de ella.

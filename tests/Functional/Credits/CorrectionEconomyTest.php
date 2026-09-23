@@ -7,6 +7,7 @@ namespace LectoresBeta\Tests\Functional\Credits;
 use LectoresBeta\Credits\Account\Application\Event\FeedbackSubmitted;
 use LectoresBeta\Credits\Pricing\Application\Event\CorrectionDraftDiscarded;
 use LectoresBeta\Credits\Pricing\Application\Event\CorrectionStarted;
+use LectoresBeta\Tests\Functional\Support\EconomyScenario;
 
 /**
  * La economía entera, de punta a punta (`FEAT-CRD-006`, `FEAT-CRD-009`).
@@ -21,7 +22,7 @@ use LectoresBeta\Credits\Pricing\Application\Event\CorrectionStarted;
  * que coincidir es el nombre del hecho y la forma de su payload: eso es todo
  * lo que comparten dos contextos.
  */
-final class CorrectionEconomyTest extends CreditsScenario
+final class CorrectionEconomyTest extends EconomyScenario
 {
     /**
      * **Una corrección mueve créditos; no los crea.** Es la invariante

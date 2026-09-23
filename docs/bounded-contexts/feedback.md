@@ -74,9 +74,9 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `CorrectionStarted` | Un lector pulsa «Empezar corrección» | **`Credits`** (retiene el precio del capítulo) |
+| `CorrectionStarted` | Un lector pulsa «Empezar corrección» | **`Credits`** (**anota** el precio del capítulo; no retiene nada) |
 | `FeedbackSubmitted` | Se **entrega** una corrección | **`Credits`**, `Notification`, `Community` (rankings) |
-| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (libera la retención) |
+| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación; no hay nada que liberar) |
 | `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` (reputación) |
 | `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` no lo consume**: está fuera de la economía |
 | `FeedbackRatedPositively` | El autor valora la corrección como útil | `Notification`, `Community`. **Ya no mueve créditos**: la bonificación automática se sustituyó por la propina |
@@ -84,43 +84,63 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 | `FeedbackHidden` | El autor oculta un comentario | `Community` (rankings), posiblemente `Credits` (`C-9`) |
 | `WorkRated` | Un LB valora la obra | `Community` (rankings de obras y escritores) |
 
-`FeedbackSubmitted` es el evento más importante del sistema: dispara a la vez el abono al
-comentarista y la **confirmación de la retención** del autor.
+`FeedbackSubmitted` es el evento más importante del sistema: es el **único momento en que los
+créditos se mueven**, y provoca a la vez el cargo al autor y el abono al lector.
 
-Lleva `betaReaderAccessId` porque `Credits` necesita localizar la retención que se creó al
-conceder ese acceso ([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)).
+No lleva retención que confirmar, porque [`decision:0006`](../decisions/0006-credit-system.md)
+eliminó las retenciones: lo que `Credits` busca es la **cotización** que anotó al empezar la
+corrección.
 
-Payload propuesto (pendiente de cerrar con `C-10`):
+Payload:
 
 ```json
 {
-  "feedbackId": "...",
-  "workId": "...",
+  "correctionId": "...",
   "chapterId": "...",
+  "workId": "...",
   "authorId": "...",
-  "reviewerId": "...",
-  "textTier": "SHORT_STORY",
-  "questionCount": 5,
-  "origin": "BETA_READER"
+  "readerId": "...",
+  "questionnaireVersion": 3,
+  "submittedAt": "2026-09-23T10:00:00+00:00"
 }
 ```
 
-**El contenido del comentario nunca viaja en el evento.**
+`questionnaireVersion` viaja porque el autor necesita saber a qué preguntas responde lo que le
+llega: puede haber reescrito el cuestionario mientras el lector escribía.
+
+**Ni importes, ni una palabra de las respuestas.** El texto es material privado entre dos
+personas, y una cola que persiste, reintenta y aparca mensajes no es sitio para él.
 
 ## Eventos consumidos
 
 | Evento | Origen | Efecto |
 |---|---|---|
-| `CreditsHeld` | **`Credits`** | Se abre el panel: hay respaldo para pagar esta corrección |
-| `CreditHoldRejected` | **`Credits`** | **No se abre el panel.** Se explica por qué |
-| `CreditHoldReleased` | `Credits` | La retención caducó; para entregar hay que volver a retener |
-| `OverdraftCorrectionGranted` | `Credits` | La corrección se marca como **bloqueada** para el autor |
+| `ChapterCorrectabilityChanged` | **`Credits`** | Actualiza la proyección de qué capítulos admiten corrección |
+| `CreditBalanceWentNegative` | `Credits` | La corrección recién llegada se marca **bloqueada** para el autor |
+| `OverdraftCorrectionGranted` | `Credits` | Igual, para el descubierto deliberado |
 | `CorrectionUnlocked` | `Credits` | El autor repuso saldo: se desbloquea el contenido |
 | `WorkClosedForCorrection` | `Work` | Los borradores en curso dejan de poder enviarse (`Q-5`) |
 
-`CreditHoldRejected` es el único evento que **impide** a este contexto dejar trabajar a un
-usuario, y por eso hay que esperarlo antes de abrir el panel de corrección. Es el punto donde
-la asincronía tiene coste visible (`C-18`).
+**Ningún evento de `Credits` bloquea a este contexto.** Con las retenciones desapareció el
+único punto donde la asincronía tenía coste visible: el panel se abre contra la proyección
+propia de `ChapterCorrectabilityChanged`, sin esperar respuesta a nada. Que vaya ligeramente
+retrasada solo puede producir un descubierto, que es un caso aceptado.
+
+La proyección lleva **un booleano**: este contexto no conoce saldos ni precios.
+
+## Contratos que consulta
+
+Lo que no llega por evento se pregunta por contrato publicado
+([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md)):
+
+| Contrato | Contexto | Qué responde |
+|---|---|---|
+| `CorrectionBriefs` | `Work` | Qué pregunta el autor en **este** capítulo, de quién es la obra y si admite correcciones |
+| `BetaReaderAccessCheck` | `Reading` | Si esta persona es lector beta de la obra |
+| `ReaderMaturity` | `User` | Si tiene edad para una obra `ADULTS_ONLY` |
+
+El primero es síncrono porque **los enunciados son texto del autor**, y por eso
+`QuestionnaireUpdated` no los lleva. Quien abre el panel los necesita en ese momento.
 
 **Quién decide qué se ve es `Feedback`, no `Credits`.** En el descubierto, `Credits` publica
 el hecho económico; ocultar o enseñar el texto de una corrección es decisión de quien la
