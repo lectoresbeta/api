@@ -24,6 +24,29 @@ Handler en el contexto consumidor
 `Domain` emite eventos de dominio. La traducción a evento de integración, su serialización,
 su enrutado y sus reintentos son **exclusivamente** responsabilidad de `Infrastructure`.
 
+## Qué viaja por el cable
+
+**Ningún nombre de clase** ([`decision:0013`](../decisions/0013-integration-events-travel-without-class-names.md)).
+
+```text
+headers: X-Event-Name: AccountActivated
+         X-Event-Id:   0199c7f2-...
+         X-Occurred-At: 2026-09-23T10:00:00+00:00
+body:    {"userId":"0199...","activatedAt":"2026-09-23T10:00:00+00:00"}
+```
+
+Los serializadores de serie —el nativo de PHP y el de Symfony— escriben la clase del mensaje,
+y eso obligaría al consumidor a tener esa misma clase: un contexto importando las de otro.
+
+Por eso **cada contexto declara su propia clase para el mismo hecho**. El que publica
+implementa `IntegrationEvent`; el que consume implementa `IncomingIntegrationEvent`, que dice a
+qué nombre se suscribe y cómo reconstruirse. Lo único compartido es el nombre del hecho y la
+forma del payload, que es lo que documenta el [catálogo de eventos](../events/README.md).
+
+La contrapartida, que conviene tener presente: **nada comprueba en compilación que los dos
+lados se entienden**. Mantener el catálogo deja de ser una buena práctica y pasa a ser la
+única red que hay.
+
 ## Qué publica un evento
 
 Un hecho **ya ocurrido**, descrito en el lenguaje del contexto que lo emite.

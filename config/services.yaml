@@ -42,6 +42,16 @@ services:
         arguments:
             $checks: !tagged_iterator lectoresbeta.health_check
 
+    # A qué hechos publicados por otros contextos reacciona esta aplicación.
+    #
+    # Se declara a mano y no se descubre escaneando: suscribirse a un hecho
+    # ajeno es una decisión de integración, y una decisión que vive en un
+    # fichero se puede revisar. Con descubrimiento automático, una suscripción
+    # nueva aparecería porque alguien añadió una clase.
+    LectoresBeta\Shared\Infrastructure\Messenger\IncomingEventRegistry:
+        arguments:
+            $eventClasses: []
+
     # El DSN del transporte es configuración, y traducirla a una dependencia
     # tipada es trabajo de Infrastructure: ni Domain ni Application leen
     # variables de entorno.

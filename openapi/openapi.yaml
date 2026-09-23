@@ -215,7 +215,7 @@ components:
       description: |
         Error según RFC 9457. **Nunca** expone trazas, SQL, nombres de clase
         internos ni rutas de fichero (`AGENTS.md`).
-      required: [type, title, status]
+      required: [type, title, status, code]
       properties:
         type:
           type: string
@@ -225,15 +225,24 @@ components:
           type: string
         status:
           type: integer
+        code:
+          type: string
+          description: |
+            Estable y legible por máquina. **El cliente decide por `code`**,
+            nunca por `title` ni por `detail`, que son para personas y pueden
+            cambiar sin que sea un cambio incompatible.
+          examples: ['WEAK_PASSWORD']
         detail:
           type: string
         errors:
           type: array
           items:
             type: object
-            required: [field, message]
+            required: [field, code, message]
             properties:
               field:
+                type: string
+              code:
                 type: string
               message:
                 type: string

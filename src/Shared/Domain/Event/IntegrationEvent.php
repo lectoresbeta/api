@@ -38,4 +38,17 @@ interface IntegrationEvent
     public function eventName(): string;
 
     public function occurredAt(): \DateTimeImmutable;
+
+    /**
+     * The fact itself, as flat scalars.
+     *
+     * Flat and scalar on purpose. The payload is a **published contract**
+     * read by contexts that do not share a single class with this one, so it
+     * has to be inspectable in a queue browser and diffable in a review. A
+     * nested structure is where a whole aggregate quietly ends up, which is
+     * the thing this interface's docblock forbids.
+     *
+     * @return array<string, string|int|float|bool|null>
+     */
+    public function payload(): array;
 }

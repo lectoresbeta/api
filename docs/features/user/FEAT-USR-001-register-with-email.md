@@ -101,23 +101,29 @@ para cómo conciliarlo con una experiencia usable.
 6. Si hay token de invitación válido, lo consume y registra el vínculo con el invitador.
 7. Publica `UserRegistered`.
 8. `Notification` envía el correo de activación (`FEAT-NOT-008`).
-9. `Credits` crea la cuenta de créditos **con saldo cero**.
-10. El usuario entra en el onboarding (`FEAT-USR-022`).
+9. El usuario inicia sesión y entra en el onboarding (`FEAT-USR-022`). Ver `Q-1`.
 
-Los pasos 8 y 9 son **asíncronos**. El registro se completa sin esperarlos.
+El paso 8 es **asíncrono**. El registro se completa sin esperarlo.
 
-Los créditos de bienvenida llegan más tarde, al activar la cuenta.
+**`Credits` no reacciona al registro.** No crea ninguna cuenta de créditos: la crea
+perezosamente al recibir el primer hecho que sí tiene efecto, que es la activación
+([`FEAT-CRD-002`](../credits/FEAT-CRD-002-welcome-credit-grant.md) `RN-5`). Una cuenta sin
+movimientos y un saldo de cero son indistinguibles, así que crearla antes no aporta nada y
+obligaría a `Credits` a conocer un hecho que no le afecta.
 
 ## Flujos alternativos y errores
 
 | Caso | Comportamiento | Respuesta |
 |---|---|---|
-| Email ya registrado | Se rechaza sin revelar la causa exacta (`RN-14`) | `409` o `422` genérico — ver `Q-2` |
-| Email con formato inválido | Se rechaza | `422` |
+| Email ya registrado | **No se crea nada y no se envía correo**, pero la respuesta es idéntica a la de un alta correcta (`RN-14`) | `202` |
+| Email con formato inválido | Se rechaza | `422` con `code: VALIDATION_FAILED` |
 | Contraseña que incumple la política | Se rechaza indicando los requisitos incumplidos | `422` con `code: WEAK_PASSWORD` |
 | Sin aceptar condiciones | Se rechaza | `422` con `code: TERMS_NOT_ACCEPTED` |
-| Token de invitación inválido o usado | Se ignora, el registro continúa (`RN-13`) | `201` |
-| Petición con sesión activa | Se rechaza | `409` |
+| Token de invitación inválido o usado | Se ignora, el registro continúa (`RN-13`) | `202` |
+
+La validación de formato y de política **ocurre antes** de mirar si el email existe, de modo
+que un `422` nunca depende de si hay cuenta: informa de lo que el cliente ha escrito mal, que
+es algo que ya sabe.
 
 ## Contrato de API
 
@@ -128,10 +134,23 @@ Los créditos de bienvenida llegan más tarde, al activar la cuenta.
 Documento: [`../../api/endpoints/user.md`](../../api/endpoints/user.md).
 Esquemas: `openapi/paths/auth.yaml`.
 
-Qué devuelve el registro —solo la cuenta creada, o también una sesión iniciada— depende de
-`S-1`. Dado que el usuario pasa directamente al onboarding, **lo más coherente con el diseño
-es que el registro devuelva ya una sesión**: de lo contrario habría que pedirle iniciar
-sesión entre el registro y el paso 1, que no es lo que muestran las pantallas.
+**El registro devuelve `202 Accepted` sin cuerpo, y la misma respuesta exista o no ya esa
+cuenta.** Resuelve `Q-1` y `Q-2` a la vez, y las dos con la misma decisión, porque son la
+misma pregunta vista desde dos lados.
+
+Devolver una sesión iniciada sería más cómodo, pero **convertiría la respuesta en un oráculo**:
+con sesión el correo estaba libre, sin sesión estaba ocupado. Cualquier diferencia observable
+—código, cuerpo, cabeceras— hace del formulario de alta un comprobador de quién tiene cuenta
+en la plataforma, que es justo lo que `RN-14` prohíbe.
+
+El diseño no se resiente: el cliente acaba de recibir el email y la contraseña del usuario, así
+que puede iniciar sesión él mismo (`FEAT-USR-004`) y entrar al onboarding sin pedirle nada más.
+La molestia recae en el cliente, que la puede absorber; no en la persona.
+
+**Consecuencia asumida:** una persona que ya tenía cuenta y vuelve a registrarse ve una
+pantalla de éxito y no recibe ningún correo. Es desconcertante, y es el precio. Lo atenúa el
+correo de activación —quien lo tenga pendiente puede pedir el reenvío (`FEAT-USR-021`)— y lo
+resuelve del todo el error de inicio de sesión inmediatamente después.
 
 ## Eventos
 
@@ -145,8 +164,8 @@ sesión entre el registro y el paso 1, que no es lo que muestran las pantallas.
 
 ## Efectos en créditos
 
-El hecho publicado es `UserRegistered`. `Credits` lo interpreta **creando la cuenta de
-créditos con saldo cero**. No abona nada.
+El hecho publicado es `UserRegistered`. **`Credits` no lo consume**: no hay efecto de
+créditos en el registro, y un contexto no se suscribe a un hecho que no le cambia nada.
 
 El abono de los 10 créditos de bienvenida se produce al consumir `AccountActivated`
 (`FEAT-CRD-002`). Es una barrera deliberada contra el registro masivo de cuentas falsas, que
@@ -173,21 +192,22 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 ## Criterios de aceptación
 
-- [ ] Un registro con email y contraseña válidos crea la cuenta y devuelve `201`.
+- [ ] Un registro con email y contraseña válidos crea la cuenta y devuelve `202`.
 - [ ] La cuenta se crea en estado `PENDING_ACTIVATION`.
 - [ ] Una contraseña de 7 caracteres se rechaza con `422`.
 - [ ] Una contraseña sin mayúscula, sin número o sin carácter especial se rechaza con `422`.
 - [ ] La validación de contraseña se aplica aunque el cliente no la haya comprobado.
 - [ ] Un registro sin aceptar las condiciones se rechaza con `422`.
 - [ ] La contraseña nunca se almacena ni se registra en claro.
-- [ ] Un email ya registrado no permite crear una segunda cuenta.
-- [ ] La respuesta de error no permite averiguar si un email concreto está registrado.
+- [ ] Un email ya registrado no crea una segunda cuenta, no envía correo y devuelve `202`.
+- [ ] Ninguna diferencia observable de la respuesta —código, cuerpo o cabeceras— permite
+      averiguar si un email concreto está registrado.
 - [ ] El email se normaliza: `Usuario@Ejemplo.com` y `usuario@ejemplo.com` son la misma cuenta.
 - [ ] Se asigna un nombre de usuario único derivado del email (`FEAT-USR-033`).
 - [ ] Dos altas con el mismo email local producen nombres de usuario distintos.
 - [ ] Se publica `UserRegistered` exactamente una vez por registro correcto.
 - [ ] El payload de `UserRegistered` no contiene la contraseña ni su hash.
-- [ ] Tras procesarse el evento, el usuario tiene una cuenta de créditos con **saldo 0**.
+- [ ] El registro **no crea** ninguna cuenta de créditos: `Credits` no consume `UserRegistered`.
 - [ ] El registro no abona en ningún caso los créditos de bienvenida.
 - [ ] La cuenta recién creada no puede ejecutar operaciones de escritura.
 - [ ] Se envía el correo de activación.
@@ -200,12 +220,12 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| Q-1 | ¿El registro devuelve además una sesión iniciada? | El diseño sugiere que sí; depende de `S-1` |
+| ~~Q-1~~ | ¿El registro devuelve además una sesión iniciada? | **Resuelto:** no. Devolver sesión solo cuando el alta procede filtraría qué correos existen. El cliente inicia sesión él mismo |
 | OB-2 | ¿Qué nombre se muestra públicamente? | **Resuelto:** el «Nombre» que se pide en el paso 1 del onboarding (`FEAT-USR-022`). Es público y es el referente para identificar a un usuario |
 | OB-1 | ¿De dónde sale el alias del saludo? | **Resuelto:** de la parte del email anterior a la `@`. Solo para presentación |
 | OB-3 | ¿Qué puede hacer una cuenta sin activar? ¿Recibe créditos? | **Resuelto:** nada de escritura, y los créditos llegan al activar. Ver `decision:0003` |
 | Q-5 | ¿Qué reglas sigue el nombre de usuario? | **Resuelto:** existe y se especifica en `FEAT-USR-033` |
-| Q-2 | ¿Cómo se concilia no revelar emails registrados (`RN-14`) con una experiencia usable? | Compromiso entre seguridad y usabilidad |
+| ~~Q-2~~ | ¿Cómo se concilia no revelar emails registrados (`RN-14`) con una experiencia usable? | **Resuelto:** `202` uniforme. El coste recae en el caso raro —volver a registrarse— y no en el habitual |
 | Q-6 | ¿Se piden las preferencias literarias en el registro? | **Resuelto:** no. Van en el onboarding (`FEAT-USR-023`) |
 | Q-7 | ¿Hay aceptación de términos? | **Resuelto:** sí, casilla obligatoria (`FEAT-USR-024`) |
 | Q-4 | ¿Cuál es la política de contraseñas? | **Resuelto:** ver `RN-3` |
