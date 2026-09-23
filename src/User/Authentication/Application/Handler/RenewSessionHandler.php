@@ -12,11 +12,11 @@ use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Authentication\Application\Command\RenewSession;
 use LectoresBeta\User\Authentication\Application\DTO\Session;
+use LectoresBeta\User\Authentication\Application\Port\SessionSecurityLog;
 use LectoresBeta\User\Authentication\Application\Service\OpenSession;
 use LectoresBeta\User\Authentication\Domain\Exception\AccountBlocked;
 use LectoresBeta\User\Authentication\Domain\Exception\InvalidRefreshToken;
 use LectoresBeta\User\Authentication\Domain\Repository\RefreshTokenRepository;
-use Psr\Log\LoggerInterface;
 
 /**
  * Renewing the session (`FEAT-USR-004` `RN-10`, `RN-11`).
@@ -42,7 +42,7 @@ final readonly class RenewSessionHandler
         private SecureTokenFactory $secureTokens,
         private TransactionalSession $transaction,
         private Clock $clock,
-        private LoggerInterface $logger,
+        private SessionSecurityLog $securityLog,
     ) {
     }
 
@@ -90,12 +90,7 @@ final readonly class RenewSessionHandler
         $revoked = $this->refreshTokens->revokeAllOf($userId, $now);
 
         if ($revoked > 0) {
-            // Worth an alert, not just a line: it is the only signal the
-            // system has that a refresh token may have been stolen.
-            $this->logger->warning('A revoked refresh token was presented again; every session of the user was revoked.', [
-                'userId' => $userId->value(),
-                'revokedSessions' => $revoked,
-            ]);
+            $this->securityLog->refreshTokenReused($userId, $revoked);
         }
     }
 }
