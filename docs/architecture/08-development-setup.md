@@ -191,9 +191,15 @@ con otra versión obtenga exactamente el mismo bloqueo.
 justamente la estructura que este proyecto **no** tiene. Sin Flex, `config/bundles.php` se
 mantiene a mano —son cuatro líneas— y nada reorganiza el árbol por sorpresa.
 
-**Los controladores llevan `#[AsController]`.** No se registran aparte en
-`config/services.yaml`: el atributo de Symfony ya les pone la etiqueta
-`controller.service_arguments`. El atributo se queda donde debe, en `Infrastructure`.
+**Los controladores llevan `#[AsController]`, y nada más.** Ese atributo es configuración de
+servicio —le pone la etiqueta `controller.service_arguments`— y por eso no hay que
+registrarlos aparte en `config/services.yaml`.
+
+**Las rutas, en cambio, no van en el controlador.** Se declaran en YAML, un fichero por
+bounded context en `config/routes/`
+([`decision:0010`](../decisions/0010-routes-declared-in-yaml-per-context.md)). El nombre de
+cada ruta es su `operationId` de OpenAPI, y hay un test que comprueba que ninguna se queda
+sin documentar.
 
 **Los eventos de integración viajan en JSON**, no en la serialización nativa de PHP
 (`serializer: messenger.transport.symfony_serializer`). Un evento de integración es un contrato

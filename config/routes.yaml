@@ -1,5 +1,8 @@
-controllers:
-    resource:
-        path: ../src/
-        namespace: LectoresBeta
-    type: attribute
+# Las rutas **no** se declaran aquí, ni con atributos en los controladores.
+#
+# Cada bounded context tiene su propio fichero en `config/routes/`, y Symfony
+# los importa todos solos. Este fichero se queda vacío a propósito: si alguna
+# ruta acabara aquí, dejaría de estar claro de quién es.
+#
+# Convención completa: docs/api/conventions/routing.md
+# Por qué:              docs/decisions/0010-routes-declared-in-yaml-per-context.md

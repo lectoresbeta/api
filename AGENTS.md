@@ -588,6 +588,8 @@ Symfony is the application framework but must remain an Infrastructure concern w
 - Avoid using the Symfony service container as a service locator.
 - Avoid static access to services.
 - Keep framework attributes and configuration out of Domain classes.
+- **Routes live in YAML, one file per bounded context**, never in controller attributes. See
+  *Routing* below.
 - Symfony-specific events must not replace Domain Events.
 - Convert framework exceptions into appropriate API responses in a centralized and consistent way.
 
@@ -646,6 +648,52 @@ DeleteManuscriptController
 ```
 
 A controller should be small enough that its complete behavior is obvious at a glance.
+
+## Routing
+
+**Routes are declared in YAML, never with attributes or annotations on the controller.**
+
+Each bounded context owns one file:
+
+```text
+config/routes.yaml          empty; it only exists as Symfony's entry point
+config/routes/user.yaml
+config/routes/work.yaml
+config/routes/reading.yaml
+config/routes/feedback.yaml
+config/routes/community.yaml
+config/routes/credits.yaml
+config/routes/moderation.yaml
+config/routes/notification.yaml
+config/routes/shared.yaml
+```
+
+Every context has a file even when it exposes nothing yet. Listing that directory is how
+anyone finds out what the API is made of.
+
+Format:
+
+```yaml
+registerUser:
+    path: /api/v1/auth/register
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\RegisterUserController::__invoke
+    methods: [POST]
+```
+
+- **The route name is the OpenAPI `operationId`.** It is what makes "the implementation and
+  the specification must not diverge" checkable rather than aspirational.
+- A route that belongs to a context goes in that context's file. Never in
+  `config/routes.yaml`, and never in another context's file.
+- `#[AsController]` on the controller class is fine and expected: it is service configuration,
+  not routing.
+
+Why YAML and not attributes: with attributes, the map of the API is scattered across every
+controller, and answering "what does this context expose?" means grepping. With one file per
+context, it is a file. See
+[`decision:0010`](docs/decisions/0010-routes-declared-in-yaml-per-context.md) and
+[`docs/api/conventions/routing.md`](docs/api/conventions/routing.md).
+
+`tests/Unit/Architecture/RoutingConventionTest.php` enforces all of this. Do not weaken it.
 
 ## Request handling
 
@@ -1269,6 +1317,7 @@ A backend task is not complete until, when applicable:
 Do not solve a task by:
 
 - putting business logic in a controller;
+- declaring a route with an attribute or annotation instead of in its context's YAML file;
 - accessing Doctrine directly from Domain or Application;
 - injecting one bounded context's repository into another;
 - calling Credits directly from another bounded context to add, subtract or modify credits;

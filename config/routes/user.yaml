@@ -1,0 +1,14 @@
+# Rutas del bounded context `User`. Todavía ninguna.
+#
+# El fichero existe vacío a propósito: hace visible de un vistazo qué
+# contextos exponen API y cuáles no, y quien añada el primer endpoint de
+# `User` no tiene que averiguar dónde va.
+#
+# Formato:
+#
+#     <operationId>:
+#         path: /api/v1/...
+#         controller: LectoresBeta\User\<Concepto>\Infrastructure\Controller\<Algo>Controller::<metodo>
+#         methods: [GET]
+#
+# Convención completa: docs/api/conventions/routing.md

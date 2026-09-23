@@ -8,7 +8,7 @@ cada operación**; la forma exacta de peticiones y respuestas vive en
 
 | Dónde | Qué contiene |
 |---|---|
-| `api/conventions/` | Lo transversal: autenticación, errores, paginación, versionado, concurrencia, ficheros |
+| `api/conventions/` | Lo transversal: enrutado, autenticación, errores, paginación, versionado, concurrencia, ficheros |
 | `api/endpoints/` | Por contexto: propósito de cada operación, autorización, reglas y efectos |
 | `openapi/` (raíz) | Esquemas, tipos, códigos y ejemplos. Contrato máquina-legible |
 
@@ -25,6 +25,7 @@ requisito explícito de `AGENTS.md` y de la *Definition of done*.
 
 | Documento | Contenido |
 |---|---|
+| [routing.md](conventions/routing.md) | Dónde se declara cada ruta y cómo se nombra |
 | [authentication.md](conventions/authentication.md) | Cómo se autentica y cómo se identifica al usuario |
 | [errors.md](conventions/errors.md) | Formato de error, códigos y cuándo se usa cada uno |
 | [pagination.md](conventions/pagination.md) | Paginación, filtrado y ordenación de colecciones |

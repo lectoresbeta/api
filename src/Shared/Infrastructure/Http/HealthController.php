@@ -9,7 +9,6 @@ use LectoresBeta\Shared\Domain\Health\HealthReport;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\AsController;
-use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * Whether the system is up, and whether it can do its job.
@@ -19,7 +18,8 @@ use Symfony\Component\Routing\Attribute\Route;
  * by people who are not reading release notes. It must not move when the API
  * version does.
  *
- * Two routes, because they answer questions with different consequences:
+ * Two routes —declared in `config/routes/shared.yaml`, like every route in
+ * this project— because they answer questions with different consequences:
  *
  * - `/health/live` says «this process is alive». It touches nothing.
  * - `/health` says «this process can serve traffic», and for that it checks
@@ -43,8 +43,11 @@ final readonly class HealthController
     /**
      * Liveness. No I/O: a probe that can fail for a reason other than «this
      * process is stuck» is not a liveness probe.
+     *
+     * Routed from `config/routes/shared.yaml` as `checkLiveness`. Routes are
+     * never declared with attributes in this project
+     * (`decision:0010`).
      */
-    #[Route('/health/live', name: 'health_live', methods: ['GET'])]
     public function live(): JsonResponse
     {
         return $this->json(['status' => 'up'], Response::HTTP_OK);
@@ -57,8 +60,9 @@ final readonly class HealthController
      * The failure body is the report itself and not an RFC 9457 `Problem`:
      * the interesting part of a failed health check is **which** dependency
      * broke, and that fits badly in a shape designed to describe one error.
+     *
+     * Routed from `config/routes/shared.yaml` as `checkReadiness`.
      */
-    #[Route('/health', name: 'health_ready', methods: ['GET'])]
     public function ready(): JsonResponse
     {
         $report = ($this->checkHealth)();

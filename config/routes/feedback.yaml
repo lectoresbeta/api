@@ -1,0 +1,14 @@
+# Rutas del bounded context `Feedback`. Todavía ninguna.
+#
+# El fichero existe vacío a propósito: hace visible de un vistazo qué
+# contextos exponen API y cuáles no, y quien añada el primer endpoint de
+# `Feedback` no tiene que averiguar dónde va.
+#
+# Formato:
+#
+#     <operationId>:
+#         path: /api/v1/...
+#         controller: LectoresBeta\Feedback\<Concepto>\Infrastructure\Controller\<Algo>Controller::<metodo>
+#         methods: [GET]
+#
+# Convención completa: docs/api/conventions/routing.md
