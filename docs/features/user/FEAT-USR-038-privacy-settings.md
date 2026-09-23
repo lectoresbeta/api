@@ -4,7 +4,7 @@ title: Ajustes de privacidad del usuario
 context: User
 concept: Privacy
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -15,7 +15,7 @@ endpoints:
   - PUT /me/privacy-settings
 events: [PrivacySettingsChanged]
 depends_on: [FEAT-USR-014, FEAT-COM-011]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-038 — Ajustes de privacidad del usuario
@@ -57,6 +57,31 @@ permissions»*.
 Que no se expongan importa: saber que alguien tiene el perfil restringido ya es información
 sobre esa persona.
 
+## Los tres desplegables
+
+**Decidido** (`S-13`): los tres admiten los mismos tres valores.
+
+| Valor | Quién |
+|---|---|
+| `EVERYONE` | Cualquiera |
+| `FOLLOWERS` | Solo quienes le siguen |
+| `NOBODY` | Nadie |
+
+Que los tres compartan enum es deliberado: son la misma pregunta —¿hasta dónde llega esto?—
+aplicada a tres cosas distintas. Un enum por ajuste multiplicaría por tres el trabajo de la
+autorización sin añadir expresividad.
+
+`NOBODY` significa cosas muy distintas en cada uno, y conviene verlas juntas:
+
+| Ajuste en `NOBODY` | Efecto real |
+|---|---|
+| Ver mi perfil | El perfil deja de resolver para todos. **La cuenta se vuelve invisible** |
+| Comentar mis textos | Nadie puede corregir ninguna obra, sea cual sea su modalidad |
+| Mandarme mensajes | Bandeja cerrada |
+
+El primero es el que más sorprende y merece confirmación (`S-41`): una cuenta invisible sigue
+publicando obras que aparecen en el catálogo con un autor que no se puede abrir.
+
 ## Reglas de negocio
 
 - `RN-1` Los ajustes son **del usuario**, no de sus obras ni de sus publicaciones.
@@ -64,7 +89,9 @@ sobre esa persona.
   **nunca más permisiva** (`S-14`, resuelta).
 - `RN-3` Cambiar un ajuste **no reescribe el pasado**: no borra mensajes ya recibidos ni
   comentarios ya publicados. Afecta a lo que ocurra a partir de ese momento.
-- `RN-4` Todo ajuste tiene un **valor por defecto explícito** al crear la cuenta.
+- `RN-4` Todo ajuste tiene un **valor por defecto explícito** al crear la cuenta:
+  `EVERYONE` en los tres.
+- `RN-4b` Los tres ajustes usan el mismo enum: `EVERYONE`, `FOLLOWERS`, `NOBODY` (`S-13`).
 - `RN-5` Un usuario bloqueado ([`FEAT-COM-034`](../community/FEAT-COM-034-block-user.md)) no
   gana acceso por ninguna combinación de estos ajustes. El bloqueo es más fuerte.
 - `RN-6` Restringir «quién puede comentar» **no interrumpe las correcciones en curso**: quien
@@ -204,15 +231,15 @@ ajuste ausente no puede interpretarse como «todo permitido».
 | # | Pregunta | Impacto |
 |---|---|---|
 | **S-36** | Al endurecer el ajuste global, ¿puede terminar quien ya está corrigiendo? | Cortarlo destruiría trabajo real de un tercero |
-| **S-13** | ¿Qué opciones tienen los desplegables? | Definen enums de autorización |
 | **S-16** | ¿Qué es «actividad»? | Sin ello, el cuarto ajuste no se puede especificar |
+| S-41 | Con el perfil en `NOBODY`, ¿qué se ve del autor en el catálogo? | Una cuenta invisible sigue publicando obras |
 | **S-15** | Con el perfil restringido, ¿desaparece el autor del catálogo? ¿`403` o `404`? | Un `403` confirma que la cuenta existe |
 | S-20 | ¿«Seguidores» incluye a los lectores beta con acceso concedido? | Un LB no tiene por qué seguir al autor |
 | S-21 | ¿Estos ajustes afectan a `Guest`, o el catálogo ya es público para todos? | Ligado a `L-8` |
 
 ## Estado
 
-**Especificación:** `DRAFT`. `S-14` resuelta: el ajuste global es un techo. Quedan `S-13`
-—sin las opciones de los desplegables no hay enums— y `S-16`, que define qué es «actividad».
+**Especificación:** `APPROVED` (2026-09-24). `S-13` resuelta: `EVERYONE` / `FOLLOWERS` / `NOBODY`. `S-16`
+queda como detalle de qué se considera «actividad».
 
 **Implementación:** `TODO`.

@@ -4,7 +4,7 @@ title: Ver el perfil público de un usuario
 context: User
 concept: Profile
 actors: [User, Guest]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -14,7 +14,7 @@ sources:
 endpoints: [GET /users/{userId}, GET /profiles/{username}]
 events: []
 depends_on: [FEAT-USR-028, FEAT-USR-035]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-014 — Ver el perfil público de un usuario
@@ -122,12 +122,13 @@ El backend debe rechazarlo con independencia de lo que pinte el cliente.
 |---|---|---|
 | **U-17** | ¿Es deliberado que el contador de correcciones sea público y la lista no? | Si no lo es, falta una pestaña |
 | U-18 | ¿De dónde sale el nombre de pila de los estados vacíos? | Partir el `Name` es frágil: es texto libre |
-| U-20 | ¿La lista de seguidores de alguien es pública? | El diseño la muestra sin restricción |
+| ~~U-20~~ | **Resuelta:** la lista de seguidores **es pública**, sujeta al ajuste de privacidad del perfil |
 | U-21 | ¿Se muestra «Enviar mensaje» a quien no los tiene habilitados? | `FEAT-USR-010` |
 | B-1 | ¿Qué ve un usuario bloqueado al visitar el perfil de quien le bloqueó? | `FEAT-COM-034` |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Para llegar a `APPROVED` falta confirmar `U-17`.
+**Especificación:** `APPROVED` (2026-09-24). `U-20` resuelta: la lista de seguidores es pública. Lo que
+queda son detalles de presentación.
 
 **Implementación:** `TODO`.

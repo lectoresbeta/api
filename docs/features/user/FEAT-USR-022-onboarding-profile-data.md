@@ -4,7 +4,7 @@ title: Onboarding paso 1 — nombre y fecha de nacimiento
 context: User
 concept: Onboarding
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /me/onboarding, PUT /me/onboarding/profile]
 events: []
 depends_on: [FEAT-USR-001]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-USR-022 — Onboarding paso 1: nombre y fecha de nacimiento
@@ -45,6 +45,31 @@ tarjetas de sugerencia de autores.
 
 - Cuenta creada, en `PENDING_ACTIVATION` o `ACTIVE`.
 - Onboarding no completado.
+
+## Identidad y edad
+
+**`N-2` resuelta.** Quien identifica de forma única a una persona es el **nombre de usuario**
+([`FEAT-USR-033`](FEAT-USR-033-username-assignment.md)), que es único por construcción y es lo
+que aparece en la URL del perfil.
+
+El **nombre público** de este paso del onboarding es un texto libre y **no es único**: dos
+personas pueden llamarse «Ana García» sin que eso cree ninguna ambigüedad, porque para
+distinguirlas está el nombre de usuario.
+
+> Si lo que se quería decir es que **el nombre público también debe ser único**, esto hay que
+> cambiarlo: obligaría a validar disponibilidad en el onboarding y a pedirle a alguien que
+> cambie su nombre real porque otro llegó antes. Dímelo y lo rehago.
+
+**`OB-7` resuelta.** La **fecha de nacimiento es obligatoria** y de ella se deriva la edad, que
+**filtra automáticamente el contenido** según lo que exija la ley: una cuenta que no alcance
+la mayoría de edad no ve obras marcadas `ADULTS_ONLY`
+([`FEAT-WRK-017`](../work/FEAT-WRK-017-content-rating.md)).
+
+Ese filtrado **no es una preferencia**: no se puede desactivar desde los ajustes de contenido
+([`FEAT-USR-043`](FEAT-USR-043-content-preferences.md) `RN-4`).
+
+Queda por fijar la **edad mínima para registrarse** (`OB-15`), que no es lo mismo que la
+mayoría de edad y varía por jurisdicción.
 
 ## Reglas de negocio
 
@@ -159,10 +184,8 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resuelto `OB-2`: el nombre es público y la privacidad solo
-afecta a la fecha de nacimiento. Para llegar a `APPROVED` faltan las reglas de validación del
-nombre (`N-1`), si debe ser único (`N-2`) y la edad mínima (`OB-7`).
-
-**Corrección de diseño pendiente:** retirar el tooltip de privacidad del campo Nombre.
+**Especificación:** `APPROVED` (2026-09-24). `N-2` y `OB-7` resueltas: la unicidad la aporta el nombre de
+usuario y la fecha de nacimiento es obligatoria y filtra contenido. Queda `OB-15`, la edad
+mínima de registro, que no impide implementar el paso.
 
 **Implementación:** `TODO`.

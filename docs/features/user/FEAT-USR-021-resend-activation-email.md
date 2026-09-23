@@ -4,7 +4,7 @@ title: Reenviar el email de activación
 context: User
 concept: Account
 actors: [Guest, User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [POST /auth/activation/resend]
 events: [ActivationEmailRequested]
 depends_on: [FEAT-USR-020]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-USR-021 — Reenviar el email de activación
@@ -32,6 +32,23 @@ envía correo a una dirección arbitraria es un vector de spam si no se limita.
 |---|---|---|
 | `User` | Pedir el reenvío para su propia cuenta | Sesión iniciada y cuenta en `PENDING_ACTIVATION` |
 | `Guest` | Pedir el reenvío indicando su email | Ver `RN-4` |
+
+## Se puede pedir sin sesión
+
+**Decidido** (`R-1`): basta con el correo. No hace falta tener la sesión abierta.
+
+Sin ello, quien cierra el navegador antes de activar se queda atrapado: no puede entrar
+—porque no ha activado— y no puede pedir el reenvío —porque no puede entrar—. Es un callejón
+sin salida con una solución trivial.
+
+- `RN-R1` La respuesta es **siempre la misma**, exista o no esa cuenta. Si dijera «ese correo
+  no está registrado», el formulario sería un comprobador de quién tiene cuenta.
+- `RN-R2` Si la cuenta ya está activada, **no se envía nada** y la respuesta no cambia.
+- `RN-R3` Hay **limitación de frecuencia por correo y por origen**. Un formulario público que
+  dispara envíos es un amplificador de spam con el dominio de la plataforma.
+
+`RN-R1` y `RN-R2` van juntas: cualquier diferencia observable entre los tres casos —no existe,
+existe sin activar, ya activada— filtra información.
 
 ## Reglas de negocio
 
@@ -98,10 +115,11 @@ registrar los envíos para aplicar `RN-3`.
 | # | Pregunta | Impacto |
 |---|---|---|
 | OB-9 | ¿Cuáles son el intervalo y el máximo reales? | Las cifras propuestas son un punto de partida |
-| R-1 | ¿El reenvío se puede pedir sin sesión, solo con el email? | Si no, un usuario que cierre el navegador antes de activar se queda sin salida |
+| ~~R-1~~ | ¿El reenvío se puede pedir sin sesión, solo con el email? | Si no, un usuario que cierre el navegador antes de activar se queda sin salida |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Faltan los límites definitivos y decidir si se admite sin sesión.
+**Especificación:** `APPROVED` (2026-09-24). `R-1` resuelta: el reenvío se pide sin sesión, con respuesta
+indistinguible y limitación de frecuencia.
 
 **Implementación:** `TODO`.

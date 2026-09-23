@@ -17,17 +17,17 @@ verdad sobre el alcance.**
 
 | Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
 |---|---|---|---|---|
-| `User` (USR) | 43 | 26 | 16 | 0 |
-| `Work` (WRK) | 17 | 6 | 3 | 0 |
+| `User` (USR) | 44 | 26 | 26 | 0 |
+| `Work` (WRK) | 17 | 6 | 6 | 0 |
 | `Reading` (RDG) | 10 | 0 | 0 | 0 |
 | `Feedback` (FBK) | 12 | 4 | 3 | 0 |
-| `Community` (COM) | 36 | 9 | 4 | 0 |
+| `Community` (COM) | 38 | 9 | 8 | 0 |
 | `Moderation` (MOD) | 12 | 10 | 10 | 0 |
 | `Credits` (CRD) | 19 | 9 | 9 | 0 |
 | `Notification` (NOT) | 9 | 1 | 1 | 0 |
-| **Total** | **158** | **65** | **46** | **0** |
+| **Total** | **161** | **65** | **63** | **0** |
 
-Estado global: **especificación cerrada en su mayor parte**. 46 de 65 fichas están
+Estado global: **especificación cerrada en su mayor parte**. 63 de 65 fichas están
 `APPROVED` y son implementables. No hay código en `src/`.
 
 Áreas cubiertas con diseño:
@@ -69,18 +69,18 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-010 | Configurar recepción de mensajes directos | User | PENDING | TODO | P2 | — |
 | FEAT-USR-011 | Configurar recepción de propuestas de LB y writing buddy | User | PENDING | TODO | P2 | — |
 | FEAT-USR-012 | ~~Configurar notificaciones por email~~ → `FEAT-USR-039` | User | PENDING | DEPRECATED | P3 | — |
-| FEAT-USR-013 | Eliminar la cuenta — anonimización | User | DRAFT | BLOCKED | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
-| FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-014-view-public-profile.md) |
+| FEAT-USR-013 | Eliminar la cuenta — anonimización | User | APPROVED | BLOCKED | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
+| FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-014-view-public-profile.md) |
 | FEAT-USR-015 | Configurar información de la página de autor (bio, foto, referencias) | Writer | PENDING | TODO | P2 | — |
 | FEAT-USR-016 | Personalizar página de autor (fuentes, colores, fondos) | Writer | PENDING | TODO | P3 | — |
 | FEAT-USR-017 | Buscar autores por nombre o temática | User | PENDING | TODO | P1 | — |
 | FEAT-USR-018 | Invitar a personas a la plataforma por email | User | PENDING | TODO | P2 | — |
 | FEAT-USR-019 | Registro y login con LinkedIn | Guest | APPROVED | DEFERRED | P3 | [ficha](user/FEAT-USR-019-linkedin-oauth.md) |
 | FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
-| FEAT-USR-021 | Reenviar el email de activación | Guest, User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
-| FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
-| FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
-| FEAT-USR-024 | Aceptar condiciones de uso y política de privacidad | Guest | DRAFT | TODO | P0 | [ficha](user/FEAT-USR-024-accept-terms-and-privacy.md) |
+| FEAT-USR-021 | Reenviar el email de activación | Guest, User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
+| FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
+| FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
+| FEAT-USR-024 | Aceptar condiciones de uso y política de privacidad | Guest | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-024-accept-terms-and-privacy.md) |
 | FEAT-USR-025 | Bloquear las operaciones de escritura hasta activar la cuenta | User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-025-block-writes-until-activation.md) |
 | FEAT-USR-026 | Tour de bienvenida de la Home | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-026-welcome-tour.md) |
 | FEAT-USR-027 | Contexto de sesión para el layout | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-027-session-context.md) |
@@ -91,15 +91,16 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-032 | Compartir el perfil | User | PENDING | TODO | P3 | — |
 | FEAT-USR-033 | Nombre de usuario — formato, asignación automática y unicidad | Guest, User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-033-username-assignment.md) |
 | FEAT-USR-034 | Cambiar el nombre de usuario y alias temporal | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-034-change-username.md) |
-| FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |
+| FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |
 | FEAT-USR-036 | Purga programada de alias caducados | — (sistema) | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-036-purge-expired-aliases.md) |
-| FEAT-USR-037 | Gestionar la foto de perfil — subir, editar y eliminar | User | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |
-| FEAT-USR-038 | Ajustes de privacidad del usuario | User | DRAFT | TODO | P1 | [ficha](user/FEAT-USR-038-privacy-settings.md) |
-| FEAT-USR-039 | Preferencias de notificación por canal | User | DRAFT | TODO | P2 | [ficha](user/FEAT-USR-039-notification-preferences.md) |
+| FEAT-USR-037 | Gestionar la foto de perfil — subir, editar y eliminar | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |
+| FEAT-USR-038 | Ajustes de privacidad del usuario | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-038-privacy-settings.md) |
+| FEAT-USR-039 | Preferencias de notificación por canal | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-039-notification-preferences.md) |
 | FEAT-USR-040 | Cambiar el correo de la cuenta | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-040-change-email.md) |
 | FEAT-USR-041 | Cambiar o establecer la contraseña | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-041-change-password.md) |
 | FEAT-USR-042 | Preferencias de apariencia (tema) | User | PENDING | TODO | P3 | — *(sin captura)* |
 | FEAT-USR-043 | Preferencias de contenido sensible | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-043-content-preferences.md) |
+| FEAT-USR-044 | Filtrado automático de contenido por edad | — (sistema) | PENDING | TODO | P0 | — |
 
 > **`FEAT-USR-013`: eliminar una cuenta la anonimiza** (`S-32`, decidida). Se suprime todo
 > dato personal y se conserva, sin autor identificable, lo que pertenece a terceros: las
@@ -167,9 +168,9 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-011 | Generar enlace para compartir en redes sociales y captar LB | Writer | PENDING | TODO | P2 | — |
 | FEAT-WRK-012 | Sección «Leer» — catálogo con filtros y ordenación | User | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-012-browse-catalogue.md) |
 | FEAT-WRK-013 | Calcular el número de palabras y el nivel de extensión | — (sistema) | PENDING | TODO | P0 | — |
-| FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | DRAFT | TODO | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
-| FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | DRAFT | TODO | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
-| FEAT-WRK-016 | Estado de una obra — borrador, visible y en corrección | Writer | DRAFT | TODO | P0 | [ficha](work/FEAT-WRK-016-work-status.md) |
+| FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | APPROVED | TODO | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
+| FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
+| FEAT-WRK-016 | Estado de una obra — borrador, visible y en corrección | Writer | APPROVED | TODO | P0 | [ficha](work/FEAT-WRK-016-work-status.md) |
 | FEAT-WRK-017 | Clasificación de contenido sensible de una obra | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-017-content-rating.md) |
 
 > `FEAT-WRK-009` está `BLOCKED`: el documento de origen deja explícitamente abierto en qué
@@ -276,7 +277,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-COM-001 | Ver las publicaciones del muro principal | User | PENDING | TODO | P1 | — |
-| FEAT-COM-002 | Crear una publicación (texto, imagen, vídeo, enlace o relato) | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-002-create-post.md) |
+| FEAT-COM-002 | Crear una publicación (texto, imagen, vídeo, enlace o relato) | User | APPROVED | TODO | P1 | [ficha](community/FEAT-COM-002-create-post.md) |
 | FEAT-COM-003 | Publicar buscando lectores beta para una obra | Writer | PENDING | TODO | P1 | — |
 | FEAT-COM-004 | Publicar buscando writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | PENDING | TODO | P2 | — |
@@ -292,8 +293,8 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-015 | Ver y filtrar el ranking de lectores | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-016 | Onboarding paso 3 — sugerencias de autores a seguir | User | APPROVED | TODO | P1 | [ficha](community/FEAT-COM-016-onboarding-author-suggestions.md) |
 | FEAT-COM-017 | Home — carrusel de obras recomendadas | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-017-home-work-recommendations.md) |
-| FEAT-COM-018 | Home — sugerencias de autores en el muro | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-018-home-author-suggestions.md) |
-| FEAT-COM-019 | Repostear una publicación | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-019-repost.md) |
+| FEAT-COM-018 | Home — sugerencias de autores en el muro | User | APPROVED | TODO | P1 | [ficha](community/FEAT-COM-018-home-author-suggestions.md) |
+| FEAT-COM-019 | Repostear una publicación | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-019-repost.md) |
 | FEAT-COM-020 | Compartir una publicación fuera de la plataforma | User | PENDING | TODO | P2 | — |
 | FEAT-COM-021 | Guardar una publicación | User | PENDING | TODO | P3 | — |
 | FEAT-COM-022 | Ocultar una publicación del muro | User | PENDING | TODO | P3 | — |
@@ -308,9 +309,11 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-031 | Responder a un comentario | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-031-reply-to-comment.md) |
 | FEAT-COM-032 | Menciones a usuarios | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-032-mentions.md) |
 | FEAT-COM-033 | Silenciar a un usuario | User | PENDING | TODO | P3 | — |
-| FEAT-COM-034 | Bloquear a un usuario | User | DRAFT | TODO | P2 | [ficha](community/FEAT-COM-034-block-user.md) |
+| FEAT-COM-034 | Bloquear a un usuario | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-034-block-user.md) |
 | FEAT-COM-035 | Denunciar a un usuario → `FEAT-MOD-001` | User | PENDING | TODO | P2 | — |
 | FEAT-COM-036 | Interacciones sociales sobre un capítulo (like, comentario, compartir) | User | PENDING | TODO | P1 | — |
+| FEAT-COM-037 | Adjuntar vídeo a una publicación | User | PENDING | DEFERRED | P3 | — |
+| FEAT-COM-038 | Publicaciones de la plataforma (cuenta institucional) | Admin | PENDING | TODO | P2 | — |
 
 > Los tres rankings están `BLOCKED` por `CM-4`: el material de partida dice "mejor valorados"
 > pero no define la fórmula de puntuación. Sin ella no hay especificación posible.
@@ -555,35 +558,40 @@ El sistema de créditos quedó cerrado el 2026-09-23 en
 [`decision:0006`](../decisions/0006-credit-system.md): ya no hay ninguna decisión de producto
 pendiente que impida implementarlo.
 
-### Las 19 fichas que siguen en `DRAFT`, y por qué
+### Lo que queda sin aprobar
 
-El 2026-09-24 hay **46 de 65 fichas en `APPROVED`**. Las 19 restantes están agrupadas aquí
-**por la decisión que las bloquea**: son **13 decisiones**, y varias desbloquean más de una.
+**63 de las 65 fichas están `APPROVED`.** Solo dos siguen sin aprobar, y ambas por el mismo
+motivo: falta una decisión de producto que no se puede suplir con un valor por defecto.
 
-Criterio aplicado: una ficha se aprueba si es **implementable tal como está**. Una pregunta
-abierta que solo afecta a una constante, a un texto de interfaz o a una fase posterior no
-bloquea; una que cambia **el modelo, el contrato o una regla de negocio**, sí.
-
-| # | Decisión pendiente | Bloquea |
+| Ficha | Bloqueada por | Qué falta |
 |---|---|---|
-| 1 | **`S-13`** — qué opciones tienen los desplegables de privacidad | FEAT-USR-038 |
-| 2 | **`S-11`, `S-12`** — qué tipos de aviso existen | FEAT-USR-039 |
-| 3 | **`OB-14`** — el catálogo de géneros | FEAT-USR-023 |
-| 4 | **`N-2`, `OB-7`** — si el nombre público es único y si hay edad mínima | FEAT-USR-022 |
-| 5 | **`U-3`, `V-4`** — qué pasa con obras y mensajes al anonimizar | FEAT-USR-013 |
-| 6 | **`T-1`** — dónde viven los textos legales | FEAT-USR-024 |
-| 7 | **`W-9`** — si `WorkStatus` sustituye a `Visibility` | FEAT-WRK-016, y con ella FEAT-WRK-015 |
-| 8 | **`W-17`, `W-12`** — alcance de cada pregunta y consulta de precio | FEAT-WRK-014 |
-| 9 | **`C-1`, `C-2`** — opciones de audiencia y si se admite vídeo | FEAT-COM-002 |
-| 10 | **`C-3`** — si un repost es un puntero o una entidad | FEAT-COM-019 |
-| 11 | **`B-2`, `B-3`** — efectos de bloquear a un usuario | FEAT-COM-034 |
-| 12 | **`AF-1`, `AF-2`** — mecanismo antifraude | FEAT-FBK-012 |
-| 13 | Cinco sueltas: `F-2`, `N-11`, `R-1`, `H-8`, `U-20`, `CM-4` (rankings) | FEAT-USR-037, FEAT-USR-035, FEAT-USR-021, FEAT-COM-018, FEAT-USR-014, FEAT-COM-017 |
+| `FEAT-FBK-012` — control antifraude | `AF-1`, `AF-2` | Qué mecanismo, y si actúa antes o después del abono |
+| `FEAT-COM-017` — recomendaciones de la Home | `CM-4` (recomendaciones), `H-3` | Cómo se personaliza la recomendación y qué cuenta como lectura |
 
-Resueltas el 2026-09-24: `S-1` ([`decision:0007`](../decisions/0007-jwt-sessions.md)), `W-20`,
-`CM-4` para catálogo y comentarios más `L-9`
-([`decision:0008`](../decisions/0008-catalogue-ordering.md)), `Q-4`, `Q-1`, `Q-2`, `R-4` y
-`OB-11`.
+`CM-4` quedó resuelta para el **catálogo** y los **comentarios**
+([`decision:0008`](../decisions/0008-catalogue-ordering.md) y `FEAT-COM-006`); las
+**recomendaciones** y los **rankings** siguen aplazados a propósito, porque dependen de tener
+usuarios y datos que hoy no existen.
+
+### Decisiones que quedaron anotadas dentro de fichas aprobadas
+
+Aprobar no significa que no quede nada que afinar. Estas afectan solo a constantes,
+presentación o fases posteriores, y por eso no bloquean:
+
+| Ref | Qué | Dónde |
+|---|---|---|
+| `V-4` | Qué ocurre con los mensajes directos al anonimizar una cuenta | `FEAT-USR-013` |
+| `OB-15` | Edad mínima para registrarse, distinta de la mayoría de edad | `FEAT-USR-022` |
+| `OB-14` | **Revisar el catálogo de géneros** que se ha propuesto | `FEAT-USR-023` |
+| `N-11` | **Confirmar `/@{username}`** como forma de la URL | `FEAT-USR-035` |
+| `N-2` | Confirmar que el nombre **público** no necesita ser único | `FEAT-USR-022` |
+| `S-16` | Qué se considera «visibilidad de actividad» | `FEAT-USR-038` |
+| `S-41` | Qué se ve de un autor con el perfil en `NOBODY` | `FEAT-USR-038` |
+| `C-2` | Vídeo en publicaciones → `FEAT-COM-037`, `DEFERRED` | `FEAT-COM-002` |
+| `H-10` | Cómo funciona la cuenta institucional → `FEAT-COM-038` | `FEAT-COM-018` |
+| `B-4` | Si bloquear a alguien con una corrección en curso debe quedar registrado | `FEAT-COM-034` |
+| `MOD-44` | Qué se conserva de una cuenta expulsada si pide su supresión | `FEAT-MOD-006` |
+| `MOD-37` | Si la revisión automática con IA saca obra inédita de la plataforma | `FEAT-MOD-011` |
 
 Las referencias `OB-n` están en [`../ui/account-creation.md`](../ui/account-creation.md).
 

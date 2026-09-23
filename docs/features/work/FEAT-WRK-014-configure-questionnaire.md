@@ -4,7 +4,7 @@ title: Definir el cuestionario que acompaña a la obra
 context: Work
 concept: Questionnaire
 actors: [Writer]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -16,7 +16,7 @@ endpoints:
   - PUT /works/{workId}/questionnaire
 depends_on: [FEAT-WRK-001]
 events: [QuestionnaireUpdated]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-WRK-014 — Definir el cuestionario que acompaña a la obra
@@ -63,6 +63,36 @@ concreta**, no salen de un catálogo fijo.
 |---|---|---|
 | `Writer` | Crear y editar el cuestionario de su obra | Es el autor |
 | Cualquier otro | Leer el cuestionario | Tiene acceso de lector beta a la obra |
+
+## Alcance de cada pregunta
+
+**Decidido** (`W-17`): cada pregunta declara a qué capítulos aplica.
+
+| `scope` | Se responde en |
+|---|---|
+| `EVERY_CHAPTER` | Todos los capítulos |
+| `LAST_CHAPTER` | Solo el último |
+
+Resuelve el problema que la maqueta dejaba a la vista: una pregunta como *«¿qué te pareció el
+final de la historia?»* no tiene respuesta posible en el capítulo 1, y **el autor pagaría por
+ella igualmente** al ser la corrección por capítulo.
+
+Con el `scope`, el precio de cada capítulo cuenta **solo las preguntas que aplican en él**, así
+que el autor no paga por lo que no puede recibir.
+
+Por defecto, `EVERY_CHAPTER`: es lo que espera quien no se plantea la distinción.
+
+## Cómo consulta `Work` el precio
+
+**Decidido** (`W-12`): mediante un **contrato de consulta explícito** que expone `Credits`.
+
+`POST /works/{workId}/questionnaire/estimate` devuelve **cifras y nada más** —coste por
+capítulo y recompensa— sin exponer el modelo de `Credits` ni permitir navegarlo.
+
+[`decision:0002`](../../decisions/0002-credits-as-isolated-bounded-context.md) prohíbe el
+acoplamiento al modelo, no la consulta con contrato. Y aquí la consulta síncrona está
+justificada: **el autor necesita ver el precio mientras configura**, y un evento no sirve
+porque la respuesta se necesita en el momento.
 
 ## Reglas de negocio
 
@@ -210,9 +240,9 @@ está confirmada por diseño.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **W-17** | Si la corrección es por capítulo, ¿tiene sentido repetir en cada capítulo preguntas que hablan de «la historia» o «el final»? | Ver abajo. Afecta al modelo y a la calidad del feedback |
-| **W-11** | ¿Cuál es el máximo de preguntas? | Sin tope, la corrección puede volverse inabordable |
-| **W-12** | ¿Cómo consulta `Work` el precio a `Credits` para mostrarlo al autor? | Es una consulta síncrona entre contextos: necesita contrato explícito |
+| ~~W-17~~ | Si la corrección es por capítulo, ¿tiene sentido repetir en cada capítulo preguntas que hablan de «la historia» o «el final»? | Ver abajo. Afecta al modelo y a la calidad del feedback |
+| W-11 | ¿Cuál es el máximo de preguntas? | Sin tope, la corrección puede volverse inabordable |
+| ~~W-12~~ | ¿Cómo consulta `Work` el precio a `Credits` para mostrarlo al autor? | Es una consulta síncrona entre contextos: necesita contrato explícito |
 | W-13 | ¿Existe pantalla de configuración en Figma? | Sin ella, el detalle del formulario se está deduciendo |
 | W-14 | ¿Hay tipos de pregunta además del texto libre (escala, sí/no, opción múltiple)? | Cambia el modelo y probablemente el precio |
 | W-15 | ¿Hay cuestionarios plantilla sugeridos para autores que no saben qué preguntar? | Producto |
@@ -256,9 +286,7 @@ prohíbe el acoplamiento, no la consulta con contrato).
 
 ## Estado
 
-**Especificación:** `DRAFT`. El mecanismo está claro; faltan la pantalla del autor (`W-13`),
-el contrato de consulta de precio (`W-12`) y el alcance de cada pregunta (`W-17`).
-
-Resueltas: `R-2` (corrección por capítulo) y `R-5` (longitudes **en palabras**).
+**Especificación:** `APPROVED` (2026-09-24). `W-17` y `W-12` resueltas: `scope` por pregunta y contrato de
+consulta explícito para el precio. `W-11`, el máximo de preguntas, es una constante.
 
 **Implementación:** `TODO`.

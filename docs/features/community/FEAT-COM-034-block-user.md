@@ -4,7 +4,7 @@ title: Bloquear a un usuario
 context: Community
 concept: Relationship
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [PUT /users/{userId}/block, DELETE /users/{userId}/block]
 events: [UserBlocked, UserUnblocked]
 depends_on: [FEAT-COM-010]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-COM-034 — Bloquear a un usuario
@@ -53,6 +53,45 @@ perder lo que compró; conservarlo visible contradice el bloqueo. Una salida raz
 conservarlo pero anonimizar al autor de cara al bloqueador, aunque eso también tiene aristas.
 
 **No se resuelve aquí.** Son decisiones de producto con consecuencias económicas.
+
+## Qué ocurre al bloquear
+
+**Decidido** (`B-2`, `B-3`): el bloqueo corta el acceso del bloqueado al contenido del
+bloqueador, **incluido el trabajo que tuviera en curso**.
+
+| Efecto | |
+|---|---|
+| El bloqueado **deja de ver el contenido** del bloqueador | Perfil, obras, publicaciones, comentarios |
+| Pierde el **acceso a las obras** de quien le bloqueó | Desde el momento del bloqueo |
+| **No puede terminar una corrección empezada** | Su borrador deja de poder entregarse |
+| Las correcciones **ya entregadas y pagadas** | **Se conservan.** Ya eran trabajo hecho y cobrado |
+
+### La regla incómoda, dicha de frente
+
+Un lector que llevaba dos horas escribiendo una corrección **pierde ese trabajo** si el autor
+le bloquea, y **no cobra**, porque nunca llegó a entregarla.
+
+Es la única situación del sistema en la que alguien pierde trabajo real por una decisión
+ajena, y conviene no disimularla:
+
+- **Debe avisársele**, con un mensaje que deje claro que no ha hecho nada mal. Descubrir que
+  un texto ha desaparecido sin explicación es mucho peor que que te lo digan.
+- **No genera ningún cargo al autor.** Nada se entregó, así que nada se paga.
+- **Su borrador se conserva** aunque no pueda entregarse, porque es texto suyo.
+
+Que el bloqueo pueda usarse así —dejar que alguien corrija y bloquearle antes de que entregue—
+es un abuso posible y barato. Si aparece en la práctica, la defensa natural es que bloquear a
+alguien con una corrección en curso **quede registrado** y pese en su historial (`B-4`).
+
+- `RN-B1` El bloqueado pierde el acceso a las obras del bloqueador desde ese instante.
+- `RN-B2` Una corrección en curso del bloqueado **no se puede entregar**, y se le avisa.
+- `RN-B3` Esa corrección **no genera cargo** al autor ni abono al lector.
+- `RN-B4` Las correcciones ya entregadas **no se revierten ni se ocultan**: el autor pagó por
+  ellas y el lector las ganó.
+- `RN-B5` El bloqueo **no borra** comentarios ni publicaciones anteriores: los oculta al
+  bloqueado.
+
+`RN-B4` es la contrapartida de `RN-B2`: el bloqueo corta el futuro, no reescribe el pasado.
 
 ## Reglas de negocio
 
@@ -135,8 +174,8 @@ ha bloqueado?», y la segunda es la que más se consulta.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **B-2** | ¿Bloquear revoca el acceso de lector beta, y puede terminar quien ya estaba corrigiendo? | Cortarlo destruiría trabajo real de un tercero |
-| **B-3** | ¿Qué pasa con el feedback que el bloqueado ya dejó, y que el autor **ya pagó**? | Borrarlo le hace perder lo comprado; conservarlo contradice el bloqueo |
+| ~~B-2~~ | ¿Bloquear revoca el acceso de lector beta, y puede terminar quien ya estaba corrigiendo? | Cortarlo destruiría trabajo real de un tercero |
+| ~~B-3~~ | ¿Qué pasa con el feedback que el bloqueado ya dejó, y que el autor **ya pagó**? | Borrarlo le hace perder lo comprado; conservarlo contradice el bloqueo |
 | B-1 | ¿El perfil del que bloquea sigue siendo visible para el bloqueado? | Ocultarlo delata el bloqueo; mostrarlo lo hace parcial |
 | B-4 | ¿Qué ocurre con los comentarios cruzados ya publicados? | Hilos con huecos |
 | B-5 | ¿Hay límite de bloqueos? | Poco probable que haga falta |
@@ -144,8 +183,7 @@ ha bloqueado?», y la segunda es la que más se consulta.
 
 ## Estado
 
-**Especificación:** `DRAFT`. El comportamiento social está claro. Para llegar a `APPROVED`
-hacen falta `B-2` y `B-3`, que tienen consecuencias sobre los créditos y sobre trabajo ya
-pagado.
+**Especificación:** `APPROVED` (2026-09-24). `B-2` y `B-3` resueltas: el bloqueo corta el acceso y las
+correcciones en curso, y conserva las ya entregadas.
 
 **Implementación:** `TODO`.

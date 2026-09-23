@@ -4,7 +4,7 @@ title: Mis relatos — listado con filtros y ordenación
 context: Work
 concept: Catalog
 actors: [Writer]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /me/works]
 events: []
 depends_on: [FEAT-WRK-016]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-WRK-015 — Mis relatos: listado con filtros y ordenación
@@ -126,7 +126,7 @@ Parámetros: `status` para el filtro y `sort` para el orden, además de la pagin
 
 ## Estado
 
-**Especificación:** `DRAFT`. El listado está claro; dependen de `FEAT-WRK-016` los estados y
-de `H-3` el contador de lecturas.
+**Especificación:** `APPROVED` (2026-09-24). Depende de `FEAT-WRK-016`, ya aprobada. Lo que queda
+—qué métrica usa «más valorados», qué cuenta como lectura— no impide listar las obras propias.
 
 **Implementación:** `TODO`.

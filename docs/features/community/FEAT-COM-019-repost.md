@@ -4,7 +4,7 @@ title: Repostear una publicación
 context: Community
 concept: Interaction
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [POST /posts/{postId}/repost, DELETE /posts/{postId}/repost]
 events: [PostReposted]
 depends_on: [FEAT-COM-002]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-COM-019 — Repostear una publicación
@@ -37,6 +37,37 @@ No es una cita: **quien repostea no añade texto propio**.
 │ ♡ 999  💬 999  ⟳ 999  ↗ 999          │
 └──────────────────────────────────────┘
 ```
+
+## Un repost es una publicación con entidad propia
+
+**Decidido** (`C-3`). No es un puntero: es un `Post` que **referencia** al original y que puede
+llevar texto propio.
+
+| Forma | Qué es |
+|---|---|
+| **Repost simple** | Publicación sin texto que referencia al original |
+| **Repost citado** | Publicación **con texto propio** que referencia al original |
+
+Que sea una entidad y no un puntero tiene tres consecuencias prácticas:
+
+1. **Se puede comentar y valorar el repost por separado** del original. Son dos
+   conversaciones, y mezclarlas confundiría a todo el mundo.
+2. **El repost tiene su propia audiencia y su propio autor.** Repostear algo público para tus
+   seguidores es legítimo y con un puntero no se podría expresar.
+3. **Si el original desaparece, el repost sobrevive** como referencia rota y explicada, en vez
+   de evaporarse y dejar una conversación sin sujeto.
+
+- `RN-R1` El repost **nunca copia** el contenido del original: lo referencia. Si el original
+  se edita, el repost muestra la versión actual.
+- `RN-R2` Si el original se borra o queda bloqueado, el repost muestra **un marcador**
+  explicando que el contenido ya no está disponible.
+- `RN-R3` La audiencia del repost **no puede ampliar la del original**: reposteando algo
+  dirigido a seguidores no se convierte en público.
+- `RN-R4` No se repostea un repost: se repostea **siempre el original**. Sin esa regla, una
+  cadena de diez reposts sería imposible de mostrar y de moderar.
+
+`RN-R3` es la que evita el agujero obvio: sin ella, cualquiera podría hacer público lo que otro
+escribió para un círculo cerrado.
 
 ## Reglas de negocio
 
@@ -147,7 +178,7 @@ Los dos criterios en negrita son los que hay que probar de verdad. El resto son 
 
 ## Estado
 
-**Especificación:** `DRAFT`. El comportamiento visible está claro; falta `C-3`, que decide el
-modelo.
+**Especificación:** `APPROVED` (2026-09-24). `C-3` resuelta: el repost es una entidad propia que
+referencia al original y admite texto añadido.
 
 **Implementación:** `TODO`.

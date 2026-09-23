@@ -4,7 +4,7 @@ title: Preferencias de notificación por canal
 context: User
 concept: Preferences
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -15,7 +15,7 @@ endpoints:
   - PUT /me/notification-preferences
 events: [NotificationPreferencesChanged]
 depends_on: [FEAT-NOT-008]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-039 — Preferencias de notificación por canal
@@ -70,6 +70,68 @@ La forma práctica: cada tipo de mensaje nace marcado como **operativo** o **not
 solo los segundos consultan preferencias. Un tipo nuevo tiene que declarar cuál es; ninguno
 puede quedar sin clasificar.
 
+## El catálogo de avisos
+
+**Decidido** (`S-11`, `S-12`): la maqueta estaba incompleta. Estos son todos los tipos, con
+los canales en los que existe cada uno.
+
+### Actividad sobre lo que escribo
+
+| Aviso | Correo | Plataforma |
+|---|---|---|
+| **Corrección recibida** | Sí | Sí |
+| **Corrección bloqueada por saldo** | Sí | Sí |
+| Comentario en un capítulo mío | Sí | Sí |
+| Comentario en mi publicación | Sí | Sí |
+| Respuesta a un comentario mío | No | Sí |
+| Mención | Sí | Sí |
+
+**Corrección recibida y comentario son avisos distintos** (`S-11`). Van en casillas separadas
+porque no se parecen: una corrección es trabajo que el autor ha pagado; un comentario es una
+reacción social. Meterlos juntos haría que silenciar lo segundo ocultase lo primero.
+
+### Mi actividad como corrector
+
+| Aviso | Correo | Plataforma |
+|---|---|---|
+| **Propina recibida** | Sí | Sí |
+| Mi corrección ha sido valorada | No | Sí |
+| Mi corrección ha sido desbloqueada por el autor | Sí | Sí |
+
+### Relación con otros
+
+| Aviso | Correo | Plataforma |
+|---|---|---|
+| Seguidor nuevo | Sí | Sí |
+| Mensaje nuevo | No | Sí |
+| Solicitud de lector beta | Sí | Sí |
+| Respuesta a mi solicitud | Sí | Sí |
+| Invitación de lector beta | Sí | Sí |
+| Propuesta de *writing buddy* | Sí | Sí |
+
+### Créditos
+
+| Aviso | Correo | Plataforma |
+|---|---|---|
+| Saldo en negativo | Sí | Sí |
+| Deuda saldada | No | Sí |
+
+### Divulgación
+
+| Aviso | Correo | Plataforma |
+|---|---|---|
+| Actualizaciones de la plataforma | Sí | No |
+| Consejos de uso | Sí | No |
+
+### Y los que no se configuran
+
+Activación de la cuenta, restablecimiento de contraseña, cambio de correo o de contraseña,
+sanción impuesta, bloqueo de una obra, aviso a moderadores y comunicaciones legales. Son
+**operativos** y quedan fuera de estas preferencias, incluido el interruptor general.
+
+**Ningún tipo puede quedar sin clasificar** como operativo o notificación. Es la regla que
+impide que un tipo nuevo se cuele sin decidir si se puede silenciar.
+
 ## Reglas de negocio
 
 - `RN-1` Un aviso se entrega por un canal solo si el usuario **no lo ha desactivado** en ese
@@ -80,7 +142,11 @@ puede quedar sin clasificar.
 - `RN-3` Los **mensajes operativos** —activación, restablecimiento de contraseña, avisos de
   seguridad y comunicaciones legales— quedan fuera de estas preferencias, **incluido el
   interruptor general**. No son notificaciones.
-- `RN-4` Una preferencia ausente toma su **valor por defecto**, que es explícito por tipo.
+- `RN-4` Una preferencia ausente toma su **valor por defecto**, que es explícito por tipo. Por
+  defecto **todo está activado** salvo «actualizaciones de la plataforma».
+- `RN-4b` **Corrección recibida y comentario son tipos distintos** (`S-11`).
+- `RN-4c` Un tipo nuevo **debe declararse operativo o notificación** (`RN-3`). No puede quedar
+  sin clasificar.
 - `RN-5` Las preferencias **no afectan a la autorización**: silenciar un aviso no impide que
   el hecho ocurra. Quien silencia los mensajes sigue recibiéndolos, solo no se le avisa. No
   querer enterarse y no querer recibir son cosas distintas (`S-19`).
@@ -167,8 +233,6 @@ posible `RN-2`.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **S-11** | ¿Se separan corrección y comentario? | Silenciar comentarios ocultaría lo que el autor ha pagado |
-| **S-12** | ¿Por qué faltan los demás avisos del catálogo? | ¿Lista parcial o avisos obligatorios? |
 | S-9 | ¿La asimetría entre canales es deliberada? | El modelo no debe asumir matriz completa |
 | S-10 | El interruptor general, ¿suspende o sobrescribe? | `RN-2` propone suspender |
 | S-38 | ¿Se corrige el texto del interruptor? | Promete silenciar todo y no es lo que hace |
@@ -178,7 +242,7 @@ posible `RN-2`.
 
 ## Estado
 
-**Especificación:** `DRAFT`. `S-11` y `S-12` deben resolverse antes de `APPROVED`: definen
-qué tipos existen.
+**Especificación:** `APPROVED` (2026-09-24). `S-11` y `S-12` resueltas: el catálogo de avisos está
+completo y corrección y comentario son tipos separados.
 
 **Implementación:** `TODO`.

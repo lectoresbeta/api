@@ -4,7 +4,7 @@ title: Resolver un perfil por nombre de usuario o alias
 context: User
 concept: Profile
 actors: [Guest, User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /profiles/{username}]
 events: []
 depends_on: [FEAT-USR-033, FEAT-USR-034]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-035 — Resolver un perfil por nombre de usuario o alias
@@ -40,6 +40,32 @@ GET /profiles/pabloblanco1
         │
         └─ no ──▶ 404
 ```
+
+## La forma de la URL
+
+**Propuesta aplicada** (`N-11`): **`/@{username}`**.
+
+```text
+lectoresbeta.com/@pabloblanco1
+```
+
+Tres motivos, y el tercero es el que decide:
+
+1. **Es corta y reconocible.** El `@` se lee como «esto es una persona» sin explicación.
+2. **Se comparte bien.** Cabe en una firma, en una tarjeta y en una biografía de otra red.
+3. **Elimina las colisiones de espacio de nombres.** Es el argumento técnico: con
+   `/{username}` a secas, un usuario llamado `leer`, `ayuda` o `admin` chocaría con una ruta
+   de la aplicación, y haría falta mantener para siempre una lista de palabras prohibidas que
+   crece cada vez que se añade una sección. **Con el prefijo `@`, el espacio de nombres de
+   usuarios y el de rutas no se tocan nunca.**
+
+La alternativa conservadora es `/profile/{username}`, que también evita colisiones pero a
+costa de una URL más larga y menos compartible. Si `@` da problemas con alguna herramienta,
+es el reemplazo directo.
+
+Los **alias caducados** resuelven igual que los nombres vigentes mientras duran
+([`decision:0005`](../../decisions/0005-username-with-temporary-aliases.md)), y el `@` no
+cambia nada de eso.
 
 ## Reglas de negocio
 
@@ -121,13 +147,14 @@ pueda acortar sin más.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| N-11 | ¿La URL es `/profile/{username}` o `/@{username}`? | El diseño muestra `@bealonso`; la URL del ejemplo usa `/profile/` |
+| ~~N-11~~ (revisar) | ¿La URL es `/profile/{username}` o `/@{username}`? | El diseño muestra `@bealonso`; la URL del ejemplo usa `/profile/` |
 | N-12 | ¿Se indexan los perfiles en buscadores? | Un alias que caduca y cambia de titular tendría consecuencias de SEO |
 | N-13 | ¿Conviene advertir al visitante de que llegó por un enlace antiguo? | Transparencia frente a suplantación |
 | N-4 | ¿Qué límite de peticiones tiene? | Sin él permite enumerar nombres |
 
 ## Estado
 
-**Especificación:** `DRAFT`. El mecanismo está completo; falta fijar la forma de la URL.
+**Especificación:** `APPROVED` (2026-09-24). `N-11` resuelta con la propuesta `/@{username}`, pendiente de
+tu visto bueno. El mecanismo de resolución ya estaba completo.
 
 **Implementación:** `TODO`.

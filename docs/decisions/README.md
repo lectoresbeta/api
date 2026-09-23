@@ -27,16 +27,12 @@ Bloquean trabajo y deben cerrarse antes de implementar lo que afectan:
 
 | Ref | Decisión | Bloquea |
 |---|---|---|
-| `W-9` | Si `WorkStatus` sustituye a `Visibility` en la obra | `Work`, catálogo, recomendaciones |
 | `CM-4` | Fórmula de puntuación de los **rankings**. Catálogo y comentarios ya resueltos ([0008](0008-catalogue-ordering.md)) | `FEAT-COM-013/014/015`, `FEAT-COM-017` |
+| `V-4` | Qué ocurre con los mensajes directos al anonimizar una cuenta | `FEAT-USR-013`, anotado dentro de la ficha |
 | `W-1` | En qué momentos se genera el registro de autoría | `FEAT-WRK-009` |
 | `P-1` | Un esquema de PostgreSQL por contexto, o uno solo | La primera migración |
-| `V-4`, `U-3` | Qué pasa con los mensajes directos y con las obras propias al **anonimizar** una cuenta | `FEAT-USR-013` |
 | `AF-1`, `AF-2` | Qué mecanismo antifraude y si actúa antes o después del abono | `FEAT-FBK-012` |
 | `T-5` | Cómo se recoge la aceptación legal en el alta con Google: casilla previa o pantalla intermedia | `FEAT-USR-002`, `FEAT-USR-024` |
-| `OB-7` | Si hay edad mínima de registro | `FEAT-USR-022`. Tiene implicaciones legales |
-| `N-2` | Si el nombre público debe ser único | `FEAT-USR-022`. Sin unicidad, dos homónimos son indistinguibles |
-| `H-5` | Si conviven «me gusta» y las reacciones con emoji | `FEAT-COM-007`, `FEAT-COM-008` |
 
 ## Estados
 

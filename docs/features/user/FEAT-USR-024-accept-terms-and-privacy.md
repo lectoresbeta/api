@@ -4,7 +4,7 @@ title: Aceptar las condiciones de uso y la política de privacidad
 context: User
 concept: Account
 actors: [Guest]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [POST /auth/register]
 events: []
 depends_on: [FEAT-USR-001]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-USR-024 — Aceptar las condiciones de uso y la política de privacidad
@@ -43,6 +43,23 @@ y eso solo se consigue si el backend registra qué versión concreta se aceptó 
 | Actor | Puede | Condición |
 |---|---|---|
 | `Guest` | Aceptar al registrarse | Es obligatorio para completar el registro |
+
+## Los textos legales viven en el backend
+
+**Decidido** (`T-1`): el backend los almacena y los versiona, y `GET /legal/documents` los
+sirve.
+
+El motivo es que la aceptación hay que **poder demostrarla**, y una aceptación que apunta a un
+texto que vive en el CMS del frontend no demuestra nada: si ese texto cambia, no queda rastro
+de qué se aceptó.
+
+- `RN-T1` Cada documento tiene **tipo, versión y fecha de entrada en vigor**.
+- `RN-T2` Una versión publicada **nunca se edita**. Un cambio es una versión nueva.
+- `RN-T3` La aceptación guarda **la versión concreta**, no una referencia genérica al
+  documento.
+
+`RN-T2` es lo que convierte el registro de aceptaciones en prueba. Sin inmutabilidad, saber
+que alguien aceptó «las condiciones» no dice qué aceptó.
 
 ## Reglas de negocio
 
@@ -120,7 +137,7 @@ Sí necesita, al menos:
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| T-1 | ¿Dónde viven los textos legales: en el backend, en el CMS del frontend, o en ficheros estáticos? | Determina si `GET /legal/documents` existe |
+| ~~T-1~~ | ¿Dónde viven los textos legales: en el backend, en el CMS del frontend, o en ficheros estáticos? | Determina si `GET /legal/documents` existe |
 | **T-6** | ¿Hay banner de consentimiento de cookies y registro de preferencias? | Publicar la política no equivale a recabar consentimiento |
 | T-7 | ¿El «Aviso legal» se acepta o solo se publica? | Identifica al titular del sitio; no regula la relación con el usuario |
 | T-2 | ¿Qué ocurre cuando cambian los términos con usuarios ya registrados? ¿Hay reaceptación obligatoria? | Flujo completo sin diseñar |
@@ -130,7 +147,7 @@ Sí necesita, al menos:
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resuelto `T-4`. Falta decidir dónde viven los textos legales
-(`T-1`) y cómo se recoge la aceptación en el alta con Google (`T-5`).
+**Especificación:** `APPROVED` (2026-09-24). `T-1` resuelta: los textos viven en el backend, versionados e
+inmutables. `T-2` (reaceptación al cambiar) y `T-6`/`T-7` quedan como flujos posteriores.
 
 **Implementación:** `TODO`.

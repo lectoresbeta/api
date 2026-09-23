@@ -4,7 +4,7 @@ title: Gestionar la foto de perfil — subir, editar y eliminar
 context: User
 concept: Profile
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [PUT /me/profile/avatar, DELETE /me/profile/avatar]
 events: [UserProfileUpdated]
 depends_on: [FEAT-USR-028]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-037 — Gestionar la foto de perfil: subir, editar y eliminar
@@ -179,6 +179,28 @@ referencias. `avatar_crop` guarda escala, rotación y desplazamiento para reabri
 `avatar_original_url` **no se expone en el perfil público**: es material de trabajo del
 editor, no la imagen que el usuario ha elegido mostrar.
 
+## Se conserva la imagen original
+
+**Decidido** (`F-2`): además de la imagen recortada, se guarda **la original tal como la subió
+el usuario**.
+
+Es lo que hace posible el botón «Editar», que reabre el editor con el recorte anterior: sin la
+original, «editar» solo podría recortar sobre lo ya recortado y cada pasada degradaría la
+imagen un poco más.
+
+| Se guarda | Para qué |
+|---|---|
+| `avatar_url` | Lo que se muestra |
+| `avatar_original_url` | Reabrir el editor sin pérdida |
+| `avatar_crop` | Escala, rotación y desplazamiento anteriores |
+
+Tiene un coste que conviene asumir a sabiendas: **se almacena el doble**, y la original puede
+ser mucho mayor que el recorte. Por eso conviene normalizar su tamaño máximo al subirla, no
+guardarla tal cual venga del móvil.
+
+Y una consecuencia de privacidad: al eliminar la foto **hay que borrar las dos**. Dejar la
+original huérfana es guardar una imagen personal que el usuario cree haber borrado.
+
 ## Criterios de aceptación
 
 - [ ] Subir una imagen válida actualiza el avatar y devuelve su URL.
@@ -221,7 +243,7 @@ editor, no la imagen que el usuario ha elegido mostrar.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Resueltas `F-1` y `F-4`. Para llegar a `APPROVED` faltan `F-2`
-—conservar el original, que «Editar» exige— y `F-3`, si se acepta HEIC.
+**Especificación:** `APPROVED` (2026-09-24). `F-2` resuelta: se conserva la original para poder reeditar.
+`F-3` (HEIC) es un detalle de formatos admitidos.
 
 **Implementación:** `TODO`.

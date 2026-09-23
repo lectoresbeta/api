@@ -4,7 +4,7 @@ title: Home — sugerencias de autores en el muro
 context: Community
 concept: Subscription
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /home/author-suggestions]
 events: [AuthorSubscribed]
 depends_on: [FEAT-COM-016, FEAT-COM-010]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-COM-018 — Home: sugerencias de autores en el muro
@@ -37,6 +37,35 @@ Cierra el cabo suelto del onboarding. La nota de diseño lo dice con todas las l
 El paso 3 del onboarding es opcional y además **se omite automáticamente** cuando no hay
 autores suficientes (`FEAT-COM-016`). Sin este bloque, quien lo saltara se quedaría con un
 muro pobre y sin una vía evidente de arreglarlo.
+
+## Qué compone el muro de quien no sigue a nadie
+
+**Decidido** (`H-8`). Cuatro fuentes, y ninguna es «nada»:
+
+| Fuente | Qué aporta |
+|---|---|
+| **Publicaciones públicas** | Actividad real de la plataforma, con audiencia `EVERYONE` |
+| **Sugerencias de autores** | A quién seguir, que es lo que resuelve el problema de raíz |
+| **Publicaciones de la plataforma** | Anuncios, novedades, contenido editorial propio |
+| **Sugerencias de corrección** | Capítulos que este usuario podría corregir ahora |
+
+La cuarta es la que más valor tiene y la que un muro social no tendría: **le ofrece trabajo**,
+que es la única forma de ganar créditos. Sale del mismo orden del catálogo
+([`decision:0008`](../../decisions/0008-catalogue-ordering.md)), así que no hay nada nuevo que
+calcular.
+
+### La cuenta de la plataforma es un concepto nuevo
+
+«Publicaciones de la plataforma» implica que **existe un emisor institucional** que publica en
+el muro. No es un usuario con nombre de persona: es la plataforma hablando.
+
+Eso plantea preguntas que no estaban en ninguna ficha (`H-10`): quién puede publicar en su
+nombre —previsiblemente un `Admin`—, si esas publicaciones admiten comentarios y valoraciones,
+y si se pueden silenciar.
+
+Conviene tratarlas como **un tipo de publicación propio** y no como una cuenta normal con un
+avatar bonito: de lo contrario alguien acabará pudiendo seguirla, bloquearla o denunciarla, y
+ninguna de las tres cosas tiene sentido.
 
 ## Reglas de negocio
 
@@ -88,13 +117,14 @@ Ambas delegan en el mismo caso de uso.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| H-8 | ¿Qué compone el muro de quien no sigue a nadie? | Define si el muro es cronológico por seguidos o algorítmico |
+| ~~H-8~~ | ¿Qué compone el muro de quien no sigue a nadie? | Define si el muro es cronológico por seguidos o algorítmico |
 | S-2 | ¿Cuántas sugerencias se muestran aquí? El diseño pinta cuatro | Propuesta: cuatro, frente a las diez del onboarding |
 | S-3 | ¿A dónde lleva «Explorar más perfiles»? | Pantalla de descubrimiento sin diseñar |
 | OB-6 | Criterio de orden de las sugerencias | Compartido con `FEAT-COM-016` |
 
 ## Estado
 
-**Especificación:** `DRAFT`. Depende casi por completo de `FEAT-COM-016`.
+**Especificación:** `APPROVED` (2026-09-24). `H-8` resuelta: cuatro fuentes, incluidas sugerencias de
+corrección. Queda `H-10`, la cuenta institucional, que se registra aparte.
 
 **Implementación:** `TODO`.

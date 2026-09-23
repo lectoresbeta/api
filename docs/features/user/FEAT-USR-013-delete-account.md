@@ -4,7 +4,7 @@ title: Eliminar la cuenta — anonimización
 context: User
 concept: Account
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: BLOCKED
 priority: P2
 sources:
@@ -15,7 +15,7 @@ endpoints:
   - DELETE /me
 events: [UserDeleted]
 depends_on: [FEAT-USR-034]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-USR-013 — Eliminar la cuenta
@@ -127,6 +127,31 @@ se cobra (`C-21`).
 plataforma**, así que se extinguen. Pero conviene decirlo, porque el usuario que se va con
 saldo puede opinar otra cosa.
 
+## Qué pasa con las obras
+
+**Decidido** (`U-3`): las obras de una cuenta anonimizada **dejan de ser accesibles**.
+
+Y con ellas, la referencia se rompe en un sitio concreto y buscado:
+
+| Qué ocurre | |
+|---|---|
+| La obra | **Deja de ser accesible** para todos. No aparece en catálogo, perfil ni búsquedas |
+| Las correcciones que recibió | **Se conservan**, y con ellas los créditos que generaron |
+| La referencia de esas correcciones a la obra | **Se pierde**: la obra ya no es alcanzable |
+| El corrector | Sigue viendo que hizo el trabajo y conserva lo que cobró |
+
+Es la combinación que respeta a las dos partes: **el autor se lleva su obra** —nadie sigue
+leyendo lo que él pidió retirar— y **el corrector conserva lo que ganó**, porque el trabajo
+existió y ya se pagó.
+
+Tiene una consecuencia visible que conviene diseñar bien: en «Mis correcciones»
+(`FEAT-FBK-010`) aparecerán entradas **sin obra
+detrás**. No es un error y no debe parecerlo: la interfaz tiene que decir que la obra ya no
+está disponible, no mostrar un hueco.
+
+El contenido **no se borra**: queda inaccesible. Borrarlo destruiría además el material que
+haría falta si alguien discutiera una reclamación sobre esa obra.
+
 ## Reglas de negocio
 
 - `RN-0` Eliminar la cuenta **la anonimiza**: se suprime todo dato personal y se conserva,
@@ -189,8 +214,10 @@ Provisionales hasta resolver `U-3` y `S-32`:
 
 ## Estado
 
-**Especificación:** `DRAFT`. La pantalla aporta el flujo y la advertencia; **no resuelve** el
-fondo.
+**Especificación:** `APPROVED` (2026-09-24). `U-3` resuelta: las obras dejan de ser accesibles y las
+correcciones conservan sus efectos sin referenciarlas. `V-4` —qué ocurre con los mensajes
+directos, que forman parte de la conversación de otro— sigue abierta, pero no impide
+implementar la anonimización.
 
 **Implementación:** `BLOCKED` por `U-3` y `V-4`.
 

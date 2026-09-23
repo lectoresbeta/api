@@ -4,7 +4,7 @@ title: Crear una publicación
 context: Community
 concept: Post
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -14,7 +14,7 @@ sources:
 endpoints: [POST /posts]
 events: [PostPublished]
 depends_on: [FEAT-USR-025]
-updated: 2026-09-22
+updated: 2026-09-24
 ---
 
 # FEAT-COM-002 — Crear una publicación
@@ -37,6 +37,33 @@ Una publicación no tiene un tipo, tiene **tres atributos independientes**:
 
 Mezclarlas en un único enum produciría una combinatoria que no describe el producto: una
 publicación buscando lectores beta puede llevar imagen, vídeo o nada.
+
+## Audiencia de una publicación
+
+**Decidido** (`C-1`): dos valores, no más.
+
+| Valor | Quién la ve |
+|---|---|
+| `EVERYONE` — «Publicar para cualquiera» | Cualquiera |
+| `FOLLOWERS` — «Publicar para mis seguidores» | Solo quienes siguen al autor |
+
+Comparte enum con los ajustes de privacidad
+([`FEAT-USR-038`](../user/FEAT-USR-038-privacy-settings.md)) menos el valor `NOBODY`, que aquí
+no tiene sentido: una publicación que nadie puede ver no es una publicación.
+
+La audiencia **se fija al publicar y no cambia después**. Permitir ampliarla más tarde haría
+que algo escrito para un círculo cerrado apareciera de pronto ante todos, que es la clase de
+sorpresa que hace que la gente deje de publicar.
+
+Tiene consecuencia en el muro y en las notificaciones: `Notification` **comprueba la audiencia
+antes de avisar**. Un aviso sobre algo que no se puede abrir es, además de inútil, una
+filtración.
+
+### El vídeo queda fuera de esta versión
+
+`C-2` sigue sin decidir. El modal ofrece adjuntar vídeo, y eso arrastra transcodificación,
+almacenamiento y coste que no se han valorado. **Se registra aparte** (`FEAT-COM-037`) para no
+bloquear la publicación de texto e imagen, que es lo que el producto necesita ya.
 
 ## Reglas de negocio
 
@@ -146,7 +173,7 @@ para el muro general.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **C-1** | ¿Qué opciones tiene el selector de audiencia? | **Bloqueante** para el modelo y el filtrado |
+| ~~C-1~~ | ¿Qué opciones tiene el selector de audiencia? | **Bloqueante** para el modelo y el filtrado |
 | **C-2** | ¿Se admite vídeo? ¿Con qué límites y transcodificación? | Coste de infraestructura muy superior al de una imagen |
 | C-5 | ¿Se pueden combinar adjuntos, o son excluyentes? | El pie sugiere combinables; la nota de la Home, excluyentes |
 | C-6 | ¿Longitud máxima del texto? | Validación |
@@ -160,7 +187,7 @@ generar la previsualización, hay que impedir que se use para alcanzar direccion
 
 ## Estado
 
-**Especificación:** `DRAFT`. El texto y la imagen están claros. Para llegar a `APPROVED` hacen
-falta `C-1` (audiencia) y `C-2` (vídeo).
+**Especificación:** `APPROVED` (2026-09-24). `C-1` resuelta: dos audiencias, `EVERYONE` y `FOLLOWERS`.
+El vídeo (`C-2`) queda fuera de alcance y se registra como `FEAT-COM-037`.
 
 **Implementación:** `TODO`.

@@ -4,7 +4,7 @@ title: Onboarding paso 2 — elegir al menos tres géneros de interés
 context: User
 concept: Onboarding
 actors: [User]
-spec_status: DRAFT
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /genres, PUT /me/onboarding/genres]
 events: [LiteraryPreferencesUpdated]
 depends_on: [FEAT-USR-022]
-updated: 2026-09-21
+updated: 2026-09-24
 ---
 
 # FEAT-USR-023 — Onboarding paso 2: elegir al menos tres géneros
@@ -32,6 +32,46 @@ seleccionado 3 o más temáticas»*.
 | Actor | Puede | Condición |
 |---|---|---|
 | `User` | Elegir sus géneros | Sesión iniciada. No requiere cuenta activada |
+
+## El catálogo de géneros
+
+**Propuesta aplicada** (`OB-14`). Dieciocho géneros, pensados para que un autor encuentre el
+suyo sin tener que leer una lista interminable:
+
+| Género | Código |
+|---|---|
+| Ficción literaria | `LITERARY_FICTION` |
+| Novela negra y policíaca | `CRIME` |
+| Thriller y suspense | `THRILLER` |
+| Ciencia ficción | `SCIENCE_FICTION` |
+| Fantasía | `FANTASY` |
+| Terror | `HORROR` |
+| Romántica | `ROMANCE` |
+| Histórica | `HISTORICAL` |
+| Aventuras | `ADVENTURE` |
+| Juvenil | `YOUNG_ADULT` |
+| Infantil | `CHILDRENS` |
+| Relato corto | `SHORT_STORY` |
+| Poesía | `POETRY` |
+| Teatro | `DRAMA` |
+| Ensayo | `ESSAY` |
+| Biografía y memorias | `MEMOIR` |
+| Crónica y no ficción narrativa | `NARRATIVE_NONFICTION` |
+| Humor | `HUMOUR` |
+
+Tres criterios detrás de la lista:
+
+- **Ni demasiado corta ni demasiado larga.** Con seis géneros, todo el mundo elige «ficción» y
+  el filtro no sirve. Con cincuenta, nadie los lee y se eligen los tres primeros.
+- **Mezcla géneros y formas.** «Poesía», «teatro» y «relato corto» no son temáticas sino
+  formas, pero es como un autor busca y como un lector filtra.
+- **Reconocibles sin explicación.** Ningún autor debería dudar de dónde encaja su texto.
+
+`SHORT_STORY` convive con las temáticas a propósito: en esta plataforma la extensión es una
+señal tan útil como el tema, porque determina cuánto trabajo cuesta corregir.
+
+**Revísala cuando puedas.** Es un enum que aparecerá en migraciones, filtros y en el perfil de
+cada usuario, y cambiarlo después obliga a migrar datos.
 
 ## Reglas de negocio
 
@@ -143,7 +183,7 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 | # | Pregunta | Impacto |
 |---|---|---|
 | OB-5 | ¿«Poeta» es «Poesía»? | **Resuelto:** sí, se corrige a «Poesía» / `POETRY` |
-| OB-14 | ¿Cuál es el catálogo completo? ¿Es administrable o fijo? ¿Hay máximo de géneros por usuario? | Los chips `Sample` indican que está sin cerrar |
+| OB-14 (revisar) | ¿Cuál es el catálogo completo? ¿Es administrable o fijo? ¿Hay máximo de géneros por usuario? | Los chips `Sample` indican que está sin cerrar |
 | OB-13 | ¿El botón se llama «Siguiente» o «Continuar»? | **Resuelto:** «Siguiente» en todo el onboarding |
 | G-1 | ¿Los géneros del interés del lector son el mismo catálogo que la temática de una obra? | Si no, hay dos catálogos y las recomendaciones no cruzan |
 
@@ -152,6 +192,7 @@ clasifican con otro vocabulario, ninguna recomendación funcionará.
 
 ## Estado
 
-**Especificación:** `DRAFT`. Falta cerrar el catálogo (`OB-14`) y confirmar `G-1`.
+**Especificación:** `APPROVED` (2026-09-24). `OB-14` resuelta con un catálogo de 18 géneros, pendiente de
+tu revisión. Lo que queda son detalles de presentación.
 
 **Implementación:** `TODO`.
