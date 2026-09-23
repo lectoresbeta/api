@@ -340,6 +340,38 @@ When one bounded context needs information or behavior from another, use one of 
 - an application-level integration service;
 - an anti-corruption layer when appropriate.
 
+## Published contracts
+
+When synchronous communication is genuinely required, the interface lives in
+
+```text
+src/<BoundedContext>/<Concept>/Application/Contract/
+```
+
+and **that folder is the only part of a context another context may reference**. Everything
+else stays private, and `deptrac.contexts.yaml` enforces it.
+
+Three rules:
+
+- **a contract asks, it never commands.** It returns information. A contract that let another
+  context change something would be a remote method call with extra steps;
+- **a contract hands over data, never entities.** Whoever receives an aggregate ends up
+  navigating it, and the internal model is shared again;
+- **a contract depends only on `Shared` and its own types.** If it needed something from
+  inside its context it would stop being a door and become a crack.
+
+Asynchronous communication remains the default. A contract is for when the answer is needed
+**now**; the fact that already happened still travels as an event. The activation email uses
+both: the fact goes over the queue, the secret is fetched at the moment of sending, because a
+live credential must never sit in a queue that persists, retries and parks messages.
+
+`Credits` publishes no contract, and must not publish one that applies credit effects.
+
+Contracts are wired by hand in `config/services.yaml`: opening a door should be a visible
+change there, not a side effect of creating a class.
+
+See [`decision:0014`](docs/decisions/0014-published-contracts-between-contexts.md).
+
 For the **Credits** bounded context, event-driven asynchronous communication is the default and direct synchronous invocation from other bounded contexts is forbidden.
 
 The consuming bounded context must depend on a contract that it understands, not on the internal model of the provider.
@@ -1333,6 +1365,8 @@ Do not solve a task by:
 - calling Credits directly from another bounded context to add, subtract or modify credits;
 - making another bounded context responsible for calculating credit effects;
 - consuming another bounded context's internal event instead of an explicit integration event;
+- reaching into another bounded context anywhere other than its `Application/Contract/` folder;
+- putting a token, password or any other credential into an integration event;
 - reusing another bounded context's entity as a shared model;
 - querying another bounded context's tables directly;
 - passing Symfony `Request` objects into Application;

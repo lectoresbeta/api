@@ -486,7 +486,7 @@ Ficha del contexto: [`../bounded-contexts/notification.md`](../bounded-contexts/
 | FEAT-NOT-005 | Avisar de solicitudes, invitaciones y propuestas | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-NOT-006 | Avisar de feedback recibido, contestado o valorado | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-NOT-007 | Enviar el email de invitación a la plataforma | — (sistema) | PENDING | TODO | P2 | — |
-| FEAT-NOT-008 | Enviar el email de activación de cuenta | — (sistema) | APPROVED | TODO | P0 | [ficha](notification/FEAT-NOT-008-account-activation-email.md) |
+| FEAT-NOT-008 | Enviar el email de activación de cuenta | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](notification/FEAT-NOT-008-account-activation-email.md) |
 | FEAT-NOT-009 | Centro de notificaciones in-app y contador de no leídas | User | PENDING | TODO | P1 | — |
 
 ---

@@ -107,6 +107,22 @@ make docs            # validar docs/
 `make schema-validate` merece un sitio en la cabeza: si alguna vez responde que el esquema y
 el mapeo no coinciden, o falta una migración, o alguien ha tocado la base de datos a mano.
 
+## Variables de entorno
+
+Las que el código exige. `.env` trae un valor de desarrollo para cada una.
+
+| Variable | Qué es |
+|---|---|
+| `DATABASE_URL` | PostgreSQL |
+| `MESSENGER_TRANSPORT_DSN` | RabbitMQ. En tests, `in-memory://` |
+| `MAILER_DSN` | Proveedor de correo. Sin decidir (`FEAT-NOT-008` `N-3`) |
+| `MAILER_SENDER` | Remitente de los correos transaccionales |
+| `ACTIVATION_URL_TEMPLATE` | Página **del frontend** que recoge el token. `{token}` se sustituye al generar el correo |
+
+`ACTIVATION_URL_TEMPLATE` apunta al frontend y no a la API a propósito: el enlace abre una
+página que extrae el token y lo envía en el cuerpo de la petición, de modo que no quede en los
+logs del servidor ni en el historial del navegador.
+
 ## Secretos
 
 `.env` lleva **valores de desarrollo**, nunca secretos reales. Lo que cambie cada uno va en

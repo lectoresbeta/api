@@ -5,13 +5,10 @@ declare(strict_types=1);
 namespace LectoresBeta\Tests\Functional\User;
 
 use Doctrine\Persistence\ManagerRegistry;
-use LectoresBeta\Shared\Application\Security\SecureTokenFactory;
 use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
-use LectoresBeta\User\Account\Domain\Entity\AccountActivationToken;
+use LectoresBeta\User\Account\Application\Contract\ActivationLinkProvider;
 use LectoresBeta\User\Account\Domain\Enum\AccountStatus;
-use LectoresBeta\User\Account\Domain\Repository\AccountActivationTokenRepository;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
-use LectoresBeta\User\Account\Domain\ValueObject\AccountActivationTokenId;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -206,34 +203,29 @@ final class RegistrationTest extends WebTestCase
     }
 
     /**
-     * El token en claro solo existe dentro del correo, que todavía no se
-     * envía (`FEAT-NOT-008`). El test emite uno propio, que es exactamente lo
-     * que hará el reenvío cuando exista.
+     * El token en claro solo existe dentro del correo. Aquí se pide por el
+     * mismo contrato que usa `Notification` al enviarlo, en vez de fabricar
+     * uno a mano: un atajo en el test haría que el test siguiera pasando el
+     * día que ese camino se rompa.
+     *
+     * El recorrido completo, con correo incluido, está en `ActivationFlowTest`.
      */
     private function issueActivationTokenFor(string $email): string
     {
         $user = $this->users()->ofEmail(Email::fromString($email));
         self::assertNotNull($user);
 
-        /** @var SecureTokenFactory $factory */
-        $factory = self::getContainer()->get(SecureTokenFactory::class);
-        $token = $factory->create();
+        /** @var ActivationLinkProvider $links */
+        $links = self::getContainer()->get(ActivationLinkProvider::class);
+        $link = $links->issueFor($user->id()->value());
 
-        /** @var AccountActivationTokenRepository $tokens */
-        $tokens = self::getContainer()->get(AccountActivationTokenRepository::class);
-        $tokens->save(new AccountActivationToken(
-            AccountActivationTokenId::generate(),
-            $user->id(),
-            $token->hash,
-            new \DateTimeImmutable(),
-            new \DateTimeImmutable('+2 days'),
-        ));
+        self::assertNotNull($link);
 
         /** @var ManagerRegistry $doctrine */
         $doctrine = self::getContainer()->get('doctrine');
         $doctrine->getManager()->flush();
 
-        return $token->plain;
+        return $link->token;
     }
 
     private function users(): UserRepository

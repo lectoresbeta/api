@@ -5,21 +5,17 @@ declare(strict_types=1);
 namespace LectoresBeta\User\Account\Application\Handler;
 
 use LectoresBeta\Shared\Application\Event\EventPublisher;
-use LectoresBeta\Shared\Application\Security\SecureTokenFactory;
 use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 use LectoresBeta\User\Account\Application\Command\RegisterUser;
 use LectoresBeta\User\Account\Application\Port\PasswordHasher;
 use LectoresBeta\User\Account\Application\Service\UsernameAllocator;
-use LectoresBeta\User\Account\Domain\Entity\AccountActivationToken;
 use LectoresBeta\User\Account\Domain\Entity\User;
 use LectoresBeta\User\Account\Domain\Event\UserRegistered;
 use LectoresBeta\User\Account\Domain\Exception\TermsNotAccepted;
-use LectoresBeta\User\Account\Domain\Repository\AccountActivationTokenRepository;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\Service\PasswordPolicy;
-use LectoresBeta\User\Account\Domain\ValueObject\AccountActivationTokenId;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Legal\Domain\Entity\LegalAcceptance;
@@ -29,6 +25,11 @@ use LectoresBeta\User\Legal\Domain\ValueObject\LegalAcceptanceId;
 
 /**
  * Signing up (`FEAT-USR-001`).
+ *
+ * It does **not** mint the activation token. That happens when the email is
+ * about to go out ([`IssueActivationLink`](../Service/IssueActivationLink.php)),
+ * so the link does not start expiring while the message waits in a retry
+ * queue.
  *
  * The shape of this handler is dictated by one rule, `RN-14`: **the response
  * may not reveal whether an email already has an account.** So the order of
@@ -46,20 +47,12 @@ use LectoresBeta\User\Legal\Domain\ValueObject\LegalAcceptanceId;
  */
 final readonly class RegisterUserHandler
 {
-    /**
-     * How long an activation link lives. Long enough to survive a weekend,
-     * short enough that a leaked mailbox is not a permanent key.
-     */
-    private const TOKEN_LIFETIME = 'P2D';
-
     public function __construct(
         private UserRepository $users,
-        private AccountActivationTokenRepository $tokens,
         private LegalAcceptanceRepository $acceptances,
         private UsernameAllocator $usernames,
         private PasswordPolicy $passwordPolicy,
         private PasswordHasher $passwordHasher,
-        private SecureTokenFactory $secureTokens,
         private TransactionalSession $session,
         private EventPublisher $events,
         private Clock $clock,
@@ -91,18 +84,8 @@ final readonly class RegisterUserHandler
             $now,
         );
 
-        $token = $this->secureTokens->create();
-
-        $this->session->execute(function () use ($user, $userId, $token, $now, $terms, $privacy, $command): void {
+        $this->session->execute(function () use ($user, $userId, $now, $terms, $privacy, $command): void {
             $this->users->save($user);
-
-            $this->tokens->save(new AccountActivationToken(
-                AccountActivationTokenId::generate(),
-                $userId,
-                $token->hash,
-                $now,
-                $now->add(new \DateInterval(self::TOKEN_LIFETIME)),
-            ));
 
             foreach ([[LegalDocumentType::TERMS_OF_USE, $terms], [LegalDocumentType::PRIVACY_POLICY, $privacy]] as [$type, $version]) {
                 $this->acceptances->save(new LegalAcceptance(

@@ -240,15 +240,15 @@ implementación.
 **Implementación:** `PARTIAL`.
 
 Hecho: el endpoint, la política de contraseña en servidor, la asignación de nombre de usuario,
-el registro de la aceptación legal, el token de activación y la publicación de `UserRegistered`.
+el registro de la aceptación legal, y la publicación de `UserRegistered`, que `Notification` convierte en el correo de activación
+([`FEAT-NOT-008`](../notification/FEAT-NOT-008-account-activation-email.md)).
+
+El registro **ya no acuña el token**: lo acuña `Notification` al enviar el correo, para que el
+enlace no empiece a caducar mientras el mensaje espera en una reentrega.
 Cubierto por `tests/Functional/User/RegistrationTest.php`, incluida la indistinguibilidad de la
 respuesta (`RN-14`).
 
 **Falta:**
 
-- el **correo de activación** ([`FEAT-NOT-008`](../notification/FEAT-NOT-008-account-activation-email.md)).
-  Sin él nadie puede activar su cuenta: el token existe y no hay forma de recibirlo. Es lo
-  primero que tiene que ir detrás de esto, y depende de una decisión pendiente —cómo llega el
-  token a `Notification` sin viajar por la cola—;
 - el **token de invitación** (`RN-11`, `RN-12`, `RN-13`). El campo se acepta y se ignora;
 - el paso siguiente del usuario, que exige inicio de sesión (`FEAT-USR-004`, `PENDING`).

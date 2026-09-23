@@ -186,8 +186,6 @@ indistinguibilidad entre token inexistente y usado (`RN-5`), la distinción del 
 
 **Falta:**
 
-- el **correo que entrega el token** ([`FEAT-NOT-008`](../notification/FEAT-NOT-008-account-activation-email.md)).
-  Mientras no exista, la activación solo es alcanzable desde los tests;
 - el reenvío ([`FEAT-USR-021`](FEAT-USR-021-resend-activation-email.md)), que es lo que
   `RN-4` ofrece al caducar.
 

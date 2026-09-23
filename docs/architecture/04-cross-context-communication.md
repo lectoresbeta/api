@@ -104,6 +104,26 @@ El catálogo completo está en [`../events/README.md`](../events/README.md).
 | Orden de los mensajes | No se garantiza. El diseño no puede depender del orden de llegada. |
 | Evolución del contrato | Campos nuevos opcionales. Un cambio incompatible crea una versión nueva del evento y ambas conviven durante la migración. |
 
+## Contratos publicados
+
+Cuando la respuesta hace falta **ahora**, un contexto expone una interfaz en
+`src/<Contexto>/<Concepto>/Application/Contract/`, y esa carpeta es **lo único suyo que otro
+contexto puede mirar** ([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md)).
+
+Un contrato **pregunta, no ordena**; entrega datos, nunca entidades; y no depende de su propio
+contexto. Deptrac comprueba las tres cosas.
+
+El caso que lo motivó: el correo de activación. El hecho —«alguien se ha registrado»— viaja
+por la cola, pero **el token no puede**, porque es una credencial viva y la cola la persiste,
+la reintenta y la aparca donde la gente la lee. `Notification` recibe el hecho y pide el
+enlace a `User` en el momento de enviar.
+
+Tiene un efecto secundario que conviene conocer: el enlace **empieza a caducar cuando sale el
+correo**, no cuando se creó la cuenta, así que un envío que solo prospera tras horas de
+reintentos sigue llevando un enlace utilizable.
+
+`Credits` no publica ninguno, y no puede publicar uno que aplique efectos de crédito.
+
 ## Cuándo una consulta síncrona es aceptable
 
 Solo si el caso de uso **no puede completarse sin el dato en ese instante**. Entonces:

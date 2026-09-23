@@ -5,7 +5,7 @@ context: Notification
 concept: Delivery
 actors: []
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - figma:1800-13778 (1470:9560)
@@ -98,4 +98,24 @@ cuenta no funciona no es una suscripción.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL`.
+
+Hecho: `SendActivationEmail` consume `UserRegistered`, pide el enlace a `User` por su contrato
+publicado ([`decision:0014`](../../decisions/0014-published-contracts-between-contexts.md)),
+invalida el token anterior (`RN-3`), envía en texto y HTML (`N-7`) sin pie de baja (`RN-7`) y
+sin pasar por preferencias (`RN-4`). La idempotencia (`RN-2`) se apoya en el índice único
+`(recipient_id, kind, source_event_id)`, que ya existía. `ActivationFlowTest` recorre el
+camino completo, de alta a saldo.
+
+**Por qué el token no viaja en el evento:** es una credencial viva, y la cola la persiste, la
+reintenta y la aparca en un transporte de fallos que se consulta. Se pide en el momento de
+enviar, lo que además hace que **el enlace empiece a caducar cuando sale el correo** y no
+cuando se creó la cuenta.
+
+**Falta:**
+
+- el **reenvío** (`ActivationEmailRequested`, `RN-1`), que es `FEAT-USR-021`;
+- la **alerta** cuando un envío agota los reintentos (`RN-6`). El mensaje va a la cola de
+  fallos, pero nadie avisa;
+- el proveedor de correo (`N-3`): hoy `MAILER_DSN` apunta a donde se le diga;
+- el asunto está puesto por defecto (`N-6`), sin diseño que lo fije.

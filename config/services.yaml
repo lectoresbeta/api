@@ -38,7 +38,7 @@ services:
             # construye quien los envía, con sus datos dentro. Los handlers
             # viven en `Application/Handler/` justo para poder separarlos
             # aquí, y por eso la convención de AGENTS.md los lista aparte.
-            - '../src/*/*/Application/{Command,Query,Event}/'
+            - '../src/*/*/Application/{Command,Query,Event,Contract,DTO}/'
             - '../src/Shared/Domain/{ValueObject,Exception,Event}/'
             # Un valor, no un servicio: lo construye quien lo crea, con el
             # token dentro. El contenedor intentaría autoconectar `$plain`.
@@ -60,11 +60,32 @@ services:
         arguments:
             $eventClasses:
                 - LectoresBeta\Credits\Account\Application\Event\AccountActivated
+                - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
 
     # Los consumidores de eventos se etiquetan aquí y no con
     # #[AsMessageHandler]: viven en Application, y Application no conoce a
     # Symfony. Es la misma razón por la que los chequeos de salud se etiquetan
     # arriba, y Deptrac comprueba las dos.
+    # Los contratos publicados se enlazan **a mano**, y es la única lista de
+    # alias que este fichero mantiene. Un contrato es la puerta por la que un
+    # contexto entra en otro (decision:0014): conviene que abrirla sea un
+    # cambio visible aquí, y no el efecto lateral de crear una clase.
+    LectoresBeta\User\Account\Application\Contract\ActivationLinkProvider:
+        alias: LectoresBeta\User\Account\Application\Service\IssueActivationLink
+
+    LectoresBeta\Notification\Delivery\Application\Handler\SendActivationEmail:
+        arguments:
+            # La URL es del frontend, no de la API: el enlace del correo abre
+            # una página que extrae el token y lo envía en el cuerpo, para que
+            # no quede en los logs del servidor ni en el historial.
+            $activationUrlTemplate: '%env(ACTIVATION_URL_TEMPLATE)%'
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Notification\Delivery\Infrastructure\Mail\SymfonyMailer:
+        arguments:
+            $sender: '%env(MAILER_SENDER)%'
+
     LectoresBeta\Credits\Account\Application\Handler\GrantWelcomeCredits:
         arguments:
             # decision:0006 §5. Cambiarlo afecta solo a las activaciones

@@ -25,6 +25,7 @@ Plantilla: [`../_templates/adr.md`](../_templates/adr.md).
 | [0011](0011-route-files-live-inside-their-context.md) | Los ficheros de rutas viven **dentro de su contexto**, en `src/<Contexto>/Infrastructure/` | Aceptada | 2026-09-24 |
 | [0012](0012-api-version-prefix-in-the-path.md) | La versión de la API va en la ruta, **escrita entera** en cada una. `/health` queda fuera | Aceptada | 2026-09-23 |
 | [0013](0013-integration-events-travel-without-class-names.md) | Los eventos de integración viajan **sin nombre de clase**: nombre del hecho y payload plano | Aceptada | 2026-09-23 |
+| [0014](0014-published-contracts-between-contexts.md) | Un contexto expone **contratos publicados** en `Application/Contract/`, y son su única puerta | Aceptada | 2026-09-23 |
 
 ## Decisiones pendientes
 

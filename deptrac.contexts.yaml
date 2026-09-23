@@ -17,24 +17,75 @@ parameters:
   paths:
     - ./src
   layers:
+    # Los contratos publicados: lo único de un contexto que otro puede
+    # mirar (decision:0014). Se declara antes que los contextos porque
+    # cada uno de ellos se define excluyendo esta carpeta.
+    - name: Contracts
+      collectors: [{ type: directory, value: src/[^/]*/[^/]*/Application/Contract/.* }]
+
     - name: User
-      collectors: [{ type: directory, value: src/User/.* }]
+      collectors:
+        - type: bool
+          must:
+            - { type: directory, value: src/User/.* }
+          must_not:
+            - { type: directory, value: src/[^/]*/[^/]*/Application/Contract/.* }
     - name: Work
-      collectors: [{ type: directory, value: src/Work/.* }]
+      collectors:
+        - type: bool
+          must:
+            - { type: directory, value: src/Work/.* }
+          must_not:
+            - { type: directory, value: src/[^/]*/[^/]*/Application/Contract/.* }
     - name: Reading
-      collectors: [{ type: directory, value: src/Reading/.* }]
+      collectors:
+        - type: bool
+          must:
+            - { type: directory, value: src/Reading/.* }
+          must_not:
+            - { type: directory, value: src/[^/]*/[^/]*/Application/Contract/.* }
     - name: Feedback
-      collectors: [{ type: directory, value: src/Feedback/.* }]
+      collectors:
+        - type: bool
+          must:
+            - { type: directory, value: src/Feedback/.* }
+          must_not:
+            - { type: directory, value: src/[^/]*/[^/]*/Application/Contract/.* }
     - name: Community
-      collectors: [{ type: directory, value: src/Community/.* }]
+      collectors:
+        - type: bool
+          must:
+            - { type: directory, value: src/Community/.* }
+          must_not:
+            - { type: directory, value: src/[^/]*/[^/]*/Application/Contract/.* }
     - name: Credits
-      collectors: [{ type: directory, value: src/Credits/.* }]
+      collectors:
+        - type: bool
+          must:
+            - { type: directory, value: src/Credits/.* }
+          must_not:
+            - { type: directory, value: src/[^/]*/[^/]*/Application/Contract/.* }
     - name: Moderation
-      collectors: [{ type: directory, value: src/Moderation/.* }]
+      collectors:
+        - type: bool
+          must:
+            - { type: directory, value: src/Moderation/.* }
+          must_not:
+            - { type: directory, value: src/[^/]*/[^/]*/Application/Contract/.* }
     - name: Notification
-      collectors: [{ type: directory, value: src/Notification/.* }]
+      collectors:
+        - type: bool
+          must:
+            - { type: directory, value: src/Notification/.* }
+          must_not:
+            - { type: directory, value: src/[^/]*/[^/]*/Application/Contract/.* }
     - name: Shared
-      collectors: [{ type: directory, value: src/Shared/.* }]
+      collectors:
+        - type: bool
+          must:
+            - { type: directory, value: src/Shared/.* }
+          must_not:
+            - { type: directory, value: src/[^/]*/[^/]*/Application/Contract/.* }
 
     # Todo lo que no es nuestro. No es un contexto: esta capa existe sólo para
     # que `--fail-on-uncovered` pueda seguir vigilando lo que sí lo es.
@@ -42,18 +93,28 @@ parameters:
       collectors: [{ type: classLike, value: '^(?!LectoresBeta\\).*' }]
 
   ruleset:
-    # Todos pueden usar Shared y las librerías de terceros. Nadie puede usar a
-    # ningún otro contexto.
-    User: [Shared, Vendor]
-    Work: [Shared, Vendor]
-    Reading: [Shared, Vendor]
-    Feedback: [Shared, Vendor]
-    Community: [Shared, Vendor]
-    Credits: [Shared, Vendor]
-    Moderation: [Shared, Vendor]
-    Notification: [Shared, Vendor]
+    # Todos pueden usar Shared, los contratos publicados y las librerías de
+    # terceros. Nadie puede usar las clases internas de ningún otro contexto.
+    #
+    # `Contracts` es la única puerta, y es deliberadamente estrecha: un
+    # contrato **pregunta**, nunca ordena (decision:0014). `Credits` no
+    # publica ninguno, porque aplicar un efecto de crédito desde fuera está
+    # prohibido por AGENTS.md.
+    User: [Shared, Contracts, Vendor]
+    Work: [Shared, Contracts, Vendor]
+    Reading: [Shared, Contracts, Vendor]
+    Feedback: [Shared, Contracts, Vendor]
+    Community: [Shared, Contracts, Vendor]
+    Credits: [Shared, Contracts, Vendor]
+    Moderation: [Shared, Contracts, Vendor]
+    Notification: [Shared, Contracts, Vendor]
 
     # Shared es genérico: no conoce ningún contexto de negocio.
     Shared: [Vendor]
+
+    # Un contrato es una interfaz y tipos propios. Si necesitase algo del
+    # contexto que lo publica, dejaría de ser un contrato y pasaría a ser
+    # una rendija por la que se ve el modelo interno.
+    Contracts: [Shared, Vendor]
 
     Vendor: ~
