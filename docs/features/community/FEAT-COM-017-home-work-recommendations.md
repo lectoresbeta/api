@@ -88,7 +88,7 @@ Respuesta con `shouldDisplay`, `reason` y la lista de tarjetas.
 | Evento | Origen | Efecto |
 |---|---|---|
 | `WorkPublished` | `Work` | Añade la obra al catálogo recomendable |
-| `WorkContentUpdated` | `Work` | Actualiza palabras, nivel y tiempo de lectura |
+| `ChapterContentUpdated` | `Work` | Actualiza palabras y tiempo de lectura |
 | `WorkAccessModeChanged`, `WorkDeleted` | `Work` | Retira o vuelve a admitir la obra |
 | `LiteraryPreferencesUpdated` | `User` | Recalcula a qué usuario le encaja |
 | `AccountActivated` | `User` | Habilita las obras de ese autor (`RN-4`) |

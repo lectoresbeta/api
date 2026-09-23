@@ -79,7 +79,7 @@ síncrona entre contextos en el diseño actual.
 | `User` | todos | Evento `UserRegistered` | Crear la cuenta de créditos, el perfil, las preferencias |
 | `Work` | `Reading` | Evento `WorkPublished`, `WorkAccessModeChanged` | Conocer qué obras admiten accesos y en qué modalidad |
 | `Reading` | `Feedback` | Evento `BetaReaderAccessGranted` / `Revoked` | Saber quién puede comentar |
-| `Work` | `Credits` | Eventos `WorkContentUpdated`, `QuestionnaireUpdated` | Las palabras del capítulo y las exigidas, que fijan el precio |
+| `Work` | `Credits` | Eventos `ChapterContentUpdated`, `QuestionnaireUpdated` | Las palabras del capítulo y las exigidas, que fijan el precio |
 | `Feedback` | `Credits` | Eventos `CorrectionStarted`, `FeedbackSubmitted`, `CorrectionTipped` | Hechos que mueven créditos |
 | `Credits` | `Feedback` / `Work` | Evento `ChapterCorrectabilityChanged` | Saber si un capítulo admite correcciones ahora |
 | `Moderation` | `Credits`, `Work`, `User` | Evento `ClaimUpheld` | Aplicar, cada uno en su modelo, lo que la decisión significa |

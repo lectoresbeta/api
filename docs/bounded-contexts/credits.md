@@ -189,7 +189,7 @@ solo provoca a propósito lo que ya ocurre por carrera.
 | `CorrectionDraftDiscarded` | `Feedback` | Descarta la anotación. Nada que liberar |
 | `FeedbackSubmitted` | `Feedback` | **Carga al autor y abona al lector** el importe anotado. El saldo puede quedar negativo |
 | `CorrectionTipped` | `Feedback` | Transfiere la propina del autor al lector |
-| `WorkContentUpdated` | `Work` | Actualiza las palabras de cada capítulo en su read model de precios |
+| `ChapterContentUpdated` | `Work` | Actualiza las palabras de ese capítulo en su read model de precios |
 | `QuestionnaireUpdated` | `Work` | Actualiza las palabras exigidas. **No altera precios ya anotados** |
 | `InvitedUserParticipated` | `User` | Abona +5 al invitador, hasta el tope de 10 |
 | `UserDeleted` | `User` | Anonimiza la cuenta de créditos. Los movimientos permanecen (`C-21`) |
@@ -238,9 +238,10 @@ existe, el evento se descarta sin efecto.
 |---|---|
 | `credit_account` | Un registro por usuario: saldo actual y metadatos |
 | `credit_transaction` | Movimientos inmutables, indexados por `user_id` y fecha |
-| `processed_event` | `event_id` procesados, con marca temporal y política de purga |
+| `processed_event` | `(event_id, consumer)` procesados, con marca temporal y política de purga |
 | `correction_price` | La cotización de cada corrección en curso. **No es una retención**: no participa en el saldo (`FEAT-CRD-009`) |
 | `chapter_price` | Read model del precio de cada capítulo (`FEAT-CRD-016`) |
+| `work_questionnaire_demand` | Read model de lo que exige el cuestionario vigente de cada obra. Los dos hechos que forman un precio llegan por separado y hay que conservar el primero (`FEAT-CRD-016`) |
 | `overdraft_grant` | Descubiertos concedidos y su cupo semanal (`FEAT-CRD-019`) |
 | `credit_rule` | Reglas vigentes, si se decide hacerlas configurables (`C-3`). **Todavía no existe** |
 

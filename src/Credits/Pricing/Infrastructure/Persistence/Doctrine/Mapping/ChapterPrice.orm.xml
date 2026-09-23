@@ -18,6 +18,9 @@
 
         <field name="workId" column="work_id" type="guid"/>
         <field name="authorId" column="author_id" type="guid"/>
+        <!-- El último capítulo es el que responde las preguntas de alcance
+             `LAST_CHAPTER`, así que la posición forma parte del precio. -->
+        <field name="position" type="smallint"/>
         <field name="wordCount" column="word_count" type="integer"/>
         <field name="requiredWords" column="required_words" type="integer"/>
         <field name="price" type="smallint"/>

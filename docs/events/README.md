@@ -73,7 +73,7 @@ aplicar el efecto.
 | `WorkPublished` | La obra pasa a `PUBLISHED` | `Reading`, `Community`, `Notification` | `workId`, `authorId`, `title`, `wordCount`, `chapterCount`, `publishedAt` |
 | `WorkOpenedForCorrection` | La obra pasa a `IN_CORRECTION` | `Reading`, **`Credits`** | `workId`, `authorId`, `openedAt` |
 | `WorkClosedForCorrection` | La obra vuelve a `PUBLISHED` | `Reading`, **`Credits`** | `workId`, `authorId`, `closedAt` |
-| `WorkContentUpdated` | Cambia el contenido | `Feedback`, `Credits` | `workId`, `wordCount` |
+| `ChapterContentUpdated` | Cambia el texto de un capítulo | `Feedback`, **`Credits`** | `chapterId`, `workId`, `authorId`, `position`, `wordCount`, `updatedAt` |
 | `WorkAccessModeChanged` | Cambia la modalidad | `Reading` | `workId`, `authorId`, `accessMode`, `changedAt` |
 | `WorkDeleted` | Se elimina | `Reading`, `Feedback`, `Community` | `workId`, `authorId` |
 | `QuestionnaireUpdated` | Cambia el cuestionario: nueva versión | **`Credits`** | `workId`, `version`, `questionCount`, `requiredWords`, `requiredWordsForEveryChapter`, `updatedAt` |

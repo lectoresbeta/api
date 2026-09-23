@@ -104,7 +104,7 @@ Se resuelve con un **read model del catálogo**, alimentado por eventos:
 Credits ──CreditBalanceChanged──────────────▶ ┐
 Credits ──ChapterCorrectabilityChanged──────▶ │
 Work    ──WorkOpenedForCorrection───────────▶ ├─▶ catalogue_entry
-Work    ──WorkContentUpdated────────────────▶ │
+Work    ──ChapterContentUpdated─────────────▶ │
 Feedback──FeedbackSubmitted─────────────────▶ ┘
 ```
 

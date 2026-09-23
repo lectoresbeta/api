@@ -10,7 +10,7 @@ priority: P0
 sources:
   - _sources/use-cases.pdf#p1
 endpoints: [POST /works, POST /works/{workId}/chapters]
-events: [WorkCreated]
+events: [WorkCreated, ChapterContentUpdated]
 depends_on: [FEAT-USR-004]
 updated: 2026-09-24
 ---
@@ -158,13 +158,19 @@ incremental.
 | Evento | Cuándo | Payload relevante |
 |---|---|---|
 | `WorkCreated` | Tras persistir la obra | `workId`, `authorId`, `title`, `accessMode`, `status`, `createdAt` |
+| `ChapterContentUpdated` | Tras persistir un capítulo | `chapterId`, `workId`, `authorId`, `position`, `wordCount`, `updatedAt` |
 
-El contenido de la obra **no viaja en el evento**, y tampoco nada derivado de leerlo. Una obra
-nace en `DRAFT`: es obra inédita, y una cola que persiste, reintenta y aparca mensajes es el
-último sitio donde debe estar.
+El contenido de la obra **no viaja en ningún evento**, y tampoco nada derivado de leerlo salvo
+el recuento. Una obra nace en `DRAFT`: es obra inédita, y una cola que persiste, reintenta y
+aparca mensajes es el último sitio donde debe estar.
 
-Sin `wordCount`: al crearse la obra es cero, y quien necesite el recuento lo tendrá cuando
-exista un evento de capítulo añadido. Sin `textTier`, que ya no existe.
+`WorkCreated` va sin `wordCount` porque al crearse la obra es cero, y sin `textTier`, que ya
+no existe. El recuento llega con el capítulo, que es la unidad que se corrige y se cobra
+([`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md) `RN-2`).
+
+`position` acompaña al recuento porque el último capítulo de una obra responde también las
+preguntas de alcance `LAST_CHAPTER`, y `Credits` no puede saber cuál es preguntándoselo a
+`Work`.
 
 **Consume**: ninguno.
 
@@ -203,6 +209,7 @@ a después.
 - [ ] El `wordCount` devuelto coincide con el número de palabras del contenido.
 - [ ] El usuario no puede fijar `wordCount` en la petición.
 - [ ] Se publica `WorkCreated` y su payload no contiene el contenido de la obra.
+- [ ] Añadir un capítulo publica `ChapterContentUpdated` con el recuento y sin una palabra del texto.
 - [ ] Una petición sin sesión recibe `401`.
 - [ ] El contenido enriquecido se almacena saneado frente a inyección de HTML y scripts.
 

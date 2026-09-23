@@ -106,6 +106,35 @@ final class ChapterPricingTest extends TestCase
         self::assertSame(40, $saldoAutor + $saldoLector, 'Una corrección mueve créditos; no los crea.');
     }
 
+    /**
+     * `RN-7`: las constantes son palancas, y se mueven por configuración.
+     * Reequilibrar leer contra escribir no puede exigir un despliegue.
+     */
+    public function testTheCalibrationCanBeMovedWithoutTouchingTheFormula(): void
+    {
+        // Escribir cuesta el doble: 100 palabras de crítica valen 2 créditos.
+        $masCaroEscribir = new ChapterPricing(wordsPerWritingCredit: 50);
+
+        self::assertSame(1 + 2, $masCaroEscribir->priceOf(800, 100));
+        self::assertSame(1 + 1, $this->pricing->priceOf(800, 100));
+    }
+
+    public function testAnEmptyPriceRangeIsRefused(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        new ChapterPricing(minPrice: 20, maxPrice: 2);
+    }
+
+    public function testALeverCannotBeZero(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        // Dividir el recuento por cero no es una calibración agresiva: es un
+        // error de configuración, y conviene que falle al arrancar.
+        new ChapterPricing(wordsPerReadingCredit: 0);
+    }
+
     public function testItRefusesNegativeWordCounts(): void
     {
         $this->expectException(\InvalidArgumentException::class);

@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Work\Chapter\Application\Handler;
 
+use LectoresBeta\Shared\Application\Event\EventPublisher;
 use LectoresBeta\Shared\Domain\Clock\Clock;
+use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 use LectoresBeta\Work\Chapter\Application\Command\AddChapter;
 use LectoresBeta\Work\Chapter\Application\Port\ContentSanitiser;
 use LectoresBeta\Work\Chapter\Domain\Entity\Chapter;
+use LectoresBeta\Work\Chapter\Domain\Event\ChapterContentUpdated;
 use LectoresBeta\Work\Chapter\Domain\Exception\EmptyChapter;
 use LectoresBeta\Work\Chapter\Domain\Repository\ChapterRepository;
 use LectoresBeta\Work\Chapter\Domain\Service\WordCounter;
@@ -32,6 +35,11 @@ use LectoresBeta\Work\Manuscript\Domain\ValueObject\WorkId;
  * Keeping a running counter on the work and trusting it would be cheaper and
  * would drift exactly once, silently, about a number the price of every
  * correction depends on (`FEAT-CRD-016`).
+ *
+ * The chapter's word count leaves here as a fact —`ChapterContentUpdated`—
+ * and nothing else. What that length is worth in credits is decided in
+ * `Credits`, which is the whole point of publishing a fact instead of an
+ * amount.
  */
 final readonly class AddChapterHandler
 {
@@ -41,6 +49,7 @@ final readonly class AddChapterHandler
         private ContentSanitiser $sanitiser,
         private WordCounter $words,
         private TransactionalSession $session,
+        private EventPublisher $events,
         private Clock $clock,
     ) {
     }
@@ -84,6 +93,19 @@ final readonly class AddChapterHandler
             );
             $this->works->save($work);
         });
+
+        // Published after the transaction commits: a consumer that priced a
+        // chapter this process then rolled back would be quoting a text that
+        // does not exist.
+        $this->events->publish(new ChapterContentUpdated(
+            EventId::generate(),
+            $chapter->id(),
+            $work->id(),
+            $work->authorId(),
+            $chapter->position(),
+            $chapter->wordCount(),
+            $now,
+        ));
 
         return $chapter->id()->value();
     }

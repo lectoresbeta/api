@@ -225,19 +225,22 @@ y el **precio del capítulo**. Los dos son de `Credits`, llegan por eventos, y h
 los publique:
 
 ```text
-Credits ──CreditBalanceChanged──────────────▶ ┐  ninguno existe
-Credits ──ChapterCorrectabilityChanged──────▶ │  ninguno existe
+Credits ──CreditBalanceChanged──────────────▶ ┐  no existe
+Credits ──ChapterCorrectabilityChanged──────▶ │  no existe
 Work    ──WorkOpenedForCorrection───────────▶ ├─▶ catalogue_entry
-Work    ──WorkContentUpdated────────────────▶ │  no existe
+Work    ──ChapterContentUpdated─────────────▶ │  se publica
 Feedback──FeedbackSubmitted─────────────────▶ ┘  no existe
 ```
 
-De los cinco, solo `WorkOpenedForCorrection` se publica. Con `price` y `authorBalance` a cero,
-`capacidad = min(saldo ÷ precio, 10)` no es una ordenación degradada: es una división por cero.
+De los cinco se publican dos. Los que faltan son precisamente los de `Credits`, y son los que
+la ordenación necesita: con `price` y `authorBalance` a cero,
+`capacidad = min(saldo ÷ precio, 10)` no es una ordenación degradada, es una división por cero.
 
-La cadena real es **cuestionario → precio → catálogo**: el segundo término del precio son las
-palabras exigidas por el cuestionario ([`FEAT-WRK-014`](FEAT-WRK-014-configure-questionnaire.md),
-`P0`), sin el cual `FEAT-CRD-016` no puede calcular nada.
+La cadena era **cuestionario → precio → catálogo**, y los dos primeros eslabones ya existen:
+[`FEAT-WRK-014`](FEAT-WRK-014-configure-questionnaire.md) publica lo que exige el cuestionario
+y [`FEAT-CRD-016`](../credits/FEAT-CRD-016-effort-based-pricing.md) mantiene el precio vigente
+de cada capítulo. **Lo que falta es que `Credits` publique lo que ya sabe**: que el saldo de un
+autor cambió, y que un capítulo dejó de ser corregible.
 
 Implementar el catálogo antes que eso obligaría a ordenar por otra cosa —fecha, por ejemplo—
 y eso **contradice la razón de ser del producto**: `decision:0008` descarta explícitamente

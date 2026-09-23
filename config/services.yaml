@@ -2,6 +2,20 @@ parameters:
     app.jwt_ttl: 900          # 15 minutos — decision:0007
     app.welcome_credits: 10   # decision:0006
 
+    # Las palancas del precio de una corrección (decision:0006 regla 1,
+    # FEAT-CRD-016 RN-7). Están aquí y no como literales en el código porque
+    # son lo único que permite reequilibrar leer contra escribir, y una
+    # palanca que exige desplegar no es una palanca.
+    #
+    # Moverlas es seguro para la economía: el precio es una transferencia
+    # —lo que paga el autor es lo que cobra el lector—, así que ninguna de
+    # estas cifras crea ni destruye créditos.
+    app.pricing.words_per_reading_credit: 1000
+    app.pricing.words_per_writing_credit: 100
+    app.pricing.words_per_unbounded_question: 25   # el suelo por pregunta sin mínimo
+    app.pricing.min_price: 2
+    app.pricing.max_price: 20
+
 services:
     _defaults:
         autowire: true
@@ -63,6 +77,8 @@ services:
         arguments:
             $eventClasses:
                 - LectoresBeta\Credits\Account\Application\Event\AccountActivated
+                - LectoresBeta\Credits\Pricing\Application\Event\ChapterContentUpdated
+                - LectoresBeta\Credits\Pricing\Application\Event\QuestionnaireUpdated
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
 
     # Los consumidores de eventos se etiquetan aquí y no con
@@ -109,6 +125,22 @@ services:
             # decision:0006 §5. Cambiarlo afecta solo a las activaciones
             # posteriores: un movimiento es inmutable (FEAT-CRD-002 RN-8).
             $welcomeCredits: '%app.welcome_credits%'
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Credits\Pricing\Domain\Service\ChapterPricing:
+        arguments:
+            $wordsPerReadingCredit: '%app.pricing.words_per_reading_credit%'
+            $wordsPerWritingCredit: '%app.pricing.words_per_writing_credit%'
+            $wordsPerUnboundedQuestion: '%app.pricing.words_per_unbounded_question%'
+            $minPrice: '%app.pricing.min_price%'
+            $maxPrice: '%app.pricing.max_price%'
+
+    LectoresBeta\Credits\Pricing\Application\Handler\PriceChapterOnContentUpdate:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Credits\Pricing\Application\Handler\RepriceWorkOnQuestionnaireUpdate:
         tags:
             - { name: messenger.message_handler }
 

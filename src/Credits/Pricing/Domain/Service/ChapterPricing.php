@@ -18,11 +18,19 @@ namespace LectoresBeta\Credits\Pricing\Domain\Service;
  * work they want when they set the minimum word counts.
  *
  * Price is also **reward**: the author pays exactly what the reader earns
- * (`RN-6`). A correction moves credits; it neither creates nor destroys them,
+ * (`RN-3`). A correction moves credits; it neither creates nor destroys them,
  * which is why changing these constants cannot put the economy at risk.
  *
  * A domain service and not a method on an entity: the price belongs to no
  * single aggregate. It is computed from facts that arrive from `Work`.
+ *
+ * **The four numbers are levers, not literals** (`RN-7`). They arrive through
+ * the constructor and `config/services.yaml` is what production passes; the
+ * constants below are the calibration of record and the default, so a test
+ * can state a price without restating the whole configuration. Correcting the
+ * balance between reading and writing must not require a code change, and it
+ * is safe to do: the price is a transfer, so moving it shifts no credits into
+ * or out of the system.
  */
 final class ChapterPricing
 {
@@ -37,8 +45,32 @@ final class ChapterPricing
      * (`decision:0006`). Without a floor, a questionnaire that demands
      * nothing would score zero on the writing term and a whole novel would
      * be corrected for two credits.
+     *
+     * A questionnaire built through `FEAT-WRK-014` cannot get here with an
+     * undeclared minimum — `C-14` made them mandatory — so this floor guards
+     * the inputs that do **not** come from one: an import, a migration, a
+     * questionnaire written before the rule existed.
      */
     public const WORDS_PER_UNBOUNDED_QUESTION = 25;
+
+    public function __construct(
+        private readonly int $wordsPerReadingCredit = self::WORDS_PER_READING_CREDIT,
+        private readonly int $wordsPerWritingCredit = self::WORDS_PER_WRITING_CREDIT,
+        private readonly int $wordsPerUnboundedQuestion = self::WORDS_PER_UNBOUNDED_QUESTION,
+        private readonly int $minPrice = self::MIN_PRICE,
+        private readonly int $maxPrice = self::MAX_PRICE,
+    ) {
+        if ($wordsPerReadingCredit < 1 || $wordsPerWritingCredit < 1 || $wordsPerUnboundedQuestion < 1) {
+            throw new \InvalidArgumentException('A pricing lever cannot be zero or negative.');
+        }
+
+        // A configuration mistake here would silently price every correction
+        // in the product, so it fails on the way in rather than showing up as
+        // an inexplicable number weeks later.
+        if ($minPrice < 1 || $maxPrice < $minPrice) {
+            throw new \InvalidArgumentException('The price range is empty.');
+        }
+    }
 
     public function priceOf(int $wordCount, int $requiredWords): int
     {
@@ -46,10 +78,10 @@ final class ChapterPricing
             throw new \InvalidArgumentException('Word counts cannot be negative.');
         }
 
-        $reading = (int) ceil($wordCount / self::WORDS_PER_READING_CREDIT);
-        $writing = (int) ceil($requiredWords / self::WORDS_PER_WRITING_CREDIT);
+        $reading = (int) ceil($wordCount / $this->wordsPerReadingCredit);
+        $writing = (int) ceil($requiredWords / $this->wordsPerWritingCredit);
 
-        return max(self::MIN_PRICE, min(self::MAX_PRICE, $reading + $writing));
+        return max($this->minPrice, min($this->maxPrice, $reading + $writing));
     }
 
     /**
@@ -64,7 +96,7 @@ final class ChapterPricing
 
         foreach ($minimumWordsPerQuestion as $minimum) {
             $total += (null === $minimum || $minimum <= 0)
-                ? self::WORDS_PER_UNBOUNDED_QUESTION
+                ? $this->wordsPerUnboundedQuestion
                 : $minimum;
         }
 

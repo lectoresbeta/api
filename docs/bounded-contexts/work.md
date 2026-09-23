@@ -63,7 +63,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | `ChapterContent` | Texto; calcula `WordCount` |
 | `WordCount` | Entero no negativo |
 | `TextTier` | Derivado de `WordCount` según la tabla de [credits.md](credits.md) |
-| `WorkStatus` | `DRAFT`, `VISIBLE`, `IN_CORRECTION`. **Sustituye a `Visibility` en la obra** (`W-9`) |
+| `WorkStatus` | `DRAFT`, `PUBLISHED`, `IN_CORRECTION`. **Sustituye a `Visibility` en la obra** (`W-9`) |
 | `Visibility` | `VISIBLE`, `HIDDEN` — queda **solo para el fragmento** |
 | `BetaReaderAccessMode` | `PUBLIC`, `ON_REQUEST`, `PRIVATE` |
 | `Genre` | Catálogo de temáticas, por definir |
@@ -76,7 +76,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | `WorkPublished` | La obra pasa a `PUBLISHED` | `Reading`, `Community`, `Notification` |
 | `WorkOpenedForCorrection` | La obra pasa a `IN_CORRECTION` | **`Credits`**, `Reading`, `Notification` |
 | `WorkClosedForCorrection` | La obra sale de `IN_CORRECTION` | **`Credits`** (libera retenciones), `Reading` |
-| `WorkContentUpdated` | Cambia el contenido y posiblemente el `TextTier` | `Credits` (referencia de coste), `Feedback` |
+| `ChapterContentUpdated` | Cambia el texto de un capítulo | **`Credits`** (calcula su precio), `Feedback` |
 | `WorkAccessModeChanged` | Cambia la modalidad de acceso | `Reading` |
 | `WorkDeleted` | Se elimina la obra | `Reading`, `Feedback`, `Community` |
 | `QuestionnaireUpdated` | Cambia el cuestionario: nueva versión | **`Credits`** (recalcula coste **y** recompensa de esa obra) |
