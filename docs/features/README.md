@@ -409,8 +409,8 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-CRD-001 | Consultar el saldo de créditos | User | REVIEW | TODO | P0 | [ficha](credits/FEAT-CRD-001-check-credit-balance.md) |
-| FEAT-CRD-002 | Abonar los créditos de bienvenida al **activar** la cuenta (+10) | — (sistema) | REVIEW | TODO | P0 | [ficha](credits/FEAT-CRD-002-welcome-credit-grant.md) |
+| FEAT-CRD-001 | Consultar el saldo de créditos | User | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-001-check-credit-balance.md) |
+| FEAT-CRD-002 | Abonar los créditos de bienvenida al **activar** la cuenta (+10) | — (sistema) | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-002-welcome-credit-grant.md) |
 | FEAT-CRD-003 | ~~Abonar créditos por dar feedback según nivel del texto~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-004 | ~~Abonar +5 por feedback valorado positivamente~~ → `FEAT-CRD-017` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-005 | Abonar +5 al invitador cuando el invitado entrega su primera corrección | — (sistema) | PENDING | TODO | P2 | — |
@@ -419,7 +419,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-008 | Consultar el historial de movimientos de créditos | User | PENDING | TODO | P1 | — |
 | FEAT-CRD-009 | Comprobar el saldo al empezar una corrección | — (sistema) | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-009-balance-check-on-correction-start.md) |
 | FEAT-CRD-010 | ~~Fórmula continua en vez de tramos~~ → adoptada en `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
-| FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | REVIEW | TODO | P0 | [ficha](credits/FEAT-CRD-011-deduplicate-integration-events.md) |
+| FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-011-deduplicate-integration-events.md) |
 | FEAT-CRD-012 | Salud de la economía de créditos | Admin | APPROVED | TODO | P1 | [ficha](credits/FEAT-CRD-012-economy-health.md) |
 | FEAT-CRD-013 | Créditos asociados a un capítulo (insignia de la tarjeta) | User | APPROVED | TODO | P2 | [ficha](credits/FEAT-CRD-013-work-credit-badge.md) |
 | FEAT-CRD-014 | Modal informativo del sistema de créditos | User | APPROVED | TODO | P2 | [ficha](credits/FEAT-CRD-014-credits-info-modal.md) |

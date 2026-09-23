@@ -4,7 +4,7 @@ title: Deduplicar eventos para garantizar idempotencia
 context: Credits
 concept: EventProcessing
 actors: []
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -138,8 +138,8 @@ movimientos que dependan de ella.
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa. Lo que se somete a validación es `RN-4`, que **obliga
-a cambiar una tabla ya creada**, y el plazo de retención de `RN-7`.
+**Especificación:** `APPROVED` (2026-09-23). `RN-4` —la clave es `(eventId, consumer)`, lo que
+**obliga a cambiar una tabla ya creada**— y el plazo de retención de `RN-7` quedan validados.
 
 **Implementación:** `TODO`. Existen la entidad `ProcessedEvent`, su repositorio y su tabla; les
 falta la columna `consumer`, el comando de purga y los consumidores que los usen.

@@ -4,7 +4,7 @@ title: Consultar el saldo de créditos
 context: Credits
 concept: Account
 actors: [User]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -140,9 +140,8 @@ Ninguna.
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa. Lo que se somete a validación es la ruta
-(`/credits/balance` frente a `/me/credits`, argumentado arriba) y `RN-2`, que fija que la
-ausencia de cuenta es un saldo de cero y no un error.
+**Especificación:** `APPROVED` (2026-09-23). La ruta `/credits/balance` y `RN-2` —la
+ausencia de cuenta es un saldo de cero, no un error— quedan validadas.
 
 **Implementación:** `TODO`. La operación no entra en `openapi/` hasta que la ficha esté
 `APPROVED`.

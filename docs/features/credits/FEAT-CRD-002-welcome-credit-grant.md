@@ -4,7 +4,7 @@ title: Abonar los créditos de bienvenida al activar la cuenta
 context: Credits
 concept: Account
 actors: []
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -160,8 +160,8 @@ implementación**, no antes.
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa. El importe, el momento y el mecanismo vienen de
-[`decision:0006`](../../decisions/0006-credit-system.md); lo que esta ficha añade y somete a
-validación es `RN-3` (una vez por usuario, no por evento) y `RN-5` (la cuenta nace perezosa).
+**Especificación:** `APPROVED` (2026-09-23). El importe, el momento y el mecanismo vienen de
+[`decision:0006`](../../decisions/0006-credit-system.md); `RN-3` (una vez por usuario, no por
+evento) y `RN-5` (la cuenta nace perezosa) quedan validadas.
 
 **Implementación:** `TODO`.

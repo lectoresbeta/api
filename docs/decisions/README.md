@@ -23,6 +23,7 @@ Plantilla: [`../_templates/adr.md`](../_templates/adr.md).
 | [0009](0009-one-postgresql-schema-per-bounded-context.md) | **Un esquema de PostgreSQL por bounded context**, sin claves foráneas entre ellos | Aceptada | 2026-09-24 |
 | [0010](0010-routes-declared-in-yaml-per-context.md) | **Las rutas se declaran en YAML**, un fichero por bounded context, nunca con atributos | Aceptada, ubicación modificada por [0011](0011-route-files-live-inside-their-context.md) | 2026-09-24 |
 | [0011](0011-route-files-live-inside-their-context.md) | Los ficheros de rutas viven **dentro de su contexto**, en `src/<Contexto>/Infrastructure/` | Aceptada | 2026-09-24 |
+| [0012](0012-api-version-prefix-in-the-path.md) | La versión de la API va en la ruta, **escrita entera** en cada una. `/health` queda fuera | Aceptada | 2026-09-23 |
 
 ## Decisiones pendientes
 

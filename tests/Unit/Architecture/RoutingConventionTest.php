@@ -168,6 +168,40 @@ final class RoutingConventionTest extends TestCase
     }
 
     /**
+     * Toda ruta va bajo `/api/v1/`
+     * ([`decision:0012`](../../../docs/decisions/0012-api-version-prefix-in-the-path.md)),
+     * y el prefijo se escribe entero: no hay `prefix` en el import.
+     *
+     * Las exentas se enumeran aquí a propósito. Sacar una ruta de la versión
+     * es una decisión, no un descuido, y así queda por escrito en un sitio
+     * que hay que editar para saltársela.
+     */
+    public function testEveryRouteLivesUnderTheVersionPrefix(): void
+    {
+        $unversioned = ['checkReadiness', 'checkLiveness'];
+
+        foreach ($this->declaredRoutes() as $name => $definition) {
+            $path = (string) ($definition['path'] ?? '');
+
+            if (\in_array($name, $unversioned, true)) {
+                self::assertStringStartsNotWith('/api/', $path, \sprintf(
+                    'La ruta %s figura como exenta de la versión pero apunta a %s.',
+                    $name,
+                    $path,
+                ));
+
+                continue;
+            }
+
+            self::assertStringStartsWith('/api/v1/', $path, \sprintf(
+                'La ruta %s (%s) no va bajo /api/v1/. Ver decision:0012.',
+                $name,
+                $path,
+            ));
+        }
+    }
+
+    /**
      * @return list<string>
      */
     private function boundedContexts(): array

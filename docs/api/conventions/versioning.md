@@ -2,20 +2,32 @@
 
 ## Estrategia
 
-**Propuesta: prefijo de versión en la ruta.**
+**Prefijo de versión en la ruta**, decidido en
+[`decision:0012`](../../decisions/0012-api-version-prefix-in-the-path.md).
 
 ```text
 /api/v1/works
 ```
 
-A favor: explícito, fácil de enrutar, fácil de convivir con dos versiones. En contra: obliga
-a versionar la API entera aunque cambie un solo endpoint.
+El prefijo se **escribe entero en cada ruta** del fichero de su contexto. No se declara como
+`prefix` en el `import` de `config/routes.yaml`: el fichero de rutas de un contexto es el mapa
+de lo que ese contexto expone ([`decision:0011`](../../decisions/0011-route-files-live-inside-their-context.md)),
+y un prefijo invisible lo convierte en media verdad.
 
-Alternativa considerada: versionado por cabecera (`Accept: application/vnd.lectoresbeta.v1+json`).
-Más granular, pero más difícil de probar y de cachear.
+```yaml
+registerUser:
+    path: /api/v1/auth/register
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\RegisterUserController::__invoke
+    methods: [POST]
+```
 
-**Pendiente de confirmar** antes del primer endpoint. Una vez publicada la API, cambiar de
-estrategia es caro.
+### Qué queda fuera de la versión
+
+`/health` y `/health/live`. Las consultan sondas de infraestructura que no versionan nada y
+que deben seguir respondiendo cuando la v1 se retire.
+
+Descartado: versionado por cabecera (`Accept: application/vnd.lectoresbeta.v1+json`). Más
+granular, pero invisible en un log y difícil de probar a mano.
 
 ## Qué es un cambio compatible
 
