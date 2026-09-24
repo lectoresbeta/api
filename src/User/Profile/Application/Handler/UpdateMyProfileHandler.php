@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\User\Profile\Application\Handler;
 
 use LectoresBeta\Shared\Application\Event\EventPublisher;
+use LectoresBeta\Shared\Application\Storage\MediaUrl;
 use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
@@ -77,6 +78,7 @@ final readonly class UpdateMyProfileHandler
             $user->id(),
             $name?->value(),
             $description?->value(),
+            MediaUrl::of($user->avatarUrl()),
             $now,
         ));
 

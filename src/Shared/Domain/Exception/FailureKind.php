@@ -56,4 +56,13 @@ enum FailureKind
      * trying, which is the behaviour the limit exists to stop.
      */
     case RATE_LIMITED;
+
+    /**
+     * Pedido bien, y **demasiado grande**.
+     *
+     * Aparte de `INVALID` porque el cliente no puede arreglarlo editando
+     * campos: tiene que mandar otra cosa, y un `413` se lo dice antes de leer
+     * el mensaje. El límite lo aplica siempre el servidor.
+     */
+    case TOO_LARGE;
 }

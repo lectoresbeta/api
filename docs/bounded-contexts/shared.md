@@ -42,3 +42,11 @@ Duplicar un enum en dos contextos es correcto cuando cada uno lo interpreta a su
 | `Shared/Infrastructure/Messenger` | Publicación y serialización genérica de eventos |
 | `Shared/Infrastructure/Doctrine/Type` | Tipos personalizados de Doctrine (UUID, enums) |
 | `Shared/Infrastructure/Http` | Traducción centralizada de excepciones a respuestas |
+| `Shared/Application/Storage` | El puerto `FileStorage` y la dirección pública de un fichero |
+| `Shared/Application/Image` | El puerto `ImageProcessor`: normalizar una imagen subida |
+| `Shared/Infrastructure/Storage`, `.../Image` | Sus implementaciones: directorio local y GD |
+
+Los dos últimos pasan la prueba decisiva sin esfuerzo: «guardar un fichero» y «quitarle los
+metadatos a una imagen» significan exactamente lo mismo en cualquier proyecto. Lo que **no**
+es genérico —cuánto pesa como mucho un avatar, qué se borra al quitarlo, qué formatos se
+admiten— se quedó en `User`, que es quien sube la foto (`FEAT-USR-037`).

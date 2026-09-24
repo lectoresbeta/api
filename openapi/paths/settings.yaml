@@ -214,6 +214,18 @@ EditableProfile:
         Con una cuenta que nunca lo ha cambiado es el momento actual.
     counters:
       $ref: '#/ProfileCounters'
+    avatarCrop:
+      type: [object, 'null']
+      description: |
+        El encuadre con el que se guardó la foto —escala, rotación y
+        desplazamiento— para **reabrir el editor donde se dejó**
+        (`FEAT-USR-037`). El recorte ya está aplicado en la imagen: esto no se
+        aplica nunca.
+
+        Va solo aquí, en el perfil propio: es material de trabajo de su dueño,
+        no algo que enseñar en el perfil que ven los demás.
+      additionalProperties:
+        type: number
 
 myProfile:
   get:
@@ -517,6 +529,153 @@ literaryPreferences:
           Menos de tres géneros (`code: NOT_ENOUGH_GENRES`) o alguno que no
           está disponible (`code: UNKNOWN_GENRE`, que **los nombra**: uno
           desconocido se rechaza, nunca se ignora en silencio).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+avatar:
+  put:
+    tags: [User]
+    operationId: updateAvatar
+    summary: Subir o reencuadrar mi foto de perfil
+    description: |
+      `multipart/form-data` con `image` —la imagen **ya recortada por el
+      navegador**— y, la primera vez, `original`. Al reencuadrar basta con la
+      primera: la original ya está guardada y volver a subirla sería mandar
+      por la red algo que no ha cambiado.
+
+      **Subir y reencuadrar son la misma operación**: llega una imagen
+      cuadrada nueva y sustituye a la anterior. La distinción entre «Cambiar»
+      y «Editar» es de interfaz.
+
+      El servidor **reescribe siempre** las imágenes: normaliza el formato,
+      redimensiona y **elimina los metadatos**. Que el navegador la haya
+      recortado antes no exime — recortar y sanear son cosas distintas, y los
+      metadatos de una foto llevan dónde se tomó. Lo guardado es WebP
+      cuadrado.
+
+      El servidor **no recorta ni gira**: `crop` solo se guarda, para reabrir
+      el editor donde el usuario lo dejó.
+
+      Subir una foto nueva **borra la anterior**.
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [image]
+            properties:
+              image:
+                type: string
+                format: binary
+                description: La imagen recortada, cuadrada. Máximo 2 MB.
+              original:
+                type: string
+                format: binary
+                description: |
+                  La imagen sin recortar, para que «Editar» pueda alejar y
+                  desplazar sin degradarla. Solo la primera vez.
+              crop:
+                type: string
+                description: |
+                  JSON con `scale`, `rotation`, `offsetX` y `offsetY`. **No se
+                  aplica**: se guarda para reabrir el editor.
+    responses:
+      '200':
+        description: La dirección de la foto ya procesada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [avatarUrl]
+              properties:
+                avatarUrl:
+                  type: string
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '413':
+        description: |
+          `code: FILE_TOO_LARGE`. Más de 2 MB. **El límite lo aplica el
+          servidor**: que el modal lo anuncie es una cortesía.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNSUPPORTED_FILE_TYPE` si no es una imagen de un formato
+          admitido —JPEG, PNG o WebP, **decidido por el contenido y no por la
+          extensión ni por el `Content-Type`**—, o `INVALID_IMAGE` si lo
+          parece y no se puede leer.
+
+          HEIC, el formato por defecto de la cámara de iOS, cae hoy en el
+          primero.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [User]
+    operationId: deleteAvatar
+    summary: Quitar mi foto de perfil
+    description: |
+      Devuelve al avatar por defecto, que no es un fichero de nadie sino el
+      marcador de la interfaz, y **borra los dos ficheros**: dejar la original
+      huérfana sería guardar una imagen personal que su dueño cree haber
+      borrado.
+
+      Idempotente: quitar una foto que no hay responde igual.
+    responses:
+      '204':
+        description: Ya no tiene foto. Igual si no la tenía.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+avatarOriginal:
+  get:
+    tags: [User]
+    operationId: getMyAvatarOriginal
+    summary: Mi foto sin recortar
+    description: |
+      La imagen que carga el editor al pulsar «Editar», **solo para quien la
+      subió**.
+
+      Tiene endpoint propio en vez de viajar como una URL dentro del perfil, y
+      es una decisión de privacidad: la original puede enseñar mucho más que
+      el encuadre que su dueño eligió mostrar, y una URL acaba copiada donde
+      la ve alguien más. Tampoco se sirve por `getMediaFile`, que solo entrega
+      lo que es público.
+
+      Responde el fichero, no JSON.
+    responses:
+      '200':
+        description: La imagen original.
+        content:
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: PROFILE_NOT_FOUND`. No hay original que editar: o no tiene
+          foto, o la subió antes de que se guardaran las originales.
         content:
           application/problem+json:
             schema:

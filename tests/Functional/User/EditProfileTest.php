@@ -33,7 +33,7 @@ final class EditProfileTest extends EconomyScenario
         self::assertSame('Ana García', $this->payload()['name']);
         self::assertSame($person['username'], $this->payload()['username']);
         self::assertSame(
-            ['userId', 'username', 'name', 'description', 'avatarUrl', 'coverUrl', 'usernameChangeableOn', 'counters'],
+            ['userId', 'username', 'name', 'description', 'avatarUrl', 'coverUrl', 'usernameChangeableOn', 'avatarCrop', 'counters'],
             array_keys($this->payload()),
         );
     }

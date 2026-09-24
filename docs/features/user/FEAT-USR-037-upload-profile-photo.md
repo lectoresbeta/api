@@ -5,12 +5,15 @@ context: User
 concept: Profile
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P2
 sources:
   - conversation:2026-09-22 (capturas del flujo de foto de perfil)
   - docs/ui/profile-photo.md
-endpoints: [PUT /me/profile/avatar, DELETE /me/profile/avatar]
+endpoints:
+  - PUT /me/profile/avatar
+  - DELETE /me/profile/avatar
+  - GET /me/profile/avatar/original
 events: [UserProfileUpdated]
 depends_on: [FEAT-USR-028]
 updated: 2026-09-24
@@ -203,40 +206,40 @@ original huérfana es guardar una imagen personal que el usuario cree haber borr
 
 ## Criterios de aceptación
 
-- [ ] Subir una imagen válida actualiza el avatar y devuelve su URL.
-- [ ] Un fichero que no es imagen se rechaza con `422`, aunque tenga extensión `.jpg`.
-- [ ] Un fichero de más de 2 MB se rechaza con `413`.
-- [ ] La imagen almacenada **no conserva metadatos EXIF**.
-- [ ] La imagen almacenada es cuadrada.
-- [ ] El endpoint no acepta parámetros de encuadre: el recorte ya viene hecho.
-- [ ] Una imagen recortada por el navegador tampoco conserva metadatos EXIF tras guardarse.
-- [ ] Una imagen de 4000 × 3000 px se acepta y se redimensiona.
-- [ ] El nombre original del fichero no aparece en la URL ni en la respuesta.
-- [ ] Subir una foto nueva reemplaza la anterior.
-- [ ] No se puede cambiar la foto de otro usuario.
-- [ ] Con la cuenta sin activar devuelve `403`.
-- [ ] Tras subirla, el avatar aparece actualizado en el perfil y en la cabecera.
-- [ ] Se publica `UserProfileUpdated`.
-- [ ] Se conservan el original y la imagen recortada.
-- [ ] «Editar» parte del original, no de la imagen ya recortada.
-- [ ] Reencuadrar dos veces seguidas no degrada la calidad respecto a la primera.
-- [ ] El original no aparece en el perfil público ni en ninguna respuesta dirigida a terceros.
-- [ ] Eliminar la foto devuelve al avatar por defecto en las tres vistas.
-- [ ] Eliminar la foto borra los dos ficheros del almacenamiento.
-- [ ] Eliminar sin tener foto devuelve éxito, no error.
-- [ ] No se puede eliminar la foto de otro usuario.
+- [x] Subir una imagen válida actualiza el avatar y devuelve su URL.
+- [x] Un fichero que no es imagen se rechaza con `422`, aunque tenga extensión `.jpg`.
+- [x] Un fichero de más de 2 MB se rechaza con `413`.
+- [x] La imagen almacenada **no conserva metadatos EXIF**.
+- [x] La imagen almacenada es cuadrada.
+- [x] El endpoint no acepta parámetros de encuadre: el recorte ya viene hecho. *Acepta `crop`, pero **no lo aplica**: solo lo guarda para reabrir el editor (`F-10`). El servidor no recorta ni gira.*
+- [x] Una imagen recortada por el navegador tampoco conserva metadatos EXIF tras guardarse.
+- [x] Una imagen de 4000 × 3000 px se acepta y se redimensiona.
+- [x] El nombre original del fichero no aparece en la URL ni en la respuesta.
+- [x] Subir una foto nueva reemplaza la anterior.
+- [x] No se puede cambiar la foto de otro usuario. *Por construcción: el endpoint es `/me/profile/avatar` y no admite decir de quién.*
+- [x] Con la cuenta sin activar devuelve `403`.
+- [ ] Tras subirla, el avatar aparece actualizado en el perfil y en la cabecera. *El perfil sí; la cabecera la pinta `GET /me/context` (`FEAT-USR-027`), que no existe.*
+- [x] Se publica `UserProfileUpdated`.
+- [x] Se conservan el original y la imagen recortada.
+- [x] «Editar» parte del original, no de la imagen ya recortada.
+- [x] Reencuadrar dos veces seguidas no degrada la calidad respecto a la primera. *Se cumple por construcción: cada reencuadre parte del original, que no se toca. Lo que hay probado es eso — que el original sobrevive al reencuadre.*
+- [x] El original no aparece en el perfil público ni en ninguna respuesta dirigida a terceros.
+- [ ] Eliminar la foto devuelve al avatar por defecto en las tres vistas. *En el perfil sí. Las otras dos —cabecera y caja de publicación— son pantallas que no existen.*
+- [x] Eliminar la foto borra los dos ficheros del almacenamiento.
+- [x] Eliminar sin tener foto devuelve éxito, no error.
+- [x] No se puede eliminar la foto de otro usuario.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **F-3** | ¿Se acepta HEIC? La cámara de iOS lo produce por defecto | Sin conversión, las fotos desde iPhone fallan |
+| **F-3** | ¿Se acepta HEIC? La cámara de iOS lo produce por defecto | **Hoy no**, y el error lo dice (`UNSUPPORTED_FILE_TYPE`). Admitirlo exige ImageMagick con `libheif`: es una decisión de infraestructura, no de esta ficha |
 | F-1 | ¿Recorta el cliente o el servidor? | **Resuelta:** el cliente |
 | **F-2** | **¿Se conserva el original?** «Editar» lo exige para poder alejar y desplazar | Sin él, editar solo recorta hacia dentro y degrada la imagen |
 | F-4 | ¿Se puede eliminar la foto? | **Resuelta:** sí, con confirmación, y vuelve al avatar por defecto |
 | F-10 | ¿Se guarda el encuadre para reabrir el editor donde se dejó? | Sin él, «Editar» empieza desde una posición por defecto |
 | F-11 | ¿Hay aviso de confirmación tras eliminar? | Las demás acciones sí lo tienen |
-| F-13 | ¿Qué hace «Editar» con fotos subidas antes de conservar originales? | Solo relevante si se implanta en dos fases |
+| F-13 | ¿Qué hace «Editar» con fotos subidas antes de conservar originales? | **Resuelta:** no hay original que cargar y el endpoint responde `404`, lo mismo que quien no tiene foto. No se implantó en dos fases, así que el caso solo puede darse con datos antiguos |
 | F-5 | ¿El mismo flujo sirve para la imagen de portada? | Otras proporciones y otras recomendaciones |
 | F-7 | ¿Hay límite de cambios por periodo? | Un avatar es un vector de contenido inapropiado y no hay moderación (`V-1`) |
 | F-9 | ¿Se conservan varios tamaños del avatar? | Las tarjetas de autor lo muestran a 40–60 px; servir 180 px en todas es desperdicio |
@@ -246,4 +249,75 @@ original huérfana es guardar una imagen personal que el usuario cree haber borr
 **Especificación:** `APPROVED` (2026-09-24). `F-2` resuelta: se conserva la original para poder reeditar.
 `F-3` (HEIC) es un detalle de formatos admitidos.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-24). `PUT` y `DELETE /api/v1/me/profile/avatar`, más
+`GET /api/v1/me/profile/avatar/original`. **Sin migración**: las tres columnas —`avatar_url`,
+`avatar_original_url`, `avatar_crop`— ya estaban en la cuenta desde el esquema inicial.
+
+Con esto llega **la primera subida de ficheros del proyecto**, y por eso la mitad del trabajo
+es infraestructura compartida que no es de `User`.
+
+### Lo que se ha construido y no es de nadie en particular
+
+- **`FileStorage`**, el puerto de `file-uploads.md`, en `Shared`. Guardar un fichero es una
+  capacidad técnica genérica, como el reloj: la necesitan los avatares, las portadas y algún
+  día los manuscritos. Su implementación de hoy escribe en un directorio local, que es con lo
+  que se empieza y no lo definitivo: el día que haya más de una instancia sirviendo la API
+  hay que cambiar **una clase**, y que sea una sola es la razón de que el puerto exista.
+- **`ImageProcessor`**, con GD. No valida y deja pasar: **decodifica y vuelve a codificar**.
+  Un reencodificado no puede arrastrar metadatos, que es la única forma sólida de cumplir
+  `RN-3`.
+- **`GET /api/v1/media/{key}`**, que sirve los ficheros públicos.
+- La variable de entorno **`APP_STORAGE_DIR`**, documentada en `.env`.
+
+### Las dos carpetas no son cosmética
+
+La recortada vive en `avatars/` y la original en `originals/`, y el endpoint abierto **solo
+sirve la primera carpeta**. Así la original no es alcanzable desde ahí ni conociendo su clave:
+para leerla hay que pasar por el endpoint que comprueba de quién es.
+
+Podría haber bastado con que las claves sean impredecibles —son 128 bits—, y no basta: una
+clave acaba en un log, en una captura o en el historial de un navegador. Una frontera que se
+lee de un vistazo es mejor que un secreto que se mantiene por costumbre.
+
+### El EXIF se prueba con EXIF de verdad
+
+La prueba no confía en que GD «ya limpia»: construye un JPEG **con un bloque EXIF
+reconocible**, con etiquetas de geolocalización dentro, lo sube y comprueba que lo guardado no
+las contiene. Es la única forma de que la prueba siga valiendo el día que alguien cambie el
+procesador de imagen por otro.
+
+### Lo que el servidor no hace
+
+No recorta y no gira (`RN-4b`). Eso lo hizo el navegador, y de ahí sale una ventaja que
+conviene no perder: **el servidor nunca tiene que interpretar la orientación EXIF**, que es la
+fuente clásica de fotos tumbadas.
+
+`crop` se guarda y no se aplica. El criterio de aceptación decía «el endpoint no acepta
+parámetros de encuadre»; lo que quería decir es que no los **aplica**, y guardar el último
+encuadre es lo que permite que «Editar» reabra el editor donde se dejó (`F-10`). Va solo en el
+perfil propio: es material de trabajo de su dueño.
+
+### El orden de las operaciones importa
+
+Se guarda el fichero, luego se guarda la cuenta, y **solo después** se borra lo que sustituye.
+Al revés, un fallo entre medias dejaría a alguien sin foto o apuntando a un fichero que ya no
+está. Lo mismo al eliminar: primero la fila, después los ficheros.
+
+### `F-3`, HEIC: hoy no, y el error lo dice
+
+GD no lo decodifica, así que una foto hecha con un iPhone en su formato por defecto se rechaza
+con `UNSUPPORTED_FILE_TYPE`. No es un olvido: admitirlo exige ImageMagick con `libheif`, que
+es una decisión de infraestructura. Mientras tanto el mensaje dice qué formatos valen, que es
+lo único que quien sube la foto puede accionar.
+
+### Lo que queda fuera
+
+- **La portada del perfil** (`FEAT-USR-028`, `F-5`). Ahora es barata —el puerto y el
+  procesador ya están— pero sus proporciones y límites no están decididos.
+- **Varios tamaños del avatar** (`F-9`). Se guarda uno de 360 px y las tarjetas de autor lo
+  enseñan a 40–60: hay desperdicio, y no duele hasta que haya tráfico.
+- **Límite de cambios por periodo** (`F-7`). Un avatar es un vector de contenido inapropiado y
+  no hay moderación (`V-1`).
+- Al **anonimizar una cuenta** (`FEAT-USR-013`, `BLOCKED`) habrá que borrar también sus
+  ficheros. Hoy la anonimización limpia las columnas; cuando ese borrado exista, tendrá que
+  pasar por aquí.

@@ -76,6 +76,7 @@ final readonly class ProblemFactory
             FailureKind::FORBIDDEN => Response::HTTP_FORBIDDEN,
             FailureKind::GONE => Response::HTTP_GONE,
             FailureKind::RATE_LIMITED => Response::HTTP_TOO_MANY_REQUESTS,
+            FailureKind::TOO_LARGE => Response::HTTP_REQUEST_ENTITY_TOO_LARGE,
         };
     }
 

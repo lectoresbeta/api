@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\User\Profile\Infrastructure\Http;
 
+use LectoresBeta\Shared\Application\Storage\MediaUrl;
 use LectoresBeta\User\Profile\Application\DTO\PublicProfile;
 
 /**
@@ -29,7 +30,7 @@ final readonly class PublicProfileBody
             'resolvedVia' => $profile->resolvedVia,
             'name' => $profile->name,
             'description' => $profile->description,
-            'avatarUrl' => $profile->avatarUrl,
+            'avatarUrl' => MediaUrl::of($profile->avatarUrl),
             'coverUrl' => $profile->coverUrl,
         ];
     }

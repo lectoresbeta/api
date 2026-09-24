@@ -114,3 +114,25 @@ updateLiteraryPreferences:
     path: /api/v1/me/literary-preferences
     controller: LectoresBeta\User\Profile\Infrastructure\Controller\UpdateLiteraryPreferencesController::__invoke
     methods: [PUT]
+
+# La foto de perfil (FEAT-USR-037). Subir y reencuadrar son el mismo endpoint:
+# para el servidor son la misma operación —llega una imagen cuadrada nueva y
+# sustituye a la anterior— y la distinción es de interfaz.
+#
+# La original tiene su propia lectura, y con sesión: no se expone como URL
+# porque puede enseñar mucho más que el encuadre que su dueño eligió mostrar.
+
+updateAvatar:
+    path: /api/v1/me/profile/avatar
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\UpdateAvatarController::__invoke
+    methods: [PUT]
+
+deleteAvatar:
+    path: /api/v1/me/profile/avatar
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\DeleteAvatarController::__invoke
+    methods: [DELETE]
+
+getMyAvatarOriginal:
+    path: /api/v1/me/profile/avatar/original
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetMyAvatarOriginalController::__invoke
+    methods: [GET]

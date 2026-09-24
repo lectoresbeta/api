@@ -93,7 +93,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-034 | Cambiar el nombre de usuario y alias temporal | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-034-change-username.md) |
 | FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |
 | FEAT-USR-036 | Purga programada de alias caducados | — (sistema) | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-036-purge-expired-aliases.md) |
-| FEAT-USR-037 | Gestionar la foto de perfil — subir, editar y eliminar | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |
+| FEAT-USR-037 | Gestionar la foto de perfil — subir, editar y eliminar | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |
 | FEAT-USR-038 | Ajustes de privacidad del usuario | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-038-privacy-settings.md) |
 | FEAT-USR-039 | Preferencias de notificación por canal | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-039-notification-preferences.md) |
 | FEAT-USR-040 | Cambiar el correo de la cuenta | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-040-change-email.md) |

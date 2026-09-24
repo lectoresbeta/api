@@ -20,9 +20,19 @@ namespace LectoresBeta\User\Profile\Application\DTO;
  * Y con él viaja `usernameChangeableOn` (`FEAT-USR-034`): la pantalla que
  * enseña el campo necesita saber si puede dejar escribir en él, y enterarse
  * con un `429` es enterarse tarde.
+ *
+ * `avatarCrop` es lo último que hizo el editor de la foto (`FEAT-USR-037`
+ * `F-10`), y va **solo aquí**: es dato de trabajo de su dueño, no algo que
+ * enseñar en el perfil que ven los demás. El recorte ya está aplicado en la
+ * imagen; esto solo sirve para reabrir el editor donde se dejó.
  */
 final readonly class EditableProfile
 {
+    /**
+     * @param array<string, float|int>|null $avatarCrop escala, rotación y
+     *                                                  desplazamiento de la
+     *                                                  última vez
+     */
     public function __construct(
         public string $userId,
         public string $username,
@@ -31,6 +41,7 @@ final readonly class EditableProfile
         public ?string $avatarUrl,
         public ?string $coverUrl,
         public \DateTimeImmutable $usernameChangeableOn,
+        public ?array $avatarCrop,
     ) {
     }
 }

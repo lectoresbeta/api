@@ -20,6 +20,10 @@ use LectoresBeta\User\Account\Domain\ValueObject\UserId;
  * Ni correo ni fecha de nacimiento, nunca: son privados y no salen de este
  * contexto (`FEAT-USR-022` `RN-4b`). Lo que viaja es exactamente lo que
  * cualquiera puede ver abriendo el perfil.
+ *
+ * `avatarUrl` llegó con [`FEAT-USR-037`](../../../../../docs/features/user/FEAT-USR-037-upload-profile-photo.md)
+ * `RN-11`, y lleva **la recortada, nunca la original**: esa es material de
+ * trabajo del editor y no se enseña a nadie.
  */
 final readonly class UserProfileUpdated implements IntegrationEvent
 {
@@ -28,6 +32,7 @@ final readonly class UserProfileUpdated implements IntegrationEvent
         private UserId $userId,
         private ?string $name,
         private ?string $description,
+        private ?string $avatarUrl,
         private \DateTimeImmutable $updatedAt,
     ) {
     }
@@ -53,6 +58,7 @@ final readonly class UserProfileUpdated implements IntegrationEvent
             'userId' => $this->userId->value(),
             'name' => $this->name,
             'description' => $this->description,
+            'avatarUrl' => $this->avatarUrl,
             'updatedAt' => $this->updatedAt->format(\DATE_ATOM),
         ];
     }

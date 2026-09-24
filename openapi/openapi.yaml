@@ -97,6 +97,15 @@ paths:
   /me/literary-preferences:
     $ref: './paths/settings.yaml#/literaryPreferences'
 
+  /me/profile/avatar:
+    $ref: './paths/settings.yaml#/avatar'
+
+  /me/profile/avatar/original:
+    $ref: './paths/settings.yaml#/avatarOriginal'
+
+  /media/{key}:
+    $ref: './paths/health.yaml#/media'
+
   /me/privacy-settings:
     $ref: './paths/settings.yaml#/privacySettings'
 

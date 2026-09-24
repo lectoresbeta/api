@@ -51,6 +51,7 @@ final readonly class MyProfile
             $user->avatarUrl(),
             $user->coverUrl(),
             $user->usernameChangeableOn($now),
+            $user->avatarCrop(),
         );
     }
 }

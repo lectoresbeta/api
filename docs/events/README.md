@@ -45,7 +45,7 @@ aplicar el efecto.
 | `ActivationEmailRequested` | Se pide reenviar el correo de activación | `Notification` | `userId` |
 | `LiteraryPreferencesUpdated` | El usuario fija sus géneros en el onboarding **o los cambia después** (`FEAT-USR-009`) | `Community` | `userId`, `genres`. **La selección entera, no lo que cambió**: aplicar diferencias daría un conjunto equivocado el primer día que se pierda un mensaje |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models | `userId`, `completedAt` |
-| `UserProfileUpdated` | Cambian datos públicos | `Community` | `userId`, `name`, `description`, `updatedAt`. **Los valores nuevos, no un diff**: quien lo consume quiere con qué quedarse |
+| `UserProfileUpdated` | Cambian datos públicos, **la foto incluida** | `Community` | `userId`, `name`, `description`, `avatarUrl`, `updatedAt`. **Los valores nuevos, no un diff**: quien lo consume quiere con qué quedarse. `avatarUrl` es la recortada, **nunca la original**, y viaja como dirección y no como clave: un consumidor no tiene por qué aprender cómo se construye una URL de este sistema |
 | `UsernameChanged` | El usuario cambia su nombre de usuario, **o recupera uno suyo** | `Community` (read models con el `@`) | `userId`, `previousUsername`, `newUsername`, `aliasExpiresAt`, `changedAt`. El viejo para encontrar qué actualizar, el nuevo para escribirlo, y la fecha para saber hasta cuándo un enlace antiguo sigue llevando a alguna parte |
 | `EmailChangeRequested` | Se pide cambiar el correo | `Notification` | `userId`, `requestId`, `expiresAt` |
 | `EmailChanged` | Se confirma el cambio de correo | `Notification`, read models | `userId`, `changedAt` |

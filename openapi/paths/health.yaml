@@ -97,3 +97,41 @@ live:
                 status:
                   type: string
                   const: up
+
+media:
+  get:
+    tags: [Health]
+    operationId: getMediaFile
+    summary: Servir un fichero guardado
+    description: |
+      Los ficheros que alguien ha subido y que son **públicos por
+      naturaleza**: hoy, los avatares recortados. Aparecen en perfiles que se
+      abren sin sesión, así que exigirla haría imposible pintarlos.
+
+      **Solo sirve lo que está en una carpeta pública.** Lo que no lo está no
+      se entrega aunque se conozca su clave: las fotos originales viven en
+      otra y su único camino es `getMyAvatarOriginal`, que comprueba de quién
+      son.
+
+      Las claves son impredecibles y cada fichero estrena la suya, así que la
+      respuesta se puede cachear indefinidamente: una foto nueva es otra
+      dirección.
+    security: []
+    parameters:
+      - name: key
+        in: path
+        required: true
+        description: La clave del fichero, con su carpeta. Lleva barras dentro.
+        schema:
+          type: string
+        example: avatars/9f2c8e4a71b5d2c86b5d2c8e4a71b5d2.webp
+    responses:
+      '200':
+        description: El fichero.
+        content:
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      '404':
+        description: No existe, o no es de una carpeta pública.

@@ -1,5 +1,10 @@
 parameters:
     app.jwt_ttl: 900          # 15 minutos — decision:0007
+
+    # Dónde viven los ficheros subidos (FEAT-USR-037). Un directorio local es
+    # con lo que se empieza; el día que haya más de una instancia sirviendo la
+    # API hay que cambiar el adaptador, no este valor.
+    app.storage_dir: '%env(resolve:APP_STORAGE_DIR)%'
     app.welcome_credits: 10   # decision:0006
 
     # Las palancas del precio de una corrección (decision:0006 regla 1,
@@ -59,6 +64,13 @@ services:
             # quien las crea: el token, con su secreto dentro; el usuario
             # autenticado, con el identificador que venía en la petición.
             - '../src/Shared/Application/Security/SecureToken.php'
+            # Lo mismo con los dos valores del almacenamiento de ficheros: un
+            # fichero guardado y una imagen ya normalizada son datos que
+            # devuelve un puerto, no servicios (FEAT-USR-037).
+            - '../src/Shared/Application/Storage/StoredFile.php'
+            - '../src/Shared/Application/Image/ProcessedImage.php'
+            # Y la dirección pública de un fichero, que es una función.
+            - '../src/Shared/Application/Storage/MediaUrl.php'
             # Un mensaje, no un servicio: lo construye el serializador con el
             # hecho que acaba de llegar dentro.
             - '../src/Shared/Infrastructure/Messenger/IncomingFacts.php'
@@ -176,6 +188,10 @@ services:
             $activationUrlTemplate: '%env(ACTIVATION_URL_TEMPLATE)%'
         tags:
             - { name: messenger.message_handler }
+
+    LectoresBeta\Shared\Infrastructure\Storage\LocalFileStorage:
+        arguments:
+            $directory: '%app.storage_dir%'
 
     LectoresBeta\Notification\Delivery\Infrastructure\Mail\SymfonyMailer:
         arguments:

@@ -33,7 +33,8 @@ Interfaces que define `Application` (o `Domain`) y que implementa `Infrastructur
 | `PasswordHasher` | Cifrado de contraseñas | `User` |
 | `OAuthProvider` | Autenticación con Google y Facebook | `User` |
 | `Mailer` | Envío de correo | `Notification` |
-| `FileStorage` | Almacenamiento de ficheros subidos y portadas | `Work` |
+| `FileStorage` | Almacenamiento de ficheros subidos y portadas. **Existe** desde `FEAT-USR-037` | `Shared` |
+| `ImageProcessor` | Normalizar una imagen subida: formato, tamaño y **sin metadatos**. **Existe** | `Shared` |
 | `DocumentTextExtractor` | Extraer texto plano de `.doc`, `.docx`, `.pdf`, `.txt` | `Work` |
 | `ContentHasher` | Huella criptográfica para el registro de autoría | `Work` |
 | `Clock` | Tiempo controlable en tests | `Shared` |

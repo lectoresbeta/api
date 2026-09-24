@@ -46,8 +46,9 @@
 | `PUT /api/v1/me/username` | `changeUsername` | Cambiar el nombre de usuario | FEAT-USR-034 | **Implementado** |
 | `GET /usernames/{username}/availability` | `checkUsernameAvailability` | Comprobar si un nombre está libre | FEAT-USR-033 | DRAFT |
 | — | — | La cabecera del perfil propio la sirven `getMyProfile` y `updateMyProfile`, arriba, **con sus cuatro contadores**. Le faltan portada y avatar | FEAT-USR-028 | PARTIAL |
-| `PUT /me/profile/avatar` | `updateAvatar` | Subir o reencuadrar la foto de perfil | FEAT-USR-037 | DRAFT |
-| `DELETE /me/profile/avatar` | `deleteAvatar` | Eliminar la foto de perfil | FEAT-USR-037 | DRAFT |
+| `PUT /api/v1/me/profile/avatar` | `updateAvatar` | Subir o reencuadrar la foto | FEAT-USR-037 | **Implementado** |
+| `DELETE /api/v1/me/profile/avatar` | `deleteAvatar` | Quitar la foto | FEAT-USR-037 | **Implementado** |
+| `GET /api/v1/me/profile/avatar/original` | `getMyAvatarOriginal` | Mi foto sin recortar, para el editor | FEAT-USR-037 | **Implementado** |
 | `PUT /me/profile/cover` | `updateCover` | Cambiar portada | FEAT-USR-028 | DRAFT |
 | `GET /users/{userId}/published-books` | `listPublishedBooks` | Obras publicadas de un autor | FEAT-USR-029 | DRAFT |
 | `POST /me/published-books` | `addPublishedBook` | Añadir obra publicada | FEAT-USR-029 | DRAFT |
@@ -668,3 +669,64 @@ Publica `LiteraryPreferencesUpdated` con la **selección entera**, no con lo que
 lo consume quiere con qué quedarse, y aplicar una secuencia de diferencias daría un conjunto
 equivocado el primer día que se pierda un mensaje. Es el mismo hecho que publica el
 onboarding.
+
+---
+
+## `PUT` y `DELETE /api/v1/me/profile/avatar`, y `GET .../avatar/original`
+
+**`operationId`:** `updateAvatar`, `deleteAvatar`, `getMyAvatarOriginal` ·
+**Funcionalidad:** [`FEAT-USR-037`](../../features/user/FEAT-USR-037-upload-profile-photo.md)
+
+### Propósito
+
+La foto de perfil. **Subir y reencuadrar son la misma operación**: llega una imagen cuadrada
+nueva y sustituye a la anterior; la distinción entre «Cambiar» y «Editar» es de interfaz.
+
+### Autorización
+
+Solo el titular, con la cuenta activada. La foto sin recortar la sirve únicamente quien la
+subió.
+
+### Reglas aplicadas
+
+- **El servidor reescribe siempre la imagen**: normaliza el formato, redimensiona y elimina
+  los metadatos. Que el navegador la haya recortado antes no exime — recortar y sanear son
+  cosas distintas, y los metadatos de una foto llevan **dónde se tomó**.
+- El tipo se decide **por el contenido**, nunca por la extensión ni por el `Content-Type`:
+  los dos los escribe quien sube el fichero. Se admiten JPEG, PNG y WebP; lo guardado es WebP
+  cuadrado.
+- Máximo **2 MB por fichero**, aplicado por el servidor.
+- **El servidor no recorta ni gira.** `crop` se guarda para reabrir el editor donde se dejó, y
+  no se aplica nunca. De ahí una ventaja que conviene no perder: nunca hay que interpretar la
+  orientación EXIF, que es la fuente clásica de fotos tumbadas.
+- Se guardan **dos ficheros**: la recortada, que se ve, y la original, material de trabajo del
+  editor. Al reencuadrar basta con mandar la recortada.
+- El nombre del fichero se descarta: no se usa como ruta ni se devuelve.
+- Subir otra **borra la anterior**; eliminar **borra las dos**. Dejar la original huérfana
+  sería guardar una imagen personal que su dueño cree haber borrado.
+- Eliminar es idempotente.
+
+### Dónde viven los ficheros
+
+En el puerto `FileStorage`, nunca en la base de datos, y se sirven por
+`GET /api/v1/media/{key}`, que es **público**: un avatar aparece en perfiles que se abren sin
+sesión.
+
+**La original no se sirve por ahí.** Vive en otra carpeta y el endpoint abierto solo entrega
+las públicas, así que no es alcanzable ni conociendo su clave. Podría haber bastado con que
+las claves sean impredecibles; no basta, porque una clave acaba en un log o en un historial.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `UNSUPPORTED_FILE_TYPE` | 422 | No es una imagen de un formato admitido. **HEIC —el formato por defecto de la cámara de iOS— cae aquí hoy** |
+| `INVALID_IMAGE` | 422 | Lo parece y no se puede leer |
+| `FILE_TOO_LARGE` | 413 | Más de 2 MB |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | La cuenta no está activada |
+| `PROFILE_NOT_FOUND` | 404 | Al pedir la original cuando no hay ninguna |
+
+### Efectos
+
+Publica `UserProfileUpdated` con la **recortada y nunca la original**, para que los read
+models que copian el avatar se actualicen.

@@ -1,6 +1,10 @@
 # Subida de ficheros
 
-> Estado: `DRAFT`. Relacionado con `FEAT-WRK-002` (crear obra subiendo un fichero).
+> Estado: `DRAFT` en lo que falta. **La foto de perfil ya funciona**
+> ([`FEAT-USR-037`](../../features/user/FEAT-USR-037-upload-profile-photo.md)) y con ella
+> existen el puerto `FileStorage`, el normalizador de imágenes y
+> `GET /api/v1/media/{key}`. Lo que sigue sin implementarse es el manuscrito
+> (`FEAT-WRK-002`) y las demás imágenes.
 
 ## Tipos de fichero
 
@@ -47,10 +51,16 @@ El límite lo aplica **el servidor**. Que el cliente lo anuncie es una cortesía
 
 ## Almacenamiento
 
-- A través del puerto `FileStorage`, implementado en `Infrastructure`.
-- Nunca en la base de datos.
-- Nunca accesibles por URL pública adivinable: el acceso pasa por la misma autorización que
-  el contenido que representan.
+- A través del puerto `FileStorage`, implementado en `Infrastructure`. La implementación de
+  hoy escribe en un directorio local (`APP_STORAGE_DIR`); cambiarla por almacenamiento de
+  objetos es cambiar **una clase**, que es para lo que está el puerto.
+- Nunca en la base de datos. Lo que se guarda en una fila es **la clave**, no la dirección: la
+  dirección se calcula en un solo sitio, y así mudarse de dominio o a un CDN no obliga a
+  reescribir ninguna tabla.
+- Nunca accesibles por URL pública adivinable. Las claves son impredecibles **y** el endpoint
+  que sirve ficheros solo entrega las carpetas declaradas públicas: lo que no lo es no sale de
+  ahí aunque se conozca su clave. Una frontera que se lee de un vistazo es mejor que un
+  secreto que se mantiene por costumbre.
 
 Pendiente: si el fichero original se conserva tras extraer el texto. Conservarlo tiene valor
 probatorio para el registro de autoría, pero multiplica el almacenamiento y la superficie de
