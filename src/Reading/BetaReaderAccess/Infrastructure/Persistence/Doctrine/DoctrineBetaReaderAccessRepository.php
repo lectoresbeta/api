@@ -9,6 +9,7 @@ use LectoresBeta\Reading\BetaReaderAccess\Domain\Repository\BetaReaderAccessRepo
 use LectoresBeta\Reading\BetaReaderAccess\Domain\ValueObject\BetaReaderAccessId;
 use LectoresBeta\Reading\BetaReaderAccess\Domain\ValueObject\ReaderId;
 use LectoresBeta\Reading\BetaReaderAccess\Domain\ValueObject\WorkId;
+use LectoresBeta\Shared\Domain\Pagination\Cursor;
 use LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\DoctrineRepository;
 
 /**
@@ -49,6 +50,31 @@ final class DoctrineBetaReaderAccessRepository extends DoctrineRepository implem
             'readerId' => $readerId->value(),
             'revokedAt' => null,
         ]));
+    }
+
+    public function livePageOnWork(WorkId $workId, ?Cursor $after, int $limit): array
+    {
+        $query = $this->repository()->createQueryBuilder('a')
+            ->where('a.workId = :work')
+            ->andWhere('a.revokedAt IS NULL')
+            ->setParameter('work', $workId->value());
+
+        if (null !== $after) {
+            $query
+                ->andWhere('(a.grantedAt < :at OR (a.grantedAt = :at AND a.id < :id))')
+                ->setParameter('at', $after->at)
+                ->setParameter('id', $after->id);
+        }
+
+        /** @var list<BetaReaderAccess> $found */
+        $found = $query
+            ->orderBy('a.grantedAt', 'DESC')
+            ->addOrderBy('a.id', 'DESC')
+            ->setMaxResults($limit + 1)
+            ->getQuery()
+            ->getResult();
+
+        return $found;
     }
 
     protected function entityClass(): string

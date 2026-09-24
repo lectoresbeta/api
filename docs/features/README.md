@@ -207,7 +207,7 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 | FEAT-RDG-007 | Gestionar grupos de lectores beta (CRUD y miembros) | Writer | PENDING | TODO | P2 | — |
 | FEAT-RDG-008 | Proponer a un usuario ser writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-RDG-009 | Aceptar o rechazar una propuesta de writing buddy | User | PENDING | TODO | P2 | — |
-| FEAT-RDG-010 | Revocar el acceso de un lector beta | Writer | PENDING | DEFERRED | P3 | — |
+| FEAT-RDG-010 | Revocar el acceso de un lector beta | Writer | APPROVED | DONE | P3 | [ficha](reading/FEAT-RDG-010-revoke-beta-reader-access.md) |
 
 > **`R-4` resuelta (2026-09-24):** en una obra `PUBLIC`, **empezar a corregir concede el
 > acceso**. No hay solicitud previa ni espera. `ON_REQUEST` y `PRIVATE` mantienen su flujo.
@@ -217,8 +217,9 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 > El motivo es de producto: el recorrido es *descubrir → leer → corregir*, y meter una espera
 > en medio cae justo donde el lector estaba dispuesto a trabajar gratis.
 >
-> `FEAT-RDG-010` no aparece en el material de partida. Se registra porque su ausencia es
-> probablemente un olvido, no una decisión (`A-4`, `R-1`).
+> `FEAT-RDG-010` no aparecía en el material de partida y se registró porque su ausencia era
+> probablemente un olvido (`A-4`, `R-1`). **Confirmado**: se entraba a una obra por tres
+> caminos y no había forma de salir salvo bloquear a la persona. Ya la hay.
 
 ---
 

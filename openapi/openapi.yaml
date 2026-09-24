@@ -181,6 +181,12 @@ paths:
   /beta-reader-invitations/{invitationId}/resolution:
     $ref: './paths/reading.yaml#/invitationResolution'
 
+  /works/{workId}/beta-readers:
+    $ref: './paths/reading.yaml#/workBetaReaders'
+
+  /works/{workId}/beta-readers/{readerId}:
+    $ref: './paths/reading.yaml#/workBetaReader'
+
   /works/{workId}/invitable-readers:
     $ref: './paths/reading.yaml#/invitableReaders'
 

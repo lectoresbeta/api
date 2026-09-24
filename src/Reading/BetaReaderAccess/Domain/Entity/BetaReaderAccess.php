@@ -99,6 +99,11 @@ class BetaReaderAccess
         return null === $this->revokedAt;
     }
 
+    public function grantedAt(): \DateTimeImmutable
+    {
+        return $this->grantedAt;
+    }
+
     public function isEarned(): bool
     {
         return $this->earned;

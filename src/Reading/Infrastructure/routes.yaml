@@ -84,3 +84,20 @@ searchInvitableBetaReaders:
     path: /api/v1/works/{workId}/invitable-readers
     controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\SearchInvitableReadersController::__invoke
     methods: [GET]
+
+# Quién puede leer mi obra, y retirarle el acceso (FEAT-RDG-010). Cierra
+# `R-1`: se entra por tres caminos y hasta ahora no había forma de salir.
+#
+# El `DELETE` va sobre **la persona dentro de la obra** y no sobre un
+# identificador de acceso: es lo que el autor quiere decir, y de paso sale
+# idempotente.
+
+listWorkBetaReaders:
+    path: /api/v1/works/{workId}/beta-readers
+    controller: LectoresBeta\Reading\BetaReaderAccess\Infrastructure\Controller\ListWorkBetaReadersController::__invoke
+    methods: [GET]
+
+revokeBetaReaderAccess:
+    path: /api/v1/works/{workId}/beta-readers/{readerId}
+    controller: LectoresBeta\Reading\BetaReaderAccess\Infrastructure\Controller\RevokeBetaReaderAccessController::__invoke
+    methods: [DELETE]

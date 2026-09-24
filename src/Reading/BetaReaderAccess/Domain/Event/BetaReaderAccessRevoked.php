@@ -13,10 +13,14 @@ use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
 /**
  * Alguien deja de ser lector beta de una obra.
  *
- * Hoy solo ocurre por echarse atrás: descartar un borrador de una corrección
- * que había concedido el acceso y nunca llegó a entregar nada
- * (`FEAT-RDG-001` `RN-5`). El día que el autor pueda revocar a mano
- * (`FEAT-RDG-010`), será el mismo hecho.
+ * Ocurre por tres caminos: **echarse atrás** —descartar el borrador de una
+ * corrección que había concedido el acceso y nunca entregó nada
+ * (`FEAT-RDG-001` `RN-5`)—, **un bloqueo** (`FEAT-COM-034` `RN-B1`) y **la
+ * decisión del autor** (`FEAT-RDG-010`).
+ *
+ * Los tres publican **este mismo hecho**, y quien lo consume no tiene por qué
+ * saber cuál de ellos fue: lo que le importa es que esa persona ya no puede
+ * leer esa obra.
  */
 final readonly class BetaReaderAccessRevoked implements IntegrationEvent
 {

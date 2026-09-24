@@ -861,3 +861,144 @@ invitableReaders:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+workBetaReaders:
+  get:
+    tags: [Reading]
+    operationId: listWorkBetaReaders
+    summary: Quién puede leer mi obra
+    description: |
+      Los lectores beta con acceso vivo a una obra, **con el camino por el que
+      entró cada uno**: eso es lo que permite responder, meses después, por
+      qué esa persona puede leerla.
+
+      Hace falta tanto como la revocación: se entra por tres caminos —empezar
+      a corregir una obra pública, una solicitud aceptada y una invitación—,
+      así que sin esta lista el autor no sabe a quién le ha dado acceso.
+
+      Solo el autor. Una obra ajena responde `404` y no `403`: un `403`
+      confirmaría que esa obra existe.
+
+      **No se filtra por privacidad**: quien tiene acceso a una obra inédita
+      aparece aquí aunque haya cerrado su perfil después. Lo contrario
+      convertiría cerrar el perfil en una forma de volverse invisible para el
+      autor cuya obra se está leyendo.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Quién puede leerla, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, username, source, earned, grantedAt]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      username:
+                        type: string
+                      name:
+                        type: [string, 'null']
+                      avatarUrl:
+                        type: [string, 'null']
+                      source:
+                        type: string
+                        enum: [PUBLIC_JOIN, REQUEST_APPROVED, AUTHOR_INVITATION]
+                        description: Por dónde entró.
+                      earned:
+                        type: boolean
+                        description: |
+                          Si ya entregó una corrección de esta obra. Un acceso
+                          ganado no se pierde al descartar un borrador — pero
+                          **sí se puede revocar**.
+                      grantedAt:
+                        type: string
+                        format: date-time
+                pageInfo:
+                  type: object
+                  required: [nextCursor, hasNextPage]
+                  properties:
+                    nextCursor:
+                      type: [string, 'null']
+                    hasNextPage:
+                      type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: WORK_NOT_FOUND`. No existe, o no es suya.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+workBetaReader:
+  delete:
+    tags: [Reading]
+    operationId: revokeBetaReaderAccess
+    summary: Retirar el acceso de un lector beta
+    description: |
+      El autor retira a alguien el acceso a una obra suya, **desde ese
+      instante**.
+
+      Idempotente: si esa persona no tiene acceso vivo, no pasa nada.
+
+      Lo que se lleva por delante es lo mismo que un bloqueo: **una corrección
+      en curso deja de poder entregarse**, y quien la estaba escribiendo no
+      cobra, porque nunca entregó. Su borrador se conserva. Lo ya entregado no
+      se toca: el autor lo pagó y el lector lo ganó.
+
+      También se puede retirar un acceso **ganado** —el de quien ya entregó
+      una corrección—. Lo que ganó no se le quita; lo que se retira es la
+      lectura futura de un texto ajeno.
+
+      > **Revocar no es expulsar.** En una obra `PUBLIC`, esta persona vuelve
+      > a tener acceso en cuanto empiece otra corrección. Para dejar a alguien
+      > fuera hay que cerrar la modalidad de la obra —afecta a todos— o
+      > bloquearle —afecta solo a esa persona, y en todas partes—.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: readerId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Ya no puede leerla. Igual si no podía.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: WORK_NOT_FOUND`. No existe, o no es suya.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

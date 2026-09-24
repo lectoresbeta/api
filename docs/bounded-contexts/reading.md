@@ -93,7 +93,7 @@ capítulo y lo consume `Feedback`
 | Evento | Cuándo | Consumidores |
 |---|---|---|
 | `BetaReaderAccessGranted` | Se concede acceso | `Notification`. **`Credits` no lo consume**: conceder acceso no mueve ni compromete créditos |
-| `BetaReaderAccessRevoked` | Se retira el acceso | `Feedback`, `Notification` |
+| `BetaReaderAccessRevoked` | Se retira el acceso, **por cualquiera de los tres caminos**: descartar un borrador, un bloqueo o la decisión del autor (`FEAT-RDG-010`) | `Feedback`, `Notification` |
 | `AccessRequested` | Un usuario solicita ser LB | `Notification` (avisa al autor) |
 | `AccessRequestRejected` | El autor rechaza | `Notification` |
 | `BetaReaderInvited` | El autor invita a un usuario | `Notification` |

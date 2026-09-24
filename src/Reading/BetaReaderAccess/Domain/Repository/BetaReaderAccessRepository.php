@@ -8,6 +8,7 @@ use LectoresBeta\Reading\BetaReaderAccess\Domain\Entity\BetaReaderAccess;
 use LectoresBeta\Reading\BetaReaderAccess\Domain\ValueObject\BetaReaderAccessId;
 use LectoresBeta\Reading\BetaReaderAccess\Domain\ValueObject\ReaderId;
 use LectoresBeta\Reading\BetaReaderAccess\Domain\ValueObject\WorkId;
+use LectoresBeta\Shared\Domain\Pagination\Cursor;
 
 /**
  * Who may read what.
@@ -32,4 +33,13 @@ interface BetaReaderAccessRepository
      * @return list<BetaReaderAccess>
      */
     public function liveOfReader(ReaderId $readerId): array;
+
+    /**
+     * Quién puede leer esta obra ahora mismo, de lo más reciente a lo más
+     * antiguo, con una fila de más para saber si hay página siguiente
+     * (`FEAT-RDG-010`).
+     *
+     * @return list<BetaReaderAccess>
+     */
+    public function livePageOnWork(WorkId $workId, ?Cursor $after, int $limit): array;
 }

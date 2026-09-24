@@ -21,6 +21,8 @@ una solicitud que nadie puede contestar es peor que no poder pedirla.
 | `GET /api/v1/me/beta-reader-invitations` | `listMyBetaReaderInvitations` | Lo que me han ofrecido | FEAT-RDG-005 | **Implementado** |
 | `PUT /api/v1/beta-reader-invitations/{invitationId}/resolution` | `resolveBetaReaderInvitation` | Aceptar o rechazar | FEAT-RDG-005 | **Implementado** |
 | `GET /api/v1/works/{workId}/invitable-readers` | `searchInvitableBetaReaders` | Buscar a quién invitar | FEAT-RDG-006 | **Implementado** |
+| `GET /api/v1/works/{workId}/beta-readers` | `listWorkBetaReaders` | Quién puede leer mi obra | FEAT-RDG-010 | **Implementado** |
+| `DELETE /api/v1/works/{workId}/beta-readers/{readerId}` | `revokeBetaReaderAccess` | Retirarle el acceso | FEAT-RDG-010 | **Implementado** |
 
 Convertirse en lector beta de una obra `PUBLIC` **no tiene endpoint**: es el efecto de empezar
 una corrección ([`FEAT-RDG-001`](../../features/reading/FEAT-RDG-001-become-beta-reader-by-correcting.md)).
@@ -103,3 +105,54 @@ los que se salte a la página 4, y lo que se abre es lo que queda por resolver.
 Ninguno, en ninguna de las diez. Conceder acceso dejó de tener efecto económico con
 [`decision:0006`](../../decisions/0006-credit-system.md): lo que mueve créditos es entregar
 una corrección, no poder leer.
+
+---
+
+## `GET /api/v1/works/{workId}/beta-readers` y `DELETE .../{readerId}`
+
+**`operationId`:** `listWorkBetaReaders`, `revokeBetaReaderAccess` · **Funcionalidad:**
+[`FEAT-RDG-010`](../../features/reading/FEAT-RDG-010-revoke-beta-reader-access.md)
+
+### Propósito
+
+Quién puede leer una obra, y retirarle el acceso. Cierra `R-1`: se entraba por **tres
+caminos** y no había forma de salir salvo bloquear a la persona, que es una respuesta social a
+un problema que muchas veces no lo es.
+
+### Autorización
+
+Solo el autor de la obra. Una obra ajena responde `404` y no `403`: un `403` confirmaría que
+esa obra existe. Revocar exige además la cuenta activada; consultar, no.
+
+### Reglas aplicadas
+
+- Revocar es **idempotente**: sin acceso vivo que retirar, no pasa nada y no se publica nada.
+- El acceso se retira **desde ese instante**. Una corrección en curso deja de poder
+  entregarse, quien la escribía no cobra —nunca entregó— y su borrador se conserva.
+- **Lo ya entregado no se toca**: el autor lo pagó y el lector lo ganó.
+- Un acceso **ganado** también se puede retirar: lo que se quita es la lectura futura, no lo
+  ganado.
+- La lista **no se filtra por privacidad**: quien tiene acceso a una obra inédita aparece
+  aunque haya cerrado su perfil, o cerrar el perfil sería volverse invisible para el autor
+  cuya obra se está leyendo.
+
+### Lo que no consigue
+
+**Revocar no expulsa de una obra `PUBLIC`.** Esa persona vuelve a tener acceso en cuanto
+empiece otra corrección, porque así funciona esa modalidad. Para dejar a alguien fuera hay dos
+herramientas distintas: **cerrar la modalidad** —afecta a todos— o **bloquearle**
+([`FEAT-COM-034`](../../features/community/FEAT-COM-034-block-user.md)) —afecta solo a esa
+persona, y en todas partes—.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `WORK_NOT_FOUND` | 404 | La obra no existe **o no es suya** |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | Revocar sin haber activado la cuenta |
+| `INVALID_CURSOR` | 422 | Al listar, un cursor que no produjo esta API |
+
+### Efectos
+
+Publica `BetaReaderAccessRevoked`, **el mismo hecho** que publican descartar un borrador y un
+bloqueo. Quien lo consume no tiene por qué saber cuál de los tres caminos lo provocó.

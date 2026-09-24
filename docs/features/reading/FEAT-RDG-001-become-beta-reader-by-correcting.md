@@ -97,9 +97,10 @@ Dos condiciones, y las dos importan:
   y descartar el borrador de otro no se lo quita.
 
 Queda un hueco conocido y aceptado: **abandonar sin descartar no revoca nada**. Cerrar la
-pestaña no es un hecho, nadie lo publica, y la alternativa —caducar accesos por inactividad—
-introduce un reloj y un estado nuevo para un caso que el autor puede resolver él mismo cuando
-exista [`FEAT-RDG-010`](../README.md).
+pestaña no es un hecho y nadie lo publica. La alternativa —caducar accesos por inactividad,
+con su reloj y su estado nuevo— sigue descartada, y ya no hace falta: el autor lo resuelve él
+con [`FEAT-RDG-010`](FEAT-RDG-010-revoke-beta-reader-access.md), que existe desde el
+2026-09-24.
 
 ## `RN-7` — por qué no se comprueba la modalidad
 

@@ -99,11 +99,14 @@ contestan en uno.
 | `AccessRequested` | Un usuario solicita ser LB | `Notification` | `accessRequestId`, `workId`, `authorId`, `readerId` |
 | `AccessRequestRejected` | El autor rechaza | `Notification` | `accessRequestId`, `readerId` |
 | `BetaReaderAccessGranted` | Se concede acceso | `Notification` | `accessId`, `workId`, `authorId`, `readerId`, `grantedVia`, `grantedAt` |
-| `BetaReaderAccessRevoked` | Se retira el acceso | `Notification` | `accessId`, `workId`, `readerId`, `revokedAt` |
+| `BetaReaderAccessRevoked` | Se retira el acceso: al **descartar** un borrador, al **bloquear** a alguien o porque **el autor lo revoca** (`FEAT-RDG-010`) | `Notification` | `accessId`, `workId`, `readerId`, `revokedAt` |
 | `BetaReaderInvited` | El autor invita | `Notification` | `invitationId`, `workId`, `authorId`, `readerId` |
 | `BetaReaderInvitationDeclined` | El invitado rechaza | `Notification` | `invitationId`, `workId`, `authorId`, `readerId` |
 | `WritingBuddyProposed` | Se propone el vínculo | `Notification` | `proposalId`, `proposerId`, `targetUserId` |
 | `WritingBuddyLinked` | Se acepta | `Notification`, `Community` | `linkId`, `userIds` |
+
+Los tres caminos publican **el mismo hecho**, y a propósito: quien lo consume no tiene por qué
+saber cuál fue. Lo que le importa es que esa persona ya no puede leer esa obra.
 
 `BetaReaderAccessGranted` llevaba `textTier` y `questionCount` «porque `Credits` los necesita
 para calcular la retención». Ya no: `textTier` no existe y

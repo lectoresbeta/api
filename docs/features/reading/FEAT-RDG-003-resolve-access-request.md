@@ -189,7 +189,7 @@ sobre los accesos vivos es lo que sostiene `RN-4` si dos caminos llegan a la vez
 |---|---|---|
 | R-11 | ¿Puede el autor aceptar varias solicitudes de una vez? | Con volumen, resolver de una en una es tedioso. Es una operación por lotes, no un modelo distinto |
 | R-12 | ¿Debería el autor ver algo del solicitante además de su perfil público —obras corregidas, valoraciones— para decidir? | Depende de `Community` y de `FEAT-RDG-006` |
-| R-1 | ¿El autor puede revocar un acceso ya concedido? | Sigue abierta: es [`FEAT-RDG-010`](../README.md), y esta ficha la hace más urgente, porque ahora sí hay accesos que el autor concede a mano |
+| R-1 | ¿El autor puede revocar un acceso ya concedido? | **Resuelta: sí**, en [`FEAT-RDG-010`](FEAT-RDG-010-revoke-beta-reader-access.md) |
 
 ## Estado
 
