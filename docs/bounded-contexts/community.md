@@ -94,6 +94,10 @@ periodo.
 - `RN-2b` Seguir y dejar de seguir son **idempotentes**, y seguir **no concede acceso a nada**
   (`FEAT-COM-010`). Lo que cambia son los avisos y qué audiencias incluyen a esa persona; qué
   audiencia eligió su titular no lo decide quien le sigue.
+- `RN-2c` Las listas de seguidos y seguidores se ven **tanto como el perfil que las tiene**, y
+  cada fila **tanto como la persona que la ocupa** (`FEAT-COM-027`, `CM-14` resuelta). Quién
+  es visible lo decide `User` por contrato: este contexto no aprende qué hace visible a
+  alguien.
 - `RN-3` Una reacción por usuario y publicación; cambiarla sustituye la anterior.
 - `RN-4` El apoyo (`Like`) y la reacción con emoji son mecanismos distintos y coexisten.
   **El diseño de la Home solo muestra el apoyo**, así que la coexistencia está en duda (`H-5`).
@@ -135,5 +139,5 @@ periodo.
 | CM-21 | ¿Se pueden editar o eliminar comentarios propios? | El menú «···» no tiene diseño (`I-3`) |
 | CM-12 | ¿«Ocultar post» oculta ese post concreto o todos los de ese autor? | `FEAT-COM-022` |
 | CM-13 | ¿Las publicaciones guardadas son privadas y dónde se consultan? | `FEAT-COM-021`, pantalla sin diseñar |
-| CM-14 | ¿La lista de seguidores de un usuario es pública o solo la ve él? | `FEAT-COM-027` |
+| CM-14 | ¿La lista de seguidores de un usuario es pública o solo la ve él? | **Resuelta** en `FEAT-COM-027`: se ve tanto como el perfil que la tiene, y cada fila tanto como quien la ocupa |
 | CM-15 | ¿«Mis Amigos» es el nombre adecuado para una relación asimétrica? | Seguir no es ser amigo (`P-8`) |

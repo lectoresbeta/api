@@ -37,6 +37,15 @@ final class DoctrineUserRepository extends DoctrineRepository implements UserRep
         return $this->repository()->findOneBy(['username' => $username->value()]);
     }
 
+    public function ofIds(array $userIds): array
+    {
+        if ([] === $userIds) {
+            return [];
+        }
+
+        return array_values($this->repository()->findBy(['id' => $userIds]));
+    }
+
     public function matching(string $query, int $limit): array
     {
         // `ILIKE` y no `LOWER(...) LIKE`: PostgreSQL lo entiende directamente

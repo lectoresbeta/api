@@ -27,6 +27,19 @@ interface UserRepository
     public function ofUsername(Username $username): ?User;
 
     /**
+     * Varios de golpe, para pintar una página entera de una lista
+     * (`FEAT-COM-027`).
+     *
+     * Quien no exista sencillamente no viene, y el orden no se promete: quien
+     * pregunta ya tiene el suyo — el de la lista que está pintando.
+     *
+     * @param list<string> $userIds
+     *
+     * @return list<User>
+     */
+    public function ofIds(array $userIds): array;
+
+    /**
      * People whose **name or username** match, for the directory
      * (`FEAT-RDG-006`).
      *

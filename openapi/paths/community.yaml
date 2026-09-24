@@ -109,3 +109,135 @@ UserIdParam:
   description: La persona a la que se sigue o se deja de seguir.
   schema:
     $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+PersonCard:
+  type: object
+  required: [userId, username, subscribedAt]
+  description: |
+    Una persona, **como tarjeta de perfil**. Una lista de identificadores
+    obligaría al cliente a una petición por fila para poder pintarla.
+  properties:
+    userId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    username:
+      type: string
+    name:
+      type: [string, 'null']
+      description: Nulo mientras no haya terminado el onboarding.
+    avatarUrl:
+      type: [string, 'null']
+    subscribedAt:
+      type: string
+      format: date-time
+      description: Cuándo empezó ese seguimiento. Es el orden de la lista.
+
+PeoplePage:
+  type: object
+  required: [data, pageInfo]
+  description: |
+    **Una página puede traer menos filas que el `limit` pedido, o ninguna, y
+    seguir teniendo siguiente.** El filtro de privacidad se aplica después de
+    paginar, así que quien no sea visible para quien pregunta deja un hueco.
+
+    Lo que dice si hay más es `pageInfo.nextCursor`, **nunca** cuántos
+    elementos llegaron.
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/PersonCard'
+    pageInfo:
+      type: object
+      required: [nextCursor, hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
+subscriptions:
+  get:
+    tags: [Community]
+    operationId: listAuthorSubscriptions
+    summary: A quién sigue esta persona
+    description: |
+      La sub-pestaña «Seguidos» de «Amigos», en su perfil o en el propio.
+
+      **Se ve tanto como el perfil que la tiene** (`CM-14`, resuelta en
+      `FEAT-COM-027`): si puedes abrir su perfil, puedes ver esta lista; si su
+      perfil te responde `404` porque lo tiene restringido, esta también.
+
+      Y **cada fila se ve tanto como la persona que la ocupa**: quien tiene su
+      perfil cerrado no aparece en la lista de nadie. Es la mitad que se
+      olvidaría, y sin ella cerrar el perfil no serviría de nada — bastaría
+      con mirar los seguidores de cualquier autor conocido para encontrar a
+      quien no quiere ser encontrado.
+
+      Pública: no hace falta sesión, y con ella se ve además lo que la sesión
+      permita.
+    security: []
+    parameters:
+      - $ref: '#/UserIdParam'
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Las personas a las que sigue, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PeoplePage'
+      '404':
+        description: |
+          `code: PROFILE_NOT_FOUND`. Ese perfil no existe **o no es visible
+          para quien pregunta**, que responden igual a propósito: un `403`
+          confirmaría que la cuenta está ahí.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: INVALID_CURSOR`. El cursor no lo produjo esta API.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+subscribers:
+  get:
+    tags: [Community]
+    operationId: listSubscribers
+    summary: Quién sigue a esta persona
+    description: |
+      La sub-pestaña «Seguidores». La misma tabla que `listAuthorSubscriptions`
+      leída por el otro extremo, y con **las mismas dos reglas de
+      visibilidad**: la lista se ve tanto como el perfil que la tiene, y cada
+      fila tanto como la persona que la ocupa.
+
+      Dos endpoints y no uno con un parámetro `direction`: son dos preguntas
+      distintas sobre la misma tabla, y un parámetro que cambia el significado
+      de la respuesta acaba mal documentado.
+    security: []
+    parameters:
+      - $ref: '#/UserIdParam'
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Quienes le siguen, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PeoplePage'
+      '404':
+        description: '`code: PROFILE_NOT_FOUND`. No existe o no es visible.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

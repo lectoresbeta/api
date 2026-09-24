@@ -126,6 +126,9 @@ services:
     LectoresBeta\User\Account\Application\Contract\ActivationLinkProvider:
         alias: LectoresBeta\User\Account\Application\Service\IssueActivationLink
 
+    LectoresBeta\User\Account\Application\Contract\VisibleProfiles:
+        alias: LectoresBeta\User\Account\Application\Service\ShowVisibleProfiles
+
     LectoresBeta\User\Account\Application\Contract\ReaderMaturity:
         alias: LectoresBeta\User\Account\Application\Service\CheckReaderMaturity
 

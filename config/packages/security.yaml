@@ -53,6 +53,12 @@ security:
         # reconocido, que es lo que permite que su titular se vea a sí mismo
         # aunque haya restringido su perfil.
         - { path: '^/api/v1/(users|profiles)/[^/]+$', methods: [GET], roles: PUBLIC_ACCESS }
+
+        # Y sus listas de seguidos y seguidores (FEAT-COM-027), por lo mismo:
+        # son parte de ese perfil. Solo el `GET` de esas dos, no cualquier
+        # subrecurso — `/users/{id}/subscription` es la acción de seguir, y
+        # esa sí exige sesión.
+        - { path: '^/api/v1/users/[^/]+/(subscriptions|subscribers)$', methods: [GET], roles: PUBLIC_ACCESS }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

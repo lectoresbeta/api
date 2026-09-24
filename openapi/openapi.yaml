@@ -109,6 +109,12 @@ paths:
   /users/{userId}/subscription:
     $ref: './paths/community.yaml#/subscription'
 
+  /users/{userId}/subscriptions:
+    $ref: './paths/community.yaml#/subscriptions'
+
+  /users/{userId}/subscribers:
+    $ref: './paths/community.yaml#/subscribers'
+
   /works:
     $ref: './paths/works.yaml#/collection'
 

@@ -174,6 +174,11 @@ final class InMemoryUsers implements UserRepository
         return $this->user;
     }
 
+    public function ofIds(array $userIds): array
+    {
+        return null === $this->user ? [] : [$this->user];
+    }
+
     public function matching(string $query, int $limit): array
     {
         return null === $this->user ? [] : [$this->user];

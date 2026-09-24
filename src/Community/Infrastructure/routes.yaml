@@ -34,3 +34,21 @@ unsubscribeFromAuthor:
     path: /api/v1/users/{userId}/subscription
     controller: LectoresBeta\Community\Subscription\Infrastructure\Controller\UnsubscribeFromAuthorController::__invoke
     methods: [DELETE]
+
+# Seguidos y seguidores (FEAT-COM-027). La misma tabla por sus dos extremos,
+# y dos rutas en vez de un parámetro `direction`: son dos preguntas distintas,
+# y un parámetro que cambia el significado de la respuesta acaba mal
+# documentado.
+#
+# Públicas, como el perfil al que pertenecen. Lo que no es público no sale,
+# ni el perfil entero ni ninguna de sus filas.
+
+listAuthorSubscriptions:
+    path: /api/v1/users/{userId}/subscriptions
+    controller: LectoresBeta\Community\Subscription\Infrastructure\Controller\ListAuthorSubscriptionsController::__invoke
+    methods: [GET]
+
+listSubscribers:
+    path: /api/v1/users/{userId}/subscribers
+    controller: LectoresBeta\Community\Subscription\Infrastructure\Controller\ListSubscribersController::__invoke
+    methods: [GET]

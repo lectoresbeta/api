@@ -116,8 +116,9 @@ preferencias y presencia pública como autor.
 | `RegisteredUsers` | **Un booleano**: ¿existe este usuario? Nada más de él | `Reading`, `Community` |
 | `ReaderDirectory` | Hasta N personas cuyo nombre o `@usuario` encajan, como tarjeta de perfil | `Reading` |
 | `AuthorAudience` | **Un booleano**: ¿acepta este autor comentarios de esta persona? Nunca el ajuste | `Feedback` |
+| `VisibleProfiles` | De estas personas, **las que quien pregunta puede ver**, como tarjeta de perfil | `Community` |
 
-Los cuatro son de lectura y devuelven lo justo
+Todos son de lectura y devuelven lo justo
 ([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md)). `ReaderMaturity`
 es el que más importa: la fecha de nacimiento es dato privado y **no sale de aquí**, así que lo
 que cruza la frontera es la respuesta a la única pregunta que los demás necesitan hacer.
@@ -143,6 +144,16 @@ el perfil pone el máximo y cada obra puede bajarlo, nunca subirlo. Devuelve un 
 el ajuste, y eso es lo que permitió que `FOLLOWERS` significara «nadie» mientras no existía el
 grafo de seguidores y pasara a decir lo que dice **cambiando un solo sitio**, con
 [`FEAT-COM-010`](../features/community/FEAT-COM-010-subscribe-to-author.md).
+
+`VisibleProfiles` está preguntado **al revés de como parecería natural**, igual que
+`GenreCatalogue`: no «dame estos perfiles» sino «dame los que esta persona puede ver, de
+estos». Así la regla de privacidad viaja con la implementación y no con quien llama, que es lo
+que la hace cumplirse siempre — un consumidor que recibiera los perfiles y tuviera que
+filtrarlos después es un consumidor que algún día no lo hace, y lo que se le escaparía es
+justo quien pidió no ser encontrado ([`FEAT-COM-027`](../features/community/FEAT-COM-027-following-and-followers.md)).
+
+Responde **por lotes**: existe para pintar una página entera de una lista, y una llamada por
+fila sería un N+1 escondido detrás de un contrato.
 
 ### La copia del grafo de seguidores
 

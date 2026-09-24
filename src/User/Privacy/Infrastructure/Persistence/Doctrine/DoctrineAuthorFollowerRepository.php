@@ -19,6 +19,26 @@ final class DoctrineAuthorFollowerRepository extends DoctrineRepository implemen
         return null !== $this->between($followerId, $authorId);
     }
 
+    public function followedAmong(UserId $followerId, array $authorIds): array
+    {
+        if ([] === $authorIds) {
+            return [];
+        }
+
+        /** @var list<array{authorId: string}> $rows */
+        $rows = $this->entityManager->createQueryBuilder()
+            ->select('f.authorId')
+            ->from(AuthorFollower::class, 'f')
+            ->where('f.followerId = :follower')
+            ->andWhere('f.authorId IN (:authors)')
+            ->setParameter('follower', $followerId->value())
+            ->setParameter('authors', $authorIds)
+            ->getQuery()
+            ->getArrayResult();
+
+        return array_column($rows, 'authorId');
+    }
+
     public function between(UserId $followerId, UserId $authorId): ?AuthorFollower
     {
         return $this->repository()->findOneBy([

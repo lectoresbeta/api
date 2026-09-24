@@ -191,7 +191,7 @@ agregado que una copia para responder una pregunta: `Community` es el dueño del
 |---|---|---|
 | **C-22** | Con seguimiento unilateral, `FOLLOWERS` equivale a «cualquiera que pulse Seguir». ¿Hace falta aprobación, o `FOLLOWERS` debería ser seguimiento mutuo? | **Decisión de producto.** Afecta a lo que promete `FEAT-USR-038`, no a este modelo |
 | C-23 | ¿Se puede seguir a alguien cuyo perfil no se puede ver? | Hoy **sí**, si se conoce su identificador. Hace falta conocerlo, y solo se obtiene de un perfil que sí se podía ver |
-| CM-14 | ¿La lista de seguidores es pública? | `FEAT-COM-027`. Esta ficha no la decide |
+| CM-14 | ¿La lista de seguidores es pública? | **Resuelta** en [`FEAT-COM-027`](FEAT-COM-027-following-and-followers.md): se ve tanto como el perfil que la tiene, y cada fila tanto como quien la ocupa |
 | CM-15 | ¿«Mis Amigos» es un buen nombre para una relación asimétrica? | Seguir no es ser amigo (`P-8`) |
 | C-24 | ¿Aparece en el buscador de a quién invitar alguien con el perfil en `FOLLOWERS`, para sus seguidores? | El contrato `ReaderDirectory` no recibe quién busca, así que hoy no. Ver `FEAT-RDG-006` |
 
@@ -256,6 +256,7 @@ cosa, porque es el error que alguien cometerá al añadir la siguiente audiencia
 - `Notification` no consume `AuthorSubscribed` todavía, así que a nadie le
   llega el aviso de que le siguen. El hecho ya viaja; solo falta quien lo
   escuche.
-- Las listas de seguidos y seguidores son `FEAT-COM-027`, y con ellas se
-  decidirá `CM-14` —si son públicas—. Esta ficha no lo decide, y por eso el
-  `GET` responde solo por quien pregunta.
+- Las listas de seguidos y seguidores llegaron con
+  [`FEAT-COM-027`](FEAT-COM-027-following-and-followers.md), que resolvió
+  `CM-14`. El `GET` de aquí sigue respondiendo solo por quien pregunta, y está
+  bien así: es el estado del botón, no el grafo.

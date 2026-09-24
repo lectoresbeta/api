@@ -234,7 +234,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | FEAT-USR-037 | **Nueva** — gestionar la foto de perfil | `DRAFT` |
 | FEAT-USR-032 | **Nueva** — compartir el perfil | `PENDING` |
 | FEAT-COM-026 | **Nueva** — muro propio | `PENDING` |
-| FEAT-COM-027 | **Nueva** — seguidos y seguidores | `PENDING` |
+| FEAT-COM-027 | **Nueva** — seguidos y seguidores | `APPROVED`, implementada |
 | FEAT-FBK-010 | **Nueva** — mis correcciones | `PENDING` |
 | FEAT-USR-014 | Ver perfil público: esta es su variante propia y editable | `DRAFT` |
 | FEAT-USR-015 | Página de autor: puede ser esta misma pantalla | `PENDING`, ver `P-5` |
