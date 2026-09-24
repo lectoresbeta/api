@@ -35,6 +35,39 @@ final class AnswerValidator
      * @param list<QuestionRequirement> $questions
      * @param array<string, string>     $answers   text by question id
      */
+    /**
+     * Un borrador **no se mide contra lo que el autor pidió**: está a medias
+     * por definición, y rechazar «tres palabras» al guardar sería impedir
+     * guardar (`FEAT-FBK-011` `RN-2`).
+     *
+     * Lo único que sí se comprueba es el techo, que no está para medir
+     * calidad sino para no almacenar texto sin límite.
+     *
+     * @param list<QuestionRequirement> $questions
+     * @param array<string, string>     $answers   text by question id
+     */
+    public function validateDraft(array $questions, array $answers): void
+    {
+        $asked = [];
+
+        foreach ($questions as $question) {
+            $asked[$question->questionId->value()] = $question;
+        }
+
+        foreach ($answers as $questionId => $text) {
+            $question = $asked[$questionId] ?? throw IncompleteCorrection::answeringAnUnknownQuestion();
+            $words = $this->words->count($text);
+
+            if (null !== $question->maxWords && $words > $question->maxWords) {
+                throw IncompleteCorrection::answerTooLong($question->position, $words, $question->maxWords);
+            }
+        }
+    }
+
+    /**
+     * @param list<QuestionRequirement> $questions
+     * @param array<string, string>     $answers   text by question id
+     */
     public function validate(array $questions, array $answers): void
     {
         $asked = [];

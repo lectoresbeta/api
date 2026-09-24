@@ -5,7 +5,7 @@ context: Feedback
 concept: Correction
 actors: [BetaReader]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-22 (botón «Guardar» del panel de corrección)
@@ -121,14 +121,14 @@ sincronizados y acaban divergiendo: enviar es una transición de estado, no una 
 
 ## Criterios de aceptación
 
-- [ ] Guardar dos veces deja un solo borrador del mismo capítulo.
-- [ ] Un lector puede tener borradores simultáneos en capítulos distintos de una misma obra.
-- [ ] Un borrador guardado aparece precargado al reabrir el panel.
-- [ ] Guardar no publica ningún evento ni mueve créditos.
-- [ ] Un borrador no supera la validación de máximo, pero sí puede estar incompleto.
-- [ ] El autor no puede acceder al borrador de nadie por ninguna vía de la API.
-- [ ] Al enviar, el borrador deja de existir como tal.
-- [ ] El lector puede descartar su borrador.
+- [x] Guardar dos veces deja un solo borrador del mismo capítulo.
+- [x] Un lector puede tener borradores simultáneos en capítulos distintos de una misma obra.
+- [x] Un borrador guardado aparece precargado al reabrir el panel.
+- [x] Guardar no publica ningún evento ni mueve créditos.
+- [x] Un borrador no supera la validación de máximo, pero sí puede estar incompleto.
+- [x] El autor no puede acceder al borrador de nadie por ninguna vía de la API.
+- [x] Al enviar, el borrador deja de existir como tal.
+- [x] El lector puede descartar su borrador.
 
 ## Preguntas abiertas
 
@@ -168,4 +168,16 @@ capítulo sobran.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-24). Las dos operaciones, con las siete reglas.
+
+Dos cosas que la implementación aclaró, ya recogidas arriba:
+
+- **guardar en un capítulo sin empezar lo empieza**, con los efectos de `startCorrection`.
+  Escribir es la señal más clara posible de que alguien está corrigiendo, y pedir dos botones
+  para que el sistema se entere sería inventar un trámite;
+- **descartar publica `CorrectionDraftDiscarded`**, que `Credits` y `Reading` ya esperaban.
+  Sus dos consumidores existían antes que el publicador, así que hasta hoy la cotización y el
+  acceso no se soltaban nunca.
+
+`R-8` queda abierta y **es la única deuda de esta ficha**: un borrador abandonado sin
+descartar retiene uno de los tres sitios del capítulo para siempre.

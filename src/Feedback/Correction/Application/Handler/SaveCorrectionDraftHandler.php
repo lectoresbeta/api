@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Feedback\Correction\Application\Handler;
 
-use LectoresBeta\Feedback\Correction\Application\Command\SubmitCorrection;
+use LectoresBeta\Feedback\Correction\Application\Command\SaveCorrectionDraft;
+use LectoresBeta\Feedback\Correction\Application\DTO\SavedDraft;
 use LectoresBeta\Feedback\Correction\Application\Service\EligibleCorrectionBrief;
 use LectoresBeta\Feedback\Correction\Application\Service\WriteAnswers;
 use LectoresBeta\Feedback\Correction\Domain\Entity\Correction;
 use LectoresBeta\Feedback\Correction\Domain\Event\CorrectionStarted;
-use LectoresBeta\Feedback\Correction\Domain\Event\FeedbackSubmitted;
 use LectoresBeta\Feedback\Correction\Domain\Exception\ChapterNotCorrectable;
 use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectionAnswerRepository;
 use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectionRepository;
@@ -25,24 +25,25 @@ use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 
 /**
- * Delivering a correction (`FEAT-FBK-003`).
+ * «Guardar» (`FEAT-FBK-011`).
  *
- * **This is the use case the product exists for.** Everything else —
- * discovering works, asking for access, reading — is scaffolding around this
- * moment, and it is the only one that moves credits.
+ * Una corrección seria de una obra larga no se escribe de una sentada. Sin
+ * esto, quien la intenta tiene dos salidas —escribir en otro sitio y pegar, o
+ * perder el trabajo— y las dos empeoran el feedback, que es el producto.
  *
- * What it does not do is move them. It publishes a fact: *this reader
- * delivered this correction*. `Credits` decides what that is worth, charges
- * the author and pays the reader, and this context never learns either figure
- * ([`decision:0002`](../../../../../docs/decisions/0002-credits-as-isolated-bounded-context.md)).
- * The HTTP response does not wait for any of it: what the reader needs to
- * know is that their work is registered.
+ * **No publica nada y no mueve un solo crédito.** Un borrador a medias no es
+ * un hecho de negocio, y avisar de que alguien está escribiendo sería
+ * precisamente lo que `RN-4` evita: el autor sabría que hay una crítica en
+ * camino y el lector sentiría la presión de enviarla.
  *
- * A correction is answered against **the version it started with**. The
- * author may have rewritten the questionnaire in the meantime, and refusing
- * the delivery would punish the reader for somebody else's edit.
+ * Solo se valida el **techo** de palabras. Rechazar un borrador por corto
+ * sería impedir guardar.
+ *
+ * Guardar en un capítulo que no se había empezado **lo empieza**: escribir es
+ * la señal más clara posible de que alguien está corrigiendo, y exigir dos
+ * botones para que el sistema se entere sería inventar un trámite.
  */
-final readonly class SubmitCorrectionHandler
+final readonly class SaveCorrectionDraftHandler
 {
     public function __construct(
         private EligibleCorrectionBrief $eligible,
@@ -56,7 +57,7 @@ final readonly class SubmitCorrectionHandler
     ) {
     }
 
-    public function __invoke(SubmitCorrection $command): string
+    public function __invoke(SaveCorrectionDraft $command): SavedDraft
     {
         $brief = $this->eligible->for($command->chapterId, $command->readerId);
 
@@ -69,17 +70,10 @@ final readonly class SubmitCorrectionHandler
         $correction = $this->corrections->ofReaderAndChapter($readerId, $chapterId);
 
         if (null !== $correction && !$correction->isDraft()) {
-            // Immutable once delivered: the author has already paid for it
-            // (`RN-3`).
             throw ChapterNotCorrectable::becauseItWasAlreadyCorrected();
         }
 
-        $opened = null === $correction;
-
-        // Somebody who wrote the whole thing without ever opening a panel —
-        // a script, or a client that lost its draft. Starting it now keeps
-        // the two facts in the order `Credits` expects: a price is quoted,
-        // then charged.
+        $started = null === $correction;
         $correction ??= Correction::start(
             CorrectionId::generate(),
             $workId,
@@ -90,10 +84,9 @@ final readonly class SubmitCorrectionHandler
             $now,
         );
 
-        $this->validator->validate($this->write->requirementsOf($brief->questions), $command->answers);
+        $this->validator->validateDraft($this->write->requirementsOf($brief->questions), $command->answers);
 
         $written = $this->write->onto($correction, $brief->questions, $command->answers, $now);
-        $correction->submit($now);
 
         $this->session->execute(function () use ($correction, $written): void {
             $this->corrections->save($correction);
@@ -103,32 +96,25 @@ final readonly class SubmitCorrectionHandler
             }
         });
 
-        $announcements = [];
-
-        if ($opened) {
-            $announcements[] = new CorrectionStarted(
+        if ($started) {
+            $this->events->publish(new CorrectionStarted(
                 EventId::generate(),
                 $chapterId,
                 $workId,
                 $authorId,
                 $readerId,
                 $now,
-            );
+            ));
         }
 
-        $announcements[] = new FeedbackSubmitted(
-            EventId::generate(),
-            $correction->id(),
-            $chapterId,
-            $workId,
-            $authorId,
-            $readerId,
+        return new SavedDraft(
+            $correction->id()->value(),
             $correction->questionnaireVersion(),
-            $now,
+            // El autor puede haber reescrito el cuestionario mientras el
+            // lector escribía, y el lector tiene derecho a enterarse antes de
+            // seguir: las preguntas que ve ya no son las que responde.
+            $correction->questionnaireVersion() !== $brief->questionnaireVersion,
+            $started,
         );
-
-        $this->events->publish(...$announcements);
-
-        return $correction->id()->value();
     }
 }

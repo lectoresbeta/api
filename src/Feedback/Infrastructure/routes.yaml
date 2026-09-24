@@ -28,3 +28,13 @@ submitCorrection:
     path: /api/v1/chapters/{chapterId}/corrections
     controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\SubmitCorrectionController::__invoke
     methods: [POST]
+
+saveCorrectionDraft:
+    path: /api/v1/chapters/{chapterId}/correction/draft
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\SaveCorrectionDraftController::__invoke
+    methods: [PUT]
+
+discardCorrectionDraft:
+    path: /api/v1/chapters/{chapterId}/correction/draft
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\DiscardCorrectionDraftController::__invoke
+    methods: [DELETE]

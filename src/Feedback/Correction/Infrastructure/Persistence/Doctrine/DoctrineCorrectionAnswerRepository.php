@@ -27,6 +27,13 @@ final class DoctrineCorrectionAnswerRepository extends DoctrineRepository implem
         ));
     }
 
+    public function removeAllOf(CorrectionId $correctionId): void
+    {
+        foreach ($this->ofCorrection($correctionId) as $answer) {
+            $this->forget($answer);
+        }
+    }
+
     protected function entityClass(): string
     {
         return CorrectionAnswer::class;

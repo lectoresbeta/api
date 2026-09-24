@@ -10,8 +10,8 @@
 | `GET /api/v1/chapters/{chapterId}/questionnaire` | `getChapterQuestionnaire` | Cuestionario a responder y lo ya escrito | FEAT-FBK-003 | **Implementado** |
 | `POST /api/v1/chapters/{chapterId}/corrections/start` | `startCorrection` | Empezar: ocupa sitio y fija el precio | FEAT-FBK-003 | **Implementado** |
 | `POST /api/v1/chapters/{chapterId}/corrections` | `submitCorrection` | Enviar la corrección | FEAT-FBK-003 | **Implementado** |
-| `PUT /chapters/{chapterId}/correction/draft` | `saveCorrectionDraft` | Guardar borrador | FEAT-FBK-011 | DRAFT |
-| `DELETE /chapters/{chapterId}/correction/draft` | `discardCorrectionDraft` | Descartar borrador | FEAT-FBK-011 | DRAFT |
+| `PUT /api/v1/chapters/{chapterId}/correction/draft` | `saveCorrectionDraft` | Guardar borrador | FEAT-FBK-011 | **Implementado** |
+| `DELETE /api/v1/chapters/{chapterId}/correction/draft` | `discardCorrectionDraft` | Descartar borrador | FEAT-FBK-011 | **Implementado** |
 | `GET /works/{workId}/corrections` | `listWorkCorrections` | Correcciones recibidas | FEAT-FBK-004 | PENDING |
 | `POST /corrections/{correctionId}/reply` | `replyToCorrection` | Contestar | FEAT-FBK-005 | PENDING |
 | `POST /corrections/{correctionId}/rating` | `rateCorrection` | Valorarla como útil | FEAT-FBK-006 | PENDING |
@@ -173,7 +173,7 @@ Ninguno.
 
 ---
 
-## `PUT /chapters/{chapterId}/correction/draft`
+## `PUT /api/v1/chapters/{chapterId}/correction/draft`
 
 **`operationId`:** `saveCorrectionDraft` · **Funcionalidad:** [`FEAT-FBK-011`](../../features/feedback/FEAT-FBK-011-save-correction-draft.md)
 
@@ -191,10 +191,49 @@ alguien tiene una crítica a medias es información que no le corresponde.
 - Un borrador por lector y **capítulo**; guardar de nuevo sobrescribe.
 - **No se valida obligatoriedad ni longitud mínima**: está a medias por definición. Sí el
   máximo, para no almacenar texto sin límite.
+- Guardar en un capítulo que no se había empezado **lo empieza**, con los efectos de
+  `startCorrection`. Responde `201` la primera vez y `200` las siguientes.
+
+### Respuesta
+
+`correctionId`, la versión que se está respondiendo y `questionnaireVersionChanged`: si el
+autor publicó una versión nueva mientras el lector escribía, lo que sigue respondiendo es la
+antigua, y tiene derecho a enterarse antes de seguir.
 
 ### Efectos
 
-**Ninguno.** No publica eventos ni mueve créditos. Un borrador no es un hecho de negocio.
+**Guardar no publica nada y no mueve créditos.** Un borrador no es un hecho de negocio, y
+avisar de que alguien está escribiendo sería justo lo que `RN-4` evita.
 
 Es idempotente por naturaleza —el recurso es único por lector y capítulo—, así que no
 necesita `Idempotency-Key`.
+
+---
+
+## `DELETE /api/v1/chapters/{chapterId}/correction/draft`
+
+**`operationId`:** `discardCorrectionDraft` · **Funcionalidad:** [`FEAT-FBK-011`](../../features/feedback/FEAT-FBK-011-save-correction-draft.md)
+
+### Propósito
+
+Descartar el borrador. **Sí es un hecho de negocio**, al revés que guardarlo, porque empezar
+había ocupado dos cosas que ahora se sueltan.
+
+### Efectos
+
+Publica `CorrectionDraftDiscarded`, que sueltan dos contextos a la vez:
+
+| Consumidor | Qué deshace |
+|---|---|
+| `Credits` | La cotización del precio, y con ella **uno de los tres sitios** de corrección del capítulo ([`FEAT-CRD-009`](../../features/credits/FEAT-CRD-009-balance-check-on-correction-start.md)) |
+| `Reading` | El acceso de lector beta, si nació de esta corrección y quien la descarta nunca entregó nada de esa obra ([`FEAT-RDG-001`](../../features/reading/FEAT-RDG-001-become-beta-reader-by-correcting.md)) |
+
+### Errores específicos
+
+| Caso | Código |
+|---|---|
+| No hay borrador | `204`. Lo que se pedía ya se cumple |
+| La corrección ya se entregó | `409` con `CORRECTION_ALREADY_SUBMITTED` |
+
+**No se exige seguir pudiendo corregir.** Cerrarle la salida a quien perdió el acceso, o cuya
+obra se cerró, dejaría borradores imposibles de borrar ocupando sitio para siempre.

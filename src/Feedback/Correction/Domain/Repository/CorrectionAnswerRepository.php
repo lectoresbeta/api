@@ -15,4 +15,10 @@ interface CorrectionAnswerRepository
      * @return list<CorrectionAnswer>
      */
     public function ofCorrection(CorrectionId $correctionId): array;
+
+    /**
+     * The answers of a draft being discarded. There is no case where they
+     * outlive their correction: nobody could read them or come back to them.
+     */
+    public function removeAllOf(CorrectionId $correctionId): void;
 }

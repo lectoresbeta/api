@@ -118,6 +118,9 @@ paths:
   /chapters/{chapterId}/corrections/start:
     $ref: './paths/corrections.yaml#/start'
 
+  /chapters/{chapterId}/correction/draft:
+    $ref: './paths/corrections.yaml#/draft'
+
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'
 

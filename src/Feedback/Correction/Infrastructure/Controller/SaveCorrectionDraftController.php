@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Feedback\Correction\Infrastructure\Controller;
 
-use LectoresBeta\Feedback\Correction\Application\Command\SubmitCorrection;
-use LectoresBeta\Feedback\Correction\Application\Handler\SubmitCorrectionHandler;
+use LectoresBeta\Feedback\Correction\Application\Command\SaveCorrectionDraft;
+use LectoresBeta\Feedback\Correction\Application\Handler\SaveCorrectionDraftHandler;
 use LectoresBeta\Feedback\Correction\Infrastructure\Http\AnswersPayload;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -15,17 +15,16 @@ use Symfony\Component\HttpKernel\Attribute\AsController;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
 /**
- * `POST /api/v1/chapters/{chapterId}/corrections` (`FEAT-FBK-003`).
+ * `PUT /api/v1/chapters/{chapterId}/correction/draft` (`FEAT-FBK-011`).
  *
- * El envío. La respuesta **no lleva ninguna cifra de créditos**: el abono es
- * asíncrono y lo decide otro contexto, y devolver un importe aquí obligaría a
- * `Feedback` a conocer las reglas de `Credits`.
+ * Idempotente por naturaleza: el recurso es «el borrador de esta persona para
+ * este capítulo», que es único. No necesita `Idempotency-Key`.
  */
 #[AsController]
-final readonly class SubmitCorrectionController
+final readonly class SaveCorrectionDraftController
 {
     public function __construct(
-        private SubmitCorrectionHandler $submit,
+        private SaveCorrectionDraftHandler $save,
         private Security $security,
     ) {
     }
@@ -38,12 +37,16 @@ final readonly class SubmitCorrectionController
             throw new UnauthorizedHttpException('Bearer');
         }
 
-        $correctionId = ($this->submit)(new SubmitCorrection(
+        $draft = ($this->save)(new SaveCorrectionDraft(
             $chapterId,
             $user->getUserIdentifier(),
             AnswersPayload::of($request),
         ));
 
-        return new JsonResponse(['correctionId' => $correctionId, 'status' => 'SUBMITTED'], Response::HTTP_CREATED);
+        return new JsonResponse([
+            'correctionId' => $draft->correctionId,
+            'questionnaireVersion' => $draft->questionnaireVersion,
+            'questionnaireVersionChanged' => $draft->questionnaireVersionChanged,
+        ], $draft->started ? Response::HTTP_CREATED : Response::HTTP_OK);
     }
 }

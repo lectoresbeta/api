@@ -238,7 +238,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-008 | Corregir por enlace público sin cuenta | Guest | APPROVED | TODO | P1 | [ficha](feedback/FEAT-FBK-008-public-link-correction.md) |
 | FEAT-FBK-009 | Denunciar una corrección abusiva → `FEAT-MOD-001` | User | PENDING | TODO | P2 | — |
 | FEAT-FBK-010 | Mis correcciones — listado del feedback que he dado | User | PENDING | TODO | P2 | — |
-| FEAT-FBK-011 | Guardar un borrador de corrección | BetaReader | APPROVED | TODO | P1 | [ficha](feedback/FEAT-FBK-011-save-correction-draft.md) |
+| FEAT-FBK-011 | Guardar un borrador de corrección | BetaReader | APPROVED | DONE | P1 | [ficha](feedback/FEAT-FBK-011-save-correction-draft.md) |
 | FEAT-FBK-012 | Control antifraude de las correcciones | — (sistema) | PENDING | BLOCKED | P0 | [ficha](feedback/FEAT-FBK-012-correction-fraud-control.md) |
 
 > **Una corrección no es un comentario.** La pantalla de lectura tiene las dos cosas a la

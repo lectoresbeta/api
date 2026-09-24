@@ -261,8 +261,162 @@ collection:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
 
+draft:
+  put:
+    tags: [Corrections]
+    operationId: saveCorrectionDraft
+    summary: Guardar el borrador de una corrección
+    description: |
+      Conservar lo escrito sin entregarlo, para seguir en otra sesión. Una
+      corrección seria de una obra larga no se escribe de una sentada, y sin
+      esto el lector tiene dos salidas —escribir en otro sitio y pegar, o
+      perder el trabajo— que empeoran las dos el feedback, que es el producto.
+
+      **No publica nada ni mueve un solo crédito.** Un borrador a medias no es
+      un hecho de negocio, y avisar de que alguien está escribiendo sería
+      justo lo que la privacidad del borrador evita: el autor sabría que hay
+      una crítica en camino y el lector sentiría la presión de enviarla.
+
+      **Solo se valida el techo de palabras**, no el mínimo ni la
+      obligatoriedad: está a medias por definición, y rechazar un borrador por
+      corto sería impedir guardar.
+
+      Guardar en un capítulo que no se había empezado **lo empieza**, con
+      todos los efectos de `startCorrection`: escribir es la señal más clara
+      posible de que alguien está corrigiendo.
+
+      El borrador es **privado del lector**. El autor no lo ve ni sabe que
+      existe por ninguna vía de la API.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [answers]
+            properties:
+              answers:
+                type: array
+                items:
+                  type: object
+                  required: [questionId, text]
+                  properties:
+                    questionId:
+                      type: string
+                      format: uuid
+                    text:
+                      type: string
+    responses:
+      '200':
+        description: Borrador sobrescrito.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedDraft'
+      '201':
+        description: Borrador creado. Este guardado ha empezado la corrección.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedDraft'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: NOT_A_BETA_READER`, `AUTHOR_CANNOT_CORRECT` o
+          `ACCOUNT_NOT_ACTIVATED`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '409':
+        description: '`code: CORRECTION_ALREADY_SUBMITTED` o `WORK_NOT_IN_CORRECTION`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          Una respuesta supera el máximo de palabras de su pregunta.
+          `code: ANSWER_TOO_LONG` o `UNKNOWN_QUESTION`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Corrections]
+    operationId: discardCorrectionDraft
+    summary: Descartar el borrador
+    description: |
+      Guardar no es un hecho de negocio y **descartar sí**, porque empezar
+      había ocupado dos cosas que ahora se sueltan: la cotización del precio
+      —y con ella uno de los tres sitios de corrección del capítulo— y el
+      acceso de lector beta, si nació de esta corrección.
+
+      Descartar un borrador que no existe devuelve `204` igual: lo que se
+      pedía —que no haya borrador— ya se cumple.
+
+      **No se exige seguir pudiendo corregir.** Cerrarle la salida a quien
+      perdió el acceso, o cuya obra se cerró, dejaría borradores imposibles de
+      borrar ocupando sitio para siempre.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: No queda borrador.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: CORRECTION_ALREADY_SUBMITTED`. Una corrección entregada es
+          inmutable: el autor ya ha pagado por ella.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
 components:
   schemas:
+    SavedDraft:
+      type: object
+      required: [correctionId, questionnaireVersion, questionnaireVersionChanged]
+      properties:
+        correctionId:
+          type: string
+          format: uuid
+        questionnaireVersion:
+          type: integer
+          description: La versión que este borrador responde.
+        questionnaireVersionChanged:
+          type: boolean
+          description: |
+            El autor ha publicado una versión nueva del cuestionario desde que
+            este borrador empezó. Lo que se sigue respondiendo es la antigua,
+            y el lector tiene derecho a enterarse antes de seguir escribiendo.
+
     PanelQuestion:
       type: object
       required: [questionId, position, statement, required, minWords, answer]
