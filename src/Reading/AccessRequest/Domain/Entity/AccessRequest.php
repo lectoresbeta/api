@@ -77,6 +77,30 @@ class AccessRequest
         return $this->status;
     }
 
+    public function isOpen(): bool
+    {
+        return $this->status->isOpen();
+    }
+
+    /**
+     * What the reader wrote to persuade the author. It is the one thing that
+     * turns a list of names into a decision somebody can make.
+     */
+    public function message(): ?string
+    {
+        return $this->message;
+    }
+
+    public function requestedAt(): \DateTimeImmutable
+    {
+        return $this->requestedAt;
+    }
+
+    public function resolvedAt(): ?\DateTimeImmutable
+    {
+        return $this->resolvedAt;
+    }
+
     public function accept(\DateTimeImmutable $now): void
     {
         $this->resolve(AccessRequestStatus::ACCEPTED, $now);

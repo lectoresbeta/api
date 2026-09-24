@@ -16,6 +16,19 @@ interface WorkRepository
     public function ofId(WorkId $id): ?Work;
 
     /**
+     * Several works in one query.
+     *
+     * It exists for `WorkAccessBriefs::ofWorks()`, which answers about a page
+     * of requests at a time: one call per row would be an N+1 hidden behind a
+     * contract.
+     *
+     * @param list<WorkId> $ids
+     *
+     * @return array<string, Work> keyed by identifier; missing ones are absent
+     */
+    public function ofIds(array $ids): array;
+
+    /**
      * «Mis relatos» (`FEAT-WRK-015`). Filtering by status is optional
      * because the screen has tabs.
      *

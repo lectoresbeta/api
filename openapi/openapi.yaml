@@ -115,6 +115,18 @@ paths:
   /content-warnings:
     $ref: './paths/works.yaml#/contentWarnings'
 
+  /works/{workId}/access-requests:
+    $ref: './paths/reading.yaml#/collection'
+
+  /me/access-requests:
+    $ref: './paths/reading.yaml#/mine'
+
+  /access-requests/{requestId}:
+    $ref: './paths/reading.yaml#/request'
+
+  /access-requests/{requestId}/resolution:
+    $ref: './paths/reading.yaml#/resolution'
+
   /works/{workId}/questionnaire:
     $ref: './paths/works.yaml#/questionnaire'
 

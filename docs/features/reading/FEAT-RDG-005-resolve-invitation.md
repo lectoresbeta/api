@@ -4,7 +4,7 @@ title: Aceptar o rechazar una invitación de lector beta
 context: Reading
 concept: AccessInvitation
 actors: [Reader]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -177,8 +177,8 @@ el mismo índice único parcial sobre los accesos vivos sosteniendo `RN-4`.
 
 ## Estado
 
-**Especificación:** `REVIEW` (2026-09-24). Ficha completa. Lo que necesita validación de
-producto es `RN-6` —avisar al autor del rechazo, con el evento nuevo que eso añade— y que la
+**Especificación:** `APPROVED` (2026-09-24). Aprobada con sus decisiones discutibles
+explícitas: `RN-6` —avisar al autor del rechazo, con el evento nuevo que eso añade— y que la
 lista de invitaciones enseñe sinopsis y clasificación de una obra que el invitado todavía no
 puede leer.
 

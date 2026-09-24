@@ -17,3 +17,31 @@
 #         methods: [POST]
 #
 # Convención completa: docs/api/conventions/routing.md
+
+# El camino `ON_REQUEST` (FEAT-RDG-002 y FEAT-RDG-003). Son dos fichas y un
+# solo recurso: la solicitud la crea el lector y la resuelve el autor.
+
+requestBetaReaderAccess:
+    path: /api/v1/works/{workId}/access-requests
+    controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\RequestBetaReaderAccessController::__invoke
+    methods: [POST]
+
+listWorkAccessRequests:
+    path: /api/v1/works/{workId}/access-requests
+    controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\ListWorkAccessRequestsController::__invoke
+    methods: [GET]
+
+listMyBetaReaderAccessRequests:
+    path: /api/v1/me/access-requests
+    controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\ListMyAccessRequestsController::__invoke
+    methods: [GET]
+
+cancelBetaReaderAccessRequest:
+    path: /api/v1/access-requests/{requestId}
+    controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\CancelAccessRequestController::__invoke
+    methods: [DELETE]
+
+resolveBetaReaderAccessRequest:
+    path: /api/v1/access-requests/{requestId}/resolution
+    controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\ResolveAccessRequestController::__invoke
+    methods: [PUT]

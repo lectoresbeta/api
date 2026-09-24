@@ -1,0 +1,393 @@
+# Quién puede leer qué, y cómo llegó a poder hacerlo.
+#
+# Convertirse en lector beta de una obra PUBLIC no aparece aquí y no es un
+# olvido: no tiene endpoint. Es el efecto de empezar una corrección
+# (FEAT-RDG-001). Los tres caminos producen el mismo acceso; solo dos son
+# pantallas.
+
+AccessRequestStatus:
+  type: string
+  enum: [PENDING, ACCEPTED, REJECTED, CANCELLED]
+
+AccessRequest:
+  type: object
+  required: [requestId, workId, readerId, status, requestedAt]
+  properties:
+    requestId:
+      type: string
+      format: uuid
+    workId:
+      type: string
+      format: uuid
+    workTitle:
+      type: [string, 'null']
+      description: |
+        Nulo solo si la obra ha dejado de existir y el cierre de sus
+        solicitudes todavía no ha llegado. Una fila sin título es mejor que
+        una lista que falla.
+    readerId:
+      type: string
+      format: uuid
+      description: Quién pide. El autor lo mira; el propio solicitante, no.
+    status:
+      $ref: '#/AccessRequestStatus'
+    message:
+      type: [string, 'null']
+      description: |
+        Lo que el lector escribió para convencer. Es lo único que convierte
+        una lista de identificadores en una decisión que se pueda tomar.
+    requestedAt:
+      type: string
+      format: date-time
+    resolvedAt:
+      type: [string, 'null']
+      format: date-time
+
+AccessRequestPage:
+  type: object
+  required: [requests, pageInfo]
+  properties:
+    requests:
+      type: array
+      items:
+        $ref: '#/AccessRequest'
+    pageInfo:
+      type: object
+      required: [nextCursor, hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+          description: Opaco. No se construye a mano.
+        hasNextPage:
+          type: boolean
+
+collection:
+  post:
+    tags: [Reading]
+    operationId: requestBetaReaderAccess
+    summary: Pedir ser lector beta de una obra
+    description: |
+      El camino de entrada a una obra **abierta a solicitud**, que es la
+      modalidad con la que nace toda obra.
+
+      Una solicitud **no concede nada**: es una pregunta con acuse de recibo,
+      y lo único que produce por sí sola es un aviso al autor. Quien decide es
+      él.
+
+      Se puede volver a pedir después de un rechazo. No hay enfriamiento:
+      cerrar la puerta tras un «no» lo convertiría en un «nunca», y el caso
+      normal —una obra que ya tiene diez lectores hoy y no dentro de dos
+      meses— dejaría de tener salida.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: |
+                  Opcional, y lo que hace que el autor pueda decidir. En
+                  blanco cuenta como no escrito.
+    responses:
+      '201':
+        description: La solicitud queda pendiente.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestId, status]
+              properties:
+                requestId: { type: string, format: uuid }
+                status: { $ref: '#/AccessRequestStatus' }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND`. **Cuatro situaciones, una respuesta**: la
+          obra no existe, es el borrador de otra persona, está bloqueada por
+          reclamación, o es para adultos y quien pregunta no tiene edad
+          declarada. Distinguirlas sería decirle a un desconocido algo de
+          obra que no está publicada.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: ALREADY_A_BETA_READER` si ya tiene acceso vivo, o
+          `REQUEST_ALREADY_PENDING` si ya hay una solicitud abierta suya sobre
+          esta obra.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: WORK_DOES_NOT_TAKE_REQUESTS` cuando la obra es `PUBLIC` o
+          `PRIVATE`. Caen en el mismo error por motivos opuestos: en una no
+          hace falta pedir nada —basta con ponerse a corregir— y en la otra
+          pedir no es la vía de entrada.
+
+          `AUTHOR_CANNOT_BE_BETA_READER` cuando es el autor quien pide. Aquí
+          **no** se finge que la obra no existe: la está viendo, y mentirle
+          sobre algo suyo le confundiría.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  get:
+    tags: [Reading]
+    operationId: listWorkAccessRequests
+    summary: Quién quiere leer mi obra
+    description: |
+      La bandeja del autor. Por defecto enseña **lo pendiente**, que es lo que
+      se viene a mirar; el histórico está a un filtro de distancia.
+
+      La obra de otra persona responde `404`, igual que una inexistente.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        description: |
+          `ALL` para el histórico entero. Un valor que no existe devuelve
+          `422` en lugar de ignorarse: servir otra lista dejaría a quien
+          pregunta sin forma de notarlo.
+        schema:
+          type: string
+          enum: [PENDING, ACCEPTED, REJECTED, CANCELLED, ALL]
+          default: PENDING
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    responses:
+      '200':
+        description: |
+          Una página de solicitudes, por cursor: es una bandeja cronológica y
+          no un catálogo sobre el que se salte. Tampoco lleva total — nadie
+          necesita saber que tiene 413 solicitudes, necesita las veinte
+          siguientes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AccessRequestPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: '`code: UNKNOWN_FILTER_VALUE` o `INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+mine:
+  get:
+    tags: [Reading]
+    operationId: listMyBetaReaderAccessRequests
+    summary: Lo que he pedido
+    parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [PENDING, ACCEPTED, REJECTED, CANCELLED, ALL]
+          default: PENDING
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    responses:
+      '200':
+        description: Mis solicitudes, de la más reciente a la más antigua.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AccessRequestPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_FILTER_VALUE` o `INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+request:
+  delete:
+    tags: [Reading]
+    operationId: cancelBetaReaderAccessRequest
+    summary: Retirar mi solicitud
+    description: |
+      Retirarse de la cola mientras siga pendiente. **No avisa al autor**:
+      nadie estaba esperando una pregunta que quien la hizo ha retirado. Es la
+      asimetría deliberada con el rechazo, que sí se cuenta.
+
+      Cancelar deja la vía libre para volver a pedir.
+    parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Retirada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: ACCESS_REQUEST_NOT_FOUND`. La solicitud de otra persona
+          responde lo mismo que una inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: REQUEST_ALREADY_RESOLVED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+resolution:
+  put:
+    tags: [Reading]
+    operationId: resolveBetaReaderAccessRequest
+    summary: Aceptar o rechazar una solicitud
+    description: |
+      **Aceptar concede el acceso en el acto**, en la misma transacción que
+      cierra la solicitud: los dos agregados son del mismo contexto, así que
+      no hay ventana en la que la solicitud esté aceptada y el acceso todavía
+      no exista. A partir de ahí el lector lee la obra **sea cual sea su
+      modalidad**.
+
+      Rechazar la cierra y se lo dice al lector. **No se pide motivo**: si
+      decir que no costara escribir una justificación, la salida fácil sería
+      no contestar nunca, y el lector se quedaría sin acceso y sin respuesta.
+
+      Un `PUT` con la decisión, y no dos rutas `accept` y `reject`: es una
+      transición de estado con dos valores, igual que el estado de una obra.
+
+      **No se comprueba la modalidad de la obra.** Entre la solicitud y su
+      respuesta el autor pudo cambiarla, y aceptar igual es lo correcto: la
+      modalidad gobierna quién puede entrar a partir de ahora, no quién ya
+      estaba pidiendo entrar. Si cambió de opinión, tiene el rechazo delante.
+    parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [decision]
+            properties:
+              decision:
+                type: string
+                enum: [ACCEPTED, REJECTED]
+    responses:
+      '200':
+        description: Cómo ha quedado la solicitud.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestId, status]
+              properties:
+                requestId: { type: string, format: uuid }
+                status: { $ref: '#/AccessRequestStatus' }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: ACCESS_REQUEST_NOT_FOUND`. La solicitud de la obra de otra
+          persona responde igual que una inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: REQUEST_ALREADY_RESOLVED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '410':
+        description: |
+          `code: WORK_GONE`. La obra se borró mientras la solicitud esperaba.
+          `410` y no `404` porque quien resuelve conoce esa obra —es suya— y
+          fingir que nunca existió sería mentirle sobre algo que hizo él.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNKNOWN_DECISION`. **Nunca se interpreta como un rechazo**:
+          adivinar en una operación que concede acceso a obra inédita es
+          exactamente donde no conviene adivinar.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

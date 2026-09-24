@@ -133,6 +133,13 @@ services:
     LectoresBeta\Reading\BetaReaderAccess\Application\Contract\BetaReaderAccessCheck:
         alias: LectoresBeta\Reading\BetaReaderAccess\Application\Service\CheckBetaReaderAccess
 
+    # La puerta de vuelta: `Reading` pregunta a `Work` por la obra antes de
+    # dejar que nadie la pida. Es el primer ciclo entre contextos y tiene su
+    # propia decisión (decision:0015); lo que lo mantiene inofensivo es que
+    # ninguna de las dos implementaciones llama a la otra mientras responde.
+    LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs:
+        alias: LectoresBeta\Work\Manuscript\Application\Service\ResolveWorkAccessBriefs
+
     LectoresBeta\User\Profile\Application\Contract\GenreCatalogue:
         alias: LectoresBeta\User\Profile\Application\Service\CheckGenreCatalogue
 

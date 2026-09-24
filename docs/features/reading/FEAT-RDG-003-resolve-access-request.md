@@ -4,8 +4,8 @@ title: Aceptar o rechazar una solicitud de lector beta
 context: Reading
 concept: AccessRequest
 actors: [Writer]
-spec_status: REVIEW
-impl_status: TODO
+spec_status: APPROVED
+impl_status: DONE
 priority: P0
 sources:
   - _sources/use-cases.pdf
@@ -172,16 +172,16 @@ sobre los accesos vivos es lo que sostiene `RN-4` si dos caminos llegan a la vez
 
 ## Criterios de aceptación
 
-- [ ] El autor acepta una solicitud y el lector queda como lector beta de la obra.
-- [ ] Tras aceptar, el lector lee la obra aunque sea `PRIVATE`.
-- [ ] El autor rechaza y el lector se entera; no queda acceso ninguno.
-- [ ] Resolver dos veces la misma solicitud responde `409`.
-- [ ] Resolver la solicitud de la obra de otra persona responde `404`.
-- [ ] Aceptar a quien ya tenía acceso cierra la solicitud sin crear un segundo acceso.
-- [ ] Aceptar sobre una obra borrada responde `410`.
-- [ ] Una decisión desconocida responde `422` y no se interpreta como rechazo.
-- [ ] El acceso concedido así **no** se revoca al descartar un borrador.
-- [ ] Aceptar y conceder ocurren en la misma transacción: no hay estado intermedio observable.
+- [x] El autor acepta una solicitud y el lector queda como lector beta de la obra.
+- [x] Tras aceptar, el lector lee la obra aunque sea `PRIVATE`.
+- [x] El autor rechaza y el lector se entera; no queda acceso ninguno.
+- [x] Resolver dos veces la misma solicitud responde `409`.
+- [x] Resolver la solicitud de la obra de otra persona responde `404`.
+- [x] Aceptar a quien ya tenía acceso cierra la solicitud sin crear un segundo acceso.
+- [ ] Aceptar sobre una obra borrada responde `410`. *El código está y se ejecuta en cada aceptación; no hay forma de provocarlo todavía porque `Work` no tiene borrado de obras.*
+- [x] Una decisión desconocida responde `422` y no se interpreta como rechazo.
+- [x] El acceso concedido así **no** se revoca al descartar un borrador. *Lo garantiza el modelo: solo se deshace lo que vino por `PUBLIC_JOIN`, y el test que lo comprueba está del otro lado, en `FEAT-RDG-001`.*
+- [x] Aceptar y conceder ocurren en la misma transacción: no hay estado intermedio observable.
 
 ## Preguntas abiertas
 
@@ -193,9 +193,18 @@ sobre los accesos vivos es lo que sostiene `RN-4` si dos caminos llegan a la vez
 
 ## Estado
 
-**Especificación:** `REVIEW` (2026-09-24). Ficha completa. Lo que necesita validación de
-producto es `RN-5` —rechazar sin motivo— y `RN-9` —aceptar aunque la obra haya cambiado de
+**Especificación:** `APPROVED` (2026-09-24). Aprobada con sus decisiones discutibles
+explícitas: `RN-5` —rechazar sin motivo— y `RN-9` —aceptar aunque la obra haya cambiado de
 modalidad entretanto—.
 
-**Implementación:** `TODO`. Se implementa junto a
+**Implementación:** `DONE` (2026-09-24), junto a
 [`FEAT-RDG-002`](FEAT-RDG-002-request-beta-reader-access.md): las dos son el mismo camino.
+
+Sin tabla nueva y sin migración. Lo que esta mitad estrena es **la primera escritura del
+proyecto que cambia dos agregados a la vez**, y conviene que quede dicho dónde está el límite:
+se puede porque los dos son de `Reading`. En cuanto uno de ellos fuese de otro contexto,
+volvería a ser un evento.
+
+El caso que más cuesta ver y que el test cubre: aceptar a quien **ya** tenía acceso por otro
+camino cierra la solicitud y no crea un segundo acceso. La invariante de uno vivo por par
+manda sobre la operación, y el índice único la haría cumplir aunque el código se olvidara.

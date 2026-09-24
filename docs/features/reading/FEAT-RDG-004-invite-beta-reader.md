@@ -4,7 +4,7 @@ title: Invitar a un usuario a ser lector beta de una obra
 context: Reading
 concept: AccessInvitation
 actors: [Writer]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -194,8 +194,8 @@ Ninguna tabla nueva.
 
 ## Estado
 
-**Especificación:** `REVIEW` (2026-09-24). Ficha completa. Lo que necesita validación de
-producto es `RN-3` —invitar vale en `PUBLIC` aunque solicitar no— y `RN-12` —invitar a un
+**Especificación:** `APPROVED` (2026-09-24). Aprobada con sus decisiones discutibles
+explícitas: `RN-3` —invitar vale en `PUBLIC` aunque solicitar no— y `RN-12` —invitar a un
 borrador, con la espera que eso implica—.
 
 **Implementación:** `TODO`. Se implementa junto a

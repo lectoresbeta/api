@@ -3,24 +3,26 @@
 Quién puede leer qué, y cómo llegó a poder hacerlo. Ficha del contexto:
 [`reading.md`](../../bounded-contexts/reading.md).
 
-**Ninguna de estas operaciones está implementada todavía.** Las fichas están en `REVIEW` y
-este documento existe para que el contrato se discuta entero antes de escribir la primera
-línea, no después.
+**El camino `ON_REQUEST` está implementado**; el de invitación
+([`FEAT-RDG-004`](../../features/reading/FEAT-RDG-004-invite-beta-reader.md) y
+[`FEAT-RDG-005`](../../features/reading/FEAT-RDG-005-resolve-invitation.md)) está aprobado y
+pendiente. Las dos mitades de cada camino se implementan juntas: una solicitud que nadie puede
+contestar es peor que no poder pedirla.
 
 ## Operaciones
 
 | Método y ruta | `operationId` | Propósito | Ficha | Estado |
 |---|---|---|---|---|
-| `POST /api/v1/works/{workId}/access-requests` | `requestBetaReaderAccess` | Pedir ser lector beta | FEAT-RDG-002 | REVIEW |
-| `GET /api/v1/me/access-requests` | `listMyBetaReaderAccessRequests` | Mis solicitudes | FEAT-RDG-002 | REVIEW |
-| `DELETE /api/v1/access-requests/{requestId}` | `cancelBetaReaderAccessRequest` | Retirar la mía | FEAT-RDG-002 | REVIEW |
-| `GET /api/v1/works/{workId}/access-requests` | `listWorkAccessRequests` | Quién quiere leer mi obra | FEAT-RDG-003 | REVIEW |
-| `PUT /api/v1/access-requests/{requestId}/resolution` | `resolveBetaReaderAccessRequest` | Aceptar o rechazar | FEAT-RDG-003 | REVIEW |
-| `POST /api/v1/works/{workId}/beta-reader-invitations` | `inviteBetaReader` | Invitar a alguien | FEAT-RDG-004 | REVIEW |
-| `GET /api/v1/works/{workId}/beta-reader-invitations` | `listWorkBetaReaderInvitations` | Invitaciones de mi obra | FEAT-RDG-004 | REVIEW |
-| `DELETE /api/v1/beta-reader-invitations/{invitationId}` | `cancelBetaReaderInvitation` | Retirar una invitación | FEAT-RDG-004 | REVIEW |
-| `GET /api/v1/me/beta-reader-invitations` | `listMyBetaReaderInvitations` | Lo que me han ofrecido | FEAT-RDG-005 | REVIEW |
-| `PUT /api/v1/beta-reader-invitations/{invitationId}/resolution` | `resolveBetaReaderInvitation` | Aceptar o rechazar | FEAT-RDG-005 | REVIEW |
+| `POST /api/v1/works/{workId}/access-requests` | `requestBetaReaderAccess` | Pedir ser lector beta | FEAT-RDG-002 | **Implementado** |
+| `GET /api/v1/me/access-requests` | `listMyBetaReaderAccessRequests` | Mis solicitudes | FEAT-RDG-002 | **Implementado** |
+| `DELETE /api/v1/access-requests/{requestId}` | `cancelBetaReaderAccessRequest` | Retirar la mía | FEAT-RDG-002 | **Implementado** |
+| `GET /api/v1/works/{workId}/access-requests` | `listWorkAccessRequests` | Quién quiere leer mi obra | FEAT-RDG-003 | **Implementado** |
+| `PUT /api/v1/access-requests/{requestId}/resolution` | `resolveBetaReaderAccessRequest` | Aceptar o rechazar | FEAT-RDG-003 | **Implementado** |
+| `POST /api/v1/works/{workId}/beta-reader-invitations` | `inviteBetaReader` | Invitar a alguien | FEAT-RDG-004 | APPROVED |
+| `GET /api/v1/works/{workId}/beta-reader-invitations` | `listWorkBetaReaderInvitations` | Invitaciones de mi obra | FEAT-RDG-004 | APPROVED |
+| `DELETE /api/v1/beta-reader-invitations/{invitationId}` | `cancelBetaReaderInvitation` | Retirar una invitación | FEAT-RDG-004 | APPROVED |
+| `GET /api/v1/me/beta-reader-invitations` | `listMyBetaReaderInvitations` | Lo que me han ofrecido | FEAT-RDG-005 | APPROVED |
+| `PUT /api/v1/beta-reader-invitations/{invitationId}/resolution` | `resolveBetaReaderInvitation` | Aceptar o rechazar | FEAT-RDG-005 | APPROVED |
 
 Convertirse en lector beta de una obra `PUBLIC` **no tiene endpoint**: es el efecto de empezar
 una corrección ([`FEAT-RDG-001`](../../features/reading/FEAT-RDG-001-become-beta-reader-by-correcting.md)).

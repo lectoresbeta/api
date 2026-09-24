@@ -39,7 +39,7 @@ requisito explícito de `AGENTS.md` y de la *Definition of done*.
 |---|---|---|
 | `User` | [user.md](endpoints/user.md) | Esqueleto |
 | `Work` | [work.md](endpoints/work.md) | Esqueleto |
-| `Reading` | [reading.md](endpoints/reading.md) | Especificado, sin implementar |
+| `Reading` | [reading.md](endpoints/reading.md) | Solicitudes implementadas; invitaciones especificadas |
 | `Feedback` | [feedback.md](endpoints/feedback.md) | Esqueleto |
 | `Community` | `endpoints/community.md` | Por crear |
 | `Credits` | [credits.md](endpoints/credits.md) | Esqueleto |

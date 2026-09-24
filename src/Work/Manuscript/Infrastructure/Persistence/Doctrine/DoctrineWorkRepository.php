@@ -26,6 +26,24 @@ final class DoctrineWorkRepository extends DoctrineRepository implements WorkRep
         return $this->repository()->find($id->value());
     }
 
+    public function ofIds(array $ids): array
+    {
+        if ([] === $ids) {
+            return [];
+        }
+
+        $found = [];
+
+        foreach ($this->repository()->findBy(['id' => array_map(
+            static fn (WorkId $id): string => $id->value(),
+            $ids,
+        )]) as $work) {
+            $found[$work->id()->value()] = $work;
+        }
+
+        return $found;
+    }
+
     public function ofAuthor(AuthorId $authorId, ?WorkStatus $status = null): array
     {
         $criteria = ['authorId' => $authorId->value()];

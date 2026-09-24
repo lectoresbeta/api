@@ -4,8 +4,8 @@ title: Solicitar ser lector beta de una obra (obra `ON_REQUEST`)
 context: Reading
 concept: AccessRequest
 actors: [Reader]
-spec_status: REVIEW
-impl_status: TODO
+spec_status: APPROVED
+impl_status: DONE
 priority: P0
 sources:
   - _sources/use-cases.pdf
@@ -200,17 +200,17 @@ Ninguna tabla nueva.
 
 ## Criterios de aceptación
 
-- [ ] Un lector solicita acceso a una obra `ON_REQUEST` y el autor recibe el aviso.
-- [ ] Solicitar dos veces no crea dos solicitudes.
-- [ ] Una obra `PUBLIC` y una `PRIVATE` rechazan la solicitud nombrando el motivo.
-- [ ] El borrador de otra persona responde lo mismo que una obra inexistente.
-- [ ] Una obra para adultos no se distingue de una inexistente ante quien no tiene edad.
-- [ ] Quien ya es lector beta recibe `409` y no una segunda vía de entrada.
-- [ ] El autor no puede solicitar acceso a su propia obra.
-- [ ] El lector cancela su solicitud y desaparece de la lista del autor.
-- [ ] Cancelar la solicitud de otra persona responde `404`.
-- [ ] Tras un rechazo se puede volver a solicitar.
-- [ ] `Reading` no consulta ninguna tabla de `Work` en todo el proceso.
+- [x] Un lector solicita acceso a una obra `ON_REQUEST` y el autor recibe el aviso.
+- [x] Solicitar dos veces no crea dos solicitudes.
+- [x] Una obra `PUBLIC` y una `PRIVATE` rechazan la solicitud nombrando el motivo.
+- [x] El borrador de otra persona responde lo mismo que una obra inexistente.
+- [x] Una obra para adultos no se distingue de una inexistente ante quien no tiene edad.
+- [x] Quien ya es lector beta recibe `409` y no una segunda vía de entrada.
+- [x] El autor no puede solicitar acceso a su propia obra.
+- [x] El lector cancela su solicitud y desaparece de la lista del autor.
+- [x] Cancelar la solicitud de otra persona responde `404`.
+- [x] Tras un rechazo se puede volver a solicitar.
+- [x] `Reading` no consulta ninguna tabla de `Work` en todo el proceso. *Lo comprueba Deptrac, no un test.*
 
 ## Preguntas abiertas
 
@@ -222,10 +222,33 @@ Ninguna tabla nueva.
 
 ## Estado
 
-**Especificación:** `REVIEW` (2026-09-24). Ficha completa. Lo que necesita validación de
-producto es `RN-2` —que `PUBLIC` rechace la solicitud en lugar de concederla— y `RN-9` —que
+**Especificación:** `APPROVED` (2026-09-24). Aprobada con sus decisiones discutibles
+explícitas: `RN-2` —que `PUBLIC` rechace la solicitud en lugar de concederla— y `RN-9` —que
 se pueda volver a pedir sin límite—, que son las dos decisiones con consecuencias visibles
 para el usuario.
 
-**Implementación:** `TODO`. Se implementa junto a
+**Implementación:** `DONE` (2026-09-24), junto a
 [`FEAT-RDG-003`](FEAT-RDG-003-resolve-access-request.md).
+
+**Ninguna tabla nueva ni migración**: `access_request` existía desde el andamiaje inicial, con
+sus tres índices y el índice único parcial que sostiene `RN-3`. Lo que faltaba era todo lo de
+arriba.
+
+Lo que sí apareció por el camino:
+
+- **`WorkAccessBriefs`**, el contrato de `Work` que cierra el primer ciclo entre contextos
+  ([`decision:0015`](../../decisions/0015-work-and-reading-ask-each-other.md)). Devuelve por
+  obra y **por lote**: una página de veinte solicitudes habría sido veinte llamadas, y un
+  contrato que invita a un N+1 acaba teniendo uno;
+- **`Cursor` y `PageSize` en `Shared`**, la primera paginación por cursor del proyecto. El
+  cursor lleva **fecha e identificador**, y las dos cosas hacen falta: ordenar solo por
+  instante hace que dos solicitudes del mismo segundo se repitan o se pierdan al pasar de
+  página;
+- **`WorkAccessMode` en `Reading`**, copia deliberada del vocabulario de `Work`. Qué significa
+  cada modalidad **para entrar** es regla de este contexto, y una regla no se escribe sobre el
+  enum de otro.
+
+Lo único de la ficha que no se ha podido implementar es el consumo de `WorkDeleted`: **ese
+evento todavía no lo publica nadie**, porque `Work` no tiene borrado de obras. El hueco que
+dejaría está tapado igualmente — resolver una solicitud cuya obra ya no existe responde `410`,
+porque se comprueba contra el contrato y no contra una proyección.
