@@ -30,6 +30,16 @@ interface AuthorSubscriptionRepository
      */
     public function subscribersOf(MemberId $authorId, ?Cursor $after, int $limit): array;
 
+    /**
+     * A cuántos sigue, y cuántos le siguen (`FEAT-USR-028`).
+     *
+     * Contar y no traer las filas: un contador de la cabecera del perfil no
+     * puede costar cargar una lista que crece sin límite.
+     */
+    public function countSubscriptionsOf(MemberId $subscriberId): int;
+
+    public function countSubscribersOf(MemberId $authorId): int;
+
     public function save(AuthorSubscription $subscription): void;
 
     public function remove(AuthorSubscription $subscription): void;

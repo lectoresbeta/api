@@ -55,6 +55,11 @@ final class DoctrineWorkRepository extends DoctrineRepository implements WorkRep
         return array_values($this->repository()->findBy($criteria, ['updatedAt' => 'DESC']));
     }
 
+    public function countByAuthor(AuthorId $authorId): int
+    {
+        return $this->repository()->count(['authorId' => $authorId->value()]);
+    }
+
     public function remove(Work $work): void
     {
         $this->forget($work);

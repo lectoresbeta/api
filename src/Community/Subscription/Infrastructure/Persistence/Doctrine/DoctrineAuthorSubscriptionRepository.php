@@ -46,6 +46,16 @@ final class DoctrineAuthorSubscriptionRepository extends DoctrineRepository impl
         );
     }
 
+    public function countSubscriptionsOf(MemberId $subscriberId): int
+    {
+        return $this->repository()->count(['subscriberId' => $subscriberId->value()]);
+    }
+
+    public function countSubscribersOf(MemberId $authorId): int
+    {
+        return $this->repository()->count(['authorId' => $authorId->value()]);
+    }
+
     public function save(AuthorSubscription $subscription): void
     {
         $this->register($subscription);

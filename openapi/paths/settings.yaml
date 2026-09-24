@@ -134,9 +134,47 @@ privacySettings:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
 
+ProfileCounters:
+  type: object
+  required: [following, followers, works, corrections]
+  description: |
+    Las cuatro cifras de la cabecera de «Mi perfil» (`FEAT-USR-028`).
+
+    **Ninguna es de `User`**: seguidos y seguidores los cuenta `Community`,
+    los relatos `Work` y las correcciones `Feedback`. Se ensamblan al
+    responder, cada una por el contrato publicado de su contexto.
+
+    **`null` significa «no se ha podido saber», y no es lo mismo que cero.**
+    Si un contexto no responde, su cifra viaja nula y el perfil se devuelve
+    igual: un contador caído no tumba la pantalla. Un cliente que trate `null`
+    como `0` enseñará un cero donde debería dejar un hueco.
+  properties:
+    following:
+      type: [integer, 'null']
+      description: |
+        A cuántas personas sigue. **Cuenta todas**, también las que tienen el
+        perfil cerrado, así que puede ser mayor que las filas que devuelve
+        `listAuthorSubscriptions`: filtrar la cifra la haría distinta para
+        cada visitante.
+    followers:
+      type: [integer, 'null']
+      description: Cuántas le siguen, con la misma advertencia.
+    works:
+      type: [integer, 'null']
+      description: |
+        Cuántas obras tiene, **de cualquier estado**. Es su propio perfil y
+        sus borradores son suyos; el día que este contador salga en el perfil
+        ajeno hará falta otra pregunta, no esta.
+    corrections:
+      type: [integer, 'null']
+      description: |
+        Cuántas correcciones ha **entregado**. Una empezada y sin enviar no
+        cuenta: no es trabajo hecho, y contarla haría un número que sube y
+        baja solo.
+
 EditableProfile:
   type: object
-  required: [userId, username, usernameChangeableOn]
+  required: [userId, username, usernameChangeableOn, counters]
   properties:
     userId:
       type: string
@@ -174,6 +212,8 @@ EditableProfile:
         después de escribir un nombre es enterarse tarde.
 
         Con una cuenta que nunca lo ha cambiado es el momento actual.
+    counters:
+      $ref: '#/ProfileCounters'
 
 myProfile:
   get:

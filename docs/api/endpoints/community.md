@@ -129,3 +129,10 @@ decidir si sigue pidiendo se parará antes de tiempo.
 |---|---|---|
 | `PROFILE_NOT_FOUND` | 404 | Ese perfil no existe **o no es visible** para quien pregunta. Los dos casos responden igual: un `403` confirmaría que la cuenta está ahí |
 | `INVALID_CURSOR` | 422 | El cursor no lo produjo esta API |
+
+### Los contadores no están aquí
+
+Las dos cifras de seguidos y seguidores las sirve `getMyProfile` (`FEAT-USR-028`), que las
+pide a este contexto por contrato. **Cuentan a todo el mundo, sin filtrar por privacidad**,
+así que pueden ser mayores que las filas de estas listas: el contador es un dato de esa
+persona, y filtrarlo lo convertiría en un dato de quien mira.

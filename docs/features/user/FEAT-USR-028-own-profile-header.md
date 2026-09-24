@@ -5,7 +5,7 @@ context: User
 concept: Profile
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-22 (capturas de «Mi perfil»)
@@ -72,7 +72,7 @@ ya se propone para los contadores de las tarjetas de autor (`FEAT-COM-016`). Ver
 - `RN-7` La descripción está limitada a **300 caracteres** y es **el mismo campo** que la
   «Biografía» de Configuración ([`FEAT-USR-008`](FEAT-USR-008-edit-profile.md)). Los dos
   puntos de edición escriben en el mismo sitio, con el mismo límite y el mismo saneado.
-- `RN-7` Solo el titular edita su propio perfil. No existe edición de perfiles ajenos.
+- `RN-7b` Solo el titular edita su propio perfil. No existe edición de perfiles ajenos.
 - `RN-8` Los contadores son informativos y **nunca se usan para autorizar** nada.
 - `RN-9` Editar el perfil requiere la cuenta activada (`FEAT-USR-025`): es escritura.
 - `RN-10` Ver el perfil propio funciona con la cuenta sin activar.
@@ -83,11 +83,11 @@ ya se propone para los contadores de las tarjetas de autor (`FEAT-COM-016`). Ver
 |---|---|---|
 | Ver mi perfil | `GET /me/profile` | `getMyProfile` |
 | Editar descripción y datos | `PATCH /me/profile` | `updateMyProfile` |
+| Cambiar avatar | `PUT /me/profile/avatar` | `updateAvatar` |
+| Cambiar portada | `PUT /me/profile/cover` | `updateCover` |
 
 Es el mismo endpoint que usa Configuración. `PATCH` y no `PUT` precisamente porque la edición
 en línea toca un solo campo.
-| Cambiar avatar | `PUT /me/profile/avatar` | `updateAvatar` |
-| Cambiar portada | `PUT /me/profile/cover` | `updateCover` |
 
 `GET /me/profile` devuelve la cabecera con sus contadores. Las pestañas se piden aparte y
 paginadas: cargarlas todas de golpe haría inútil la paginación.
@@ -110,15 +110,15 @@ Las imágenes se guardan con el puerto `FileStorage`, nunca en la base de datos.
 
 ## Criterios de aceptación
 
-- [ ] El perfil propio devuelve nombre, descripción, avatar, portada y los cuatro contadores.
-- [ ] Los contadores proceden de contratos de consulta, no de consultas a tablas ajenas.
-- [ ] Si un contador falla, el perfil se devuelve igualmente con ese campo marcado.
-- [ ] La descripción se almacena saneada frente a inyección de HTML.
-- [ ] Las imágenes subidas pierden sus metadatos EXIF.
-- [ ] No se puede editar el perfil de otro usuario.
-- [ ] Editar con la cuenta sin activar devuelve `403 ACCOUNT_NOT_ACTIVATED`.
-- [ ] Consultar el perfil propio funciona con la cuenta sin activar.
-- [ ] Cambiar la descripción publica `UserProfileUpdated`.
+- [x] El perfil propio devuelve nombre, descripción, avatar, portada y los cuatro contadores.
+- [x] Los contadores proceden de contratos de consulta, no de consultas a tablas ajenas.
+- [x] Si un contador falla, el perfil se devuelve igualmente con ese campo marcado.
+- [x] La descripción se almacena saneada frente a inyección de HTML. *De [`FEAT-USR-008`](FEAT-USR-008-edit-profile.md), donde se implementó.*
+- [ ] Las imágenes subidas pierden sus metadatos EXIF. *No hay subida de imágenes todavía: el avatar es [`FEAT-USR-037`](FEAT-USR-037-upload-profile-photo.md) y la portada no tiene ficha propia.*
+- [x] No se puede editar el perfil de otro usuario. *Por construcción: los endpoints son `/me/profile` y no admiten decir de quién.*
+- [x] Editar con la cuenta sin activar devuelve `403 ACCOUNT_NOT_ACTIVATED`.
+- [x] Consultar el perfil propio funciona con la cuenta sin activar.
+- [x] Cambiar la descripción publica `UserProfileUpdated`.
 
 ## Preguntas abiertas
 
@@ -126,9 +126,9 @@ Las imágenes se guardan con el puerto `FileStorage`, nunca en la base de datos.
 |---|---|---|
 | P-1 | ¿Existe `@identificador`? | **Resuelta:** es el `Username` (`FEAT-USR-033`) |
 | P-5 | ¿Es esta la «página de autor» de `FEAT-USR-015`? | Si no, hay dos perfiles que mantener |
-| P-12 | ¿Los contadores se componen en cada petición o viven en un read model? | Rendimiento del perfil |
+| P-12 | ¿Los contadores se componen en cada petición o viven en un read model? | **Resuelta por ahora:** en cada petición, tres consultas de conteo sobre índices. Ver abajo |
 | P-13 | ¿Hay límites de tamaño y proporción para la **portada**? | Los del avatar están definidos (`FEAT-USR-037`); los de la portada no (`F-5`) |
-| P-14 | ¿Longitud máxima de la descripción? | Validación |
+| P-14 | ¿Longitud máxima de la descripción? | **Resuelta:** 300 caracteres (`FEAT-USR-008` `RN-3`) |
 | P-11 | ¿Qué devuelve la vista pública de este perfil? | Sin capturas |
 
 ## Estado
@@ -137,4 +137,58 @@ Las imágenes se guardan con el puerto `FileStorage`, nunca en la base de datos.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-24). **Los cuatro contadores**, sobre el `GET` y el
+`PATCH /me/profile` que ya existían. Sin tabla nueva y sin migración.
+
+Falta **todo lo que es subir una imagen**: portada y avatar. No es un olvido de esta tanda —
+no existe aún ninguna subida de ficheros en el backend, el avatar tiene ficha propia
+([`FEAT-USR-037`](FEAT-USR-037-upload-profile-photo.md)) y la portada no tiene ninguna, ni
+límites de tamaño o proporción decididos (`P-13`, `F-5`). El resto de la cabecera —nombre,
+`@usuario`, descripción— ya estaba, repartido entre `FEAT-USR-008` y `FEAT-USR-034`.
+
+### Tres contratos nuevos, uno por contexto
+
+`RN-1` pedía contratos de consulta explícitos, y son tres porque son tres dueños:
+`SubscriptionCounts` en `Community`, `AuthoredWorkCount` en `Work` y
+`DeliveredCorrectionCount` en `Feedback`. Los tres devuelven **una cifra, nunca la lista**, y
+eso no es economía sino una regla: `FEAT-USR-014` `U-17` decide a propósito que el contador
+de correcciones sea público y la lista no, y un contrato que devolviera correcciones haría esa
+decisión imposible de sostener. Lo mismo con las obras — servirlas aquí sería enseñar
+borradores ajenos por una puerta lateral.
+
+Seguidos y seguidores viajan **juntos en una sola respuesta**: se enseñan juntos, y separarlos
+serían dos viajes para dos números pegados.
+
+### Un contador caído no tumba la pantalla
+
+`RN-3`, y es la regla que más código tiene detrás. Cada contrato se pregunta por separado y
+un fallo se convierte en `null` —«no se ha podido saber»—, que **no es lo mismo que cero**.
+El perfil se devuelve igual con las cifras que sí se supieron, y el error se registra en el
+log, que es donde sirve de algo.
+
+Sin esto, la cabecera del perfil propio dependería de que los cuatro contextos estuvieran
+sanos a la vez: cuatro veces más probabilidades de no poder abrir tu propia pantalla.
+
+La prueba que lo defiende sustituye el contrato por uno que revienta. Romper su tabla habría
+sido más realista y habría probado menos: dentro de la transacción del test envenenaría
+también las consultas de los otros tres contadores, que es justo lo que hay que ver
+sobrevivir.
+
+### `P-12`, resuelta por ahora: se componen en cada petición
+
+Tres consultas de conteo sobre índices, en la lectura que abre la pantalla. La alternativa —un
+read model alimentado por `AuthorSubscribed`, `WorkPublished` y `FeedbackSubmitted`— llegará
+cuando las cifras digan que hace falta, y no antes: trae su propia deuda, que es un contador
+capaz de quedarse atrás sin que nadie lo note.
+
+### Los contadores no se filtran por privacidad, y hay que saberlo
+
+`followers` cuenta a todo el mundo, también a quien tiene el perfil cerrado, así que puede ser
+**mayor que las filas** que devuelve `listSubscribers` ([`FEAT-COM-027`](../community/FEAT-COM-027-following-and-followers.md)
+`RN-3`). Es deliberado: filtrar la cifra obligaría a resolver la visibilidad de cada seguidor
+para pintar un número y la haría **distinta para cada visitante**, con lo que el contador
+dejaría de ser un dato de esa persona para ser uno de quien mira.
+
+`works` cuenta las obras de cualquier estado porque es el perfil propio. Si algún día sale en
+el perfil ajeno hará falta otra pregunta: contar allí los borradores diría cuánto tiene
+alguien sin publicar.

@@ -15,9 +15,20 @@ use LectoresBeta\User\Profile\Application\DTO\EditableProfile;
 final readonly class EditableProfileBody
 {
     /**
+     * `counters` va aparte del resto de campos a propósito: los demás son
+     * datos de esta persona y estos cuatro son **actividad**, calculada en
+     * otros tres contextos. Mezclarlos al mismo nivel haría pensar que se
+     * guardan aquí.
+     *
+     * Un contador en `null` significa **«no se ha podido saber»**, que no es
+     * lo mismo que cero (`FEAT-USR-028` `RN-3`). Un cliente que los trate
+     * igual enseñará un 0 donde debería enseñar un hueco.
+     *
+     * @param array{following: ?int, followers: ?int, works: ?int, corrections: ?int} $counters
+     *
      * @return array<string, mixed>
      */
-    public static function of(EditableProfile $profile): array
+    public static function of(EditableProfile $profile, array $counters): array
     {
         return [
             'userId' => $profile->userId,
@@ -27,6 +38,7 @@ final readonly class EditableProfileBody
             'avatarUrl' => $profile->avatarUrl,
             'coverUrl' => $profile->coverUrl,
             'usernameChangeableOn' => $profile->usernameChangeableOn->format(\DATE_ATOM),
+            'counters' => $counters,
         ];
     }
 }

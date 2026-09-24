@@ -78,6 +78,22 @@ periodo.
 | `AuthorUnsubscribed` | Un usuario deja de seguir a un autor | **`User`**. Nadie lo notifica: dejar de seguir es asunto de quien lo hace |
 | `DirectMessageSent` | Se envía un mensaje directo | `Notification` |
 
+## Contratos publicados
+
+| Contrato | Responde | Quién pregunta |
+|---|---|---|
+| `SubscriptionCounts` | **Dos cifras**: a cuántos sigue esa persona y cuántos la siguen. Nunca las listas | `User` |
+
+El primero de este contexto, y existe para los contadores de la cabecera del perfil
+(`FEAT-USR-028`). Las listas tienen su propio endpoint y sus propias reglas de visibilidad
+(`FEAT-COM-027`); entregarlas aquí haría de la privacidad de cada seguidor un problema de
+quien pregunta.
+
+**Las cifras no se filtran por privacidad**, y es deliberado: hacerlo las volvería distintas
+para cada visitante, con lo que un contador dejaría de ser un dato de esa persona para ser uno
+de quien mira. La consecuencia es que el contador puede ser mayor que las filas que devuelve
+la lista.
+
 ## Eventos consumidos
 
 | Evento | Origen | Efecto |

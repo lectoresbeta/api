@@ -7,6 +7,7 @@ namespace LectoresBeta\User\Profile\Infrastructure\Controller;
 use LectoresBeta\Shared\Infrastructure\Http\JsonBody;
 use LectoresBeta\User\Profile\Application\Command\UpdateMyProfile;
 use LectoresBeta\User\Profile\Application\Handler\UpdateMyProfileHandler;
+use LectoresBeta\User\Profile\Infrastructure\Composition\ProfileCounters;
 use LectoresBeta\User\Profile\Infrastructure\Http\EditableProfileBody;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -32,6 +33,7 @@ final readonly class UpdateMyProfileController
 {
     public function __construct(
         private UpdateMyProfileHandler $update,
+        private ProfileCounters $counters,
         private Security $security,
     ) {
     }
@@ -46,12 +48,18 @@ final readonly class UpdateMyProfileController
 
         $body = JsonBody::of($request);
 
-        return new JsonResponse(EditableProfileBody::of(($this->update)(new UpdateMyProfile(
-            $user->getUserIdentifier(),
-            $body->has('name'),
-            $body->string('name'),
-            $body->has('description'),
-            $body->string('description'),
-        ))));
+        // La misma forma que al leer, contadores incluidos: quien acaba de
+        // guardar recibe el recurso entero y no una versión recortada que le
+        // obligue a recargar para volver a tener lo que ya tenía.
+        return new JsonResponse(EditableProfileBody::of(
+            ($this->update)(new UpdateMyProfile(
+                $user->getUserIdentifier(),
+                $body->has('name'),
+                $body->string('name'),
+                $body->has('description'),
+                $body->string('description'),
+            )),
+            $this->counters->of($user->getUserIdentifier()),
+        ));
     }
 }

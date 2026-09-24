@@ -141,6 +141,17 @@ services:
     LectoresBeta\User\Privacy\Application\Contract\AuthorAudience:
         alias: LectoresBeta\User\Privacy\Application\Service\CheckAuthorAudience
 
+    # Los tres contadores de la cabecera del perfil (FEAT-USR-028). Ninguno es
+    # de `User`, y por eso los tres entran por aquí.
+    LectoresBeta\Community\Subscription\Application\Contract\SubscriptionCounts:
+        alias: LectoresBeta\Community\Subscription\Application\Service\CountSubscriptions
+
+    LectoresBeta\Work\Manuscript\Application\Contract\AuthoredWorkCount:
+        alias: LectoresBeta\Work\Manuscript\Application\Service\CountAuthoredWorks
+
+    LectoresBeta\Feedback\Correction\Application\Contract\DeliveredCorrectionCount:
+        alias: LectoresBeta\Feedback\Correction\Application\Service\CountDeliveredCorrections
+
     LectoresBeta\Work\Chapter\Application\Contract\CorrectionBriefs:
         alias: LectoresBeta\Work\Chapter\Application\Service\ResolveCorrectionBriefs
 

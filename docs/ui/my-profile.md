@@ -226,7 +226,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 
 | ID | Acción | Estado |
 |---|---|---|
-| FEAT-USR-028 | **Nueva** — cabecera y datos del perfil propio | `DRAFT` |
+| FEAT-USR-028 | **Nueva** — cabecera y datos del perfil propio | `APPROVED`, con los contadores implementados |
 | FEAT-USR-029 | **Nueva** — obras publicadas (bibliografía externa) | `DRAFT` |
 | FEAT-USR-030 | **Nueva** — premios y reconocimientos | `PENDING` |
 | FEAT-USR-031 | ~~Nivel del usuario~~ — error del diseño | `DEPRECATED` |

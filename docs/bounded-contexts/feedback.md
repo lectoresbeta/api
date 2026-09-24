@@ -128,6 +128,19 @@ retrasada solo puede producir un descubierto, que es un caso aceptado.
 
 La proyección lleva **un booleano**: este contexto no conoce saldos ni precios.
 
+## Contratos publicados
+
+| Contrato | Responde | Quién pregunta |
+|---|---|---|
+| `DeliveredCorrectionCount` | **Una cifra**: cuántas correcciones ha entregado esa persona. Nunca la lista | `User` |
+
+Que devuelva una cifra y no las correcciones no es economía: `FEAT-USR-014` `U-17` decide a
+propósito que el **contador** de correcciones sea público y la **lista** no, y un contrato que
+entregara correcciones haría esa decisión imposible de sostener.
+
+Cuenta solo las **entregadas**. Un borrador a medias no es trabajo hecho, y contarlo haría un
+número que sube y baja solo.
+
 ## Contratos que consulta
 
 Lo que no llega por evento se pregunta por contrato publicado

@@ -104,6 +104,7 @@ dinero — `affordableCorrections` es una conclusión acotada a diez, no un sald
 |---|---|---|
 | `CorrectionBriefs` | Qué pregunta el autor en **un capítulo concreto**, de quién es la obra, si admite correcciones y bajo qué modalidad | `Feedback` |
 | `WorkAccessBriefs` | De quién es una obra, cómo está abierta, qué declara contener y si existe para alguien que no sea su autor | `Reading` |
+| `AuthoredWorkCount` | **Una cifra**: cuántas obras tiene ese autor. Nunca la lista | `User` |
 
 Es síncrono a conciencia: los enunciados del cuestionario son **texto del autor**, y por eso
 `QuestionnaireUpdated` no los transporta. Quien abre el panel de corrección los necesita en

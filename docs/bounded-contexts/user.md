@@ -170,6 +170,18 @@ El precio es que las audiencias `FOLLOWERS` son **consistentes en diferido**: en
 alguien y entrar en su audiencia pasa lo que tarde la cola. Al revés no, y por eso el hecho de
 dejar de seguir viaja por el mismo camino y no se olvida nunca.
 
+## Contratos que consulta
+
+| Contrato | De quién | Para qué |
+|---|---|---|
+| `SubscriptionCounts` | `Community` | Los contadores de seguidos y seguidores de la cabecera del perfil |
+| `AuthoredWorkCount` | `Work` | El contador de relatos |
+| `DeliveredCorrectionCount` | `Feedback` | El contador de correcciones |
+
+Los tres son para lo mismo: las cuatro cifras de `FEAT-USR-028`, que **no son de `User`**. Se
+ensamblan en `Infrastructure` al responder, y ninguno de los tres puede tumbar la pantalla —
+una cifra que no se pueda leer viaja como `null`, que no es lo mismo que cero.
+
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |

@@ -45,8 +45,7 @@
 | `GET /api/v1/profiles/{username}` | `getProfileByUsername` | Perfil por nombre de usuario o alias | FEAT-USR-035 | **Implementado** |
 | `PUT /api/v1/me/username` | `changeUsername` | Cambiar el nombre de usuario | FEAT-USR-034 | **Implementado** |
 | `GET /usernames/{username}/availability` | `checkUsernameAvailability` | Comprobar si un nombre está libre | FEAT-USR-033 | DRAFT |
-| — | — | La cabecera del perfil propio la sirve `getMyProfile`, arriba. Le faltan los contadores | FEAT-USR-028 | PARTIAL |
-| `PATCH /me/profile` | `updateMyProfile` | Editar descripción y datos | FEAT-USR-028 | DRAFT |
+| — | — | La cabecera del perfil propio la sirven `getMyProfile` y `updateMyProfile`, arriba, **con sus cuatro contadores**. Le faltan portada y avatar | FEAT-USR-028 | PARTIAL |
 | `PUT /me/profile/avatar` | `updateAvatar` | Subir o reencuadrar la foto de perfil | FEAT-USR-037 | DRAFT |
 | `DELETE /me/profile/avatar` | `deleteAvatar` | Eliminar la foto de perfil | FEAT-USR-037 | DRAFT |
 | `PUT /me/profile/cover` | `updateCover` | Cambiar portada | FEAT-USR-028 | DRAFT |
@@ -505,6 +504,9 @@ que la regla de activación existe para impedir.
   el nombre de usuario (`FEAT-USR-034`). Va en la lectura que abre la pantalla para que el
   campo pueda salir ya desactivado; enterarse con un `429` después de escribir un nombre es
   enterarse tarde.
+- Y **`counters`**, las cuatro cifras de la cabecera de «Mi perfil» (`FEAT-USR-028`). Las dos
+  pantallas piden el mismo recurso, y el `PATCH` devuelve exactamente la misma forma que el
+  `GET`: quien acaba de guardar no tiene por qué recargar para recuperar lo que ya tenía.
 
 ### Errores específicos
 
@@ -512,6 +514,24 @@ que la regla de activación existe para impedir.
 |---|---|---|
 | `INVALID_VALUE` | 422 | Nombre vacío o de más de 80 caracteres; biografía de más de 300 ya limpia |
 | `ACCOUNT_NOT_ACTIVATED` | 403 | Escribir sin haber activado la cuenta |
+
+### Los contadores
+
+`following`, `followers`, `works` y `corrections`. **Ninguno es de `User`**: los cuenta
+`Community`, `Work` y `Feedback`, cada uno por su contrato publicado, y se ensamblan al
+responder. Aquí no se consulta ninguna tabla ajena.
+
+**`null` significa «no se ha podido saber», y no es lo mismo que cero.** Si un contexto no
+responde, su cifra viaja nula y el perfil se devuelve igual: un contador caído no tumba la
+pantalla. Un cliente que trate `null` como `0` enseñará un cero donde debería dejar un hueco.
+
+Dos advertencias sobre lo que cuentan:
+
+- `followers` y `following` cuentan **a todo el mundo**, también a quien tiene el perfil
+  cerrado, así que pueden ser mayores que las filas de `listSubscribers` y
+  `listAuthorSubscriptions`. Filtrar la cifra la haría distinta para cada visitante;
+- `works` cuenta las obras **de cualquier estado**, porque es el perfil propio y los
+  borradores son suyos.
 
 ### Efectos
 

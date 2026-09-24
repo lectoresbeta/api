@@ -36,5 +36,14 @@ interface WorkRepository
      */
     public function ofAuthor(AuthorId $authorId, ?WorkStatus $status = null): array;
 
+    /**
+     * Cuántas obras tiene ese autor, **de cualquier estado**.
+     *
+     * Contar y no traerlas: es un número de la cabecera de un perfil, y
+     * cargar las obras para contarlas sería pagar la lista entera por una
+     * cifra (`FEAT-USR-028`).
+     */
+    public function countByAuthor(AuthorId $authorId): int;
+
     public function remove(Work $work): void;
 }
