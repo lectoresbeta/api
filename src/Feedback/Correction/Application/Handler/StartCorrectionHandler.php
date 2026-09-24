@@ -7,6 +7,7 @@ namespace LectoresBeta\Feedback\Correction\Application\Handler;
 use LectoresBeta\Feedback\Correction\Application\Command\StartCorrection;
 use LectoresBeta\Feedback\Correction\Application\Service\EligibleCorrectionBrief;
 use LectoresBeta\Feedback\Correction\Domain\Entity\Correction;
+use LectoresBeta\Feedback\Correction\Domain\Event\CorrectionResumed;
 use LectoresBeta\Feedback\Correction\Domain\Event\CorrectionStarted;
 use LectoresBeta\Feedback\Correction\Domain\Exception\ChapterNotCorrectable;
 use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectableChapterRepository;
@@ -36,7 +37,9 @@ use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
  *
  * Starting twice returns the same correction. It is the reader coming back to
  * a panel they left open, and a second one would be a second slot and a
- * second price for one piece of work.
+ * second price for one piece of work. It still announces itself, as
+ * `CorrectionResumed` and not as a second start: `Reading` needs to know that
+ * somebody is correcting again, and `Credits` must not quote it twice.
  */
 final readonly class StartCorrectionHandler
 {
@@ -62,6 +65,20 @@ final readonly class StartCorrectionHandler
             if (!$started->isDraft()) {
                 throw ChapterNotCorrectable::becauseItWasAlreadyCorrected();
             }
+
+            // Reanudar no es empezar: no toma hueco ni fija precio. Pero sí
+            // es un hecho, y `Reading` lo necesita — en una obra `PUBLIC`,
+            // quien perdió el acceso y conservaba el borrador vuelve a
+            // entrar por aquí (`FEAT-RDG-010` `RN-7`, `R-22`).
+            $this->events->publish(new CorrectionResumed(
+                EventId::generate(),
+                $started->id(),
+                $chapterId,
+                WorkId::fromString($brief->workId),
+                AuthorId::fromString($brief->authorId),
+                $readerId,
+                $this->clock->now(),
+            ));
 
             return $started->id()->value();
         }

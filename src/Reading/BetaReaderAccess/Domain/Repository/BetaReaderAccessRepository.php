@@ -42,4 +42,14 @@ interface BetaReaderAccessRepository
      * @return list<BetaReaderAccess>
      */
     public function livePageOnWork(WorkId $workId, ?Cursor $after, int $limit): array;
+
+    /**
+     * El acceso que abrió ese hecho, **vivo o ya retirado**.
+     *
+     * Es lo que hace idempotente conceder acceso al corregir, y no basta con
+     * buscar uno vivo: entre la primera entrega y una reentrega puede haberse
+     * revocado, y entonces no hay nada vivo que encontrar. Preguntar por el
+     * hecho responde lo mismo las dos veces.
+     */
+    public function grantedByEvent(string $eventId): ?BetaReaderAccess;
 }

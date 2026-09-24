@@ -12,7 +12,7 @@ sources:
   - conversation:2026-09-24 (R-4 y las tres preguntas que quedaban)
   - docs/features/feedback/FEAT-FBK-003-answer-correction-questionnaire.md
 endpoints: []
-events: [CorrectionStarted, CorrectionDraftDiscarded, BetaReaderAccessGranted, BetaReaderAccessRevoked]
+events: [CorrectionStarted, CorrectionResumed, CorrectionDraftDiscarded, BetaReaderAccessGranted, BetaReaderAccessRevoked]
 depends_on: [FEAT-FBK-003]
 updated: 2026-09-24
 ---
@@ -54,9 +54,15 @@ conoce la modalidad de la obra, su estado y la edad de quien llama.
 ## Reglas de negocio
 
 - `RN-1` Un `CorrectionStarted` sobre una obra de la que el lector **no tiene acceso vivo**
-  le concede uno, con origen `PUBLIC_JOIN`.
+  le concede uno, con origen `PUBLIC_JOIN`. Un `CorrectionResumed` hace lo mismo: los dos
+  significan «esta persona está corrigiendo esto ahora», que es lo único que este contexto
+  necesita saber.
 - `RN-2` Si ya lo tiene, no ocurre nada. Un acceso vivo por par (lector, obra) sigue siendo la
   invariante, y corregir cinco capítulos de la misma obra no produce cinco accesos.
+- `RN-2b` **Un hecho abre un acceso como mucho, para siempre** (`R-22`). El acceso guarda cuál
+  fue, así que una reentrega lo encuentra aunque el acceso ya esté retirado. Sin esto `RN-2`
+  no basta: revocado el acceso no hay nada vivo que encontrar, y la reentrega lo concedería
+  otra vez — una persona expulsada volvería a entrar porque la cola repitió un mensaje.
 - `RN-3` Conceder este acceso **no cuesta ni compromete créditos**
   ([`decision:0006`](../../decisions/0006-credit-system.md)).
 - `RN-4` **El acceso se concede al empezar, no al entregar.** Quien está corrigiendo conserva
@@ -125,6 +131,9 @@ Feedback                         Reading
    │ estado, edad y autoría
    ▼
 CorrectionStarted ──────────────▶ ¿acceso vivo?
+  (o CorrectionResumed)               │ no
+                                      ▼
+                                  ¿este hecho ya abrió uno?
                                       │ no
                                       ▼
                                   BetaReaderAccess(PUBLIC_JOIN)
@@ -155,6 +164,7 @@ acceso añade se nota más tarde, cuando el autor restringe la obra.
 | Evento | Origen | Efecto |
 |---|---|---|
 | `CorrectionStarted` | `Feedback` | Concede el acceso si no había uno vivo |
+| `CorrectionResumed` | `Feedback` | Lo mismo. Es lo que devuelve el acceso a quien perdió el suyo en una obra `PUBLIC` conservando el borrador (`R-22`) |
 | `CorrectionDraftDiscarded` | `Feedback` | Revoca el acceso nacido de esta vía si el lector nunca entregó nada de esa obra |
 | `FeedbackSubmitted` | `Feedback` | Marca el acceso como **ganado**: a partir de aquí no se revoca por descartar |
 

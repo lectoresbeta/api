@@ -75,6 +75,7 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 | Evento | Cuándo | Consumidores |
 |---|---|---|
 | `CorrectionStarted` | Un lector pulsa «Empezar corrección» | **`Credits`** (**anota** el precio del capítulo; no retiene nada) |
+| `CorrectionResumed` | Un lector vuelve a abrir un panel que ya tenía empezado | `Reading` (le devuelve el acceso si lo había perdido). **`Credits` no**: el hueco y el precio se tomaron al empezar |
 | `FeedbackSubmitted` | Se **entrega** una corrección | **`Credits`**, `Notification`, `Community` (rankings) |
 | `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación; no hay nada que liberar) |
 | `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` (reputación) |

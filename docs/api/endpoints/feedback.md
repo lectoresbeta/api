@@ -141,6 +141,11 @@ contaría a un desconocido cómo va el saldo del autor.
 
 Publica `CorrectionStarted`. `Credits` anota el precio; nada más ocurre, y nadie espera.
 
+**Volver a llamarla devuelve la misma corrección** —es el lector regresando a un panel que
+dejó abierto, y una segunda sería un segundo hueco y un segundo precio por un solo trabajo—,
+pero publica `CorrectionResumed`: `Reading` necesita saberlo, porque en una obra `PUBLIC` es
+por donde vuelve quien perdió el acceso conservando su borrador (`R-22`).
+
 ---
 
 ## `GET /api/v1/chapters/{chapterId}/questionnaire`

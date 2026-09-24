@@ -106,6 +106,7 @@ services:
                 - LectoresBeta\Credits\Account\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Feedback\Correction\Application\Event\ChapterCorrectabilityChanged
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionStarted
+                - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionResumed
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionDraftDiscarded
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Work\Catalogue\Application\Event\ChapterCorrectabilityChanged
@@ -257,9 +258,12 @@ services:
         tags:
             - { name: messenger.message_handler }
 
-    LectoresBeta\Reading\BetaReaderAccess\Application\Handler\GrantAccessOnCorrectionStarted:
+    # Empezar y reanudar conceden igual aquí, y son dos hechos porque en
+    # `Credits` no lo son: reanudar no toma hueco ni fija precio.
+    LectoresBeta\Reading\BetaReaderAccess\Application\Handler\GrantAccessWhileCorrecting:
         tags:
-            - { name: messenger.message_handler }
+            - { name: messenger.message_handler, method: started }
+            - { name: messenger.message_handler, method: resumed }
 
     LectoresBeta\Reading\BetaReaderAccess\Application\Handler\RevokeAccessOnDraftDiscarded:
         tags:

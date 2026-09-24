@@ -72,8 +72,8 @@ una obra ahí.
 - `RN-6` También se puede revocar un acceso **ganado** —el de quien ya entregó una corrección
   de esa obra—. Ver abajo.
 - `RN-7` Revocar **no impide volver a entrar**. En una obra `PUBLIC`, empezar a corregir
-  vuelve a conceder el acceso (`FEAT-RDG-001`). Ver abajo, porque es la parte que se
-  malinterpreta.
+  —o **reanudar** lo que se tenía a medias— vuelve a conceder el acceso (`FEAT-RDG-001`). Ver
+  abajo, porque es la parte que se malinterpreta.
 - `RN-8` **Se avisa a la persona** desde
   [`FEAT-NOT-001`](../notification/FEAT-NOT-001-in-app-notifications.md), que resolvió `R-13`.
   El aviso sale de `RN-10` y no dice por qué: el hecho no distingue los tres caminos, y
@@ -83,6 +83,8 @@ una obra ahí.
   caminos de revocación.
 - `RN-11` Revocar **no cierra** las solicitudes ni las invitaciones pendientes de esa persona:
   son puertas distintas, y el autor las resuelve donde están.
+- `RN-12` Lo que una revocación corta **no lo deshace una reentrega** (`R-22`). Un hecho abre
+  un acceso como mucho, así que repetir el mensaje que lo abrió no lo vuelve a abrir.
 
 ## `RN-6`: revocar un acceso ganado
 
@@ -106,7 +108,12 @@ Esto es lo que hay que entender antes de usarlo:
 |---|---|
 | `PRIVATE` | Retira el acceso, y sin él no hay forma de volver a entrar |
 | `ON_REQUEST` | Lo retira. Esa persona puede **volver a solicitarlo**, y el autor decidir otra vez |
-| `PUBLIC` | Lo retira, y **volverá a concederse en cuanto empiece a corregir de nuevo** |
+| `PUBLIC` | Lo retira, y **volverá a concederse en cuanto vuelva a corregir** — empezando otra o reanudando la que tenía |
+
+Que reanudar también valga es deliberado y costó descubrirlo (`R-22`): quien conservaba un
+borrador no tenía por dónde volver, porque reanudar no publicaba nada. La única alternativa
+era descartar su texto para poder empezar de cero, y este producto se sostiene sobre que el
+trabajo de un lector no se evapore.
 
 En una obra pública, revocar sirve para cortar lo que está pasando ahora —una corrección en
 curso que el autor no quiere— y no para dejar a nadie fuera. Para eso hay dos herramientas
@@ -185,7 +192,7 @@ exactamente lo que hacen los otros dos caminos.
 | ~~R-13~~ | ¿Se avisa a quien pierde el acceso, y con qué texto? | **Resuelta en [`FEAT-NOT-001`](../notification/FEAT-NOT-001-in-app-notifications.md): sí, y sin motivo.** La confrontación que se temía venía de explicar por qué; el aviso solo dice que esa obra ya no se puede leer, que es lo que hace falta para no seguir escribiendo en balde. El texto lo compone el cliente a partir del tipo y del payload |
 | R-14 | ¿Debería poder revocarse en bloque —«retirar a todos»— al cerrar una obra? | Con muchos lectores, de uno en uno es tedioso. Es una operación por lotes, no un modelo distinto |
 | R-15 | ¿Conviene que la lista diga si esa persona ha entregado alguna corrección? | Es de `Feedback`, y hoy `Reading` solo sabe si el acceso está «ganado», que es casi lo mismo |
-| R-22 | Una reentrega tardía de `CorrectionStarted` **deshace una revocación**. ¿Se ata al hecho que lo concedió, o se acepta? | Encontrado al conectar `Notification` (2026-09-24). `GrantAccessOnCorrectionStarted` es idempotente mientras el acceso siga vivo, que es lo que comprueba; si entre la primera entrega y una reentrega el autor revocó el acceso —o bloqueó a esa persona—, no encuentra nada vivo y **lo concede otra vez**. Una persona expulsada recupera el acceso porque la cola repitió un mensaje, en silencio. En una obra `PUBLIC` importa poco (`RN-7` ya la deja volver a entrar); en una cerrada es una revocación deshecha. El arreglo natural es guardar en el acceso **qué hecho lo abrió** y preguntarle a eso en vez de al estado, pero es una columna, una migración y tocar `Reading`, así que no entra en la ficha que lo encontró |
+| ~~R-22~~ | Una reentrega tardía de `CorrectionStarted` **deshace una revocación**. ¿Se ata al hecho que lo concedió, o se acepta? | **Resuelta: se ata.** Cada acceso guarda qué hecho lo abrió, y un hecho abre uno como mucho, así que una reentrega lo encuentra aunque el acceso ya esté retirado. Al arreglarlo apareció la otra mitad: en una obra `PUBLIC`, quien perdía el acceso conservando su borrador no tenía por dónde volver —reanudar no publicaba nada, y su acceso solo regresaba si la cola repetía un mensaje, es decir por accidente—. Reanudar es ahora un hecho, `CorrectionResumed`, y `RN-7` se cumple por la puerta y no por una reentrega |
 
 ## Estado
 

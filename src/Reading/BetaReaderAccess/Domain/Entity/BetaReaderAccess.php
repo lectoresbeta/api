@@ -49,6 +49,20 @@ class BetaReaderAccess
 
     private ?\DateTimeImmutable $revokedAt = null;
 
+    /**
+     * El hecho que lo abrió, cuando lo abrió un hecho y no una persona.
+     *
+     * Es lo que hace idempotente la concesión automática al corregir
+     * (`R-22`): una reentrega de ese hecho encuentra esta fila **aunque el
+     * acceso ya esté retirado**. Sin él, una revocación se desharía sola
+     * porque la cola repitió un mensaje.
+     *
+     * Nulo en los caminos que decide una persona —aprobar una solicitud,
+     * aceptar una invitación—: ahí la idempotencia la da el estado de la
+     * solicitud, que solo se resuelve una vez.
+     */
+    private ?string $grantedByEventId = null;
+
     public function __construct(
         BetaReaderAccessId $id,
         WorkId $workId,
@@ -56,6 +70,7 @@ class BetaReaderAccess
         AuthorId $authorId,
         AccessSource $source,
         \DateTimeImmutable $now,
+        ?string $grantedByEventId = null,
     ) {
         if ($readerId->value() === $authorId->value()) {
             throw AuthorCannotBeBetaReader::ofWork($workId->value());
@@ -67,6 +82,7 @@ class BetaReaderAccess
         $this->authorId = $authorId->value();
         $this->source = $source;
         $this->grantedAt = $now;
+        $this->grantedByEventId = $grantedByEventId;
     }
 
     public function id(): BetaReaderAccessId

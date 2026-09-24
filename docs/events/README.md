@@ -143,6 +143,7 @@ tiene acceso.
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
 | `CorrectionStarted` | Un LB pulsa «Empezar corrección» | **`Credits`** (anota el precio), `Notification` | `chapterId`, `workId`, `authorId`, `readerId`, `startedAt` |
+| `CorrectionResumed` | Un LB vuelve a abrir el panel de una corrección **que ya tenía empezada** | **`Reading`** ✅ (concede el acceso si no lo tiene). **`Credits` NO lo consume**: no toma hueco ni fija precio, porque las dos cosas ocurrieron al empezar | `correctionId`, `chapterId`, `workId`, `authorId`, `readerId`, `resumedAt` |
 | `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification` ✅, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `questionnaireVersion`, `submittedAt` |
 | `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación), **`Reading`** (revoca el acceso) | `chapterId`, `workId`, `readerId`, `discardedAt` |
 | `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` | `correctionId`, `authorId`, `readerId`, `amount` |

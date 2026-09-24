@@ -106,6 +106,7 @@ capítulo y lo consume `Feedback`
 | Evento | Origen | Efecto |
 |---|---|---|
 | **`CorrectionStarted`** | `Feedback` | **Concede el acceso** si no había uno vivo (`FEAT-RDG-001`) |
+| **`CorrectionResumed`** | `Feedback` | Lo mismo. Es por donde vuelve quien perdió el acceso a una obra `PUBLIC` conservando su borrador (`R-22`) |
 | `CorrectionDraftDiscarded` | `Feedback` | Revoca el acceso nacido de esa corrección, si el lector no llegó a entregar nada |
 | `WorkDeleted` | `Work` | Cierra accesos y solicitudes pendientes |
 | `UserDeleted` | `User` | Cierra accesos y vínculos del usuario |

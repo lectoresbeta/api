@@ -49,6 +49,7 @@ abstract class EconomyScenario extends WebTestCase
         'ChapterContentUpdated',
         'QuestionnaireUpdated',
         'CorrectionStarted',
+        'CorrectionResumed',
         'CorrectionDraftDiscarded',
         'FeedbackSubmitted',
         'ChapterCorrectabilityChanged',
@@ -210,36 +211,30 @@ abstract class EconomyScenario extends WebTestCase
      * catálogo proyecta. En producción eso lo hace el broker sin que nadie
      * lo piense; aquí hay que recoger la cascada a mano.
      *
-     * La cola no se vacía: volver a llamar reentrega los mismos hechos, que
-     * es lo que RabbitMQ puede hacer.
+     * La cola no se vacía, y **cada ronda la entrega entera**: un hecho se
+     * reentrega muchas veces en una sola llamada, y muchas más al volver a
+     * llamar. Es lo más duro que se le puede pedir a un consumidor, y es a
+     * propósito — RabbitMQ no promete entrega única, así que la idempotencia
+     * de todos ellos es requisito y no cortesía.
      *
-     * Dentro de una misma llamada, en cambio, **cada ronda entrega solo lo
-     * que ha aparecido en la anterior**. La primera lleva la cola entera, así
-     * que la reentrega entre llamadas —la que de verdad ejercita la
-     * idempotencia— se mantiene intacta; lo que no se hace es repetir un
-     * hecho en medio de su propia cascada.
-     *
-     * No es un atajo para que algo pase: repetirlo ahí fabrica una secuencia
-     * que la cola no produce —un hecho antiguo reentregado *después* de otro
-     * posterior que lo deshace— y dos consumidores que se deshacen el trabajo
-     * el uno al otro oscilarían para siempre sin que nadie hubiera hecho nada
-     * mal. Reentregar a mano sigue estando a mano: `deliver($this->queued(…))`.
+     * Esto llegó a suavizarse, entregando por ronda solo lo nuevo, cuando
+     * conectar `Notification` hizo visible una oscilación entre conceder
+     * acceso al corregir y revocarlo. Era el síntoma de un fallo real —una
+     * reentrega deshacía una revocación— y se arregló donde estaba (`R-22`),
+     * así que la exigencia vuelve a estar entera. Suavizar esto habría
+     * escondido justo lo que encontró.
      */
     protected function consumeEverything(): void
     {
-        $pending = $this->queue;
-
         for ($round = 0; $round < self::MAX_CASCADE_ROUNDS; ++$round) {
-            $this->deliver($pending);
+            $this->deliver($this->queue);
 
-            $before = \count($this->queue);
+            $pending = \count($this->queue);
             $this->capture();
 
-            if (\count($this->queue) === $before) {
+            if (\count($this->queue) === $pending) {
                 return;
             }
-
-            $pending = \array_slice($this->queue, $before);
         }
 
         self::fail('Los hechos no dejan de producir hechos: hay un ciclo en la cascada.');

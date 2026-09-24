@@ -144,6 +144,37 @@ final class RevokeBetaReaderAccessTest extends EconomyScenario
     }
 
     /**
+     * **`R-22`: una revocación no se deshace sola.**.
+     *
+     * La cola no promete entrega única, así que un `CorrectionStarted` puede
+     * volver a entregarse más tarde. Antes, la comprobación era «¿tiene un
+     * acceso vivo?»: revocado el acceso no había nada vivo que encontrar, y
+     * la reentrega **lo concedía otra vez**. Una persona expulsada volvía a
+     * entrar porque la cola repitió un mensaje, en silencio y sin que nadie
+     * lo hubiera decidido.
+     *
+     * Ahora cada acceso guarda qué hecho lo abrió, y un hecho abre uno como
+     * mucho. La obra es cerrada a propósito: en una `PUBLIC` volver a entrar
+     * es lo correcto (`RN-7`), así que ahí el fallo no se vería.
+     */
+    public function testARedeliveredFactDoesNotUndoARevocation(): void
+    {
+        [$autora, $lectora, , $workId] = $this->aClosedWorkWithAReaderInside();
+
+        $this->revoke($workId, $lectora['userId'], $autora['token']);
+        $this->consumeEverything();
+
+        $this->betaReaders($workId, $autora['token']);
+        self::assertSame([], $this->ids());
+
+        // Lo que RabbitMQ puede hacer en cualquier momento.
+        $this->deliver($this->queued('CorrectionStarted'));
+
+        $this->betaReaders($workId, $autora['token']);
+        self::assertSame([], $this->ids(), 'Y sigue fuera.');
+    }
+
+    /**
      * `RN-2`: revocar a quien no tiene acceso no es un error. El estado que
      * se pedía ya se cumple, y quien lo repite suele ser un reintento.
      */

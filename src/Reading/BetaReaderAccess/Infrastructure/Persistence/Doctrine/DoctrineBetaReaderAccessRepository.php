@@ -52,6 +52,11 @@ final class DoctrineBetaReaderAccessRepository extends DoctrineRepository implem
         ]));
     }
 
+    public function grantedByEvent(string $eventId): ?BetaReaderAccess
+    {
+        return $this->repository()->findOneBy(['grantedByEventId' => $eventId]);
+    }
+
     public function livePageOnWork(WorkId $workId, ?Cursor $after, int $limit): array
     {
         $query = $this->repository()->createQueryBuilder('a')

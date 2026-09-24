@@ -121,6 +121,66 @@ final class BecomeBetaReaderTest extends EconomyScenario
     }
 
     /**
+     * **La mitad que faltaba de `RN-7`** (`R-22`). En una obra `PUBLIC`,
+     * revocar no deja a nadie fuera: quien siga corrigiendo vuelve a entrar.
+     *
+     * Quien conservaba un borrador no tenía por dónde. Reanudar no publicaba
+     * nada —devolver la misma corrección es justo lo que evita cobrarla dos
+     * veces— así que su acceso solo volvía si la cola repetía un mensaje
+     * antiguo, es decir por accidente. Ahora reanudar es un hecho, y vuelve
+     * por la puerta.
+     *
+     * Y vuelve **con su borrador intacto**, que es lo que hace que esto
+     * importe: la alternativa era descartarlo para poder empezar de nuevo.
+     */
+    public function testResumingAfterARevocationLetsYouBackIntoAPublicWork(): void
+    {
+        [$author, $reader, $chapterId, $workId] = $this->aWorkOpenForCorrection();
+
+        $this->start($chapterId, $reader['token']);
+        $this->consumeEverything();
+
+        $questionId = $this->firstQuestionId($chapterId, $reader['token']);
+        $this->saveDraft($chapterId, $reader['token'], [$questionId => $this->words(60)]);
+
+        $this->revoke($workId, $reader['userId'], $author['token']);
+        $this->consumeEverything();
+        self::assertFalse($this->isBetaReader($workId, $reader['userId']));
+
+        $this->start($chapterId, $reader['token']);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $this->consumeEverything();
+
+        self::assertTrue($this->isBetaReader($workId, $reader['userId']), 'Así funciona PUBLIC.');
+        self::assertSame(
+            $this->words(60),
+            $this->draftAnswer($chapterId, $reader['token'], $questionId),
+            'Y con lo que llevaba escrito.',
+        );
+    }
+
+    /**
+     * Reanudar **no cobra otra vez**: es el mismo trabajo y la misma
+     * corrección. Por eso reanudar es un hecho distinto de empezar, y no un
+     * segundo comienzo.
+     */
+    public function testResumingDoesNotChargeTheAuthorTwice(): void
+    {
+        [$author, $reader, $chapterId] = $this->aWorkOpenForCorrection();
+
+        $this->start($chapterId, $reader['token']);
+        $this->consumeEverything();
+        $saldo = $this->balanceOf($author['userId']);
+
+        $this->start($chapterId, $reader['token']);
+        $this->consumeEverything();
+
+        self::assertSame($saldo, $this->balanceOf($author['userId']));
+        self::assertCount(1, $this->queued('CorrectionStarted'), 'Reanudar no es empezar.');
+        self::assertCount(1, $this->queued('CorrectionResumed'));
+    }
+
+    /**
      * Pero quien ya entregó algo se lo ganó: descartar el borrador de otro
      * capítulo no se lo quita.
      */
@@ -203,6 +263,54 @@ final class BecomeBetaReaderTest extends EconomyScenario
             'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
         $this->capture();
+    }
+
+    private function revoke(string $workId, string $readerId, string $token): void
+    {
+        $this->client->request('DELETE', \sprintf('/api/v1/works/%s/beta-readers/%s', $workId, $readerId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $this->capture();
+    }
+
+    /**
+     * @param array<string, string> $answers
+     */
+    private function saveDraft(string $chapterId, string $token, array $answers): void
+    {
+        $this->client->request('PUT', \sprintf('/api/v1/chapters/%s/correction/draft', $chapterId), server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ], content: json_encode([
+            'answers' => array_map(
+                static fn (string $questionId, string $text): array => ['questionId' => $questionId, 'text' => $text],
+                array_keys($answers),
+                array_values($answers),
+            ),
+        ], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseIsSuccessful();
+        $this->capture();
+    }
+
+    private function draftAnswer(string $chapterId, string $token, string $questionId): ?string
+    {
+        $this->client->request('GET', \sprintf('/api/v1/chapters/%s/questionnaire', $chapterId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+        self::assertResponseIsSuccessful();
+
+        /** @var list<array{questionId: string, answer?: string|null}> $questions */
+        $questions = $this->payload()['questions'];
+
+        foreach ($questions as $question) {
+            if ($question['questionId'] === $questionId) {
+                return $question['answer'] ?? null;
+            }
+        }
+
+        return null;
     }
 
     private function discardDraft(string $chapterId, string $token): void
