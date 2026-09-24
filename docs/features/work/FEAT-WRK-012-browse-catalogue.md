@@ -253,7 +253,7 @@ Lo que `Credits` y `Feedback` saben llega por eventos y vive en dos tablas de `w
 
 | Tabla | La alimenta | Guarda |
 |---|---|---|
-| `catalogue_chapter_signal` | `ChapterCorrectabilityChanged` | Si el capítulo admite corrección y **cuántas correcciones puede pagar el autor**, con tope de diez |
+| `catalogue_chapter_signal` | `ChapterCorrectabilityChanged`, `ChapterPriceChanged` | Si el capítulo admite corrección, **cuántas correcciones puede pagar el autor** —con tope de diez— y **lo que gana quien lo corrija** |
 | `catalogue_delivered_correction` | `FeedbackSubmitted` | Una fila por corrección entregada |
 
 La segunda guarda filas en vez de un contador a propósito: la clave primaria es lo que hace
@@ -270,6 +270,19 @@ capítulo puede pagar su autor, acotado a diez por la propia fórmula.
 No es un saldo y no es un precio: es la respuesta a «¿cuánto trabajo produce enseñar esta
 obra?», que es lo único que el catálogo necesita. Y el tope hace de paso que por encima de
 diez todos los autores se parezcan.
+
+### La insignia sí lleva un importe, y solo ella
+
+[`FEAT-CRD-013`](../credits/FEAT-CRD-013-work-credit-badge.md) añadió `ChapterPriceChanged` a
+la misma tabla: `credits`, lo que gana quien corrija ese capítulo. Llega **ya traducida** y el
+catálogo la copia, porque `RN-1` de esa ficha reserva el cálculo a `Credits`.
+
+La tarjeta enseña el **mínimo** de los capítulos corregibles, nunca la media: es lo que quien
+entre puede ganar con seguridad. Y cero no significa gratis, significa que ahora mismo no se
+puede corregir.
+
+Los dos hechos llegan por separado y la fila guarda **dos fechas**, una por cada uno: si no,
+una corregibilidad retrasada pisaría un precio recién publicado.
 
 ### Qué significa exactamente esa señal
 
@@ -289,9 +302,6 @@ fuese completa. No compensa: el catálogo ya tiene el estado delante, en la mism
   [`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)) y **las obras de usuarios
   bloqueados** (`RN-8`): dependen de funcionalidades que no existen. El filtro de edad, que es
   otro eje, sí está.
-- **La insignia de créditos** ([`FEAT-CRD-013`](../credits/FEAT-CRD-013-work-credit-badge.md)):
-  la tarjeta lleva `correctableChapters` y `correctionsReceived`, que son señales del reparto,
-  no un importe.
 - **La portada**: una obra no tiene imagen todavía.
 - `L-2` —qué otras ordenaciones hay— se implementa como `recent`, que era la única alternativa
   evidente. `L-6`, `L-7` y `L-8` siguen abiertas tal cual.

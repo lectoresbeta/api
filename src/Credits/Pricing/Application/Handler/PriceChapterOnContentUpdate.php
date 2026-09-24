@@ -8,6 +8,7 @@ use LectoresBeta\Credits\Account\Domain\ValueObject\UserId;
 use LectoresBeta\Credits\EventProcessing\Domain\Entity\ProcessedEvent;
 use LectoresBeta\Credits\EventProcessing\Domain\Repository\ProcessedEventRepository;
 use LectoresBeta\Credits\Pricing\Application\Event\ChapterContentUpdated;
+use LectoresBeta\Credits\Pricing\Application\Service\AnnounceChapterPrices;
 use LectoresBeta\Credits\Pricing\Application\Service\RefreshCorrectability;
 use LectoresBeta\Credits\Pricing\Domain\Entity\ChapterPrice;
 use LectoresBeta\Credits\Pricing\Domain\Repository\ChapterPriceRepository;
@@ -50,6 +51,7 @@ final readonly class PriceChapterOnContentUpdate
         private ProcessedEventRepository $processedEvents,
         private WorkPricing $workPricing,
         private RefreshCorrectability $correctability,
+        private AnnounceChapterPrices $announcePrices,
         private ChapterPricing $pricing,
         private TransactionalSession $session,
         private Clock $clock,
@@ -75,6 +77,8 @@ final readonly class PriceChapterOnContentUpdate
             }
         }
 
+        $announced = [];
+
         if (null === $chapter) {
             // The row is added to the list by hand instead of being read back
             // from the repository: it is not flushed yet, so a second query
@@ -91,11 +95,17 @@ final readonly class PriceChapterOnContentUpdate
                 $now,
             );
             $chapters[] = $chapter;
+
+            // Un capítulo que aparece siempre estrena precio, aunque
+            // repreciar la obra no se lo cambie después.
+            $announced[$chapterId->value()] = $chapter;
         } else {
             $chapter->updateContent($event->position, $event->wordCount, $this->pricing, $now);
         }
 
-        $this->workPricing->reprice($chapters, $this->demands->ofWork($workId), $now);
+        foreach ($this->workPricing->reprice($chapters, $this->demands->ofWork($workId), $now) as $repriced) {
+            $announced[$repriced->chapterId()->value()] = $repriced;
+        }
 
         $this->session->execute(function () use ($chapters, $event, $now): void {
             foreach ($chapters as $priced) {
@@ -106,6 +116,8 @@ final readonly class PriceChapterOnContentUpdate
                 new ProcessedEvent($event->eventId(), self::CONSUMER, $event->eventName(), $now),
             );
         });
+
+        $this->announcePrices->of(array_values($announced), $now);
 
         // A different price may put a chapter within reach of the author's
         // balance, or out of it (`FEAT-CRD-009`).

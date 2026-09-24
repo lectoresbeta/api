@@ -35,9 +35,16 @@ final class WorkPricing
     }
 
     /**
+     * Devuelve **los capítulos cuyo precio ha cambiado**, que son los que hay
+     * que anunciar: la insignia de la tarjeta enseña esa cifra
+     * ([`FEAT-CRD-013`](../../../../../docs/features/credits/FEAT-CRD-013-work-credit-badge.md)),
+     * y repreciar es mucho más frecuente que cambiar de precio.
+     *
      * @param list<ChapterPrice> $chapters
+     *
+     * @return list<ChapterPrice>
      */
-    public function reprice(array $chapters, ?WorkQuestionnaireDemand $demand, \DateTimeImmutable $now): void
+    public function reprice(array $chapters, ?WorkQuestionnaireDemand $demand, \DateTimeImmutable $now): array
     {
         $lastPosition = 0;
 
@@ -45,13 +52,23 @@ final class WorkPricing
             $lastPosition = max($lastPosition, $chapter->position());
         }
 
+        $changed = [];
+
         foreach ($chapters as $chapter) {
+            $before = $chapter->price();
+
             $chapter->applyDemand(
                 $this->demandOn($chapter->position(), $lastPosition, $demand),
                 $this->pricing,
                 $now,
             );
+
+            if ($chapter->price() !== $before) {
+                $changed[] = $chapter;
+            }
         }
+
+        return $changed;
     }
 
     /**

@@ -86,13 +86,16 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | Evento | Origen | Efecto |
 |---|---|---|
 | `ChapterCorrectabilityChanged` | **`Credits`** | El filtro duro del catálogo y su primer factor: si el capítulo admite corrección y cuántas puede pagar su autor |
+| `ChapterPriceChanged` | **`Credits`** | La insignia de la tarjeta: lo que gana quien corrija ese capítulo |
 | `FeedbackSubmitted` | **`Feedback`** | Cuenta una corrección recibida, que **baja** la obra en el catálogo |
 
-Los dos alimentan el read model del catálogo y no tocan ningún agregado. Es lo que permite
+Los tres alimentan el read model del catálogo y no tocan ningún agregado. Es lo que permite
 ordenar por capacidad de pago **sin un solo `JOIN`** con las tablas de otro contexto
 ([`decision:0008`](../decisions/0008-catalogue-ordering.md)).
 
-Ninguno lleva dinero: `affordableCorrections` es una conclusión acotada a diez, no un saldo.
+`ChapterPriceChanged` es el único que lleva una cifra de créditos, y llega **ya traducida**:
+`Work` la copia en la señal y no sabe calcularla (`FEAT-CRD-013` `RN-1`). Los demás no llevan
+dinero — `affordableCorrections` es una conclusión acotada a diez, no un saldo.
 
 ## Contratos publicados
 

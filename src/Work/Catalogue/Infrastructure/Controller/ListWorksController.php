@@ -71,6 +71,7 @@ final readonly class ListWorksController
                     'adultsOnly' => $entry->adultsOnly,
                     'genres' => $entry->genres,
                     'correctableChapters' => $entry->correctableChapters,
+                    'credits' => $entry->credits,
                     'correctionsReceived' => $entry->correctionsReceived,
                 ],
                 $page->entries,

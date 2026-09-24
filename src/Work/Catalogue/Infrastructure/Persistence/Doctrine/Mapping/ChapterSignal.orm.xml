@@ -7,7 +7,7 @@
     <!-- Proyección de lo que decide `Credits`. El catálogo la consulta en la
          misma SQL que filtra y pagina, que es la razón de que exista: no se
          puede hacer `JOIN` con las tablas de otro contexto acotado. -->
-    <entity name="LectoresBeta\Work\Catalogue\Domain\Entity\ChapterCorrectability"
+    <entity name="LectoresBeta\Work\Catalogue\Domain\Entity\ChapterSignal"
             table="catalogue_chapter_signal" schema="work_ctx">
 
         <indexes>
@@ -22,7 +22,9 @@
         <field name="workId" column="work_id" type="guid"/>
         <field name="correctable" type="boolean"/>
         <field name="affordableCorrections" column="affordable_corrections" type="smallint"/>
+        <field name="credits" type="smallint"/>
         <field name="changedAt" column="changed_at" type="datetime_immutable"/>
+        <field name="pricedAt" column="priced_at" type="datetime_immutable"/>
 
     </entity>
 

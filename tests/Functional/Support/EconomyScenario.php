@@ -52,6 +52,7 @@ abstract class EconomyScenario extends WebTestCase
         'CorrectionDraftDiscarded',
         'FeedbackSubmitted',
         'ChapterCorrectabilityChanged',
+        'ChapterPriceChanged',
     ];
 
     /**

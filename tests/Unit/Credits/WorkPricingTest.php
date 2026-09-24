@@ -124,6 +124,36 @@ final class WorkPricingTest extends TestCase
         self::assertSame($primero, $capitulo->price());
     }
 
+    /**
+     * `reprice` responde **solo con lo que ha cambiado de precio**, y es lo
+     * que permite anunciar la insignia del catálogo sin publicar un hecho
+     * por capítulo cada vez que la obra crece (`FEAT-CRD-013`). Repreciar
+     * ocurre en cada palabra que se escribe; el precio casi nunca se mueve.
+     */
+    public function testRepricingAnswersOnlyWithTheChaptersWhosePriceMoved(): void
+    {
+        $primero = $this->chapter(1, 3000);
+        $ultimo = $this->chapter(2, 3000);
+
+        self::assertCount(
+            2,
+            $this->pricing->reprice([$primero, $ultimo], $this->demand(400, 300), $this->now()),
+            'La primera vez los dos estrenan precio.',
+        );
+
+        self::assertSame(
+            [],
+            $this->pricing->reprice([$primero, $ultimo], $this->demand(400, 300), $this->now()),
+            'Repreciar sin novedad no anuncia nada.',
+        );
+
+        self::assertSame(
+            [$ultimo],
+            $this->pricing->reprice([$primero, $ultimo], $this->demand(900, 300), $this->now()),
+            'Las preguntas de cierre solo encarecen el último.',
+        );
+    }
+
     private function chapter(int $position, int $wordCount): ChapterPrice
     {
         return new ChapterPrice(

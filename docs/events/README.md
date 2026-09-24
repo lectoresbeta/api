@@ -157,6 +157,7 @@ es de la obra entera.
 | `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance`, `addedAt` |
 | `CreditsSpent` | Se carga una corrección recibida | `Notification` | `userId`, `amount`, `reason`, `balance`, `spentAt` |
 | `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, **`Work`** | `chapterId`, `workId`, `correctable`, `affordableCorrections`, `changedAt`. **Sin importes** |
+| `ChapterPriceChanged` | Cambia lo que vale corregir un capítulo | **`Work`** (insignia del catálogo), `Community` | `chapterId`, `workId`, `credits`, `changedAt`. **Lleva importe, y es el único** |
 | `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` | `userId`, `balance`, `changedAt` |
 | `CreditBalanceWentNegative` | El saldo **cruza** a negativo | `Notification`, `Feedback` | `userId`, `balance`, `crossedAt` |
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` | `userId`, `balance` |
@@ -174,6 +175,13 @@ descubierto, que es un caso aceptado.
 - `affordableCorrections`, cuántas correcciones de ese capítulo puede pagar su autor **con
   tope de diez**, que es el primer factor de la ordenación del catálogo
   ([`decision:0008`](../decisions/0008-catalogue-ordering.md)).
+
+`ChapterPriceChanged` es la excepción y conviene decir por qué no contradice a la anterior.
+Lo que [`decision:0002`](../decisions/0002-credits-as-isolated-bounded-context.md) prohíbe es
+que otro contexto **calcule** efectos de crédito, no que `Credits` publique lo que ya ha
+decidido; `RN-1` de [`FEAT-CRD-013`](../features/credits/FEAT-CRD-013-work-credit-badge.md)
+lo pide con todas las letras. La cifra viaja **ya traducida**, es un precio y no un saldo, y
+quien la recibe solo puede copiarla.
 
 El segundo es la conclusión de una aritmética cuyos sumandos no salen de aquí. Sin él, el
 catálogo no podía ordenar por capacidad de pago sin que alguien le contase el saldo del autor

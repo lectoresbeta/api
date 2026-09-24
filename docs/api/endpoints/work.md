@@ -253,10 +253,11 @@ sola.
 
 ### Entrada
 
-`status`, `sort`, `page`, `perPage`.
+`genres[]`, `status`, `sort`, `page`, `perPage`.
 
-`genres[]`, `readingTime` y `contentWarnings[]` están especificados y **no implementados**: no
-es que falte el filtro, es que una obra todavía no tiene temáticas ni etiquetas de contenido.
+`readingTime` y `contentWarnings[]` están especificados y **no implementados**: no es que
+falte el filtro, es que una obra todavía no tiene etiquetas de contenido ni tiempo de lectura
+declarado.
 
 ### Respuesta
 
@@ -264,9 +265,14 @@ es que falte el filtro, es que una obra todavía no tiene temáticas ni etiqueta
 obra aparezca aquí no significa que quien la ve pueda abrirla, y eso lo decide `getWork`.
 
 Cada tarjeta lleva `correctableChapters` y `correctionsReceived`, que son señales del reparto
-—cuánto queda por corregir y cuánto se ha corregido ya— y no importes. La insignia de créditos
-es [`FEAT-CRD-013`](../../features/credits/FEAT-CRD-013-work-credit-badge.md) y no se sirve
-todavía.
+—cuánto queda por corregir y cuánto se ha corregido ya— y no importes.
+
+`credits` sí es un importe, y es el único: la insignia de
+[`FEAT-CRD-013`](../../features/credits/FEAT-CRD-013-work-credit-badge.md), **lo que gana
+quien corrija esta obra ahora mismo**. Es el mínimo de sus capítulos corregibles, para que la
+tarjeta nunca prometa más de lo que después se abona. **Cero no significa gratis: significa
+que ahora mismo no se puede corregir.** La cifra la calcula `Credits` y llega por evento; el
+catálogo la copia sin saber de dónde sale.
 
 Es una de las dos excepciones a la paginación por cursor
 ([`paginación`](../conventions/pagination.md)): un catálogo filtrado no es un flujo, y quien

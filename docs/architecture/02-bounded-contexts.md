@@ -82,6 +82,7 @@ síncrona entre contextos en el diseño actual.
 | `Work` | `Credits` | Eventos `ChapterContentUpdated`, `QuestionnaireUpdated` | Las palabras del capítulo y las exigidas, que fijan el precio |
 | `Feedback` | `Credits` | Eventos `CorrectionStarted`, `FeedbackSubmitted`, `CorrectionTipped` | Hechos que mueven créditos |
 | `Credits` | `Feedback` / `Work` | Evento `ChapterCorrectabilityChanged` | Saber si un capítulo admite correcciones ahora |
+| `Credits` | `Work` | Evento `ChapterPriceChanged` | Pintar la insignia del catálogo con lo que gana quien corrija |
 | `Moderation` | `Credits`, `Work`, `User` | Evento `ClaimUpheld` | Aplicar, cada uno en su modelo, lo que la decisión significa |
 | cualquiera | `Notification` | Eventos de negocio | Avisar al usuario |
 | `Feedback`, `Community` | `Community` (rankings) | Eventos | Alimentar los read models de ranking |

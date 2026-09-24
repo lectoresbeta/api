@@ -100,6 +100,35 @@ final class CatalogueTest extends EconomyScenario
         self::assertSame($corregible, $this->payload()['works'][0]['workId']);
         self::assertSame($soloLectura, $this->payload()['works'][1]['workId']);
         self::assertSame(0, $this->payload()['works'][1]['correctableChapters']);
+
+        // El cero gris del diseño no dice que corregirla sea gratis: dice
+        // que ahora mismo no se puede (`FEAT-CRD-013`).
+        self::assertSame(0, $this->payload()['works'][1]['credits']);
+        self::assertGreaterThan(0, $this->payload()['works'][0]['credits']);
+    }
+
+    /**
+     * **`RN-2` de `FEAT-CRD-013`, que es la razón de ser de la insignia:** la
+     * cifra de la tarjeta y la que después se abona salen de la misma regla.
+     * Prometer seis y abonar quince es peor que no enseñar nada.
+     */
+    public function testTheBadgeIsExactlyWhatTheCorrectorIsLaterPaid(): void
+    {
+        $author = $this->activatedPerson('autora');
+        $lectora = $this->activatedPerson('lectora');
+
+        $obra = $this->aWork($author, 'La ciudad de los pájaros');
+        $this->consumeEverything();
+
+        $this->catalogue($lectora['token']);
+        $insignia = $this->payload()['works'][0]['credits'];
+        self::assertGreaterThan(0, $insignia);
+
+        $antes = $this->balanceOf($lectora['userId']);
+        $this->correct($obra, $lectora);
+        $this->consumeEverything();
+
+        self::assertSame($insignia, $this->balanceOf($lectora['userId']) - $antes);
     }
 
     /**
@@ -189,7 +218,7 @@ final class CatalogueTest extends EconomyScenario
         $card = $this->payload()['works'][0];
 
         self::assertSame(
-            ['workId', 'title', 'synopsis', 'status', 'wordCount', 'chapterCount', 'adultsOnly', 'genres', 'correctableChapters', 'correctionsReceived'],
+            ['workId', 'title', 'synopsis', 'status', 'wordCount', 'chapterCount', 'adultsOnly', 'genres', 'correctableChapters', 'credits', 'correctionsReceived'],
             array_keys($card),
         );
         self::assertStringNotContainsString('palabra palabra', json_encode($card, \JSON_THROW_ON_ERROR));

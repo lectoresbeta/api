@@ -206,6 +206,7 @@ público está fuera de la economía.
 | `CreditsAdded` | Se abonan créditos | `Notification` |
 | `CreditsSpent` | Se carga al autor una corrección recibida | `Notification` |
 | `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, `Work` (insignia). **Sin importes** |
+| `ChapterPriceChanged` | Cambia lo que vale corregir un capítulo | **`Work`** (insignia del catálogo), `Community` |
 | `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` |
 | `CreditBalanceWentNegative` | El saldo cruza a negativo | `Notification` (avisa y **explica la salida**) |
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` |
@@ -218,6 +219,11 @@ público está fuera de la economía.
 descubierto, que ya está aceptado.
 
 Ese evento lleva **un booleano, no un importe**: `Feedback` no debe conocer saldos ajenos.
+
+El único que lleva un importe es `ChapterPriceChanged`, y es un **precio, nunca un saldo**:
+la insignia del catálogo (`FEAT-CRD-013`) enseña lo que gana quien corrija, y esa cifra tiene
+que salir de aquí porque `RN-1` prohíbe que la calcule nadie más. Publicar lo que `Credits`
+ya ha decidido no es lo que `decision:0002` prohíbe; lo prohibido es que otro lo calcule.
 
 Nótese que **`Credits` nunca oculta ni enseña el texto de una corrección**. En el descubierto
 publica el hecho económico; quien decide qué se ve es `Feedback`, que es quien posee la

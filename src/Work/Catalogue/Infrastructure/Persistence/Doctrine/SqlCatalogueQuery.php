@@ -75,6 +75,14 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
      * el lector no puede corregir desperdicia el sitio más valioso de la
      * pantalla.
      *
+     * La insignia es el **mínimo** de los capítulos corregibles y no su
+     * media ni el del primero: es lo que quien entre ahora puede ganar con
+     * seguridad, y una tarjeta que promete más de lo que después se abona es
+     * peor que no enseñar nada (`FEAT-CRD-013` `RN-2`). Un capítulo sin
+     * precio todavía queda fuera del mínimo en vez de hundirlo a cero, y una
+     * obra donde no hay ninguno enseña el cero gris del diseño, que significa
+     * que ahora mismo no se puede corregir.
+     *
      * **El estado de la obra lo pone `Work`, no la señal.** Lo que `Credits`
      * responde es si el autor puede pagar ese capítulo y si le queda hueco;
      * que la obra esté abierta a corrección es dato propio, y combinar las
@@ -93,6 +101,7 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
                   w.id, w.title, w.synopsis, w.status, w.word_count, w.chapter_count, w.adults_only,
                   CASE WHEN w.status = 'IN_CORRECTION' THEN COALESCE(signal.correctable_chapters, 0) ELSE 0 END
                     AS correctable_chapters,
+                  CASE WHEN w.status = 'IN_CORRECTION' THEN COALESCE(signal.badge, 0) ELSE 0 END AS credits,
                   COALESCE(delivered.corrections_received, 0) AS corrections_received,
                   COALESCE(genres.codes, ARRAY[]::text[]) AS genres,
                   CASE
@@ -105,7 +114,8 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
                 LEFT JOIN LATERAL (
                   SELECT
                     COUNT(*) FILTER (WHERE s.correctable) AS correctable_chapters,
-                    COALESCE(MAX(s.affordable_corrections) FILTER (WHERE s.correctable), 0) AS affordable
+                    COALESCE(MAX(s.affordable_corrections) FILTER (WHERE s.correctable), 0) AS affordable,
+                    MIN(s.credits) FILTER (WHERE s.correctable AND s.credits > 0) AS badge
                   FROM work_ctx.catalogue_chapter_signal s
                   WHERE s.work_id = w.id
                 ) signal ON TRUE
@@ -213,6 +223,7 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
             (bool) $row['adults_only'],
             self::codes($row['genres']),
             (int) $row['correctable_chapters'],
+            (int) $row['credits'],
             (int) $row['corrections_received'],
         );
     }

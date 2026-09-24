@@ -23,6 +23,8 @@ final readonly class CatalogueEntry
         public bool $adultsOnly,
         public array $genres,
         public int $correctableChapters,
+        /** Lo que gana quien corrija, o cero si ahora mismo no se puede. */
+        public int $credits,
         public int $correctionsReceived,
     ) {
     }

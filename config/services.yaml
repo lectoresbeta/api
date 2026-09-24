@@ -97,6 +97,7 @@ services:
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionDraftDiscarded
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Work\Catalogue\Application\Event\ChapterCorrectabilityChanged
+                - LectoresBeta\Work\Catalogue\Application\Event\ChapterPriceChanged
                 - LectoresBeta\Work\Catalogue\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
 
@@ -201,6 +202,10 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\Work\Catalogue\Application\Handler\TrackCorrectability:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Work\Catalogue\Application\Handler\TrackChapterPrice:
         tags:
             - { name: messenger.message_handler }
 

@@ -113,7 +113,7 @@ collection:
                   type: array
                   items:
                     type: object
-                    required: [workId, title, status, wordCount, chapterCount, adultsOnly, correctableChapters, correctionsReceived]
+                    required: [workId, title, status, wordCount, chapterCount, adultsOnly, correctableChapters, credits, correctionsReceived]
                     properties:
                       workId:
                         type: string
@@ -145,6 +145,24 @@ collection:
                           **Cero significa que la obra se puede leer pero no
                           corregir**, y es lo que la manda al final de la
                           ordenación por relevancia.
+                      credits:
+                        type: integer
+                        minimum: 0
+                        description: |
+                          La insignia: **lo que gana quien corrija esta obra
+                          ahora mismo**, y como una corrección es una
+                          transferencia, también lo que paga su autor.
+
+                          Es el **mínimo** de los capítulos corregibles, no la
+                          media: es lo que quien entre puede ganar con
+                          seguridad, y prometer más de lo que después se abona
+                          es peor que no enseñar nada.
+
+                          **Cero no significa gratis, significa que ahora
+                          mismo no se puede corregir**: la obra no está en
+                          corrección, su autor no tiene saldo que cubra el
+                          precio o todavía no ha llegado ninguno. La tarjeta
+                          pinta el cero en gris.
                       correctionsReceived:
                         type: integer
                         description: |
