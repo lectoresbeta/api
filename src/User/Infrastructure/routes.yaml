@@ -101,3 +101,16 @@ changeUsername:
     path: /api/v1/me/username
     controller: LectoresBeta\User\Profile\Infrastructure\Controller\ChangeUsernameController::__invoke
     methods: [PUT]
+
+# Preferencias literarias (FEAT-USR-009). El mismo dato que elige el paso 2
+# del onboarding: una sola tabla y un solo evento, con dos puertas.
+
+getMyLiteraryPreferences:
+    path: /api/v1/me/literary-preferences
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetMyLiteraryPreferencesController::__invoke
+    methods: [GET]
+
+updateLiteraryPreferences:
+    path: /api/v1/me/literary-preferences
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\UpdateLiteraryPreferencesController::__invoke
+    methods: [PUT]

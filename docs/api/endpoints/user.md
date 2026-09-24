@@ -32,7 +32,8 @@
 | `POST /me/email-change` | `requestEmailChange` | Solicitar cambio de correo | FEAT-USR-040 | DRAFT |
 | `POST /me/email-change/confirm` | `confirmEmailChange` | Confirmarlo desde el correo nuevo | FEAT-USR-040 | DRAFT |
 | `PUT /me/password` | `changeMyPassword` | Cambiar o **establecer** contraseña | FEAT-USR-041 | DRAFT |
-| `PUT /me/literary-preferences` | `updateLiteraryPreferences` | Preferencias literarias | FEAT-USR-009 | PENDING |
+| `GET /api/v1/me/literary-preferences` | `getMyLiteraryPreferences` | Mis géneros | FEAT-USR-009 | **Implementado** |
+| `PUT /api/v1/me/literary-preferences` | `updateLiteraryPreferences` | Cambiarlos | FEAT-USR-009 | **Implementado** |
 | `GET /me/settings` | `getAccountSettings` | Ajustes de cuenta | FEAT-USR-010/011 | PENDING |
 | `GET /api/v1/me/privacy-settings` | `getMyPrivacySettings` | Ajustes de privacidad | FEAT-USR-038 | **Implementado** |
 | `PUT /api/v1/me/privacy-settings` | `updateMyPrivacySettings` | Modificarlos | FEAT-USR-038 | **Implementado** |
@@ -590,3 +591,60 @@ distingue, porque ahí no hay nadie a quien proteger.
 
 Publica `UsernameChanged` con los dos nombres y la caducidad del alias. **Recuperar publica el
 mismo hecho**: para quien lo consume es un cambio más.
+
+---
+
+## `GET` y `PUT /api/v1/me/literary-preferences`
+
+**`operationId`:** `getMyLiteraryPreferences`, `updateLiteraryPreferences` ·
+**Funcionalidad:** [`FEAT-USR-009`](../../features/user/FEAT-USR-009-literary-preferences.md)
+
+### Propósito
+
+Los géneros que le interesan a alguien. **Son los mismos** que eligió el paso 2 del
+onboarding (`FEAT-USR-023` `RN-6`): un solo dato con dos puertas, no dos copias que puedan
+discrepar — porque discreparían, y las recomendaciones acabarían contradiciendo lo que la
+persona cree haber elegido sin que nada lo detectara.
+
+### Autorización
+
+Solo las propias. Leer no exige cuenta activada; **escribir sí**. No hay forma de consultar
+los géneros de otra persona por aquí: son parte de su perfil, y qué enseña un perfil lo
+deciden `FEAT-USR-014` y sus ajustes de privacidad.
+
+### Reglas aplicadas
+
+- `PUT` y no `PATCH`: el cuerpo es la selección entera y **sustituye** a la anterior. Quien
+  quita un género espera que desaparezca.
+- Mínimo **tres**, los mismos que en el onboarding. Un mínimo que solo rigiera el primer día
+  no sería un mínimo.
+- Los duplicados se normalizan, no se rechazan, con una consecuencia que conviene conocer:
+  `['POETRY','poetry']` **no** llega al mínimo, porque es un género.
+- Solo géneros del catálogo, y un código desconocido se rechaza **nombrándolo**.
+- **Un género retirado que ya era tuyo se conserva; uno retirado que no lo era se rechaza.**
+  Conservar no es elegir, y un guardado no debe caerse por un campo que quien guarda no
+  estaba editando.
+
+### Respuesta
+
+La lista de géneros con `code` y `name`, **la misma forma que `listGenres`**, en el orden del
+catálogo. Lleva el nombre y no solo el código porque un género retirado ya no aparece en el
+catálogo: cruzar ambas respuestas dejaría sin nombre justo lo que hay que seguir enseñando.
+
+De ahí sale también cómo reconocer uno retirado sin un campo más: está en las preferencias de
+alguien y no en `GET /genres`.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `NOT_ENOUGH_GENRES` | 422 | Menos de tres, ya normalizados |
+| `UNKNOWN_GENRE` | 422 | Algún código no está disponible. El mensaje los nombra |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | Escribir sin haber activado la cuenta |
+
+### Efectos
+
+Publica `LiteraryPreferencesUpdated` con la **selección entera**, no con lo que cambió: quien
+lo consume quiere con qué quedarse, y aplicar una secuencia de diferencias daría un conjunto
+equivocado el primer día que se pierda un mensaje. Es el mismo hecho que publica el
+onboarding.

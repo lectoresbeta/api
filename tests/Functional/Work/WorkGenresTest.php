@@ -61,6 +61,26 @@ final class WorkGenresTest extends EconomyScenario
     }
 
     /**
+     * **Reclasificar conservando una temática**, que es el caso normal: se
+     * cambia una y se dejan las demás.
+     *
+     * Parece el mismo caso que el anterior y no lo es. Sustituir borrando
+     * todo y volviendo a insertar funciona mientras las listas no se
+     * solapen, y revienta en cuanto lo hacen: la fila conservada se borra y
+     * se registra otra vez con la misma identidad en la misma transacción.
+     */
+    public function testReclassifyingCanKeepOneOfTheGenres(): void
+    {
+        $author = $this->activatedPerson('autora');
+        $workId = $this->createWorkWith($author['token'], ['DRAMA', 'FANTASY']);
+
+        $this->setGenres($workId, $author['token'], ['FANTASY', 'ROMANCE']);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        self::assertSame(['FANTASY', 'ROMANCE'], $this->genresOf($workId, $author['token']));
+    }
+
+    /**
      * Un código desconocido **se nombra**. Descartarlo en silencio dejaría la
      * obra clasificada de forma distinta a como su autor cree.
      */

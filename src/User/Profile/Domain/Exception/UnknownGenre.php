@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace LectoresBeta\User\Onboarding\Domain\Exception;
+namespace LectoresBeta\User\Profile\Domain\Exception;
 
 use LectoresBeta\Shared\Domain\Exception\BusinessFailure;
 use LectoresBeta\Shared\Domain\Exception\FailureKind;
 
 /**
- * A genre that is not in the catalogue (`FEAT-USR-023` `RN-3`).
+ * A genre that is not in the catalogue (`FEAT-USR-023` `RN-3`,
+ * `FEAT-USR-009` `RN-5`).
  *
  * **Rejected and named, never dropped in silence.** Quietly ignoring it
  * would let somebody finish the step believing they chose five things when

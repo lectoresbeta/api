@@ -199,6 +199,27 @@ final class OnboardingTest extends WebTestCase
     }
 
     /**
+     * Y **conservando uno de los que ya había**, que parece el mismo caso y
+     * no lo es: sustituir borrando todo y volviendo a insertar funciona
+     * mientras las dos listas no se solapen, y falla en cuanto lo hacen.
+     */
+    public function testChoosingAgainCanKeepOneOfTheGenres(): void
+    {
+        $token = $this->completedFirstStep();
+
+        $this->put('/api/v1/me/onboarding/genres', $token, ['genres' => ['DRAMA', 'FANTASY', 'ROMANCE']]);
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+
+        $this->put('/api/v1/me/onboarding/genres', $token, ['genres' => ['DRAMA', 'HORROR', 'THRILLER']]);
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+
+        $stored = $this->storedGenresOf($token);
+        sort($stored);
+
+        self::assertSame(['DRAMA', 'HORROR', 'THRILLER'], $stored);
+    }
+
+    /**
      * El hecho que `Community` necesita para sugerir autores. Lleva **la
      * selección entera** y no lo que cambió: un consumidor que tuviera que
      * aplicar deltas acabaría con un conjunto equivocado el primer mensaje

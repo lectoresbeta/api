@@ -155,18 +155,4 @@ catalogue:
         content:
           application/json:
             schema:
-              type: object
-              required: [genres]
-              properties:
-                genres:
-                  type: array
-                  items:
-                    type: object
-                    required: [code, name]
-                    properties:
-                      code:
-                        type: string
-                        examples: ['SCIENCE_FICTION']
-                      name:
-                        type: string
-                        examples: ['Ciencia Ficción']
+              $ref: '../openapi.yaml#/components/schemas/GenreList'

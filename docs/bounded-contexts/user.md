@@ -75,7 +75,7 @@ preferencias y presencia pública como autor.
 | `Description` | Dato público. Texto libre saneado |
 | `AvatarUrl`, `CoverUrl` | Datos públicos. Imágenes sin metadatos EXIF |
 | `BirthDate` | Fecha real y pasada. **Dato privado**: no se expone en la API pública |
-| `LiteraryPreferences` | Conjunto de `Genre`, mínimo tres al completar el onboarding |
+| `LiteraryPreferences` | Conjunto de `Genre`, **mínimo tres**, tanto al completar el onboarding como al editarlas después: un mínimo que solo rigiera el primer día no sería un mínimo. Un género retirado del catálogo no se puede elegir, pero quien ya lo tenía lo conserva |
 | `AccountStatus` | `PENDING_ACTIVATION`, `ACTIVE`, `DELETED` |
 | `OnboardingStatus` | `PROFILE_PENDING`, `GENRES_PENDING`, `SUGGESTIONS_PENDING`, `COMPLETED` |
 | `AuthProvider` | `LOCAL`, `GOOGLE`. `FACEBOOK` y `LINKEDIN` diferidos |

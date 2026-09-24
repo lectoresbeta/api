@@ -43,7 +43,7 @@ aplicar el efecto.
 | `UserRegistered` | Se crea una cuenta | `Credits` (crea cuenta con saldo 0), `Notification` | `userId`, `username`, `authProvider`, `status`, `invitedBy?` |
 | `AccountActivated` | El usuario activa su cuenta desde el correo | **`Credits`** (+10), `Notification`, `Feedback` | `userId`, `activatedAt` |
 | `ActivationEmailRequested` | Se pide reenviar el correo de activación | `Notification` | `userId` |
-| `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros | `Community` | `userId`, `genres` |
+| `LiteraryPreferencesUpdated` | El usuario fija sus géneros en el onboarding **o los cambia después** (`FEAT-USR-009`) | `Community` | `userId`, `genres`. **La selección entera, no lo que cambió**: aplicar diferencias daría un conjunto equivocado el primer día que se pierda un mensaje |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models | `userId`, `completedAt` |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` | `userId`, `name`, `description`, `updatedAt`. **Los valores nuevos, no un diff**: quien lo consume quiere con qué quedarse |
 | `UsernameChanged` | El usuario cambia su nombre de usuario, **o recupera uno suyo** | `Community` (read models con el `@`) | `userId`, `previousUsername`, `newUsername`, `aliasExpiresAt`, `changedAt`. El viejo para encontrar qué actualizar, el nuevo para escribirlo, y la fecha para saber hasta cuándo un enlace antiguo sigue llevando a alguna parte |

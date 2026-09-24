@@ -168,7 +168,7 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 - [ ] Guardar dos géneros devuelve `422`, aunque el cliente lo permita.
 - [ ] Guardar un identificador de género inexistente devuelve `422`.
 - [ ] `GET /genres` devuelve el catálogo con nombre presentable e identificador.
-- [ ] Los géneros elegidos en el onboarding son los mismos que devuelve y edita `FEAT-USR-009`.
+- [x] Los géneros elegidos en el onboarding son los mismos que devuelve y edita `FEAT-USR-009`.
 - [ ] El usuario puede completar este paso sin haber activado su cuenta.
 - [ ] Añadir un género nuevo al catálogo no exige desplegar el frontend.
 
@@ -205,3 +205,13 @@ Dos decisiones que la ficha dejaba abiertas y que la implementación cierra:
 - la selección **sustituye** a la anterior en vez de acumularse.
 
 **Falta:** `RN-2` sigue sin máximo definido, así que no hay ninguno.
+
+`RN-6` deja de ser una promesa: [`FEAT-USR-009`](FEAT-USR-009-literary-preferences.md) lee y
+escribe esta misma selección, y las reglas de qué es válida son literalmente el mismo código
+(`GenreSelection`), no dos copias que puedan separarse. Por eso `NotEnoughGenres` y
+`UnknownGenre` viven ahora en `Profile`: saltan aquí primero, pero lo que protegen son las
+preferencias literarias.
+
+Aquella implementación tenía además un fallo que nadie había visto: volver a elegir géneros
+**conservando uno** de los anteriores devolvía un `500`. Las pruebas sustituían siempre por
+listas disjuntas, que es el caso raro. Está corregido y cubierto.

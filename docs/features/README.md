@@ -65,7 +65,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-006 | Login con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-007 | Recuperar contraseña | Guest | PENDING | TODO | P0 | — |
 | FEAT-USR-008 | Editar el perfil — nombre, usuario, biografía, géneros y foto | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-008-edit-profile.md) |
-| FEAT-USR-009 | Editar preferencias literarias | User | PENDING | TODO | P2 | — *(en Configuración › Perfil)* |
+| FEAT-USR-009 | Editar preferencias literarias | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-009-literary-preferences.md) |
 | FEAT-USR-010 | Configurar recepción de mensajes directos | User | PENDING | TODO | P2 | — |
 | FEAT-USR-011 | Configurar recepción de propuestas de LB y writing buddy | User | PENDING | TODO | P2 | — |
 | FEAT-USR-012 | ~~Configurar notificaciones por email~~ → `FEAT-USR-039` | User | PENDING | DEPRECATED | P3 | — |

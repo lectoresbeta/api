@@ -94,6 +94,9 @@ paths:
   /me/username:
     $ref: './paths/settings.yaml#/username'
 
+  /me/literary-preferences:
+    $ref: './paths/settings.yaml#/literaryPreferences'
+
   /me/privacy-settings:
     $ref: './paths/settings.yaml#/privacySettings'
 
@@ -259,6 +262,34 @@ components:
           description: Cada dependencia, por su nombre estable.
           additionalProperties:
             $ref: '#/components/schemas/HealthCheckResult'
+
+    GenreList:
+      type: object
+      description: |
+        Una lista de géneros, **con la misma forma en los tres sitios que la
+        devuelven**: el catálogo (`listGenres`), las preferencias de alguien y
+        la respuesta a guardarlas. El cliente pinta chips con lo que recibe, y
+        una forma distinta según de dónde venga es cómo acaba una pantalla con
+        unos chips con nombre y otros sin él.
+      required: [genres]
+      properties:
+        genres:
+          type: array
+          items:
+            type: object
+            required: [code, name]
+            properties:
+              code:
+                type: string
+                description: |
+                  El identificador estable. Es lo que viaja en los payloads y
+                  hacia otros contextos.
+                examples: ['SCIENCE_FICTION']
+              name:
+                type: string
+                description: |
+                  Lo que lee una persona. Puede reescribirse sin romper nada.
+                examples: ['Ciencia ficción']
 
     Uuid:
       type: string

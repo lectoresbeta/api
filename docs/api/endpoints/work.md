@@ -90,6 +90,10 @@ Solo el autor, con cuenta activada. Una obra ajena responde `404`.
 - Solo códigos del catálogo vigente de `User`, consultado por **contrato publicado**: `Work`
   no tiene catálogo propio ni lee sus tablas (`W-7`).
 - La lista vacía deja la obra sin clasificar, que es legítimo.
+- Sustituir **conservando** una temática es el caso normal y funciona. Se dice porque durante
+  un tiempo no: la sustitución borraba todo y volvía a insertar, lo que solo funciona con
+  listas disjuntas, y reclasificar dejando una temática devolvía un `500`
+  ([`FEAT-USR-009`](../../features/user/FEAT-USR-009-literary-preferences.md) lo destapó).
 
 ### Efectos
 

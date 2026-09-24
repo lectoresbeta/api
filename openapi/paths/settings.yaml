@@ -385,3 +385,96 @@ username:
                     availableOn:
                       type: string
                       format: date-time
+
+literaryPreferences:
+  get:
+    tags: [User]
+    operationId: getMyLiteraryPreferences
+    summary: Mis preferencias literarias
+    description: |
+      Los géneros que me interesan: **los mismos** que eligió el paso 2 del
+      onboarding (`FEAT-USR-023` `RN-6`). Un solo dato con dos puertas, no dos
+      copias que puedan discrepar — dos discreparían, y las recomendaciones
+      acabarían contradiciendo lo que la persona cree haber elegido.
+
+      **Solo las propias.** Los géneros de otra persona son parte de su perfil,
+      y qué enseña un perfil lo deciden `FEAT-USR-014` y sus ajustes de
+      privacidad.
+
+      Devuelve el nombre y no solo el código a propósito: un género **retirado**
+      ya no aparece en `listGenres`, así que cruzar ambas respuestas dejaría sin
+      nombre justo lo que hay que seguir enseñando. Y de ahí sale también cómo
+      reconocerlo: lo que está aquí y no en el catálogo es un género retirado.
+    responses:
+      '200':
+        description: Los géneros elegidos, en el orden del catálogo.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/GenreList'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  put:
+    tags: [User]
+    operationId: updateLiteraryPreferences
+    summary: Cambiar mis preferencias literarias
+    description: |
+      **Sustituye la selección entera.** `PUT` y no `PATCH` porque el dato *es*
+      la lista: una lista parcial no significa nada, y quien quita un género
+      espera que desaparezca.
+
+      Mínimo **tres**, los mismos que en el onboarding. Un mínimo que solo
+      rigiera el primer día no sería un mínimo: bastaría con terminar el
+      onboarding y volver aquí para quedarse con uno.
+
+      Los duplicados se normalizan en vez de rechazarse — mandar dos veces el
+      mismo género es un fallo del cliente, no una decisión de nadie—, con una
+      consecuencia que conviene conocer: `['POETRY','poetry']` **no** llega al
+      mínimo de tres, porque es un género.
+
+      **Un género retirado que ya era tuyo se conserva**; uno retirado que no
+      lo era se rechaza. Conservar no es elegir, y un guardado no debe caerse
+      por un campo que quien guarda no estaba editando.
+
+      Endpoint propio aunque la pantalla lo enseñe junto al nombre y la
+      biografía, por lo mismo que el nombre de usuario: comparten «Guardar»,
+      pero no comparten sus reglas.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [genres]
+            properties:
+              genres:
+                type: array
+                minItems: 3
+                items:
+                  type: string
+                  examples: ['SCIENCE_FICTION']
+    responses:
+      '200':
+        description: Cómo ha quedado la selección, con los nombres, para repintar sin volver a preguntar.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/GenreList'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          Menos de tres géneros (`code: NOT_ENOUGH_GENRES`) o alguno que no
+          está disponible (`code: UNKNOWN_GENRE`, que **los nombra**: uno
+          desconocido se rechaza, nunca se ignora en silencio).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
