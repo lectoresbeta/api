@@ -50,7 +50,7 @@ aplicar el efecto.
 | `EmailChangeRequested` | Se pide cambiar el correo | `Notification` | `userId`, `requestId`, `expiresAt` |
 | `EmailChanged` | Se confirma el cambio de correo | `Notification`, read models | `userId`, `changedAt` |
 | `PasswordChanged` | Se cambia la contraseña | `Notification` | `userId`, `changedAt` |
-| `PrivacySettingsChanged` | Cambian los ajustes de privacidad | `Community`, read models | `userId`, ajustes modificados |
+| `PrivacySettingsChanged` | Cambian los ajustes de privacidad | `Community`, read models de visibilidad | `userId`, `profileVisibility`, `commentPermission`, `messagePermission`, `changedAt`. **Nada del perfil** |
 | `NotificationPreferencesChanged` | Cambian las preferencias de aviso | `Notification` | `userId`, preferencias modificadas |
 | `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt`. En `User` convierte su nombre de usuario en alias bloqueado 30 días |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` | `inviterId`, `invitedUserId` |
@@ -65,7 +65,8 @@ aplicar el efecto.
 > Ningún evento de `User` transporta la contraseña, su hash, el token de activación ni la
 > fecha de nacimiento.
 
-## `Work`
+## 
+`Work`
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|

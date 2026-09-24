@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace LectoresBeta\User\Preferences\Domain\Entity;
+namespace LectoresBeta\User\Privacy\Domain\Entity;
 
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
-use LectoresBeta\User\Preferences\Domain\Enum\PrivacyAudience;
+use LectoresBeta\User\Privacy\Domain\Enum\PrivacyAudience;
 
 /**
  * Who can see the profile, comment on the texts and send messages
@@ -64,17 +64,43 @@ class UserPrivacySettings
         return $this->activityVisible;
     }
 
+    /**
+     * Cuándo se tocaron por última vez. Lo pide la pantalla de ajustes, que
+     * dice «guardado» con una fecha.
+     */
+    public function updatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    /**
+     * The three settings that can be spoken about today.
+     *
+     * `activityVisible` is **not** here, and its absence is deliberate: the
+     * label «visibilidad de actividad» does not say what activity is, and the
+     * candidates have very different consequences (`S-16`). Offering a switch
+     * that nothing reads would be worse than not offering it — somebody would
+     * turn it on and believe themselves protected.
+     */
     public function change(
         PrivacyAudience $profileVisibility,
         PrivacyAudience $commentPermission,
         PrivacyAudience $messagePermission,
-        bool $activityVisible,
         \DateTimeImmutable $now,
     ): void {
         $this->profileVisibility = $profileVisibility;
         $this->commentPermission = $commentPermission;
         $this->messagePermission = $messagePermission;
-        $this->activityVisible = $activityVisible;
         $this->updatedAt = $now;
+    }
+
+    /**
+     * The settings an account starts with (`RN-4`): **explicit**, and the
+     * same three. A missing row is what this method exists to avoid, because
+     * «missing» is what somebody eventually reads as «everything allowed».
+     */
+    public static function defaultsFor(UserId $userId, \DateTimeImmutable $now): self
+    {
+        return new self($userId, $now);
     }
 }

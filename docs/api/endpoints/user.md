@@ -34,8 +34,8 @@
 | `PUT /me/password` | `changeMyPassword` | Cambiar o **establecer** contraseña | FEAT-USR-041 | DRAFT |
 | `PUT /me/literary-preferences` | `updateLiteraryPreferences` | Preferencias literarias | FEAT-USR-009 | PENDING |
 | `GET /me/settings` | `getAccountSettings` | Ajustes de cuenta | FEAT-USR-010/011 | PENDING |
-| `GET /me/privacy-settings` | `getMyPrivacySettings` | Ajustes de privacidad | FEAT-USR-038 | DRAFT |
-| `PUT /me/privacy-settings` | `updateMyPrivacySettings` | Modificarlos | FEAT-USR-038 | DRAFT |
+| `GET /api/v1/me/privacy-settings` | `getMyPrivacySettings` | Ajustes de privacidad | FEAT-USR-038 | **Implementado** |
+| `PUT /api/v1/me/privacy-settings` | `updateMyPrivacySettings` | Modificarlos | FEAT-USR-038 | **Implementado** |
 | `GET /me/notification-preferences` | `getMyNotificationPreferences` | Preferencias de aviso por canal | FEAT-USR-039 | DRAFT |
 | `PUT /me/notification-preferences` | `updateMyNotificationPreferences` | Modificarlas | FEAT-USR-039 | DRAFT |
 | `PATCH /me/settings` | `updateAccountSettings` | MD y propuestas de LB | FEAT-USR-010/011 | PENDING |
@@ -368,3 +368,51 @@ Tampoco conviene que el correo y la contraseña se guarden en la misma llamada q
 son operaciones que exigen reautenticación y que cierran sesiones, y mezclarlas con un cambio
 de biografía obliga a pedir la contraseña para cambiar la biografía o a no pedirla para
 cambiar el correo.
+
+
+---
+
+## `GET` y `PUT /api/v1/me/privacy-settings`
+
+**`operationId`:** `getMyPrivacySettings`, `updateMyPrivacySettings` · **Funcionalidad:**
+[`FEAT-USR-038`](../../features/user/FEAT-USR-038-privacy-settings.md)
+
+### Propósito
+
+Quién puede ver mi perfil, comentar mis textos y mandarme mensajes. **No son preferencias de
+visualización: son reglas de autorización**, y de ahí que las aplique el servidor en cada
+operación y no el cliente escondiendo botones.
+
+### Autorización
+
+Solo el titular. **No hay endpoint para los ajenos**, y no es un olvido: saber que alguien
+tiene el perfil restringido ya es información sobre esa persona. El efecto de esos ajustes se
+ve en las respuestas de los demás endpoints.
+
+No exige cuenta activada, al contrario que el resto de escrituras: cerrar la puerta es lo
+último que conviene dificultarle a nadie.
+
+### Reglas aplicadas
+
+- Los tres comparten valores: `EVERYONE`, `FOLLOWERS`, `NOBODY`.
+- Una cuenta nace con los tres en `EVERYONE`, escritos **en la misma transacción que la
+  cuenta**: un ajuste ausente es lo que alguien acaba leyendo como «todo permitido».
+- El `PUT` es **parcial**: lo que no se envía se queda como estaba.
+- Un valor desconocido devuelve `422 UNKNOWN_AUDIENCE`. **Nunca se interpreta**: tomarlo por
+  «todos» abriría una puerta que su dueño cree cerrada y por «nadie» cerraría una que cree
+  abierta.
+- `commentPermission` es un **techo** sobre la modalidad de cada obra. En `NOBODY` no se puede
+  corregir ninguna obra propia, ni siquiera por quien ya tiene acceso concedido.
+- No reescribe el pasado ni la modalidad guardada de cada obra, así que relajarlo devuelve a
+  cada una la que su autor eligió.
+
+### Qué no está todavía
+
+«Visibilidad de actividad» **no se expone**: la etiqueta no dice qué es «actividad» (`S-16`),
+y un interruptor que nada lee es peor que ninguno.
+
+`messagePermission` se guarda y no se aplica, porque la mensajería no existe.
+
+### Efectos
+
+Publica `PrivacySettingsChanged` con los tres ajustes y **nada del perfil**.

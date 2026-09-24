@@ -37,6 +37,24 @@ final class CorrectionNotAllowed extends \DomainException implements BusinessFai
         );
     }
 
+    /**
+     * The author's global privacy setting is a **ceiling** over each work's
+     * access mode (`FEAT-USR-038` `RN-2`): the profile sets the maximum and a
+     * work may lower it, never raise it. Without this, hardening the setting
+     * would close a door that stays open on every `PUBLIC` work.
+     *
+     * It says nothing about who the author let in, only that they are not
+     * taking comments: even a beta reader with live access is refused while
+     * the ceiling is down.
+     */
+    public static function becauseTheAuthorTookCommentsDown(): self
+    {
+        return new self(
+            'AUTHOR_DOES_NOT_ACCEPT_COMMENTS',
+            'This author is not accepting comments on their texts right now.',
+        );
+    }
+
     public function errorCode(): string
     {
         return $this->failureCode;

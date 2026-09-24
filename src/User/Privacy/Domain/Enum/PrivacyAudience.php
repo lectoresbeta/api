@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace LectoresBeta\User\Preferences\Domain\Enum;
+namespace LectoresBeta\User\Privacy\Domain\Enum;
 
 /**
  * Who a privacy setting lets in (`FEAT-USR-038` `RN-4b`).

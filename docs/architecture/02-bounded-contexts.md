@@ -88,6 +88,7 @@ síncrona entre contextos en el diseño actual.
 | `Feedback`, `Community` | `Community` (rankings) | Eventos | Alimentar los read models de ranking |
 | `Reading` | `Work` | **Contrato** `WorkAccessBriefs` | De quién es una obra, cómo está abierta y si existe para quien pregunta |
 | `Work` | `Reading` | **Contrato** `BetaReaderAccessCheck` | Si alguien es lector beta, para decidir si puede leer |
+| `Feedback` | `User` | **Contrato** `AuthorAudience` | El techo de privacidad del autor sobre quién puede comentar sus textos |
 
 > Las dos últimas filas son **el primer ciclo del sistema**: `Work` y `Reading` se preguntan
 > el uno al otro. Es tolerable porque las dos direcciones preguntan, cada una responde sobre

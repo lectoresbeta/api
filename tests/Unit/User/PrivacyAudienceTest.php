@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Tests\Unit\User;
 
-use LectoresBeta\User\Preferences\Domain\Enum\PrivacyAudience;
+use LectoresBeta\User\Privacy\Domain\Enum\PrivacyAudience;
 use LectoresBeta\Work\Manuscript\Domain\Enum\BetaReaderAccessMode;
 use PHPUnit\Framework\TestCase;
 

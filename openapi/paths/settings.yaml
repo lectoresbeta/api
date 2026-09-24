@@ -1,0 +1,132 @@
+# Los ajustes que el usuario controla sobre sí mismo.
+#
+# Los de privacidad **no son preferencias de visualización: son reglas de
+# autorización**. Esa es la única lectura correcta y determina dónde se
+# aplican: en el servidor, en cada operación, y no escondiendo botones.
+
+PrivacyAudience:
+  type: string
+  enum: [EVERYONE, FOLLOWERS, NOBODY]
+  description: |
+    Los tres ajustes comparten los mismos tres valores a propósito: son la
+    misma pregunta —¿hasta dónde llega esto?— aplicada a tres cosas.
+
+    **`FOLLOWERS` se comporta hoy como `NOBODY`**, y no es un fallo: todavía
+    no se puede seguir a nadie, así que el conjunto de seguidores de cualquier
+    autor está vacío y «solo mis seguidores» significa «nadie». Cuando existan
+    los seguidores, empezará a significar lo que dice sin que haya que tocar
+    esta pantalla.
+
+PrivacySettings:
+  type: object
+  required: [profileVisibility, commentPermission, messagePermission, updatedAt]
+  properties:
+    profileVisibility:
+      allOf:
+        - $ref: '#/PrivacyAudience'
+      description: |
+        Quién puede encontrarme y abrir mi perfil. En `NOBODY`, **la cuenta se
+        vuelve invisible**: deja de aparecer al buscar a quién invitar, y el
+        perfil responde de forma que no confirme que existe.
+    commentPermission:
+      allOf:
+        - $ref: '#/PrivacyAudience'
+      description: |
+        Quién puede comentar mis textos. Es un **techo** sobre la modalidad de
+        cada obra: el perfil pone el máximo y una obra puede bajarlo, nunca
+        subirlo. En `NOBODY` no se puede corregir ninguna obra propia, sea cual
+        sea su modalidad, **ni siquiera por quien ya tiene acceso concedido** —
+        lo que se cierra es la puerta de comentar, no la de entrar.
+
+        No interrumpe lo que ya está en marcha: quien empezó una corrección,
+        entrega y cobra.
+    messagePermission:
+      allOf:
+        - $ref: '#/PrivacyAudience'
+      description: |
+        Quién puede mandarme mensajes directos. Se guarda ya, y se aplicará en
+        cuanto exista la mensajería.
+    updatedAt:
+      type: string
+      format: date-time
+
+privacySettings:
+  get:
+    tags: [User]
+    operationId: getMyPrivacySettings
+    summary: Mis ajustes de privacidad
+    description: |
+      **Solo los propios.** No hay endpoint para consultar los de otra
+      persona, y no es un olvido: saber que alguien tiene el perfil restringido
+      ya es información sobre esa persona. El efecto de esos ajustes se ve en
+      las respuestas de los demás endpoints, no preguntando por ellos.
+
+      Una cuenta nace con los tres en `EVERYONE`, escritos de forma explícita
+      en el mismo momento del alta: un ajuste ausente no puede interpretarse
+      como «todo permitido».
+
+      «Visibilidad de actividad» **no aparece todavía**. La etiqueta no dice
+      qué es «actividad» y los candidatos tienen consecuencias muy distintas,
+      así que ofrecer un interruptor que nada lee sería peor que no ofrecerlo.
+    responses:
+      '200':
+        description: Los ajustes del titular.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PrivacySettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  put:
+    tags: [User]
+    operationId: updateMyPrivacySettings
+    summary: Cambiar mis ajustes de privacidad
+    description: |
+      **Lo que no se envía se queda como estaba.** La pantalla manda un
+      desplegable cada vez, y obligar a enviar los tres haría que el cliente
+      reenviase valores que no ha leído — que es como se pierde un ajuste sin
+      que nadie lo toque.
+
+      No reescribe el pasado: no borra lo ya publicado, no revoca accesos ya
+      concedidos y no interrumpe una corrección en curso. Y **no modifica la
+      modalidad guardada de cada obra**: las dos se guardan como están y la
+      autorización evalúa las dos quedándose con la más restrictiva, de modo
+      que relajar el perfil devuelve a cada obra la modalidad que su autor
+      eligió.
+
+      No exige cuenta activada, al contrario que el resto de escrituras:
+      cerrar la puerta es lo último que conviene dificultarle a nadie.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              profileVisibility:
+                $ref: '#/PrivacyAudience'
+              commentPermission:
+                $ref: '#/PrivacyAudience'
+              messagePermission:
+                $ref: '#/PrivacyAudience'
+    responses:
+      '200':
+        description: |
+          Cómo han quedado **los tres**, no solo el que se tocó: quien acaba de
+          mover un desplegable quiere ver el estado completo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PrivacySettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: |
+          `code: UNKNOWN_AUDIENCE`. Un valor desconocido **se rechaza, nunca se
+          interpreta**: tomarlo por «todos» abriría una puerta que su dueño
+          cree cerrada, y tomarlo por «nadie» cerraría una que cree abierta.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

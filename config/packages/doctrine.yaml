@@ -234,6 +234,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/User/Preferences/Infrastructure/Persistence/Doctrine/Mapping'
                 prefix: 'LectoresBeta\User\Preferences\Domain\Entity'
                 alias: UserPreferences
+            UserPrivacy:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User/Privacy/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\User\Privacy\Domain\Entity'
+                alias: UserPrivacy
             UserProfile:
                 type: xml
                 is_bundle: false

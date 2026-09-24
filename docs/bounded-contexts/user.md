@@ -115,6 +115,7 @@ preferencias y presencia pública como autor.
 | `GenreCatalogue` | Cuáles de estos códigos de temática **no** existen | `Work` |
 | `RegisteredUsers` | **Un booleano**: ¿existe este usuario? Nada más de él | `Reading` |
 | `ReaderDirectory` | Hasta N personas cuyo nombre o `@usuario` encajan, como tarjeta de perfil | `Reading` |
+| `AuthorAudience` | **Un booleano**: ¿acepta este autor comentarios de esta persona? Nunca el ajuste | `Feedback` |
 
 Los cuatro son de lectura y devuelven lo justo
 ([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md)). `ReaderMaturity`
@@ -135,7 +136,12 @@ Tres reglas viajan **con la implementación y no con quien llama**, y es deliber
 busca por correo —un buscador que acepta una dirección responde sin querer a «¿esta persona
 tiene cuenta aquí?»—, solo aparecen cuentas activas, y el techo de privacidad de
 [`FEAT-USR-038`](../features/user/FEAT-USR-038-privacy-settings.md) se aplica aquí. La última
-todavía no descarta a nadie porque ese ajuste no existe; el sitio donde irá está escrito.
+se aplica aquí, y ya funciona: quien tenga el perfil en `NOBODY` no aparece.
+
+`AuthorAudience` es el **techo** de [`FEAT-USR-038`](../features/user/FEAT-USR-038-privacy-settings.md):
+el perfil pone el máximo y cada obra puede bajarlo, nunca subirlo. Devuelve un booleano y no
+el ajuste, y eso es lo que permite que `FOLLOWERS` signifique hoy «nadie» —el grafo de
+seguidores no existe— y mañana lo que dice, **cambiando un solo sitio**.
 
 ## Preguntas abiertas
 

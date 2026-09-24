@@ -22,6 +22,7 @@ use LectoresBeta\User\Legal\Domain\Entity\LegalAcceptance;
 use LectoresBeta\User\Legal\Domain\Enum\LegalDocumentType;
 use LectoresBeta\User\Legal\Domain\Repository\LegalAcceptanceRepository;
 use LectoresBeta\User\Legal\Domain\ValueObject\LegalAcceptanceId;
+use LectoresBeta\User\Privacy\Application\Service\StartPrivacySettings;
 
 /**
  * Signing up (`FEAT-USR-001`).
@@ -50,6 +51,7 @@ final readonly class RegisterUserHandler
     public function __construct(
         private UserRepository $users,
         private LegalAcceptanceRepository $acceptances,
+        private StartPrivacySettings $privacySettings,
         private UsernameAllocator $usernames,
         private PasswordPolicy $passwordPolicy,
         private PasswordHasher $passwordHasher,
@@ -86,6 +88,12 @@ final readonly class RegisterUserHandler
 
         $this->session->execute(function () use ($user, $userId, $now, $terms, $privacy, $command): void {
             $this->users->save($user);
+
+            // En la misma transacción y no en respuesta a un evento: una
+            // cuenta sin ajustes de privacidad, aunque fuese un segundo, es
+            // una cuenta cuya privacidad alguien tiene que suponer
+            // (`FEAT-USR-038` `RN-4`).
+            $this->privacySettings->forAccount($userId, $now);
 
             foreach ([[LegalDocumentType::TERMS_OF_USE, $terms], [LegalDocumentType::PRIVACY_POLICY, $privacy]] as [$type, $version]) {
                 $this->acceptances->save(new LegalAcceptance(

@@ -133,6 +133,9 @@ services:
     LectoresBeta\User\Account\Application\Contract\ReaderDirectory:
         alias: LectoresBeta\User\Account\Application\Service\SearchReaderDirectory
 
+    LectoresBeta\User\Privacy\Application\Contract\AuthorAudience:
+        alias: LectoresBeta\User\Privacy\Application\Service\CheckAuthorAudience
+
     LectoresBeta\Work\Chapter\Application\Contract\CorrectionBriefs:
         alias: LectoresBeta\Work\Chapter\Application\Service\ResolveCorrectionBriefs
 

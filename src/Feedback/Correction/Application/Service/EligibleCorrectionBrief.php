@@ -11,6 +11,7 @@ use LectoresBeta\Feedback\Correction\Domain\Exception\CorrectionNotAllowed;
 use LectoresBeta\Feedback\Correction\Domain\Service\CorrectionPolicy;
 use LectoresBeta\Reading\BetaReaderAccess\Application\Contract\BetaReaderAccessCheck;
 use LectoresBeta\User\Account\Application\Contract\ReaderMaturity;
+use LectoresBeta\User\Privacy\Application\Contract\AuthorAudience;
 use LectoresBeta\Work\Chapter\Application\Contract\CorrectionBrief;
 use LectoresBeta\Work\Chapter\Application\Contract\CorrectionBriefs;
 
@@ -26,8 +27,13 @@ use LectoresBeta\Work\Chapter\Application\Contract\CorrectionBriefs;
  *
  * Three contexts answer here, each through its published contract and none
  * through its model: `Work` says what is asked and whether the door is open,
- * `Reading` whether this person is a beta reader, and `User` whether they are
- * old enough.
+ * `Reading` whether this person is a beta reader, and `User` both whether
+ * they are old enough and whether the author is taking comments at all.
+ *
+ * That last one is a **ceiling** (`FEAT-USR-038` `RN-2`): the profile sets
+ * the maximum and each work may lower it, never raise it. It is checked
+ * before the work's own mode because that is what «ceiling» means — a work
+ * published as `PUBLIC` does not get past a profile that is closed.
  */
 final readonly class EligibleCorrectionBrief
 {
@@ -35,6 +41,7 @@ final readonly class EligibleCorrectionBrief
         private CorrectionBriefs $briefs,
         private BetaReaderAccessCheck $access,
         private ReaderMaturity $maturity,
+        private AuthorAudience $audience,
         private CorrectionPolicy $policy,
     ) {
     }
@@ -55,6 +62,14 @@ final readonly class EligibleCorrectionBrief
 
         if ($this->policy->isTheAuthor($readerId, $brief->authorId)) {
             throw CorrectionNotAllowed::toTheAuthor();
+        }
+
+        // El techo del perfil, antes que la modalidad de la obra: una obra
+        // `PUBLIC` no pasa por encima de un perfil cerrado. Ni siquiera quien
+        // ya tiene acceso concedido — lo que se cerró es la puerta de
+        // comentar, no la de entrar.
+        if (!$this->audience->acceptsCommentsFrom($brief->authorId, $readerId)) {
+            throw CorrectionNotAllowed::becauseTheAuthorTookCommentsDown();
         }
 
         if (!$this->policy->admits(WorkAccessMode::orStrictest($brief->accessMode), $this->access->hasAccessTo($brief->workId, $readerId))) {

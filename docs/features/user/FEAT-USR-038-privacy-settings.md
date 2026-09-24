@@ -5,7 +5,7 @@ context: User
 concept: Privacy
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-22 (pestaña «Privacidad» de Configuración)
@@ -214,17 +214,19 @@ ajuste ausente no puede interpretarse como «todo permitido».
 
 ## Criterios de aceptación
 
-- [ ] Cada ajuste se aplica en el backend, no solo en la interfaz.
-- [ ] Llamar directamente a un endpoint restringido devuelve error, no datos.
+- [x] Cada ajuste se aplica en el backend, no solo en la interfaz.
+- [x] Llamar directamente a un endpoint restringido devuelve error, no datos.
 - [ ] Con el perfil restringido, `/profile/{username}` responde de forma que **no confirme la
-      existencia de la cuenta**.
-- [ ] Un usuario bloqueado no gana acceso por ningún ajuste.
-- [ ] Cambiar un ajuste no borra ni oculta retroactivamente lo ya publicado.
-- [ ] Los ajustes de un usuario no son consultables por otro.
-- [ ] Una cuenta nueva tiene valores por defecto explícitos.
-- [ ] Entre ajuste global y modalidad de obra se aplica el más restrictivo.
-- [ ] Endurecer el ajuste global **no modifica** la modalidad guardada de cada obra.
-- [ ] Relajarlo después devuelve a cada obra su modalidad original.
+      existencia de la cuenta**. *Ese endpoint es [`FEAT-USR-014`](FEAT-USR-014-view-public-profile.md)
+      y todavía no existe. Lo que sí se comprueba es lo único que hoy expone una cuenta: con el
+      perfil en `NOBODY` deja de aparecer al buscar a quién invitar.*
+- [ ] Un usuario bloqueado no gana acceso por ningún ajuste. *[`FEAT-COM-034`](../community/FEAT-COM-034-block-user.md) no existe: no hay bloqueos que probar.*
+- [x] Cambiar un ajuste no borra ni oculta retroactivamente lo ya publicado.
+- [x] Los ajustes de un usuario no son consultables por otro.
+- [x] Una cuenta nueva tiene valores por defecto explícitos.
+- [x] Entre ajuste global y modalidad de obra se aplica el más restrictivo.
+- [x] Endurecer el ajuste global **no modifica** la modalidad guardada de cada obra.
+- [x] Relajarlo después devuelve a cada obra su modalidad original.
 
 ## Preguntas abiertas
 
@@ -242,4 +244,51 @@ ajuste ausente no puede interpretarse como «todo permitido».
 **Especificación:** `APPROVED` (2026-09-24). `S-13` resuelta: `EVERYONE` / `FOLLOWERS` / `NOBODY`. `S-16`
 queda como detalle de qué se considera «actividad».
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-24). Ni tabla nueva: `user_privacy_settings` estaba en
+el esquema desde el andamiaje. La migración que acompaña a este cambio solo **rellena** las
+cuentas anteriores, para que la invariante de `RN-4` —ninguna fila falta— sea cierta y no
+aspiracional.
+
+### Lo que hace
+
+- `GET` y `PUT /me/privacy-settings`, solo del titular. El `PUT` es **parcial**: lo que no se
+  envía se queda como estaba, porque la pantalla mueve un desplegable cada vez.
+- Una cuenta nace con los tres en `EVERYONE`, escritos **en la misma transacción que la
+  cuenta**. Una cuenta sin ajustes, aunque fuese un segundo, es una cuenta cuya privacidad
+  alguien tiene que suponer.
+- Un valor desconocido se rechaza con `UNKNOWN_AUDIENCE`. Es el único sitio del backend donde
+  interpretar sería peor en las dos direcciones a la vez.
+- **El techo funciona** (`RN-2`, `S-14`): con `commentPermission` en `NOBODY` no se puede
+  corregir ninguna obra propia, sea cual sea su modalidad, **ni siquiera quien ya tiene acceso
+  concedido** — lo que se cierra es la puerta de comentar, no la de entrar. Y relajarlo
+  devuelve a cada obra la modalidad que su autor eligió, porque endurecerlo no reescribió
+  ninguna.
+- `profileVisibility` en `NOBODY` retira a la cuenta del buscador de a quién invitar
+  ([`FEAT-RDG-006`](../reading/FEAT-RDG-006-find-beta-readers.md)), que es hoy el único sitio
+  donde una cuenta se puede encontrar.
+- Publica `PrivacySettingsChanged` con los tres ajustes y nada del perfil.
+
+### `FOLLOWERS` se comporta como `NOBODY`, y es la respuesta correcta
+
+No es un apaño: **nadie puede seguir a nadie todavía** ([`FEAT-COM-010`](../README.md) no
+existe), así que el conjunto de seguidores de cualquier autor está vacío y «solo mis
+seguidores» significa «nadie». Cuando existan los seguidores, `CheckAuthorAudience` consultará
+el grafo y la frase dejará de ser una tautología; **cambia un solo sitio**, que es la razón de
+que el contrato devuelva un booleano en vez de entregar el ajuste.
+
+Conviene ver hacia qué lado falla si alguien olvida volver: `FOLLOWERS` seguiría comportándose
+como `NOBODY`, un ajuste demasiado estricto que su dueño nota y del que se queja. La
+equivocación contraria —tratarlo como `EVERYONE`— no la nota nadie, y es la que importa.
+
+### Qué falta
+
+- **«Visibilidad de actividad» no se expone**, y no por olvido: la etiqueta no dice qué es
+  «actividad» (`S-16`) y los candidatos tienen consecuencias muy distintas. La columna existe
+  y nada la lee; ofrecer un interruptor que no hace nada sería peor que no ofrecerlo, porque
+  alguien lo activaría y se creería protegido.
+- `messagePermission` se guarda y **todavía no se aplica**: la mensajería
+  ([`FEAT-COM-011`](../README.md)) no existe. No es un agujero — no hay nada que proteger
+  mientras no se pueda mandar un mensaje.
+- El perfil público (`FEAT-USR-014`) y el bloqueo (`FEAT-COM-034`) no existen, así que dos
+  criterios de aceptación no se pueden comprobar.
+- `S-15` sigue abierta: con el perfil restringido, qué se ve del autor en el catálogo.
