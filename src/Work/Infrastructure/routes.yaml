@@ -58,3 +58,19 @@ setWorkGenres:
     path: /api/v1/works/{workId}/genres
     controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\SetWorkGenresController::__invoke
     methods: [PUT]
+
+# La clasificación de contenido sensible (FEAT-WRK-017). Va en el flujo de
+# publicación y no en un ajuste aparte: si se puede omitir, se omitirá.
+
+setWorkContentRating:
+    path: /api/v1/works/{workId}/content-rating
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\SetContentRatingController::__invoke
+    methods: [PUT]
+
+# Público, como el catálogo de temáticas: hace falta en pantallas que se ven
+# sin sesión.
+
+listContentWarnings:
+    path: /api/v1/content-warnings
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ListContentWarningsController::__invoke
+    methods: [GET]

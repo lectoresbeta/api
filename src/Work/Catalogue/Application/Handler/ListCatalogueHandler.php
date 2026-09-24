@@ -11,6 +11,7 @@ use LectoresBeta\Work\Catalogue\Application\DTO\CataloguePage;
 use LectoresBeta\Work\Catalogue\Application\Port\CatalogueQuery;
 use LectoresBeta\Work\Catalogue\Application\Query\ListCatalogue;
 use LectoresBeta\Work\Catalogue\Domain\Exception\UnknownCatalogueFilter;
+use LectoresBeta\Work\Manuscript\Domain\Enum\ContentWarning;
 use LectoresBeta\Work\Manuscript\Domain\Enum\WorkStatus;
 
 /**
@@ -30,6 +31,11 @@ use LectoresBeta\Work\Manuscript\Domain\Enum\WorkStatus;
  * Una temática que no existe **no se valida aquí**: no hay forma de
  * distinguirla de una retirada del catálogo, y las obras que la tuvieran
  * siguen apuntando a ella. Simplemente no encuentra nada.
+ *
+ * Las etiquetas de contenido van al revés en las dos cosas: **quitan** obras
+ * en vez de añadirlas (`FEAT-WRK-017` `RN-10`) y sí se validan, porque su
+ * lista es cerrada y aceptar una errata enseñaría justo lo que el lector ha
+ * pedido no ver.
  *
  * Los demás filtros se validan en vez de ignorarse. Un valor desconocido devuelve
  * los resultados de otra consulta si se ignora, y el usuario no tiene cómo
@@ -64,12 +70,40 @@ final readonly class ListCatalogueHandler
             $query->readerId,
             $this->maturity->isOfAge($query->readerId),
             array_values(array_unique(array_map(strtoupper(...), $query->genres))),
+            self::excluded($query->excludedWarnings),
             self::status($query->status),
             'relevance' === $query->sort,
             $query->page,
             min(max($query->perPage, 1), self::MAX_PER_PAGE),
             $this->clock->now(),
         ));
+    }
+
+    /**
+     * Las etiquetas que el lector no quiere ver **sí se validan**, al revés
+     * que las temáticas: la lista es cerrada, así que un valor que no está en
+     * ella es una errata, y darla por buena enseñaría exactamente lo que se
+     * ha pedido no ver.
+     *
+     * @param list<string> $warnings
+     *
+     * @return list<string>
+     */
+    private static function excluded(array $warnings): array
+    {
+        $excluded = [];
+
+        foreach (array_unique(array_map(strtoupper(...), $warnings)) as $code) {
+            $warning = ContentWarning::tryFrom($code);
+
+            if (null === $warning) {
+                throw UnknownCatalogueFilter::contentWarning();
+            }
+
+            $excluded[] = $warning->value;
+        }
+
+        return $excluded;
     }
 
     /**

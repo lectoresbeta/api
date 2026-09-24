@@ -150,8 +150,13 @@ parezca un error.
 |---|---|---|
 | Listar el catálogo | `GET /works` | `listWorks` |
 
-Parámetros: `genres[]`, `readingTime`, `status`, `contentWarnings[]`, `sort`, `page`,
+Parámetros: `genres[]`, `excludeContentWarnings[]`, `readingTime`, `status`, `sort`, `page`,
 `perPage`.
+
+El filtro de contenido sensible se llama `excludeContentWarnings[]` y no `contentWarnings[]`,
+que es como lo nombraba este contrato: **quita** obras en vez de buscarlas, y un parámetro que
+quita y se llama como si buscara es una trampa para quien integre. Lo que esta ficha fijaba
+era el filtro, no su nombre.
 
 La respuesta incluye `total` y `totalPages` además de los elementos. Cada elemento lleva
 portada, título, sinopsis truncada, géneros, tiempo de lectura, métricas y la insignia de
@@ -271,6 +276,21 @@ No es un saldo y no es un precio: es la respuesta a «¿cuánto trabajo produce 
 obra?», que es lo único que el catálogo necesita. Y el tope hace de paso que por encima de
 diez todos los autores se parezcan.
 
+### Los dos filtros de clasificación tiran en direcciones contrarias
+
+El de **temática** (`RN-5`) añade: multiselección y en `O`, porque con `Y` añadir una temática
+vaciaría la pantalla, que es lo contrario de descubrir. El de **etiquetas de contenido**
+(`RN-10`, [`FEAT-WRK-017`](FEAT-WRK-017-content-rating.md)) quita: basta con que la obra lleve
+una de las rechazadas para que desaparezca.
+
+De ahí que se validen distinto. Una temática desconocida es una búsqueda vacía —no hay forma
+de distinguirla de una retirada del catálogo—, mientras que una etiqueta desconocida es un
+`422`: la lista es cerrada, y aceptar una errata enseñaría justo lo que el lector ha pedido no
+ver.
+
+Lo excluido **no llega al cliente** y no cuenta en `total`, que es `RN-9` aplicado al filtro
+explícito: ocultar en la interfaz lo que el servidor ya ha enviado no es filtrar.
+
 ### La insignia sí lleva un importe, y solo ella
 
 [`FEAT-CRD-013`](../credits/FEAT-CRD-013-work-credit-badge.md) añadió `ChapterPriceChanged` a
@@ -294,9 +314,6 @@ fuese completa. No compensa: el catálogo ya tiene el estado delante, en la mism
 
 ### Falta
 
-- **El filtro de etiquetas de contenido** (`RN-10`): una obra todavía no tiene etiquetas
-  ([`FEAT-WRK-017`](FEAT-WRK-017-content-rating.md)). El de **temática** (`RN-5`) ya funciona,
-  con multiselección y en `O`.
 - **El filtro de tiempo de lectura** (`L-1`): sigue sin estar definido qué rangos son.
 - **Las preferencias de contenido sensible** (`RN-9`,
   [`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)) y **las obras de usuarios

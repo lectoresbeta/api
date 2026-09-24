@@ -12,6 +12,12 @@ final readonly class CatalogueEntry
 {
     /**
      * @param list<string> $genres
+     * @param list<string> $contentWarnings lo que la obra declara contener.
+     *                                      Va en la tarjeta y no solo en la
+     *                                      cabecera: una advertencia que solo
+     *                                      aparece cuando ya estás leyendo no
+     *                                      advierte de nada (`FEAT-WRK-017`
+     *                                      `RN-8`)
      */
     public function __construct(
         public string $workId,
@@ -21,6 +27,7 @@ final readonly class CatalogueEntry
         public int $wordCount,
         public int $chapterCount,
         public bool $adultsOnly,
+        public array $contentWarnings,
         public array $genres,
         public int $correctableChapters,
         /** Lo que gana quien corrija, o cero si ahora mismo no se puede. */

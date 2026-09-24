@@ -218,7 +218,7 @@ final class CatalogueTest extends EconomyScenario
         $card = $this->payload()['works'][0];
 
         self::assertSame(
-            ['workId', 'title', 'synopsis', 'status', 'wordCount', 'chapterCount', 'adultsOnly', 'genres', 'correctableChapters', 'credits', 'correctionsReceived'],
+            ['workId', 'title', 'synopsis', 'status', 'wordCount', 'chapterCount', 'adultsOnly', 'contentWarnings', 'genres', 'correctableChapters', 'credits', 'correctionsReceived'],
             array_keys($card),
         );
         self::assertStringNotContainsString('palabra palabra', json_encode($card, \JSON_THROW_ON_ERROR));

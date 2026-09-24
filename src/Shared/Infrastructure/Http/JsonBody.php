@@ -56,6 +56,22 @@ final readonly class JsonBody
     }
 
     /**
+     * A flag, such as whether a work is adults-only.
+     *
+     * A missing or non-boolean value comes back as `null` rather than
+     * `false`, and the difference matters where it is used: «nobody said»
+     * is not «no», and assuming the permissive reading is exactly the
+     * mistake a content rating exists to prevent. Whoever asks decides what
+     * to do with `null`.
+     */
+    public function bool(string $field): ?bool
+    {
+        $value = $this->values[$field] ?? null;
+
+        return \is_bool($value) ? $value : null;
+    }
+
+    /**
      * A field holding a list of strings, such as the chosen genres.
      *
      * Anything that is not a string is dropped rather than coerced: turning

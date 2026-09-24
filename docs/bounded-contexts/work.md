@@ -67,6 +67,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | `Visibility` | `VISIBLE`, `HIDDEN` — queda **solo para el fragmento** |
 | `BetaReaderAccessMode` | `PUBLIC`, `ON_REQUEST`, `PRIVATE` |
 | `Genre` | Se apunta por **código** al catálogo de `User`. Una obra declara de cero a tres |
+| `ContentWarning` | `SEXUAL_CONTENT`, `GRAPHIC_VIOLENCE`, `SELF_HARM`, `SUBSTANCE_USE`, `STRONG_LANGUAGE`. Catálogo **cerrado** y sin tope: estas etiquetas quitan obras del catálogo, así que pasarse se castiga solo. No apta para menores **no es una de ellas**: va por su propio eje (`FEAT-WRK-017`) |
 
 ## Eventos publicados
 
@@ -125,6 +126,9 @@ sabe este contexto.
   `IN_CORRECTION`. `WorkStatus` responde «si se puede comentar». Son dos ejes distintos.
 - `RN-5` El registro de autoría es inmutable: editar la obra genera uno nuevo, no modifica el anterior.
 - `RN-6` Cambiar la modalidad de acceso no revoca los accesos ya concedidos.
+- `RN-9` La clasificación de contenido sensible es **del autor y explícita**: el indicador de
+  público no tiene valor por defecto, porque suponer «apta para menores» cuando nadie lo ha
+  dicho es el error que esa clasificación existe para evitar (`FEAT-WRK-017`).
 
 ## Preguntas abiertas
 

@@ -5,14 +5,15 @@ context: Work
 concept: Manuscript
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-23 (contenido no apto para menores y filtros)
 endpoints:
   - PUT /works/{workId}/content-rating
-events: [WorkContentRatingSet]
-depends_on: [FEAT-WRK-001]
+  - GET /content-warnings
+events: []
+depends_on: [FEAT-WRK-001, FEAT-WRK-012]
 updated: 2026-09-24
 ---
 
@@ -111,17 +112,72 @@ Va en el flujo de publicación, no en un ajuste aparte: **si se puede omitir, se
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `WorkContentRatingSet` | Al declararla o cambiarla | `Community` (filtrado del muro y recomendaciones), read models del catálogo |
+| `WorkContentRatingSet` | Al declararla o cambiarla | `Community` (filtrado del muro y recomendaciones), `Moderation` (para juzgar una reclamación) |
+
+**Especificado y todavía no publicado.** Es la misma decisión que con las temáticas: ninguno
+de los dos consumidores existe, y publicar un hecho que nadie escucha es inventarse un
+contrato que luego hay que mantener. El catálogo no lo necesita —lee la clasificación de las
+tablas de su propio contexto, sin cruzar ninguna frontera—, así que el primer consumidor real
+será `Moderation`, y el evento se publica entonces.
+
+## Cómo está implementada
+
+`PUT /works/{workId}/content-rating` sustituye la clasificación entera, y `GET
+/content-warnings` publica el catálogo cerrado para que nadie lo copie en el cliente.
+
+### La asimetría del cuerpo no es un descuido
+
+`adultsOnly` es obligatorio; `contentWarnings` puede ir vacío.
+
+Una lista vacía **es una declaración**: «no contiene nada de esto». Omitir el indicador de
+público no lo es: significa que nadie lo ha dicho, y dar por supuesto lo más permisivo es
+exactamente el error que esta funcionalidad existe para evitar. Si las dos cosas pudieran
+faltar, un cuerpo vacío diría «apta para todos» sin que ningún autor lo hubiera declarado —y
+es el autor quien responde de esa declaración (`RN-7`).
+
+Por eso `JsonBody::bool()` devuelve `null` y no `false` cuando el campo falta: «nadie lo ha
+dicho» no es «no», y quien pregunta decide qué hacer con la diferencia.
+
+### Etiquetar de más no se penaliza
+
+No hay tope, al revés que en las temáticas. Y la razón es que los dos filtros del catálogo
+tiran en direcciones contrarias: una obra con ocho temáticas aparecería en casi cualquier
+búsqueda —de ahí el tope de tres—, mientras que las etiquetas de contenido **quitan** obras.
+Declararlas todas solo le cuesta lectores a su autor. Se castiga solo.
+
+### El filtro del catálogo excluye, y por eso se valida
+
+`excludeContentWarnings[]` quita del catálogo cualquier obra que lleve una de las etiquetas
+dadas. El nombre no es el que fijaba `FEAT-WRK-012` —`contentWarnings[]`—, y se ha cambiado a
+propósito: un parámetro que quita y se llama como si buscara es una trampa para quien integre.
+
+Lo excluido **no llega al cliente** y no cuenta en el total: ocultar en la interfaz lo que el
+servidor ya ha enviado no es filtrar.
+
+Una etiqueta que no existe devuelve `422`, al revés que una temática desconocida, que
+simplemente no encuentra nada. Allí no hay forma de distinguir un código inventado de uno
+retirado del catálogo; aquí la lista es cerrada, así que es una errata. Y el error va en la
+dirección peligrosa: darla por buena enseñaría justo lo que el lector ha pedido no ver.
+
+### `RN-5` no se comprueba, se construye
+
+Cambiar la clasificación no toca las correcciones en curso porque aquí no se toca nada más que
+la obra. Lo que cambia es quién la encuentra a partir de ahora.
 
 ## Criterios de aceptación
 
-- [ ] El autor declara la clasificación en el flujo de publicación.
-- [ ] La clasificación se ve en la tarjeta del catálogo, antes de abrir la obra.
-- [ ] Una obra no apta para menores no aparece a quien no cumple la edad.
-- [ ] Las etiquetas salen de un catálogo cerrado.
+- [x] El autor declara la clasificación en el flujo de publicación.
+- [x] La clasificación se ve en la tarjeta del catálogo, antes de abrir la obra.
+- [x] Una obra no apta para menores no aparece a quien no cumple la edad.
+- [x] Las etiquetas salen de un catálogo cerrado.
 - [ ] Una reclamación por contenido correctamente etiquetado se desestima.
 - [ ] Etiquetar mal puede dar lugar a reclamación estimada.
-- [ ] Cambiar la clasificación no altera correcciones en curso.
+- [x] Cambiar la clasificación no altera correcciones en curso.
+
+Los dos que faltan son los dos lados del mecanismo de defensa, y ninguno es de este contexto:
+los juzga `Moderation` ([`FEAT-MOD-002`](../moderation/FEAT-MOD-002-review-claim.md) `RN-12`),
+que no existe todavía. Lo que esta ficha deja hecho es lo que los hace posibles: una
+declaración explícita, completa, guardada y visible antes de abrir la obra.
 
 ## Preguntas abiertas
 
@@ -130,7 +186,7 @@ Va en el flujo de publicación, no en un ajuste aparte: **si se puede omitir, se
 | W-19 | ¿La clasificación es por obra o por capítulo? | Hoy **por obra** (`RN-2`); por capítulo sería más preciso y más trabajo para el autor |
 | OB-7 | ¿Hay edad mínima y fecha de nacimiento fiable? | Sin dato de edad, `ADULTS_ONLY` no se puede aplicar |
 | W-21 | ¿Se etiqueta también el **muro** y los comentarios? | Una publicación puede ser igual de fuerte que una obra |
-| W-22 | ¿Qué pasa con las obras ya publicadas cuando se añade esta funcionalidad? | Nadie las etiquetó |
+| ~~W-22~~ | ¿Qué pasa con las obras ya publicadas cuando se añade esta funcionalidad? | **Resuelta:** se quedan sin etiquetas y no apta para menores a `false`, que es lo que ya decía su fila. No hay migración de datos: una obra sin etiquetar aparece en todas las búsquedas y su autor la clasifica cuando quiera |
 
 `OB-7` es la que más arrastra: sin edad verificable, «no apto para menores» es una etiqueta
 informativa y poco más. Conviene ser honestos sobre eso en lugar de fingir un control que no
@@ -138,8 +194,14 @@ existe.
 
 ## Estado
 
-**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
-afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
-implementación.
+**Especificación:** `APPROVED` (2026-09-24).
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-24). La declaración, el catálogo de etiquetas, el
+filtro del catálogo y la visibilidad antes de abrir la obra están hechos. Falta la mitad que
+vive en `Moderation`: que una reclamación sobre contenido bien etiquetado se desestime y que
+etiquetar mal sea reclamable. También `WorkContentRatingSet`, que se publicará cuando exista
+su primer consumidor.
+
+`OB-7` sigue siendo la más honesta de las preguntas abiertas: sin edad verificable,
+`ADULTS_ONLY` retira la obra de quien no ha declarado fecha de nacimiento, y poco más. El
+mecanismo está, el control de edad real no.

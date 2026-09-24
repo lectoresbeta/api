@@ -65,6 +65,27 @@ collection:
           Una temática que nadie tiene devuelve lista vacía, no `422`: no hay
           forma de distinguir un código inventado de uno retirado del
           catálogo.
+      - name: excludeContentWarnings
+        in: query
+        required: false
+        description: |
+          Lo que el lector **no** quiere ver: una obra que lleve cualquiera de
+          estas etiquetas desaparece del catálogo, y tampoco cuenta en
+          `total`. Lo excluido no llega al cliente; no se esconde en la
+          interfaz.
+
+          Se llama `excludeContentWarnings` y no `contentWarnings` porque
+          quita obras en vez de buscarlas, y un nombre que no lo diga es una
+          trampa para quien integre.
+
+          Una etiqueta que no existe devuelve `422`, al revés que una temática
+          desconocida: la lista es cerrada, así que un valor que no está es
+          una errata, y darla por buena enseñaría justo lo que se ha pedido no
+          ver.
+        schema:
+          type: array
+          items:
+            $ref: '#/ContentWarning'
       - name: sort
         in: query
         required: false
@@ -113,7 +134,7 @@ collection:
                   type: array
                   items:
                     type: object
-                    required: [workId, title, status, wordCount, chapterCount, adultsOnly, correctableChapters, credits, correctionsReceived]
+                    required: [workId, title, status, wordCount, chapterCount, adultsOnly, contentWarnings, correctableChapters, credits, correctionsReceived]
                     properties:
                       workId:
                         type: string
@@ -133,6 +154,14 @@ collection:
                         type: integer
                       adultsOnly:
                         type: boolean
+                      contentWarnings:
+                        type: array
+                        description: |
+                          Lo que la obra declara contener. **Antes de abrirla**
+                          (`FEAT-WRK-017` `RN-8`): una advertencia que solo
+                          aparece cuando ya estás leyendo no advierte de nada.
+                        items:
+                          $ref: '#/ContentWarning'
                       genres:
                         type: array
                         items:
@@ -451,7 +480,7 @@ work:
           application/json:
             schema:
               type: object
-              required: [workId, authorId, title, status, accessMode, adultsOnly, wordCount, blocked, chapters]
+              required: [workId, authorId, title, status, accessMode, adultsOnly, contentWarnings, wordCount, blocked, chapters]
               properties:
                 workId: { type: string, format: uuid }
                 authorId: { type: string, format: uuid }
@@ -461,6 +490,14 @@ work:
                 accessMode: { type: string, enum: [PUBLIC, ON_REQUEST, PRIVATE] }
                 genres: { type: array, items: { type: string } }
                 adultsOnly: { type: boolean }
+                contentWarnings:
+                  type: array
+                  description: |
+                    Lo que la obra declara contener, declarado por su autor.
+                    Va también en la tarjeta del catálogo: una advertencia que
+                    solo aparece cuando ya estás leyendo no advierte de nada.
+                  items:
+                    $ref: '#/ContentWarning'
                 wordCount: { type: integer }
                 blocked: { type: boolean }
                 chapters:
@@ -860,3 +897,139 @@ questionnaireBody:
           scope:
             type: string
             enum: [EVERY_CHAPTER, LAST_CHAPTER]
+
+# Una etiqueta del catálogo cerrado de contenido sensible (FEAT-WRK-017).
+# Cinco valores, descriptivos y no valorativos: «violencia explícita» dice qué
+# hay; «contenido perturbador» no dice nada y depende de quién lea.
+#
+# No apta para menores **no es una de estas**: va en `adultsOnly`, por su
+# propio eje, porque un texto puede serlo por acumulación sin que ninguna
+# etiqueta concreta sea determinante.
+ContentWarning:
+  type: string
+  enum:
+    - SEXUAL_CONTENT
+    - GRAPHIC_VIOLENCE
+    - SELF_HARM
+    - SUBSTANCE_USE
+    - STRONG_LANGUAGE
+
+contentRating:
+  put:
+    tags: [Works]
+    operationId: setWorkContentRating
+    summary: Declarar el contenido sensible de la obra
+    description: |
+      El autor declara **qué contiene su obra y para quién es**. Sustituye la
+      clasificación entera: lo que se envía es cómo queda, igual que con las
+      temáticas o el modo de acceso.
+
+      La declaración funciona en los dos sentidos, y es lo que la hace algo
+      más que una cortesía: una reclamación por contenido fuerte **bien
+      etiquetado se desestima**, y etiquetar mal **es reclamable**. El sistema
+      deja así de castigar el contenido difícil y pasa a castigar el engaño.
+
+      `adultsOnly` es obligatorio y `contentWarnings` puede ir vacío. La
+      asimetría es deliberada: una lista vacía es una declaración —«no
+      contiene nada de esto»—, mientras que omitir el indicador de público no
+      significa «apta para menores», significa que nadie lo ha dicho, y dar
+      por supuesto lo más permisivo es justo el error que esto evita.
+
+      Se puede cambiar en cualquier momento y **no afecta a las correcciones
+      en curso**. Lo que cambia es quién encuentra la obra a partir de ahora.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [adultsOnly]
+            properties:
+              adultsOnly:
+                type: boolean
+                description: |
+                  No apta para menores. Va por su propio eje y no como una
+                  etiqueta más: una obra puede serlo por acumulación sin que
+                  ninguna lo sea por sí sola.
+              contentWarnings:
+                type: array
+                description: |
+                  Etiquetar de más no se penaliza: solo cuesta lectores.
+                items:
+                  $ref: '#/ContentWarning'
+    responses:
+      '200':
+        description: |
+          La clasificación tal y como ha quedado guardada. Se devuelve en
+          lugar de un `204` porque quien acaba de declarar algo de lo que
+          responde quiere ver qué se ha entendido.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [adultsOnly, contentWarnings]
+              properties:
+                adultsOnly:
+                  type: boolean
+                contentWarnings:
+                  type: array
+                  items:
+                    $ref: '#/ContentWarning'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: |
+          `code: UNKNOWN_CONTENT_WARNING` —y el `detail` **dice cuál**, porque
+          descartarla en silencio dejaría la obra etiquetada de forma distinta
+          a como su autor cree, y el autor responde de eso— o
+          `AUDIENCE_NOT_DECLARED` si falta `adultsOnly`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+contentWarnings:
+  get:
+    tags: [Works]
+    operationId: listContentWarnings
+    summary: Catálogo de etiquetas de contenido sensible
+    security: []
+    description: |
+      La lista cerrada de etiquetas que un autor puede declarar. Público: no
+      es información sensible y hace falta en pantallas que se ven sin sesión.
+
+      Devuelve **códigos y no nombres**, al revés que `GET /genres`. Las
+      temáticas son datos curados que se pueden renombrar sin tocar código;
+      estas cinco son un catálogo cerrado, y cómo se le dice cada una a una
+      persona es decisión de la interfaz.
+
+      Existe para que nadie copie la lista en el cliente: es cerrada, pero
+      puede crecer.
+    responses:
+      '200':
+        description: Las etiquetas que existen hoy.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [contentWarnings]
+              properties:
+                contentWarnings:
+                  type: array
+                  items:
+                    $ref: '#/ContentWarning'

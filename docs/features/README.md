@@ -171,7 +171,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
 | FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
 | FEAT-WRK-016 | Estado de una obra — borrador, visible y en corrección | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-016-work-status.md) |
-| FEAT-WRK-017 | Clasificación de contenido sensible de una obra | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-017-content-rating.md) |
+| FEAT-WRK-017 | Clasificación de contenido sensible de una obra | Writer | APPROVED | PARTIAL | P1 | [ficha](work/FEAT-WRK-017-content-rating.md) |
 
 > `FEAT-WRK-009` está `BLOCKED`: el documento de origen deja explícitamente abierto en qué
 > momentos se genera el registro (`W-1`).

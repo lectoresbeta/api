@@ -48,6 +48,7 @@ final readonly class GetWorkController
             'status' => $work->status,
             'accessMode' => $work->accessMode,
             'adultsOnly' => $work->adultsOnly,
+            'contentWarnings' => $work->contentWarnings,
             'wordCount' => $work->wordCount,
             'blocked' => $work->blocked,
             'genres' => $work->genres,

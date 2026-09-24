@@ -109,6 +109,12 @@ paths:
   /works/{workId}/genres:
     $ref: './paths/works.yaml#/genres'
 
+  /works/{workId}/content-rating:
+    $ref: './paths/works.yaml#/contentRating'
+
+  /content-warnings:
+    $ref: './paths/works.yaml#/contentWarnings'
+
   /works/{workId}/questionnaire:
     $ref: './paths/works.yaml#/questionnaire'
 

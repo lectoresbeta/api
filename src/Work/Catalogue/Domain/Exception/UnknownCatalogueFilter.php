@@ -40,6 +40,21 @@ final class UnknownCatalogueFilter extends \DomainException implements BusinessF
         );
     }
 
+    /**
+     * Una etiqueta de contenido inventada **no se ignora**, al revés que una
+     * temática desconocida. Ahí no había forma de distinguir un código falso
+     * de uno retirado del catálogo; aquí la lista es cerrada, así que un
+     * valor que no está es una errata. Y el error va en la dirección
+     * peligrosa: ignorarlo enseñaría justo lo que el lector ha pedido no ver.
+     */
+    public static function contentWarning(): self
+    {
+        return new self(
+            'UNKNOWN_FILTER_VALUE',
+            'That content warning does not exist; GET /content-warnings lists them.',
+        );
+    }
+
     public static function page(): self
     {
         return new self(

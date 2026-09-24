@@ -13,7 +13,9 @@ use LectoresBeta\Work\Chapter\Domain\Repository\ChapterRepository;
 use LectoresBeta\Work\Manuscript\Application\DTO\ChapterSummary;
 use LectoresBeta\Work\Manuscript\Application\DTO\WorkView;
 use LectoresBeta\Work\Manuscript\Application\Query\GetWork;
+use LectoresBeta\Work\Manuscript\Domain\Enum\ContentWarning;
 use LectoresBeta\Work\Manuscript\Domain\Exception\WorkNotFound;
+use LectoresBeta\Work\Manuscript\Domain\Repository\WorkContentWarningRepository;
 use LectoresBeta\Work\Manuscript\Domain\Repository\WorkGenreRepository;
 use LectoresBeta\Work\Manuscript\Domain\Repository\WorkRepository;
 use LectoresBeta\Work\Manuscript\Domain\Service\WorkReadPolicy;
@@ -37,6 +39,7 @@ final readonly class GetWorkHandler
     public function __construct(
         private WorkRepository $works,
         private WorkGenreRepository $genres,
+        private WorkContentWarningRepository $warnings,
         private ChapterRepository $chapters,
         private WorkReadPolicy $policy,
         private ReaderMaturity $maturity,
@@ -79,6 +82,10 @@ final readonly class GetWorkHandler
             $work->status()->value,
             $work->accessMode()->value,
             $work->isAdultsOnly(),
+            array_map(
+                static fn (ContentWarning $warning): string => $warning->value,
+                $this->warnings->of($work->id()),
+            ),
             $work->wordCount(),
             $this->genres->codesOf($work->id()),
             array_map(

@@ -44,7 +44,15 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
         // La lista de temáticas va como parámetro de array: escribirla en la
         // SQL sería construir un `IN` a mano con valores que vienen de la
         // petición.
-        $types = [] === $criteria->genres ? [] : ['genres' => ArrayParameterType::STRING];
+        $types = [];
+
+        if ([] !== $criteria->genres) {
+            $types['genres'] = ArrayParameterType::STRING;
+        }
+
+        if ([] !== $criteria->excludedWarnings) {
+            $types['excludedWarnings'] = ArrayParameterType::STRING;
+        }
 
         /** @var int<0, max> $total */
         $total = (int) $this->connection->fetchOne(
@@ -104,6 +112,7 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
                   CASE WHEN w.status = 'IN_CORRECTION' THEN COALESCE(signal.badge, 0) ELSE 0 END AS credits,
                   COALESCE(delivered.corrections_received, 0) AS corrections_received,
                   COALESCE(genres.codes, ARRAY[]::text[]) AS genres,
+                  COALESCE(warnings.codes, ARRAY[]::text[]) AS content_warnings,
                   CASE
                     WHEN w.status <> 'IN_CORRECTION' OR COALESCE(signal.correctable_chapters, 0) = 0 THEN %4$d
                     ELSE COALESCE(signal.affordable, 0)::numeric
@@ -129,6 +138,11 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
                   FROM work_ctx.work_genre g
                   WHERE g.work_id = w.id
                 ) genres ON TRUE
+                LEFT JOIN LATERAL (
+                  SELECT ARRAY_AGG(cw.warning ORDER BY cw.warning) AS codes
+                  FROM work_ctx.work_content_warning cw
+                  WHERE cw.work_id = w.id
+                ) warnings ON TRUE
                 WHERE %1$s
                 ORDER BY %5$s
                 LIMIT :limit OFFSET :offset
@@ -145,6 +159,11 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
      * Lo que nunca aparece, pase lo que pase en los parámetros: un borrador
      * ajeno, una obra bloqueada por reclamación, la obra propia y —para quien
      * no tiene edad— la marcada para adultos.
+     *
+     * Las etiquetas de contenido se aplican aquí y no en la puntuación: lo
+     * que el lector ha pedido no ver **no llega al cliente**, no se esconde
+     * en la interfaz (`FEAT-WRK-012` `RN-9`), y por eso tampoco cuenta en el
+     * total.
      */
     private function conditions(CatalogueCriteria $criteria): string
     {
@@ -160,6 +179,14 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
 
         if (!$criteria->readerIsOfAge) {
             $conditions[] = 'w.adults_only = FALSE';
+        }
+
+        if ([] !== $criteria->excludedWarnings) {
+            // `NOT EXISTS` y no un `NOT IN` con subconsulta: basta con que la
+            // obra lleve **una** de las etiquetas rechazadas para que
+            // desaparezca, y esta forma para en cuanto encuentra la primera.
+            $conditions[] = 'NOT EXISTS (SELECT 1 FROM work_ctx.work_content_warning cw'
+                .' WHERE cw.work_id = w.id AND cw.warning IN (:excludedWarnings))';
         }
 
         if ([] !== $criteria->genres) {
@@ -188,6 +215,10 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
 
         if ([] !== $criteria->genres) {
             $parameters['genres'] = $criteria->genres;
+        }
+
+        if ([] !== $criteria->excludedWarnings) {
+            $parameters['excludedWarnings'] = $criteria->excludedWarnings;
         }
 
         return $parameters;
@@ -221,6 +252,7 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
             (int) $row['word_count'],
             (int) $row['chapter_count'],
             (bool) $row['adults_only'],
+            self::codes($row['content_warnings']),
             self::codes($row['genres']),
             (int) $row['correctable_chapters'],
             (int) $row['credits'],

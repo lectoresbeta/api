@@ -23,6 +23,12 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
  *
  * La sinopsis se trunca en el borde HTTP y no en la consulta: cuánto cabe en
  * una tarjeta es cosa de la pantalla, no del catálogo.
+ *
+ * El filtro de contenido sensible se llama `excludeContentWarnings[]` y no
+ * `contentWarnings[]`, que es como lo nombraba la ficha: el parámetro
+ * **quita** obras en vez de buscarlas, y un nombre que no lo diga es una
+ * trampa para quien integre. Lo que la ficha fijaba era el filtro, no su
+ * nombre.
  */
 #[AsController]
 final readonly class ListWorksController
@@ -49,6 +55,7 @@ final readonly class ListWorksController
         $page = ($this->catalogue)(new ListCatalogue(
             $user->getUserIdentifier(),
             self::codes($request, 'genres'),
+            self::codes($request, 'excludeContentWarnings'),
             self::optional($request, 'status'),
             self::optional($request, 'sort') ?? 'relevance',
             $request->query->getInt('page', 1),
@@ -69,6 +76,7 @@ final readonly class ListWorksController
                     'wordCount' => $entry->wordCount,
                     'chapterCount' => $entry->chapterCount,
                     'adultsOnly' => $entry->adultsOnly,
+                    'contentWarnings' => $entry->contentWarnings,
                     'genres' => $entry->genres,
                     'correctableChapters' => $entry->correctableChapters,
                     'credits' => $entry->credits,

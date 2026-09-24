@@ -23,6 +23,8 @@
 | `PUT /works/{workId}/visibility` | `setWorkVisibility` | Visibilidad de la obra | FEAT-WRK-008 | PENDING |
 | `PUT /api/v1/works/{workId}/access-mode` | `setAccessMode` | Quién puede ser lector beta | FEAT-WRK-007 | **Implementado** |
 | `PUT /api/v1/works/{workId}/genres` | `setWorkGenres` | Clasificar la obra | FEAT-WRK-001 | **Implementado** |
+| `PUT /api/v1/works/{workId}/content-rating` | `setWorkContentRating` | Declarar el contenido sensible | FEAT-WRK-017 | **Implementado** |
+| `GET /api/v1/content-warnings` | `listContentWarnings` | Catálogo de etiquetas de contenido | FEAT-WRK-017 | **Implementado** |
 | `GET /api/v1/works/{workId}/questionnaire` | `getWorkQuestionnaire` | Ver el cuestionario vigente | FEAT-WRK-014 | **Implementado** |
 | `GET /chapters/{chapterId}/questionnaire` | `getChapterQuestionnaire` | Cuestionario a responder y borrador | FEAT-FBK-003 | DRAFT |
 | `PUT /api/v1/works/{workId}/questionnaire` | `updateWorkQuestionnaire` | Definir el cuestionario. Crea una versión | FEAT-WRK-014 | **Implementado** |
@@ -114,6 +116,87 @@ créditos: los créditos se mueven al entregarse una corrección, no al publicar
 
 El `AuthorshipRecord` **todavía no se genera**: depende de `W-1`, que no ha decidido en qué
 momento se crea, y hacerlo sobre una obra vacía no significaría nada.
+
+---
+
+## `PUT /api/v1/works/{workId}/content-rating`
+
+**`operationId`:** `setWorkContentRating` · **Funcionalidad:**
+[`FEAT-WRK-017`](../../features/work/FEAT-WRK-017-content-rating.md)
+
+### Propósito
+
+El autor declara **qué contiene su obra y para quién es**. Sustituye la clasificación entera,
+igual que las temáticas o el modo de acceso.
+
+La declaración funciona en los dos sentidos, y es lo que la hace algo más que una cortesía:
+una reclamación por contenido fuerte **bien etiquetado se desestima** (`RN-6`) y **etiquetar
+mal es reclamable** (`RN-7`). El sistema deja de castigar el contenido difícil y pasa a
+castigar el engaño.
+
+### Autorización
+
+Solo el autor, con cuenta activada. Una obra ajena responde `404`, igual que una inexistente.
+
+### Reglas aplicadas
+
+- `adultsOnly` es **obligatorio**; `contentWarnings` puede ir vacío. La asimetría es
+  deliberada: una lista vacía es una declaración —«no contiene nada de esto»—, mientras que
+  omitir el indicador no significa «apta para menores», significa que nadie lo ha dicho.
+- Las etiquetas salen de un **catálogo cerrado** de cinco valores (`RN-4`). Una que no existe
+  se rechaza **por su nombre**: el autor responde de lo que ha declarado, así que tiene que
+  saber qué se ha entendido.
+- Etiquetar de más no se penaliza. Solo cuesta lectores.
+- Es **por obra** (`RN-2`): una novela se etiqueta por lo más fuerte que contiene.
+- Se puede cambiar en cualquier momento y **no afecta a las correcciones en curso** (`RN-5`).
+
+### Respuesta
+
+`200` con la clasificación tal y como ha quedado, en lugar de un `204`: quien acaba de
+declarar algo de lo que responde quiere ver qué se ha entendido.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `AUDIENCE_NOT_DECLARED` | 422 | Falta `adultsOnly` |
+| `UNKNOWN_CONTENT_WARNING` | 422 | Una etiqueta que no existe. El `detail` **dice cuál** |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | La cuenta no está activada |
+
+### Efectos
+
+Ninguno fuera de este contexto todavía. **No publica `WorkContentRatingSet`**, y es la misma
+decisión que con las temáticas: los consumidores que la ficha prevé —`Community` para el muro,
+`Moderation` para juzgar una reclamación— no existen, y publicar un hecho que nadie escucha es
+inventarse un contrato que luego hay que mantener. Cuando el primero exista, se publica desde
+aquí.
+
+Lo que sí cambia de inmediato es quién encuentra la obra: `adultsOnly` la retira para quien no
+tiene edad declarada, y las etiquetas la retiran para quien las ha excluido en el catálogo.
+
+---
+
+## `GET /api/v1/content-warnings`
+
+**`operationId`:** `listContentWarnings` · **Funcionalidad:**
+[`FEAT-WRK-017`](../../features/work/FEAT-WRK-017-content-rating.md)
+
+### Propósito
+
+La lista cerrada de etiquetas que un autor puede declarar. Existe para que nadie la copie en
+el cliente: es cerrada, pero puede crecer.
+
+### Autorización
+
+**Público**, como `GET /genres`: no es información sensible y hace falta en pantallas que se
+ven sin sesión.
+
+### Respuesta
+
+`contentWarnings`, **códigos y no nombres**, al revés que `GET /genres`. La diferencia no es
+un descuido: las temáticas son datos curados que se pueden renombrar sin tocar código, y estas
+cinco son un catálogo cerrado. Cómo se le dice cada una a una persona —y la ficha pide que
+`SELF_HARM` se diga con claridad, no con un icono ambiguo— es decisión de la interfaz.
 
 ---
 
@@ -253,11 +336,20 @@ sola.
 
 ### Entrada
 
-`genres[]`, `status`, `sort`, `page`, `perPage`.
+`genres[]`, `excludeContentWarnings[]`, `status`, `sort`, `page`, `perPage`.
 
-`readingTime` y `contentWarnings[]` están especificados y **no implementados**: no es que
-falte el filtro, es que una obra todavía no tiene etiquetas de contenido ni tiempo de lectura
-declarado.
+`excludeContentWarnings[]` es el filtro de `RN-10`, y va **al revés** que los demás: **quita**
+obras en vez de buscarlas. Una obra que lleve cualquiera de las etiquetas dadas desaparece, y
+tampoco cuenta en `total` — lo excluido no llega al cliente, no se esconde en la interfaz
+(`RN-9`). Por eso se llama así y no `contentWarnings[]`, que es como lo nombraba la ficha: un
+parámetro que quita y se llama como si buscara es una trampa para quien integre.
+
+Una etiqueta que no existe devuelve `422`, al revés que una temática desconocida. Allí no hay
+forma de distinguir un código inventado de uno retirado del catálogo; aquí la lista es cerrada,
+así que un valor que no está es una errata, y darla por buena enseñaría justo lo que se ha
+pedido no ver.
+
+`readingTime` sigue especificado y **no implementado**: falta decidir qué rangos son (`L-1`).
 
 ### Respuesta
 
@@ -266,6 +358,10 @@ obra aparezca aquí no significa que quien la ve pueda abrirla, y eso lo decide 
 
 Cada tarjeta lleva `correctableChapters` y `correctionsReceived`, que son señales del reparto
 —cuánto queda por corregir y cuánto se ha corregido ya— y no importes.
+
+Cada tarjeta lleva también `contentWarnings`, lo que la obra declara contener. Va aquí y no
+solo en la cabecera porque una advertencia que solo aparece cuando ya estás leyendo no
+advierte de nada (`FEAT-WRK-017` `RN-8`).
 
 `credits` sí es un importe, y es el único: la insignia de
 [`FEAT-CRD-013`](../../features/credits/FEAT-CRD-013-work-credit-badge.md), **lo que gana
