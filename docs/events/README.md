@@ -34,6 +34,17 @@ Reglas en [`../architecture/04-cross-context-communication.md`](../architecture/
 `eventId` es la clave de deduplicación. Los consumidores idempotentes lo registran antes de
 aplicar el efecto.
 
+## Qué se consume de verdad
+
+Un ✅ junto a un consumidor quiere decir que ese consumo **existe como código**. Sin él, la
+fila es el contrato previsto y nadie lo escucha todavía.
+
+La distinción importa al leer esta tabla: casi todos los hechos listan `Notification` como
+consumidor, pero solo seis se convierten hoy en un aviso
+([`FEAT-NOT-001`](../features/notification/FEAT-NOT-001-in-app-notifications.md)). Los de
+`Credits` no, y no por olvido: son de grano fino —uno por movimiento— y merecen antes una
+decisión sobre agrupación (`N-2`).
+
 ---
 
 ## `User`
@@ -96,11 +107,11 @@ contestan en uno.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `AccessRequested` | Un usuario solicita ser LB | `Notification` | `accessRequestId`, `workId`, `authorId`, `readerId` |
-| `AccessRequestRejected` | El autor rechaza | `Notification` | `accessRequestId`, `readerId` |
-| `BetaReaderAccessGranted` | Se concede acceso | `Notification` | `accessId`, `workId`, `authorId`, `readerId`, `grantedVia`, `grantedAt` |
-| `BetaReaderAccessRevoked` | Se retira el acceso: al **descartar** un borrador, al **bloquear** a alguien o porque **el autor lo revoca** (`FEAT-RDG-010`) | `Notification` | `accessId`, `workId`, `readerId`, `revokedAt` |
-| `BetaReaderInvited` | El autor invita | `Notification` | `invitationId`, `workId`, `authorId`, `readerId` |
+| `AccessRequested` | Un usuario solicita ser LB | `Notification` ✅ | `accessRequestId`, `workId`, `authorId`, `readerId` |
+| `AccessRequestRejected` | El autor rechaza | `Notification` ✅ | `accessRequestId`, `workId`, `readerId`. **Sin el autor**: quien rechaza no tiene por qué dar la cara |
+| `BetaReaderAccessGranted` | Se concede acceso | `Notification` ✅ | `accessId`, `workId`, `authorId`, `readerId`, `grantedVia`, `grantedAt` |
+| `BetaReaderAccessRevoked` | Se retira el acceso: al **descartar** un borrador, al **bloquear** a alguien o porque **el autor lo revoca** (`FEAT-RDG-010`) | `Notification` ✅ | `accessId`, `workId`, `readerId`, `revokedAt` |
+| `BetaReaderInvited` | El autor invita | `Notification` ✅ | `invitationId`, `workId`, `authorId`, `readerId` |
 | `BetaReaderInvitationDeclined` | El invitado rechaza | `Notification` | `invitationId`, `workId`, `authorId`, `readerId` |
 | `WritingBuddyProposed` | Se propone el vínculo | `Notification` | `proposalId`, `proposerId`, `targetUserId` |
 | `WritingBuddyLinked` | Se acepta | `Notification`, `Community` | `linkId`, `userIds` |
@@ -132,7 +143,7 @@ tiene acceso.
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
 | `CorrectionStarted` | Un LB pulsa «Empezar corrección» | **`Credits`** (anota el precio), `Notification` | `chapterId`, `workId`, `authorId`, `readerId`, `startedAt` |
-| `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification`, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `questionnaireVersion`, `submittedAt` |
+| `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification` ✅, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `questionnaireVersion`, `submittedAt` |
 | `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación), **`Reading`** (revoca el acceso) | `chapterId`, `workId`, `readerId`, `discardedAt` |
 | `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` | `correctionId`, `authorId`, `readerId`, `amount` |
 | `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` NO lo consume** | `correctionId`, `workId`, `chapterId`, `authorId`, `authorLabel?` |

@@ -18,6 +18,12 @@ namespace LectoresBeta\Notification\Delivery\Domain\Enum;
  * A new kind must declare which family it is in (`RN-4c`). One that declares
  * neither will silently behave as a notification, which is the wrong default
  * for anything to do with security.
+ *
+ * `BETA_READER_ACCESS_REVOKED` arrived with `FEAT-NOT-001` and is the one
+ * that saldó a debt two features had written down: somebody who loses access
+ * to a work **stops being able to deliver what they were writing**, and until
+ * now nothing told them. It is a notification and not operational: it is not
+ * about their account, it is about somebody else's decision.
  */
 enum NotificationKind: string
 {
@@ -36,6 +42,7 @@ enum NotificationKind: string
     case ACCESS_REQUESTED = 'ACCESS_REQUESTED';
     case ACCESS_REQUEST_RESOLVED = 'ACCESS_REQUEST_RESOLVED';
     case BETA_READER_INVITATION = 'BETA_READER_INVITATION';
+    case BETA_READER_ACCESS_REVOKED = 'BETA_READER_ACCESS_REVOKED';
     case WRITING_BUDDY_PROPOSED = 'WRITING_BUDDY_PROPOSED';
     case DIRECT_MESSAGE_RECEIVED = 'DIRECT_MESSAGE_RECEIVED';
     case MENTION = 'MENTION';

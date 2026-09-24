@@ -205,6 +205,18 @@ paths:
   /chapters/{chapterId}/correction/draft:
     $ref: './paths/corrections.yaml#/draft'
 
+  /me/notifications:
+    $ref: './paths/notifications.yaml#/inbox'
+
+  /me/notifications/unread-count:
+    $ref: './paths/notifications.yaml#/unreadCount'
+
+  /me/notifications/read:
+    $ref: './paths/notifications.yaml#/allRead'
+
+  /me/notifications/{notificationId}/read:
+    $ref: './paths/notifications.yaml#/read'
+
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'
 

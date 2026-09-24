@@ -80,11 +80,31 @@ class Notification
         return $this->payload;
     }
 
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function readAt(): ?\DateTimeImmutable
+    {
+        return $this->readAt;
+    }
+
+    public function isFor(RecipientId $recipientId): bool
+    {
+        return $this->recipientId === $recipientId->value();
+    }
+
     public function isRead(): bool
     {
         return null !== $this->readAt;
     }
 
+    /**
+     * Marcar lo ya leído no mueve la fecha (`FEAT-NOT-009` `RN-4`). La
+     * idempotencia no es un detalle de implementación: la pantalla marca al
+     * abrir y también con un gesto, así que la segunda vez llega sola.
+     */
     public function markRead(\DateTimeImmutable $now): void
     {
         $this->readAt ??= $now;

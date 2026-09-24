@@ -14,7 +14,7 @@ duplica aquí.
 | `Feedback` | [feedback.md](feedback.md) | Correcciones especificadas |
 | `Community` | [community.md](community.md) | Seguir a un autor implementado |
 | `Credits` | [credits.md](credits.md) | Saldo implementado |
-| `Notification` | notification.md | Por crear |
+| `Notification` | [notification.md](notification.md) | Bandeja y contador implementados |
 
 Se crean a partir de [`../../_templates/endpoint.md`](../../_templates/endpoint.md) conforme
 se especifican las funcionalidades correspondientes.

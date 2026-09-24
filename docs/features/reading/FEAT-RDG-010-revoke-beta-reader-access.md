@@ -74,8 +74,10 @@ una obra ahí.
 - `RN-7` Revocar **no impide volver a entrar**. En una obra `PUBLIC`, empezar a corregir
   vuelve a conceder el acceso (`FEAT-RDG-001`). Ver abajo, porque es la parte que se
   malinterpreta.
-- `RN-8` No se avisa a la persona. Hoy porque no hay notificaciones; cuando las haya, **habrá
-  que decidirlo** (`R-13`).
+- `RN-8` **Se avisa a la persona** desde
+  [`FEAT-NOT-001`](../notification/FEAT-NOT-001-in-app-notifications.md), que resolvió `R-13`.
+  El aviso sale de `RN-10` y no dice por qué: el hecho no distingue los tres caminos, y
+  contar que ha habido un bloqueo sería anunciarlo.
 - `RN-9` Revocar exige la cuenta activada; consultar la lista, no.
 - `RN-10` Se publica `BetaReaderAccessRevoked`, el mismo hecho que ya publican los otros dos
   caminos de revocación.
@@ -180,9 +182,10 @@ exactamente lo que hacen los otros dos caminos.
 | # | Pregunta | Impacto |
 |---|---|---|
 | R-1 | ¿El autor puede revocar un acceso ya concedido? | **Resuelta aquí: sí** |
-| R-13 | ¿Se avisa a quien pierde el acceso, y con qué texto? | Hoy no hay notificaciones. Cuando las haya: avisar es honesto y también una confrontación. Es la misma pregunta que deja abierta `FEAT-COM-034` |
+| ~~R-13~~ | ¿Se avisa a quien pierde el acceso, y con qué texto? | **Resuelta en [`FEAT-NOT-001`](../notification/FEAT-NOT-001-in-app-notifications.md): sí, y sin motivo.** La confrontación que se temía venía de explicar por qué; el aviso solo dice que esa obra ya no se puede leer, que es lo que hace falta para no seguir escribiendo en balde. El texto lo compone el cliente a partir del tipo y del payload |
 | R-14 | ¿Debería poder revocarse en bloque —«retirar a todos»— al cerrar una obra? | Con muchos lectores, de uno en uno es tedioso. Es una operación por lotes, no un modelo distinto |
 | R-15 | ¿Conviene que la lista diga si esa persona ha entregado alguna corrección? | Es de `Feedback`, y hoy `Reading` solo sabe si el acceso está «ganado», que es casi lo mismo |
+| R-22 | Una reentrega tardía de `CorrectionStarted` **deshace una revocación**. ¿Se ata al hecho que lo concedió, o se acepta? | Encontrado al conectar `Notification` (2026-09-24). `GrantAccessOnCorrectionStarted` es idempotente mientras el acceso siga vivo, que es lo que comprueba; si entre la primera entrega y una reentrega el autor revocó el acceso —o bloqueó a esa persona—, no encuentra nada vivo y **lo concede otra vez**. Una persona expulsada recupera el acceso porque la cola repitió un mensaje, en silencio. En una obra `PUBLIC` importa poco (`RN-7` ya la deja volver a entrar); en una cerrada es una revocación deshecha. El arreglo natural es guardar en el acceso **qué hecho lo abrió** y preguntarle a eso en vez de al estado, pero es una columna, una migración y tocar `Reading`, así que no entra en la ficha que lo encontró |
 
 ## Estado
 
@@ -227,8 +230,11 @@ revés de lo que ese ajuste promete.
 - **Un acceso ganado también se revoca** (`RN-6`). Lo que el lector ganó —cobrar, y que su
   corrección cuente— no se le quita; lo que se retira es la lectura futura de un texto ajeno.
 
-### Lo que falta
+### Lo que faltaba
 
-Avisar a quien pierde el acceso (`R-13`), por la misma razón que en el bloqueo: no hay
-notificaciones. Hoy alguien puede quedarse sin poder entregar lo que estaba escribiendo sin
-que nada se lo diga, y esa es la peor forma de enterarse.
+Avisar a quien pierde el acceso (`R-13`). Lo cumple
+[`FEAT-NOT-001`](../notification/FEAT-NOT-001-in-app-notifications.md) desde 2026-09-24: el
+mismo `BetaReaderAccessRevoked` de `RN-10` se convierte en un aviso
+`BETA_READER_ACCESS_REVOKED`, por los tres caminos de revocación y sin distinguirlos.
+
+Queda `R-14` —revocar en bloque— y `R-15`.

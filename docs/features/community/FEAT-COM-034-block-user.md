@@ -163,7 +163,7 @@ ha bloqueado?», y la segunda es la que más se consulta.
 ## Criterios de aceptación
 
 - [x] Bloquear deshace las dos relaciones de seguimiento.
-- [x] El bloqueado no recibe ningún aviso. *Se cumple por construcción: no hay nada que lo notifique, y `Notification` no consume el hecho.*
+- [x] El bloqueado no recibe ningún aviso **del bloqueo**. *`Notification` no consume `UserBlocked`. Sí recibe el aviso de haber perdido el acceso, que es otra cosa y no dice por qué: ver abajo.*
 - [x] Ninguno puede seguir al otro mientras dure el bloqueo.
 - [ ] Los mensajes directos entre ambos se cortan. *La mensajería (`FEAT-COM-011`) no existe.*
 - [ ] El bloqueado no puede comentar ni mencionar al que bloquea. *En el muro no: las publicaciones y sus comentarios (`FEAT-COM-002`, `FEAT-COM-006`) no existen. **En las obras sí**, que es donde hoy se comenta: ver abajo.*
@@ -180,7 +180,7 @@ ha bloqueado?», y la segunda es la que más se consulta.
 - [x] `RN-B3`: esa corrección no genera cargo ni abono. *Se cumple por construcción: no hay entrega, y el cargo lo dispara la entrega.*
 - [x] `RN-B4`: las correcciones ya entregadas no se revierten ni se ocultan.
 - [ ] `RN-B5`: el bloqueo no borra comentarios ni publicaciones anteriores, los oculta al bloqueado. *No hay muro; y lo entregado en una obra se conserva, que es la mitad que sí existe.*
-- [ ] Se le avisa a quien pierde una corrección en curso. *No hay notificaciones (`FEAT-NOT-*`). **Es lo más importante que queda pendiente**: hoy ese texto deja de poder entregarse sin que nadie se lo diga.*
+- [x] Se le avisa a quien pierde una corrección en curso. *Lo cumple [`FEAT-NOT-001`](../notification/FEAT-NOT-001-in-app-notifications.md): el bloqueo publica `BetaReaderAccessRevoked` por el mismo camino que cualquier otra revocación, y `Notification` lo convierte en un aviso `BETA_READER_ACCESS_REVOKED`.*
 
 ## Preguntas abiertas
 
@@ -251,12 +251,17 @@ Por eso hay un contrato aparte —`ProfileCards`, sin filtro— en vez de relaja
 el peligroso tiene nombre propio y un solo uso legítimo, en lugar de un parámetro que alguien
 acabaría pasando en una pantalla donde se descubre gente.
 
-### La regla incómoda sigue siendo incómoda
+### La regla incómoda sigue siendo incómoda, pero ya no en silencio
 
 Quien estuviera corrigiendo pierde ese trabajo y no cobra. Está probado, no disimulado, y se
-asume a conciencia. **Lo que falta es lo que la ficha pedía junto a eso: avisarle.** No hay
-notificaciones todavía, así que hoy ese texto deja de poder entregarse en silencio. Es lo
-primero que hay que completar cuando exista `Notification`.
+asume a conciencia. Lo que la ficha pedía junto a eso —avisarle— lo cumple
+[`FEAT-NOT-001`](../notification/FEAT-NOT-001-in-app-notifications.md) desde 2026-09-24.
+
+**Y lo hace sin contar que ha habido un bloqueo**, que era la tensión entre esta ficha y
+aquella. El aviso sale de `BetaReaderAccessRevoked`, el mismo hecho que publican los otros dos
+caminos de revocación, y dice lo único que esa persona necesita saber para no seguir
+escribiendo en balde: que ya no puede leer esa obra. `RN-2` —el bloqueo no se anuncia— sigue
+intacto, porque el hecho no distingue el camino y el aviso tampoco.
 
 ### Qué queda fuera
 

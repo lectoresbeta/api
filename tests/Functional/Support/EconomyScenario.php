@@ -40,7 +40,7 @@ abstract class EconomyScenario extends WebTestCase
     protected const PASSWORD = 'Valida1!';
 
     /**
-     * A qué reacciona `Credits`. Se filtra aquí por lo mismo que en
+     * A qué reacciona la aplicación. Se filtra aquí por lo mismo que en
      * producción: una cola entrega a cada consumidor lo que dice su binding,
      * no todo lo que se publica.
      */
@@ -65,6 +65,15 @@ abstract class EconomyScenario extends WebTestCase
         // el acceso a las obras del bloqueador.
         'UserBlocked',
         'UserUnblocked',
+
+        // Y lo que `Notification` convierte en avisos (`FEAT-NOT-001`).
+        // `FeedbackSubmitted` y `UserBlocked` ya estaban arriba: el mismo
+        // hecho lo escuchan varios contextos, cada uno con su clase.
+        'AccessRequested',
+        'AccessRequestRejected',
+        'BetaReaderAccessGranted',
+        'BetaReaderAccessRevoked',
+        'BetaReaderInvited',
     ];
 
     /**
@@ -203,18 +212,34 @@ abstract class EconomyScenario extends WebTestCase
      *
      * La cola no se vacía: volver a llamar reentrega los mismos hechos, que
      * es lo que RabbitMQ puede hacer.
+     *
+     * Dentro de una misma llamada, en cambio, **cada ronda entrega solo lo
+     * que ha aparecido en la anterior**. La primera lleva la cola entera, así
+     * que la reentrega entre llamadas —la que de verdad ejercita la
+     * idempotencia— se mantiene intacta; lo que no se hace es repetir un
+     * hecho en medio de su propia cascada.
+     *
+     * No es un atajo para que algo pase: repetirlo ahí fabrica una secuencia
+     * que la cola no produce —un hecho antiguo reentregado *después* de otro
+     * posterior que lo deshace— y dos consumidores que se deshacen el trabajo
+     * el uno al otro oscilarían para siempre sin que nadie hubiera hecho nada
+     * mal. Reentregar a mano sigue estando a mano: `deliver($this->queued(…))`.
      */
     protected function consumeEverything(): void
     {
-        for ($round = 0; $round < self::MAX_CASCADE_ROUNDS; ++$round) {
-            $this->deliver($this->queue);
+        $pending = $this->queue;
 
-            $pending = \count($this->queue);
+        for ($round = 0; $round < self::MAX_CASCADE_ROUNDS; ++$round) {
+            $this->deliver($pending);
+
+            $before = \count($this->queue);
             $this->capture();
 
-            if (\count($this->queue) === $pending) {
+            if (\count($this->queue) === $before) {
                 return;
             }
+
+            $pending = \array_slice($this->queue, $before);
         }
 
         self::fail('Los hechos no dejan de producir hechos: hay un ciclo en la cascada.');

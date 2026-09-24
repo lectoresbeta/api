@@ -43,13 +43,19 @@ final readonly class RequireActivatedAccountListener
      * Writes that an unactivated account is still allowed to make.
      *
      * Adding a name here is a deliberate, visible act, and each one states
-     * why. Two families, and no third:
+     * why. Three families, and no fourth:
      *
      * - **the onboarding**, which is the whole point of letting somebody in
      *   before activating (`RN-5`);
      * - **managing your own account**, including the way out of this very
      *   state (`RN-6`). An account that could not ask for the activation
      *   email again would be locked out by the rule meant to protect it.
+     * - **reading your own notices**, for the same reason as the family
+     *   above: **the notice telling somebody to activate is in that inbox**,
+     *   and a rule that stops them clearing it would be the rule getting in
+     *   its own way (`FEAT-NOT-009`). What these two write is a `readAt` on a
+     *   row that belongs to whoever calls them, so nothing leaves the
+     *   account — which is what `decision:0003` is there to prevent.
      *
      * Public routes are not listed: with nobody signed in there is nothing to
      * check. `logout` and `refreshSession` are, because they may well arrive
@@ -69,6 +75,10 @@ final readonly class RequireActivatedAccountListener
         'registerUser',
         'activateAccount',
         'resendActivationEmail',
+
+        // Your own inbox, where the notice about activating is.
+        'markNotificationRead',
+        'markAllNotificationsRead',
     ];
 
     public function __construct(

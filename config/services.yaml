@@ -118,6 +118,18 @@ services:
                 - LectoresBeta\User\Privacy\Application\Event\UserUnblocked
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\UserBlocked
 
+                # Lo que `Notification` escucha para convertir en avisos
+                # (`FEAT-NOT-001`). Son hechos de `Reading` y de `Feedback`, y
+                # cada contexto los modela por su cuenta: aquí llegan cuatro
+                # nombres que ya están arriba, con clases distintas, y eso es
+                # exactamente lo que decision:0013 hace posible.
+                - LectoresBeta\Notification\Delivery\Application\Event\AccessRequested
+                - LectoresBeta\Notification\Delivery\Application\Event\AccessRequestRejected
+                - LectoresBeta\Notification\Delivery\Application\Event\BetaReaderAccessGranted
+                - LectoresBeta\Notification\Delivery\Application\Event\BetaReaderAccessRevoked
+                - LectoresBeta\Notification\Delivery\Application\Event\BetaReaderInvited
+                - LectoresBeta\Notification\Delivery\Application\Event\FeedbackSubmitted
+
     # Los consumidores de eventos se etiquetan aquí y no con
     # #[AsMessageHandler]: viven en Application, y Application no conoce a
     # Symfony. Es la misma razón por la que los chequeos de salud se etiquetan
@@ -293,6 +305,37 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\Work\Catalogue\Application\Handler\CountDeliveredCorrection:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Los avisos in-app (`FEAT-NOT-001`). `Notification` no origina nada: todo
+    # lo que hace entra por aquí.
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorOfAnAccessRequest:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Dos etiquetas para una clase, que es la única de todo el proyecto que lo
+    # necesita: conceder y rechazar son el mismo aviso con distinto desenlace,
+    # y separarlas en dos clases dejaría que alguien añadiera un tercer
+    # desenlace sin mirar el otro. El tipo de hecho lo deduce Symfony del
+    # parámetro de cada método.
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheReaderOfAResolvedRequest:
+        tags:
+            - { name: messenger.message_handler, method: granted }
+            - { name: messenger.message_handler, method: rejected }
+
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheInvitedReader:
+        tags:
+            - { name: messenger.message_handler }
+
+    # El aviso que saldó la deuda de `FEAT-COM-034` y `FEAT-RDG-010`: quien
+    # pierde el acceso deja de poder entregar lo que estaba escribiendo, y
+    # hasta ahora nada se lo decía.
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheReaderOfARevokedAccess:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorOfACorrection:
         tags:
             - { name: messenger.message_handler }
 

@@ -480,7 +480,7 @@ Ficha del contexto: [`../bounded-contexts/notification.md`](../bounded-contexts/
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-NOT-001 | Entregar notificaciones in-app | — (sistema) | PENDING | TODO | P1 | — |
+| FEAT-NOT-001 | Entregar notificaciones in-app | — (sistema) | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-001-in-app-notifications.md) |
 | FEAT-NOT-002 | Entregar notificaciones por email | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-NOT-003 | Aplicar las preferencias de notificación del usuario | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-NOT-004 | Avisar de nueva obra o publicación de un autor suscrito | — (sistema) | PENDING | TODO | P2 | — |
@@ -488,7 +488,7 @@ Ficha del contexto: [`../bounded-contexts/notification.md`](../bounded-contexts/
 | FEAT-NOT-006 | Avisar de feedback recibido, contestado o valorado | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-NOT-007 | Enviar el email de invitación a la plataforma | — (sistema) | PENDING | TODO | P2 | — |
 | FEAT-NOT-008 | Enviar el email de activación de cuenta | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](notification/FEAT-NOT-008-account-activation-email.md) |
-| FEAT-NOT-009 | Centro de notificaciones in-app y contador de no leídas | User | PENDING | TODO | P1 | — |
+| FEAT-NOT-009 | Centro de notificaciones in-app y contador de no leídas | User | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-009-notification-centre.md) |
 
 ---
 
