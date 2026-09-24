@@ -66,7 +66,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | `WorkStatus` | `DRAFT`, `PUBLISHED`, `IN_CORRECTION`. **Sustituye a `Visibility` en la obra** (`W-9`) |
 | `Visibility` | `VISIBLE`, `HIDDEN` — queda **solo para el fragmento** |
 | `BetaReaderAccessMode` | `PUBLIC`, `ON_REQUEST`, `PRIVATE` |
-| `Genre` | Catálogo de temáticas, por definir |
+| `Genre` | Se apunta por **código** al catálogo de `User`. Una obra declara de cero a tres |
 
 ## Eventos publicados
 
@@ -137,5 +137,5 @@ sabe este contexto.
 | W-11 | ¿Se puede editar una obra mientras está en corrección? | El texto cambiaría bajo los pies del lector |
 | W-14 | ¿Cuántas correcciones admite una obra a la vez? | Con reserva por obra habría que declararlo (`R-1`) |
 | W-6 | ¿La visibilidad de un fragmento es independiente de la de la obra? | Reglas de autorización |
-| W-7 | ¿El catálogo de temáticas (`Genre`) es cerrado o libre? | Búsqueda y rankings |
+| ~~W-7~~ | ¿El catálogo de temáticas (`Genre`) es cerrado o libre? | **Resuelta:** cerrado, y **no es de este contexto**. Lo posee `User` y `Work` lo consulta por contrato publicado |
 | W-8 | ¿Se puede limitar el número de lectores beta de una obra? | Control de coste en créditos |

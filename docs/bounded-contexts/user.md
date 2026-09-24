@@ -106,6 +106,19 @@ preferencias y presencia pública como autor.
 > `InvitedUserParticipated` requiere correlacionar la invitación con el primer comentario del
 > invitado, que ocurre en `Feedback`. Diseño pendiente: ver `U-4`.
 
+## Contratos publicados
+
+| Contrato | Responde | Quién pregunta |
+|---|---|---|
+| `ActivationLinkProvider` | El enlace de activación, en el momento de enviar el correo | `Notification` |
+| `ReaderMaturity` | **Un booleano**: ¿tiene edad? Ni la fecha de nacimiento ni la edad | `Work`, `Feedback` |
+| `GenreCatalogue` | Cuáles de estos códigos de temática **no** existen | `Work` |
+
+Los tres son de lectura y devuelven lo justo
+([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md)). `ReaderMaturity`
+es el que más importa: la fecha de nacimiento es dato privado y **no sale de aquí**, así que lo
+que cruza la frontera es la respuesta a la única pregunta que los demás necesitan hacer.
+
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |

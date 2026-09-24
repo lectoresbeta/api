@@ -14,6 +14,7 @@ use LectoresBeta\Work\Manuscript\Application\DTO\ChapterSummary;
 use LectoresBeta\Work\Manuscript\Application\DTO\WorkView;
 use LectoresBeta\Work\Manuscript\Application\Query\GetWork;
 use LectoresBeta\Work\Manuscript\Domain\Exception\WorkNotFound;
+use LectoresBeta\Work\Manuscript\Domain\Repository\WorkGenreRepository;
 use LectoresBeta\Work\Manuscript\Domain\Repository\WorkRepository;
 use LectoresBeta\Work\Manuscript\Domain\Service\WorkReadPolicy;
 use LectoresBeta\Work\Manuscript\Domain\ValueObject\AuthorId;
@@ -35,6 +36,7 @@ final readonly class GetWorkHandler
 {
     public function __construct(
         private WorkRepository $works,
+        private WorkGenreRepository $genres,
         private ChapterRepository $chapters,
         private WorkReadPolicy $policy,
         private ReaderMaturity $maturity,
@@ -78,6 +80,7 @@ final readonly class GetWorkHandler
             $work->accessMode()->value,
             $work->isAdultsOnly(),
             $work->wordCount(),
+            $this->genres->codesOf($work->id()),
             array_map(
                 static fn (Chapter $chapter): ChapterSummary => new ChapterSummary(
                     $chapter->id()->value(),

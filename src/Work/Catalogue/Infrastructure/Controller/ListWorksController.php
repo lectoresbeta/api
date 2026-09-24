@@ -48,6 +48,7 @@ final readonly class ListWorksController
 
         $page = ($this->catalogue)(new ListCatalogue(
             $user->getUserIdentifier(),
+            self::codes($request, 'genres'),
             self::optional($request, 'status'),
             self::optional($request, 'sort') ?? 'relevance',
             $request->query->getInt('page', 1),
@@ -68,12 +69,42 @@ final readonly class ListWorksController
                     'wordCount' => $entry->wordCount,
                     'chapterCount' => $entry->chapterCount,
                     'adultsOnly' => $entry->adultsOnly,
+                    'genres' => $entry->genres,
                     'correctableChapters' => $entry->correctableChapters,
                     'correctionsReceived' => $entry->correctionsReceived,
                 ],
                 $page->entries,
             ),
         ]);
+    }
+
+    /**
+     * `?genres[]=FICTION&genres[]=DRAMA`, y también `?genres=FICTION,DRAMA`:
+     * las dos formas se ven en la práctica y ninguna merece un error.
+     *
+     * @return list<string>
+     */
+    private static function codes(Request $request, string $parameter): array
+    {
+        $value = $request->query->all()[$parameter] ?? null;
+
+        if (\is_string($value)) {
+            $value = explode(',', $value);
+        }
+
+        if (!\is_array($value)) {
+            return [];
+        }
+
+        $codes = [];
+
+        foreach ($value as $code) {
+            if (\is_string($code) && '' !== trim($code)) {
+                $codes[] = trim($code);
+            }
+        }
+
+        return $codes;
     }
 
     private static function optional(Request $request, string $parameter): ?string

@@ -21,7 +21,17 @@ use LectoresBeta\Work\Manuscript\Domain\Enum\WorkStatus;
  * habitual: reparto de trabajo, nunca popularidad
  * ([`decision:0008`](../../../../../docs/decisions/0008-catalogue-ordering.md)).
  *
- * Los filtros se validan en vez de ignorarse. Un valor desconocido devuelve
+ * El filtro de temática es **multiselección y en `O`** (`RN-5`, `L-7`):
+ * pedir «Ficción» y «YoungAdult» devuelve las obras que son cualquiera de las
+ * dos, no las que son ambas. Es lo que se espera de un catálogo de
+ * descubrimiento — con `Y`, añadir una temática al filtro reduce los
+ * resultados hasta dejar la pantalla vacía, que es lo contrario de descubrir.
+ *
+ * Una temática que no existe **no se valida aquí**: no hay forma de
+ * distinguirla de una retirada del catálogo, y las obras que la tuvieran
+ * siguen apuntando a ella. Simplemente no encuentra nada.
+ *
+ * Los demás filtros se validan en vez de ignorarse. Un valor desconocido devuelve
  * los resultados de otra consulta si se ignora, y el usuario no tiene cómo
  * notarlo; `status=DRAFT` además tiene que rechazarse **aunque el desplegable
  * no lo ofrezca**, porque un desplegable no es una autorización.
@@ -53,6 +63,7 @@ final readonly class ListCatalogueHandler
         return $this->catalogue->page(new CatalogueCriteria(
             $query->readerId,
             $this->maturity->isOfAge($query->readerId),
+            array_values(array_unique(array_map(strtoupper(...), $query->genres))),
             self::status($query->status),
             'relevance' === $query->sort,
             $query->page,

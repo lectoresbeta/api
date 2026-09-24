@@ -42,11 +42,17 @@ Los publicados hasta ahora:
 |---|---|---|
 | `ActivationLinkProvider` | `User` | El enlace de activación, en el momento de enviar el correo |
 | `ReaderMaturity` | `User` | Un booleano: ¿tiene edad? |
+| `GenreCatalogue` | `User` | Cuáles de estos códigos de temática **no** existen |
 | `CorrectionBriefs` | `Work` | Qué se pregunta en un capítulo, de quién es la obra y si admite correcciones |
 | `BetaReaderAccessCheck` | `Reading` | Un booleano: ¿es lector beta de esta obra? |
 
-Tres de los cuatro devuelven **un booleano o poco más**, y no es casualidad: un contrato que
-devuelve mucho suele ser un modelo compartido con otro nombre.
+Casi todos devuelven **un booleano o poco más**, y no es casualidad: un contrato que devuelve
+mucho suele ser un modelo compartido con otro nombre.
+
+`GenreCatalogue` pregunta al revés de como parecería natural —qué códigos *no* existen, en vez
+de cuáles sí— y eso también es deliberado: es la respuesta que hace falta, porque un código
+desconocido se rechaza nombrándolo, y evita entregar el catálogo entero para validar tres
+valores.
 
 Tres reglas, y las tres importan:
 

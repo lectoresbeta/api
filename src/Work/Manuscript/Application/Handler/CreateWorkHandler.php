@@ -9,6 +9,7 @@ use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 use LectoresBeta\Work\Manuscript\Application\Command\CreateWork;
+use LectoresBeta\Work\Manuscript\Application\Service\DeclareGenres;
 use LectoresBeta\Work\Manuscript\Domain\Entity\Work;
 use LectoresBeta\Work\Manuscript\Domain\Event\WorkCreated;
 use LectoresBeta\Work\Manuscript\Domain\Repository\WorkRepository;
@@ -36,6 +37,7 @@ final readonly class CreateWorkHandler
 {
     public function __construct(
         private WorkRepository $works,
+        private DeclareGenres $genres,
         private TransactionalSession $session,
         private EventPublisher $events,
         private Clock $clock,
@@ -56,8 +58,9 @@ final readonly class CreateWorkHandler
             $work->describe($command->synopsis, $now);
         }
 
-        $this->session->execute(function () use ($work): void {
+        $this->session->execute(function () use ($work, $command): void {
             $this->works->save($work);
+            $this->genres->on($work->id(), $command->genres);
         });
 
         $this->events->publish(new WorkCreated(

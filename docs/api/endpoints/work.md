@@ -22,6 +22,7 @@
 | `PUT /chapters/{chapterId}/visibility` | `setChapterVisibility` | Visibilidad del fragmento | FEAT-WRK-008 | PENDING |
 | `PUT /works/{workId}/visibility` | `setWorkVisibility` | Visibilidad de la obra | FEAT-WRK-008 | PENDING |
 | `PUT /api/v1/works/{workId}/access-mode` | `setAccessMode` | Quién puede ser lector beta | FEAT-WRK-007 | **Implementado** |
+| `PUT /api/v1/works/{workId}/genres` | `setWorkGenres` | Clasificar la obra | FEAT-WRK-001 | **Implementado** |
 | `GET /api/v1/works/{workId}/questionnaire` | `getWorkQuestionnaire` | Ver el cuestionario vigente | FEAT-WRK-014 | **Implementado** |
 | `GET /chapters/{chapterId}/questionnaire` | `getChapterQuestionnaire` | Cuestionario a responder y borrador | FEAT-FBK-003 | DRAFT |
 | `PUT /api/v1/works/{workId}/questionnaire` | `updateWorkQuestionnaire` | Definir el cuestionario. Crea una versión | FEAT-WRK-014 | **Implementado** |
@@ -52,13 +53,47 @@ distingue para poder ofrecer el reenvío del correo.
 
 ### Entrada
 
-Solo `title` y, opcionalmente, `synopsis`. **La obra nace vacía**: los capítulos se añaden
+`title` y, opcionalmente, `synopsis` y `genres`. **La obra nace vacía**: los capítulos se añaden
 después (`Q-2`, resuelta). Una novela de cuarenta capítulos no cabe en una petición, y
 obligar a ello convertiría cada guardado en un envío completo.
 
 **No se acepta `authorId`**, y un `wordCount` enviado se ignora: aceptarlos permitiría
 falsear la autoría o el coste en créditos de la obra. `textTier` ya no existe
 ([`decision:0006`](../../decisions/0006-credit-system.md)).
+
+`genres` son códigos del catálogo que posee `User` (`GET /genres`), como mucho tres, y son
+opcionales: una obra sin clasificar existe, solo que no aparece cuando alguien filtra el
+catálogo. Se validan contra el catálogo vigente y un código desconocido se rechaza
+**nombrándolo**.
+
+---
+
+## `PUT /api/v1/works/{workId}/genres`
+
+**`operationId`:** `setWorkGenres` · **Funcionalidad:** [`FEAT-WRK-001`](../../features/work/FEAT-WRK-001-create-work-with-editor.md)
+
+### Propósito
+
+Sustituir las temáticas de la obra. **No hay «añadir una»**: lo que se envía es cómo queda
+clasificada, igual que con el modo de acceso o el estado.
+
+### Autorización
+
+Solo el autor, con cuenta activada. Una obra ajena responde `404`.
+
+### Reglas aplicadas
+
+- Como mucho **tres** temáticas. El filtro del catálogo es en `O`, así que una obra con ocho
+  aparecería en casi cualquier búsqueda.
+- Solo códigos del catálogo vigente de `User`, consultado por **contrato publicado**: `Work`
+  no tiene catálogo propio ni lee sus tablas (`W-7`).
+- La lista vacía deja la obra sin clasificar, que es legítimo.
+
+### Efectos
+
+Ninguno fuera de este contexto. No cuesta créditos, no toca lo que ya se corrigió y no publica
+ningún evento: nadie fuera de `Work` usa todavía las temáticas de una obra, y publicar un
+hecho que nadie escucha es inventarse un contrato que luego hay que mantener.
 
 ### Respuesta
 

@@ -10,6 +10,9 @@ namespace LectoresBeta\Work\Catalogue\Application\DTO;
  */
 final readonly class CatalogueEntry
 {
+    /**
+     * @param list<string> $genres
+     */
     public function __construct(
         public string $workId,
         public string $title,
@@ -18,6 +21,7 @@ final readonly class CatalogueEntry
         public int $wordCount,
         public int $chapterCount,
         public bool $adultsOnly,
+        public array $genres,
         public int $correctableChapters,
         public int $correctionsReceived,
     ) {

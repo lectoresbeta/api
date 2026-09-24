@@ -49,6 +49,7 @@ final readonly class CreateWorkController
             $user->getUserIdentifier(),
             (string) $body->string('title'),
             $body->string('synopsis'),
+            $body->stringList('genres'),
         ));
 
         return new JsonResponse(['workId' => $workId], Response::HTTP_CREATED);

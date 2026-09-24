@@ -108,6 +108,15 @@ ella su principal ventaja.
 - `RN-6` El título es obligatorio y no puede estar vacío.
 - `RN-7` Al crear la obra se genera un `AuthorshipRecord`. *(Momento exacto pendiente, `W-1`.)*
 - `RN-8` El contenido enriquecido se almacena de forma saneada: no se acepta HTML arbitrario.
+- `RN-9` La obra declara **de cero a tres temáticas**, por código, del catálogo que posee
+  `User` ([`FEAT-USR-023`](../user/FEAT-USR-023-onboarding-select-genres.md)). Son opcionales:
+  una obra sin clasificar existe, solo que no aparece cuando alguien filtra el catálogo. Un
+  código desconocido se rechaza **nombrándolo**, nunca se descarta en silencio.
+
+`RN-9` cierra `Q-6` para la temática y `W-7` para el catálogo. El tope de tres no es
+cosmético: el filtro del catálogo es multiselección **en `O`**
+([`FEAT-WRK-012`](FEAT-WRK-012-browse-catalogue.md), `L-7`), y una obra que declarase ocho
+temáticas aparecería en casi cualquier búsqueda.
 
 ## Flujo principal
 
@@ -142,6 +151,12 @@ ella su principal ventaja.
 |---|---|---|
 | Crear obra | `POST /works` | `createWork` |
 | Añadir fragmento | `POST /works/{workId}/chapters` | `addChapter` |
+| Clasificar la obra | `PUT /works/{workId}/genres` | `setWorkGenres` |
+
+`setWorkGenres` es un `PUT` con la lista entera, como el modo de acceso y el estado: lo que el
+autor envía es **cómo queda clasificada su obra**, no un cambio incremental. No hay «añadir
+una temática», y no es una omisión — clasificar es decir qué es una obra, no ir apilando
+etiquetas.
 
 Documento: [`../../api/endpoints/work.md`](../../api/endpoints/work.md).
 Esquemas: `openapi/paths/works.yaml`.
@@ -189,7 +204,11 @@ referencia en ese momento (`C-7`).
 | `chapter` | Uno o varios registros |
 | `authorship_record` | Nuevo registro inmutable |
 
-Índices necesarios: `work(author_id)`, `work(genre, created_at)`, `chapter(work_id, position)`.
+Índices necesarios: `work(author_id)`, `chapter(work_id, position)` y `work_genre(genre_code)`
+para el filtro del catálogo.
+
+La temática **no es una columna de `work`**: es una tabla `work_genre` con una fila por obra y
+código. Una obra declara varias, y el índice por código es el que usa el catálogo.
 
 ## Diseño (Figma)
 
@@ -208,6 +227,9 @@ a después.
 - [ ] Un capítulo que tras sanear se queda sin texto se rechaza con `422`.
 - [ ] El `wordCount` devuelto coincide con el número de palabras del contenido.
 - [ ] El usuario no puede fijar `wordCount` en la petición.
+- [x] Una obra puede nacer clasificada, y reclasificarse después sin consecuencias.
+- [x] Una temática que no está en el catálogo se rechaza **diciendo cuál**.
+- [x] Una obra no declara más de tres temáticas.
 - [ ] Se publica `WorkCreated` y su payload no contiene el contenido de la obra.
 - [ ] Añadir un capítulo publica `ChapterContentUpdated` con el recuento y sin una palabra del texto.
 - [ ] Una petición sin sesión recibe `401`.
@@ -227,7 +249,7 @@ a después.
 |---|---|---|
 | Q-3 | ¿Qué ocurre si falla la generación del registro de autoría? | Sigue abierta, y **bloquea a `W-1`**: hasta saber *cuándo* se genera no tiene sentido decidir qué pasa si falla |
 | Q-5 | ¿Hay borradores con guardado automático? | Cambia el ciclo de vida de la obra (`W-5`) |
-| Q-6 | ¿Qué metadatos son obligatorios: temática, sinopsis, portada? | Validación y búsqueda |
+| Q-6 | ¿Qué metadatos son obligatorios: sinopsis, portada? | **La temática ya no**: es opcional (`RN-9`). Sigue abierto para el resto |
 
 ## Estado
 

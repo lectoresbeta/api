@@ -132,6 +132,9 @@ services:
     LectoresBeta\Reading\BetaReaderAccess\Application\Contract\BetaReaderAccessCheck:
         alias: LectoresBeta\Reading\BetaReaderAccess\Application\Service\CheckBetaReaderAccess
 
+    LectoresBeta\User\Profile\Application\Contract\GenreCatalogue:
+        alias: LectoresBeta\User\Profile\Application\Service\CheckGenreCatalogue
+
     LectoresBeta\Notification\Delivery\Application\Handler\SendActivationEmail:
         arguments:
             # La URL es del frontend, no de la API: el enlace del correo abre

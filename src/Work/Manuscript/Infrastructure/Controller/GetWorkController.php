@@ -50,6 +50,7 @@ final readonly class GetWorkController
             'adultsOnly' => $work->adultsOnly,
             'wordCount' => $work->wordCount,
             'blocked' => $work->blocked,
+            'genres' => $work->genres,
             'chapters' => array_map(
                 static fn (ChapterSummary $chapter): array => [
                     'chapterId' => $chapter->chapterId,

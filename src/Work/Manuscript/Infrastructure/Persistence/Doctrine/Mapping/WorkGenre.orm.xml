@@ -4,13 +4,16 @@
                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
 
-    <entity name="LectoresBeta\Work\Manuscript\Domain\Entity\WorkGenre" table="work_genre" schema="work_ctx">
+    <entity name="LectoresBeta\Work\Manuscript\Domain\Entity\WorkGenre"
+            table="work_genre" schema="work_ctx">
 
         <indexes>
-            <!-- Filtering the catalogue by genre reads this way round. -->
+            <!-- La consulta del catálogo: obras de estas temáticas. -->
             <index name="idx_work_genre_code" columns="genre_code"/>
         </indexes>
 
+        <!-- La clave es el par: una obra no declara dos veces la misma
+             temática, y eso lo garantiza la base de datos, no el código. -->
         <id name="workId" column="work_id" type="guid">
             <generator strategy="NONE"/>
         </id>

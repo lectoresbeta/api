@@ -16,6 +16,8 @@ final readonly class WorkView
 {
     /**
      * @param list<ChapterSummary> $chapters
+     * @param list<string>         $genres   códigos del catálogo, no nombres:
+     *                                       el nombre lo cura `User` y puede cambiar
      */
     public function __construct(
         public string $workId,
@@ -26,6 +28,7 @@ final readonly class WorkView
         public string $accessMode,
         public bool $adultsOnly,
         public int $wordCount,
+        public array $genres,
         public array $chapters,
         public bool $blocked,
     ) {

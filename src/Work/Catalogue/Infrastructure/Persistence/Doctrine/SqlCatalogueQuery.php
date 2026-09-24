@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Work\Catalogue\Infrastructure\Persistence\Doctrine;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use LectoresBeta\Work\Catalogue\Application\DTO\CatalogueCriteria;
 use LectoresBeta\Work\Catalogue\Application\DTO\CatalogueEntry;
@@ -40,10 +41,16 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
         $where = $this->conditions($criteria);
         $parameters = $this->parameters($criteria);
 
+        // La lista de temáticas va como parámetro de array: escribirla en la
+        // SQL sería construir un `IN` a mano con valores que vienen de la
+        // petición.
+        $types = [] === $criteria->genres ? [] : ['genres' => ArrayParameterType::STRING];
+
         /** @var int<0, max> $total */
         $total = (int) $this->connection->fetchOne(
             \sprintf('SELECT COUNT(*) FROM work_ctx.work w WHERE %s', $where),
             $parameters,
+            $types,
         );
 
         if (0 === $total) {
@@ -54,6 +61,7 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
         $rows = $this->connection->fetchAllAssociative(
             $this->sql($where, $criteria->byRelevance),
             [...$parameters, 'limit' => $criteria->perPage, 'offset' => $criteria->offset()],
+            $types,
         );
 
         return new CataloguePage(array_map(self::entry(...), $rows), $total, $criteria->page, $criteria->perPage);
@@ -86,6 +94,7 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
                   CASE WHEN w.status = 'IN_CORRECTION' THEN COALESCE(signal.correctable_chapters, 0) ELSE 0 END
                     AS correctable_chapters,
                   COALESCE(delivered.corrections_received, 0) AS corrections_received,
+                  COALESCE(genres.codes, ARRAY[]::text[]) AS genres,
                   CASE
                     WHEN w.status <> 'IN_CORRECTION' OR COALESCE(signal.correctable_chapters, 0) = 0 THEN %4$d
                     ELSE COALESCE(signal.affordable, 0)::numeric
@@ -105,6 +114,11 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
                   FROM work_ctx.catalogue_delivered_correction d
                   WHERE d.work_id = w.id
                 ) delivered ON TRUE
+                LEFT JOIN LATERAL (
+                  SELECT ARRAY_AGG(g.genre_code ORDER BY g.genre_code) AS codes
+                  FROM work_ctx.work_genre g
+                  WHERE g.work_id = w.id
+                ) genres ON TRUE
                 WHERE %1$s
                 ORDER BY %5$s
                 LIMIT :limit OFFSET :offset
@@ -138,11 +152,18 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
             $conditions[] = 'w.adults_only = FALSE';
         }
 
+        if ([] !== $criteria->genres) {
+            // En `O`: basta con que la obra tenga **alguna** de las pedidas
+            // (`L-7`). `EXISTS` y no un `JOIN` porque una obra con tres
+            // temáticas no debe aparecer tres veces.
+            $conditions[] = 'EXISTS (SELECT 1 FROM work_ctx.work_genre g WHERE g.work_id = w.id AND g.genre_code IN (:genres))';
+        }
+
         return implode(' AND ', $conditions);
     }
 
     /**
-     * @return array<string, string|\DateTimeImmutable>
+     * @return array<string, string|list<string>>
      */
     private function parameters(CatalogueCriteria $criteria): array
     {
@@ -155,7 +176,26 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
             $parameters['status'] = $criteria->status;
         }
 
+        if ([] !== $criteria->genres) {
+            $parameters['genres'] = $criteria->genres;
+        }
+
         return $parameters;
+    }
+
+    /**
+     * PostgreSQL devuelve un `text[]` como `{A,B}`. Se deshace aquí, en el
+     * único sitio que sabe de dónde viene.
+     *
+     * @return list<string>
+     */
+    private static function codes(mixed $aggregate): array
+    {
+        if (!\is_string($aggregate) || '{}' === $aggregate || '' === $aggregate) {
+            return [];
+        }
+
+        return array_values(array_filter(explode(',', trim($aggregate, '{}'))));
     }
 
     /**
@@ -171,6 +211,7 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
             (int) $row['word_count'],
             (int) $row['chapter_count'],
             (bool) $row['adults_only'],
+            self::codes($row['genres']),
             (int) $row['correctable_chapters'],
             (int) $row['corrections_received'],
         );

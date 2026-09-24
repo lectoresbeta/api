@@ -13,10 +13,15 @@ namespace LectoresBeta\Work\Manuscript\Application\Command;
  */
 final readonly class CreateWork
 {
+    /**
+     * @param list<string> $genres opcionales: una obra sin clasificar existe,
+     *                             solo que no aparece cuando alguien filtra
+     */
     public function __construct(
         public string $authorId,
         public string $title,
         public ?string $synopsis = null,
+        public array $genres = [],
     ) {
     }
 }

@@ -48,6 +48,23 @@ collection:
           **`DRAFT` no es un valor de este filtro.** Se rechaza con `422`
           aunque se fuerce el parámetro: un desplegable que no lo ofrece no es
           una autorización.
+      - name: genres
+        in: query
+        required: false
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+        description: |
+          Multiselección, y **en `O`**: pedir `DRAMA` y `FANTASY` devuelve las
+          obras que son cualquiera de las dos, no las que son ambas (`L-7`).
+          Con `Y`, añadir una temática al filtro reduciría los resultados
+          hasta dejar la pantalla vacía, que es lo contrario de descubrir.
+
+          Una temática que nadie tiene devuelve lista vacía, no `422`: no hay
+          forma de distinguir un código inventado de uno retirado del
+          catálogo.
       - name: sort
         in: query
         required: false
@@ -116,6 +133,11 @@ collection:
                         type: integer
                       adultsOnly:
                         type: boolean
+                      genres:
+                        type: array
+                        items:
+                          type: string
+                        description: Códigos del catálogo, no nombres.
                       correctableChapters:
                         type: integer
                         description: |
@@ -173,6 +195,19 @@ collection:
                 maxLength: 180
               synopsis:
                 type: string
+              genres:
+                type: array
+                maxItems: 3
+                items:
+                  type: string
+                description: |
+                  Códigos del catálogo de temáticas (`GET /genres`), que posee
+                  `User`. **Opcionales**: una obra sin clasificar existe, solo
+                  que no aparece cuando alguien filtra el catálogo.
+
+                  El tope de tres no es cosmético: el filtro del catálogo es
+                  en `O`, y una obra con ocho temáticas aparecería en casi
+                  cualquier búsqueda.
     responses:
       '201':
         description: Obra creada.
@@ -406,6 +441,7 @@ work:
                 synopsis: { type: [string, 'null'] }
                 status: { type: string, enum: [DRAFT, PUBLISHED, IN_CORRECTION] }
                 accessMode: { type: string, enum: [PUBLIC, ON_REQUEST, PRIVATE] }
+                genres: { type: array, items: { type: string } }
                 adultsOnly: { type: boolean }
                 wordCount: { type: integer }
                 blocked: { type: boolean }
@@ -472,6 +508,65 @@ chapter:
         description: |
           No existe, está oculto, está bloqueado, o pertenece a una obra que
           no puedes abrir. `code: CHAPTER_NOT_FOUND`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+genres:
+  put:
+    tags: [Works]
+    operationId: setWorkGenres
+    summary: Clasificar la obra
+    description: |
+      Sustituye las temáticas de la obra por las enviadas. **No hay «añadir
+      una»**: clasificar es decir qué es una obra, y lo que se envía es cómo
+      queda, igual que con el modo de acceso o el estado.
+
+      La lista vacía la deja sin clasificar, que es un estado legítimo — lo
+      que le pasa es que no aparece cuando alguien filtra el catálogo.
+
+      Se puede en cualquier momento y sin consecuencias: la temática no cuesta
+      créditos y no toca lo que ya se corrigió. Lo único que mueve es dónde
+      aparece la obra.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [genres]
+            properties:
+              genres:
+                type: array
+                maxItems: 3
+                items:
+                  type: string
+    responses:
+      '204':
+        description: La obra queda clasificada así.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: |
+          `code: UNKNOWN_GENRE` —y el `detail` **dice cuál**, porque quien
+          clasifica su obra necesita saber cuál de los tres que envió no
+          existe— o `TOO_MANY_GENRES`.
         content:
           application/problem+json:
             schema:

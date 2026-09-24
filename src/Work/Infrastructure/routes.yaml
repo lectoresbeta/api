@@ -53,3 +53,8 @@ listWorks:
     path: /api/v1/works
     controller: LectoresBeta\Work\Catalogue\Infrastructure\Controller\ListWorksController::__invoke
     methods: [GET]
+
+setWorkGenres:
+    path: /api/v1/works/{workId}/genres
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\SetWorkGenresController::__invoke
+    methods: [PUT]

@@ -13,9 +13,15 @@ namespace LectoresBeta\Work\Catalogue\Application\DTO;
  */
 final readonly class CatalogueCriteria
 {
+    /**
+     * @param list<string> $genres en `O` y no en `Y` (`L-7`): filtrar por
+     *                             «Ficción» y «YoungAdult» devuelve las obras
+     *                             que son **cualquiera** de las dos
+     */
     public function __construct(
         public string $readerId,
         public bool $readerIsOfAge,
+        public array $genres,
         public ?string $status,
         public bool $byRelevance,
         public int $page,

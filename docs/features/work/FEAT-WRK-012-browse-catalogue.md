@@ -185,7 +185,7 @@ explícitamente. Hace falta un read model o un contrato de consulta (`L-9`).
 - [ ] El contenido excluido por preferencias **no llega al cliente**. *Las preferencias no
       existen ([`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)); sí funciona el
       filtro de edad, que es de otro eje.*
-- [ ] Filtrar por varias temáticas a la vez funciona. *Una obra todavía no tiene temáticas.*
+- [x] Filtrar por varias temáticas a la vez funciona, **en `O`** (`L-7`).
 - [x] El total refleja los filtros aplicados.
 - [x] La respuesta incluye `total` y `totalPages`.
 - [x] Un valor de filtro desconocido produce `422`, no una lista vacía.
@@ -206,14 +206,22 @@ explícitamente. Hace falta un read model o un contrato de consulta (`L-9`).
 | L-1 | ¿Qué rangos tiene «Tiempo de lectura»? | Define el filtro |
 | L-2 | ¿Qué otras opciones de ordenación hay? | Solo se ve «relevancia» |
 | L-6 | ¿Se excluyen las obras propias? | `RN-7` lo asume |
-| L-7 | Varios géneros: ¿`Y` u `O`? | Cambia por completo los resultados |
+| ~~L-7~~ | Varios géneros: ¿`Y` u `O`? | **Resuelta: `O`.** Ver abajo |
 | L-8 | ¿El catálogo es público para `Guest`? | Decide autorización y SEO |
 | L-4 | ¿Se acepta la paginación numerada? | Excepción a la convención |
 
-`L-7` parece menor y no lo es: con `Y`, filtrar por «Ficción» y «YoungAdult» devuelve las
+`L-7` parecía menor y no lo era: con `Y`, filtrar por «Ficción» y «YoungAdult» devuelve las
 obras que son ambas cosas; con `O`, las que son cualquiera de las dos. Los resultados no se
-parecen en nada, y la maqueta no lo aclara. Lo habitual en un catálogo de descubrimiento es
-`O`.
+parecen en nada.
+
+**Resuelta como `O`** (2026-09-24). Con `Y`, cada temática que se añade al filtro **reduce**
+los resultados, y en un catálogo pequeño los deja en cero enseguida: quien está explorando
+acaba en una pantalla vacía por haber marcado dos casillas, que es exactamente lo contrario de
+descubrir. Con `O`, marcar más casillas enseña más cosas, que es lo que la palabra «filtro»
+sugiere en una pantalla de descubrimiento.
+
+El tope de **tres temáticas por obra** es la otra mitad de esa decisión: con `O`, una obra que
+declarase ocho aparecería en casi cualquier búsqueda y el filtro dejaría de filtrar.
 
 ## Estado
 
@@ -273,10 +281,9 @@ fuese completa. No compensa: el catálogo ya tiene el estado delante, en la mism
 
 ### Falta
 
-- **Los filtros de temática y de etiquetas de contenido** (`RN-5`, `RN-10`). No es que falte
-  el filtro: es que **una obra todavía no tiene temáticas ni etiquetas**. Las temáticas existen
-  para las personas —el onboarding las usa— pero nunca se le han puesto a una obra, y las
-  etiquetas son [`FEAT-WRK-017`](FEAT-WRK-017-content-rating.md).
+- **El filtro de etiquetas de contenido** (`RN-10`): una obra todavía no tiene etiquetas
+  ([`FEAT-WRK-017`](FEAT-WRK-017-content-rating.md)). El de **temática** (`RN-5`) ya funciona,
+  con multiselección y en `O`.
 - **El filtro de tiempo de lectura** (`L-1`): sigue sin estar definido qué rangos son.
 - **Las preferencias de contenido sensible** (`RN-9`,
   [`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)) y **las obras de usuarios
