@@ -117,6 +117,7 @@ preferencias y presencia pública como autor.
 | `ReaderDirectory` | Hasta N personas cuyo nombre o `@usuario` encajan, como tarjeta de perfil | `Reading` |
 | `AuthorAudience` | **Un booleano**: ¿acepta este autor comentarios de esta persona? Nunca el ajuste | `Feedback` |
 | `VisibleProfiles` | De estas personas, **las que quien pregunta puede ver**, como tarjeta de perfil | `Community` |
+| `ProfileCards` | Lo mismo **sin filtrar**, y con un solo uso legítimo: la lista de a quién has bloqueado | `Community` |
 
 Todos son de lectura y devuelven lo justo
 ([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md)). `ReaderMaturity`
@@ -154,6 +155,24 @@ justo quien pidió no ser encontrado ([`FEAT-COM-027`](../features/community/FEA
 
 Responde **por lotes**: existe para pintar una página entera de una lista, y una llamada por
 fila sería un N+1 escondido detrás de un contrato.
+
+`ProfileCards` es el hermano peligroso del anterior y tiene nombre propio por eso. Existe
+porque la lista de bloqueados **no puede filtrarse**: si alguien cierra su perfil después de
+ser bloqueado, filtrarlo lo haría desaparecer de esa lista y el bloqueo quedaría sin deshacer
+para siempre ([`FEAT-COM-034`](../features/community/FEAT-COM-034-block-user.md)). Un contrato
+aparte y mal usable de un vistazo es mejor que un parámetro que alguien acabaría pasando en
+una pantalla donde se descubre gente.
+
+### Las copias del grafo social
+
+`User` mantiene dos proyecciones de hechos de `Community`, y las dos existen por la misma
+regla —un contrato publicado no llama al de otro contexto mientras responde: el grafo de
+seguidores y **los bloqueos**.
+
+La de bloqueos guarda **el par ordenado y no la dirección**: lo único que se pregunta es si
+dos personas se hablan, porque el efecto sobre los comentarios corta en los dos sentidos. Un
+bloqueo vence a cualquier ajuste de privacidad, así que se comprueba antes que nada en
+`AuthorAudience`.
 
 ### La copia del grafo de seguidores
 

@@ -109,6 +109,7 @@ capítulo y lo consume `Feedback`
 | `CorrectionDraftDiscarded` | `Feedback` | Revoca el acceso nacido de esa corrección, si el lector no llegó a entregar nada |
 | `WorkDeleted` | `Work` | Cierra accesos y solicitudes pendientes |
 | `UserDeleted` | `User` | Cierra accesos y vínculos del usuario |
+| **`UserBlocked`** | `Community` | **Revoca el acceso del bloqueado a las obras del bloqueador** (`FEAT-COM-034` `RN-B1`). `Community` no lo ordena: qué significa un bloqueo para una obra inédita se decide aquí |
 
 `WorkAccessModeChanged` **ya no se consume**. Estaba aquí para mantener una proyección de
 «qué caminos admite la obra», y [`decision:0015`](../decisions/0015-work-and-reading-ask-each-other.md)

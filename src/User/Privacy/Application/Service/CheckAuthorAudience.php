@@ -9,6 +9,7 @@ use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Privacy\Application\Contract\AuthorAudience;
 use LectoresBeta\User\Privacy\Domain\Enum\PrivacyAudience;
 use LectoresBeta\User\Privacy\Domain\Repository\AuthorFollowerRepository;
+use LectoresBeta\User\Privacy\Domain\Repository\BlockedPairRepository;
 use LectoresBeta\User\Privacy\Domain\Repository\UserPrivacySettingsRepository;
 
 /**
@@ -30,20 +31,33 @@ use LectoresBeta\User\Privacy\Domain\Repository\UserPrivacySettingsRepository;
  * Lo que esto abre y decide producto (`C-22`): con seguimiento unilateral,
  * «solo mis seguidores» es «cualquiera que pulse Seguir». Hoy el ajuste hace
  * literalmente lo que dice.
+ *
+ * Y por encima de todo ello está **el bloqueo** (`FEAT-COM-034`): ninguna
+ * combinación de ajustes le devuelve la palabra a quien ha sido bloqueado, ni
+ * al revés. Se consulta la misma copia local, por la misma regla.
  */
 final readonly class CheckAuthorAudience implements AuthorAudience
 {
     public function __construct(
         private UserPrivacySettingsRepository $settings,
         private AuthorFollowerRepository $followers,
+        private BlockedPairRepository $blocks,
     ) {
     }
 
     public function acceptsCommentsFrom(string $authorId, string $readerId): bool
     {
         try {
-            $settings = $this->settings->ofUser(UserId::fromString($authorId));
+            $author = UserId::fromString($authorId);
+            $settings = $this->settings->ofUser($author);
         } catch (InvalidValue) {
+            return false;
+        }
+
+        // **Un bloqueo vence a cualquier ajuste** (`FEAT-COM-034`), y corta
+        // en los dos sentidos: da igual quién bloqueó a quién, porque lo que
+        // se decide aquí es si estas dos personas se hablan.
+        if ($this->isBlocked($readerId, $author)) {
             return false;
         }
 
@@ -57,6 +71,15 @@ final readonly class CheckAuthorAudience implements AuthorAudience
             PrivacyAudience::FOLLOWERS => $this->follows($readerId, $authorId),
             PrivacyAudience::NOBODY => false,
         };
+    }
+
+    private function isBlocked(string $readerId, UserId $author): bool
+    {
+        try {
+            return $this->blocks->exists(UserId::fromString($readerId), $author);
+        } catch (InvalidValue) {
+            return false;
+        }
     }
 
     /**

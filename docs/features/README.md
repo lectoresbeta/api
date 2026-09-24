@@ -309,7 +309,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-031 | Responder a un comentario | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-031-reply-to-comment.md) |
 | FEAT-COM-032 | Menciones a usuarios | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-032-mentions.md) |
 | FEAT-COM-033 | Silenciar a un usuario | User | PENDING | TODO | P3 | — |
-| FEAT-COM-034 | Bloquear a un usuario | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-034-block-user.md) |
+| FEAT-COM-034 | Bloquear a un usuario | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-034-block-user.md) |
 | FEAT-COM-035 | Denunciar a un usuario → `FEAT-MOD-001` | User | PENDING | TODO | P2 | — |
 | FEAT-COM-036 | Interacciones sociales sobre un capítulo (like, comentario, compartir) | User | PENDING | TODO | P1 | — |
 | FEAT-COM-037 | Adjuntar vídeo a una publicación | User | PENDING | DEFERRED | P3 | — |

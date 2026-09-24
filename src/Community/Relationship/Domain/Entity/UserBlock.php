@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Community\Relationship\Domain\Entity;
 
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
+use LectoresBeta\Community\Relationship\Domain\Exception\BlockRefused;
 use LectoresBeta\Community\Relationship\Domain\ValueObject\UserBlockId;
 
 /**
@@ -37,8 +38,10 @@ class UserBlock
         MemberId $blockedId,
         \DateTimeImmutable $now,
     ) {
+        // Una regla de negocio, no una comprobación defensiva: quien la
+        // incumple recibe un `422` con su código, no un `500`.
         if ($blockerId->value() === $blockedId->value()) {
-            throw new \DomainException('Nobody blocks themselves.');
+            throw BlockRefused::yourself();
         }
 
         $this->id = $id->value();
@@ -60,5 +63,10 @@ class UserBlock
     public function blockedId(): MemberId
     {
         return MemberId::fromString($this->blockedId);
+    }
+
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
     }
 }

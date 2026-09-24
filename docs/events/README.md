@@ -225,6 +225,8 @@ hecho económico; qué se ve lo decide `Feedback`, que es quien posee la correcc
 |---|---|---|---|
 | `AuthorSubscribed` | Alguien empieza a seguir a un autor | **`User`** (proyección de audiencias), `Notification` | `subscriberId`, `authorId`, `subscribedAt` |
 | `AuthorUnsubscribed` | Alguien deja de seguir a un autor | **`User`** | `subscriberId`, `authorId`, `unsubscribedAt` |
+| `UserBlocked` | Alguien bloquea a alguien | **`User`** (deja de aceptar comentarios entre ambos), **`Reading`** (retira el acceso de lector beta), y `Feedback`, `Credits` y `Notification` cuando existan | `blockerId`, `blockedId`, `blockedAt` |
+| `UserUnblocked` | Se levanta un bloqueo | **`User`**. `Reading` **no** lo consume: devolver un acceso revocado es una decisión del autor, no un efecto secundario | `blockerId`, `blockedId`, `unblockedAt` |
 
 Los dos llevan **los dos identificadores y nada más**. Ni nombres ni perfiles: quien los
 consume tiene su propia copia de las personas, y copiar un nombre aquí solo añadiría un sitio
@@ -234,6 +236,15 @@ donde envejece.
 proyecta el grafo lo necesita para no quedarse con una copia que envejece **hacia el lado
 peligroso**: alguien contando como seguidor —y por tanto dentro de una audiencia
 `FOLLOWERS`— después de haberse ido.
+
+`UserBlocked` es el ejemplo más claro de por qué un hecho no lleva instrucciones: dice que dos
+personas han dejado de hablarse, y **cada contexto decide qué significa eso en su modelo**.
+`Community` no sabe qué es un acceso de lector beta ni un crédito, y no tiene por qué
+aprenderlo para que bloquear funcione.
+
+Al deshacer los seguimientos, el bloqueo publica además un `AuthorUnsubscribed` por cada uno.
+Quien proyecta el grafo se entera de lo que le importa —esa relación ya no está— sin aprender
+que detrás había un bloqueo.
 
 Que `User` consuma estos dos hechos es lo que hace verdad `FOLLOWERS` en
 [`FEAT-USR-038`](../features/user/FEAT-USR-038-privacy-settings.md) sin que `User` llame a

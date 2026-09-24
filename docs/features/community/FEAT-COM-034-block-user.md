@@ -5,12 +5,15 @@ context: Community
 concept: Relationship
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P2
 sources:
   - conversation:2026-09-22 (menú «···» del perfil ajeno)
   - docs/ui/user-profile.md
-endpoints: [PUT /users/{userId}/block, DELETE /users/{userId}/block]
+endpoints:
+  - PUT /users/{userId}/block
+  - DELETE /users/{userId}/block
+  - GET /me/blocked-users
 events: [UserBlocked, UserUnblocked]
 depends_on: [FEAT-COM-010]
 updated: 2026-09-24
@@ -159,16 +162,25 @@ ha bloqueado?», y la segunda es la que más se consulta.
 
 ## Criterios de aceptación
 
-- [ ] Bloquear deshace las dos relaciones de seguimiento.
-- [ ] El bloqueado no recibe ningún aviso.
-- [ ] Ninguno puede seguir al otro mientras dure el bloqueo.
-- [ ] Los mensajes directos entre ambos se cortan.
-- [ ] El bloqueado no puede comentar ni mencionar al que bloquea.
-- [ ] Desbloquear no restaura los seguimientos.
-- [ ] No se puede uno bloquear a sí mismo.
-- [ ] El usuario puede consultar a quién tiene bloqueado.
-- [ ] `Community` no revoca accesos de lector beta ni toca créditos: publica el evento.
-- [ ] Con la cuenta sin activar devuelve `403`.
+- [x] Bloquear deshace las dos relaciones de seguimiento.
+- [x] El bloqueado no recibe ningún aviso. *Se cumple por construcción: no hay nada que lo notifique, y `Notification` no consume el hecho.*
+- [x] Ninguno puede seguir al otro mientras dure el bloqueo.
+- [ ] Los mensajes directos entre ambos se cortan. *La mensajería (`FEAT-COM-011`) no existe.*
+- [ ] El bloqueado no puede comentar ni mencionar al que bloquea. *En el muro no: las publicaciones y sus comentarios (`FEAT-COM-002`, `FEAT-COM-006`) no existen. **En las obras sí**, que es donde hoy se comenta: ver abajo.*
+- [x] Desbloquear no restaura los seguimientos.
+- [x] No se puede uno bloquear a sí mismo.
+- [x] El usuario puede consultar a quién tiene bloqueado.
+- [x] `Community` no revoca accesos de lector beta ni toca créditos: publica el evento.
+- [x] Con la cuenta sin activar devuelve `403`.
+
+### Y los de «qué ocurre al bloquear»
+
+- [x] `RN-B1`: el bloqueado pierde el acceso a las obras del bloqueador desde ese instante.
+- [x] `RN-B2`: una corrección en curso del bloqueado no se puede entregar.
+- [x] `RN-B3`: esa corrección no genera cargo ni abono. *Se cumple por construcción: no hay entrega, y el cargo lo dispara la entrega.*
+- [x] `RN-B4`: las correcciones ya entregadas no se revierten ni se ocultan.
+- [ ] `RN-B5`: el bloqueo no borra comentarios ni publicaciones anteriores, los oculta al bloqueado. *No hay muro; y lo entregado en una obra se conserva, que es la mitad que sí existe.*
+- [ ] Se le avisa a quien pierde una corrección en curso. *No hay notificaciones (`FEAT-NOT-*`). **Es lo más importante que queda pendiente**: hoy ese texto deja de poder entregarse sin que nadie se lo diga.*
 
 ## Preguntas abiertas
 
@@ -176,14 +188,82 @@ ha bloqueado?», y la segunda es la que más se consulta.
 |---|---|---|
 | ~~B-2~~ | ¿Bloquear revoca el acceso de lector beta, y puede terminar quien ya estaba corrigiendo? | Cortarlo destruiría trabajo real de un tercero |
 | ~~B-3~~ | ¿Qué pasa con el feedback que el bloqueado ya dejó, y que el autor **ya pagó**? | Borrarlo le hace perder lo comprado; conservarlo contradice el bloqueo |
-| B-1 | ¿El perfil del que bloquea sigue siendo visible para el bloqueado? | Ocultarlo delata el bloqueo; mostrarlo lo hace parcial |
+| B-1 | ¿El perfil del que bloquea sigue siendo visible para el bloqueado? | Ocultarlo delata el bloqueo; mostrarlo lo hace parcial. **Hoy se ve**: nada lo esconde |
 | B-4 | ¿Qué ocurre con los comentarios cruzados ya publicados? | Hilos con huecos |
 | B-5 | ¿Hay límite de bloqueos? | Poco probable que haga falta |
-| B-6 | ¿El bloqueo impide que el bloqueado solicite acceso a obras del bloqueador? | Se deduce de `RN-6`, pero conviene decirlo |
+| B-6 | ¿El bloqueo impide que el bloqueado solicite acceso a obras del bloqueador? | Se deduce de `RN-6`, pero conviene decirlo. **Hoy no lo impide**: la solicitud (`FEAT-RDG-002`) no consulta el bloqueo, aunque el acceso que se le conceda quedaría sin efecto para comentar |
 
 ## Estado
 
 **Especificación:** `APPROVED` (2026-09-24). `B-2` y `B-3` resueltas: el bloqueo corta el acceso y las
 correcciones en curso, y conserva las ya entregadas.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-24). `PUT` y `DELETE
+/api/v1/users/{userId}/block`, y `GET /api/v1/me/blocked-users`. Una tabla nueva y su
+migración, pero en `User`: la proyección de bloqueos.
+
+### Lo que hace `Community`, y lo que deliberadamente no hace
+
+Guarda el bloqueo, deshace los dos seguimientos —que son suyos— y publica el hecho. **Nada
+más.** No revoca accesos de lector beta y no toca créditos, porque no sabe qué son: este
+contexto conoce relaciones sociales. `RN-10` no es una preferencia de estilo, es lo que
+permite que bloquear tenga consecuencias en tres contextos sin que ninguno dependa de los
+otros.
+
+Al deshacer los seguimientos publica un `AuthorUnsubscribed` por cada uno. Quien proyecta el
+grafo se entera de lo que le importa —esa relación ya no está— **sin aprender que detrás había
+un bloqueo**, que es información de otro orden.
+
+### Dos caminos para «el bloqueado no puede comentar», y hacen falta los dos
+
+| Dónde | Quién lo aplica | Cómo |
+|---|---|---|
+| Obras con acceso restringido | `Reading` | Revoca el acceso de lector beta del bloqueado a las obras del bloqueador (`RN-B1`) |
+| Obras públicas | `User` | El techo de audiencia responde que no: **un bloqueo vence a cualquier ajuste de privacidad** |
+
+Con solo el primero, bloquear no serviría de nada en las obras abiertas, que son la mayoría.
+Con solo el segundo, el bloqueado seguiría **leyendo** obra inédita a la que tenía acceso, que
+es lo que de verdad hay que cortar.
+
+`RN-B2` —que una corrección en curso no se pueda entregar— no necesitó ninguna regla nueva:
+sale de los dos anteriores. Sin acceso o sin audiencia, no se entrega.
+
+### La proyección de bloqueos en `User`
+
+La misma historia que la de seguidores, y por la misma regla: `CheckAuthorAudience` es un
+contrato publicado, y un contrato no llama al de otro contexto mientras responde
+([`decision:0014`](../../decisions/0014-published-contracts-between-contexts.md)).
+
+Guarda **el par ordenado y no la dirección**. Lo único que se pregunta aquí es si dos personas
+se hablan, porque el efecto sobre los comentarios corta en los dos sentidos; guardar quién
+bloqueó a quién invitaría a usarlo, y quien lo usara respondería distinto a cada lado de un
+bloqueo que no tiene lados. Eso tiene un coste conocido y asumido: si dos personas se
+bloquearon mutuamente, levantar uno de los dos deja la copia sin bloqueo aunque el otro siga
+vivo. El caso es raro y dura hasta el siguiente hecho.
+
+### La lista de bloqueados no se filtra por privacidad
+
+Y es la única lista del sistema que no lo hace. Si se filtrara, bloquear a alguien que después
+cierra su perfil lo haría desaparecer de ahí, y **el bloqueo sería irreversible en la
+práctica**: no se puede deshacer lo que no se puede encontrar.
+
+Por eso hay un contrato aparte —`ProfileCards`, sin filtro— en vez de relajar `VisibleProfiles`:
+el peligroso tiene nombre propio y un solo uso legítimo, en lugar de un parámetro que alguien
+acabaría pasando en una pantalla donde se descubre gente.
+
+### La regla incómoda sigue siendo incómoda
+
+Quien estuviera corrigiendo pierde ese trabajo y no cobra. Está probado, no disimulado, y se
+asume a conciencia. **Lo que falta es lo que la ficha pedía junto a eso: avisarle.** No hay
+notificaciones todavía, así que hoy ese texto deja de poder entregarse en silencio. Es lo
+primero que hay que completar cuando exista `Notification`.
+
+### Qué queda fuera
+
+Los mensajes directos (`FEAT-COM-011`) y el muro con sus comentarios y menciones
+(`FEAT-COM-002`, `FEAT-COM-006`, `FEAT-COM-032`) no existen como código. Cuando existan, cada
+uno tendrá que consultar el bloqueo — y la forma ya está: consumir el hecho y mantener su
+propia copia, como han hecho `User` y `Reading`.
+
+`B-1` sigue abierta: si el perfil del bloqueador se le oculta al bloqueado. Hoy se ve, porque
+nada lo esconde.

@@ -52,3 +52,26 @@ listSubscribers:
     path: /api/v1/users/{userId}/subscribers
     controller: LectoresBeta\Community\Subscription\Infrastructure\Controller\ListSubscribersController::__invoke
     methods: [GET]
+
+# Bloquear (FEAT-COM-034). `PUT` y `DELETE` sobre el estado de la relación,
+# como seguir, y por lo mismo: repetir cualquiera de los dos deja el mundo
+# igual.
+#
+# La lista de bloqueados **hace falta**: sin ella el bloqueo sería
+# irreversible en la práctica, porque nadie recuerda el `@usuario` de quien
+# bloqueó hace tres meses.
+
+blockUser:
+    path: /api/v1/users/{userId}/block
+    controller: LectoresBeta\Community\Relationship\Infrastructure\Controller\BlockUserController::__invoke
+    methods: [PUT]
+
+unblockUser:
+    path: /api/v1/users/{userId}/block
+    controller: LectoresBeta\Community\Relationship\Infrastructure\Controller\UnblockUserController::__invoke
+    methods: [DELETE]
+
+listBlockedUsers:
+    path: /api/v1/me/blocked-users
+    controller: LectoresBeta\Community\Relationship\Infrastructure\Controller\ListBlockedUsersController::__invoke
+    methods: [GET]

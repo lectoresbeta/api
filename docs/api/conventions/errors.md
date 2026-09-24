@@ -125,6 +125,7 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `READER_ALREADY_HAS_ACCESS` | 409 | El usuario ya es lector beta de la obra |
 | `WORK_IS_PRIVATE` | 403 | La obra no admite solicitudes de acceso |
 | `CANNOT_SUBSCRIBE_TO_YOURSELF` | 422 | Uno no se sigue a sí mismo (`FEAT-COM-010`) |
+| `CANNOT_BLOCK_YOURSELF` | 422 | Uno no se bloquea a sí mismo (`FEAT-COM-034`) |
 | `INSUFFICIENT_CREDITS` | 402 | El saldo del autor no cubre el precio del capítulo, así que no admite correcciones ahora mismo |
 | `DIRECT_MESSAGES_DISABLED` | 403 | El destinatario no acepta mensajes directos |
 | `PROPOSALS_DISABLED` | 403 | El destinatario no acepta propuestas |

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Community\Subscription\Application\Handler;
 
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
+use LectoresBeta\Community\Relationship\Domain\Repository\UserBlockRepository;
 use LectoresBeta\Community\Subscription\Application\Command\SubscribeToAuthor;
 use LectoresBeta\Community\Subscription\Domain\Entity\AuthorSubscription;
 use LectoresBeta\Community\Subscription\Domain\Event\AuthorSubscribed;
@@ -30,11 +31,16 @@ use LectoresBeta\User\Account\Application\Contract\RegisteredUsers;
  * (`RN-3`), nunca leyendo sus tablas. Sin esa comprobación, un identificador
  * inventado crearía una suscripción a nadie, y `User` proyectaría un seguidor
  * de un autor inexistente.
+ *
+ * Un bloqueo entre los dos lo impide (`FEAT-COM-034` `RN-4`), y se consulta
+ * aquí mismo: `Relationship` es un concepto de este contexto, no otro
+ * contexto.
  */
 final readonly class SubscribeToAuthorHandler
 {
     public function __construct(
         private AuthorSubscriptionRepository $subscriptions,
+        private UserBlockRepository $blocks,
         private RegisteredUsers $users,
         private TransactionalSession $session,
         private EventPublisher $events,
@@ -59,6 +65,14 @@ final readonly class SubscribeToAuthorHandler
         }
 
         if (!$this->users->exists($authorId->value())) {
+            throw SubscriptionRefused::authorNotFound();
+        }
+
+        // Con un bloqueo de por medio **en cualquiera de los dos sentidos**
+        // no se sigue a nadie (`FEAT-COM-034` `RN-4`). Responde como si esa
+        // cuenta no existiera: decir «te ha bloqueado» sería avisar del
+        // bloqueo, que es justo lo que `RN-2` evita.
+        if ($this->blocks->existsBetween($subscriberId, $authorId)) {
             throw SubscriptionRefused::authorNotFound();
         }
 

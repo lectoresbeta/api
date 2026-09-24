@@ -76,6 +76,8 @@ periodo.
 | `PostPublished` | Se publica en el muro | `Notification` (suscriptores del autor) |
 | `AuthorSubscribed` | Un usuario sigue a un autor | **`User`** (proyección de audiencias `FOLLOWERS`), `Notification` |
 | `AuthorUnsubscribed` | Un usuario deja de seguir a un autor | **`User`**. Nadie lo notifica: dejar de seguir es asunto de quien lo hace |
+| `UserBlocked` | Un usuario bloquea a otro | **`User`**, **`Reading`**, y `Feedback`, `Credits` y `Notification` cuando existan |
+| `UserUnblocked` | Se levanta el bloqueo | **`User`**. `Reading` no lo consume: un acceso revocado no vuelve solo |
 | `DirectMessageSent` | Se envía un mensaje directo | `Notification` |
 
 ## Contratos publicados
@@ -126,7 +128,8 @@ la lista.
 - `RN-9` **Mencionar a alguien no le da acceso a nada** y no se le avisa de contenido que no
   puede ver.
 - `RN-11` **`Community` no revoca accesos de lector beta ni toca créditos** al bloquear:
-  publica `UserBlocked` y cada contexto decide su reacción.
+  publica `UserBlocked` y cada contexto decide su reacción. Lo único que hace por su cuenta es
+  deshacer los dos seguimientos, que son suyos (`FEAT-COM-034` `RN-3`).
 - `RN-10` Las menciones se guardan como `UserId`. Guardarlas como texto rompería al cambiar
   el nombre y, con el reciclado de nombres de usuario, podría señalar a otra persona.
 - `RN-6` Este contexto **no consulta** las tablas de `Work`, `User` ni `Credits` para pintar

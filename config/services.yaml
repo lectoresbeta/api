@@ -114,6 +114,9 @@ services:
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
                 - LectoresBeta\User\Privacy\Application\Event\AuthorSubscribed
                 - LectoresBeta\User\Privacy\Application\Event\AuthorUnsubscribed
+                - LectoresBeta\User\Privacy\Application\Event\UserBlocked
+                - LectoresBeta\User\Privacy\Application\Event\UserUnblocked
+                - LectoresBeta\Reading\BetaReaderAccess\Application\Event\UserBlocked
 
     # Los consumidores de eventos se etiquetan aquí y no con
     # #[AsMessageHandler]: viven en Application, y Application no conoce a
@@ -139,6 +142,11 @@ services:
         alias: LectoresBeta\User\Account\Application\Service\IssueActivationLink
 
     LectoresBeta\User\Account\Application\Contract\VisibleProfiles:
+        alias: LectoresBeta\User\Account\Application\Service\ShowVisibleProfiles
+
+    # El hermano sin filtro, y con un solo uso legítimo: la lista de a quién
+    # has bloqueado (FEAT-COM-034). En cualquier otro sitio va el de arriba.
+    LectoresBeta\User\Account\Application\Contract\ProfileCards:
         alias: LectoresBeta\User\Account\Application\Service\ShowVisibleProfiles
 
     LectoresBeta\User\Account\Application\Contract\ReaderMaturity:
@@ -257,6 +265,22 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\User\Privacy\Application\Handler\ForgetFollower:
+        tags:
+            - { name: messenger.message_handler }
+
+    # La copia de los bloqueos, que es lo que hace que un bloqueo venza a
+    # cualquier ajuste de privacidad (FEAT-COM-034).
+    LectoresBeta\User\Privacy\Application\Handler\RememberBlock:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\User\Privacy\Application\Handler\ForgetBlock:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Y lo que un bloqueo significa para una obra inédita, que lo decide
+    # `Reading` y no `Community`.
+    LectoresBeta\Reading\BetaReaderAccess\Application\Handler\RevokeAccessOnBlock:
         tags:
             - { name: messenger.message_handler }
 

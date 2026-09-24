@@ -59,6 +59,12 @@ abstract class EconomyScenario extends WebTestCase
         // seguir seguiría contando como seguidor.
         'AuthorSubscribed',
         'AuthorUnsubscribed',
+
+        // Y lo que un bloqueo significa en cada contexto (`FEAT-COM-034`):
+        // `User` deja de aceptar comentarios entre los dos y `Reading` retira
+        // el acceso a las obras del bloqueador.
+        'UserBlocked',
+        'UserUnblocked',
     ];
 
     /**

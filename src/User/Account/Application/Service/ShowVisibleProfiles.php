@@ -6,6 +6,7 @@ namespace LectoresBeta\User\Account\Application\Service;
 
 use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\User\Account\Application\Contract\DirectoryEntry;
+use LectoresBeta\User\Account\Application\Contract\ProfileCards;
 use LectoresBeta\User\Account\Application\Contract\VisibleProfiles;
 use LectoresBeta\User\Account\Domain\Entity\User;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
@@ -27,7 +28,7 @@ use LectoresBeta\User\Privacy\Domain\Repository\UserPrivacySettingsRepository;
  * sus ajustes y —solo para los que dependan de ello— a quién sigue quien
  * pregunta.
  */
-final readonly class ShowVisibleProfiles implements VisibleProfiles
+final readonly class ShowVisibleProfiles implements VisibleProfiles, ProfileCards
 {
     public function __construct(
         private UserRepository $users,
@@ -36,7 +37,29 @@ final readonly class ShowVisibleProfiles implements VisibleProfiles
     ) {
     }
 
+    /**
+     * Las mismas tarjetas **sin el filtro**, para quien ya sabe quiénes son
+     * (`ProfileCards`). Comparte implementación con `visibleTo()` a
+     * propósito: son la misma consulta con una decisión distinta, y tenerlas
+     * en dos clases sería dos sitios donde arreglar el día que la tarjeta
+     * cambie.
+     */
+    public function of(array $userIds): array
+    {
+        return $this->cardsOf($userIds, null, filtered: false);
+    }
+
     public function visibleTo(?string $viewerId, array $userIds): array
+    {
+        return $this->cardsOf($userIds, $viewerId, filtered: true);
+    }
+
+    /**
+     * @param list<string> $userIds
+     *
+     * @return array<string, DirectoryEntry>
+     */
+    private function cardsOf(array $userIds, ?string $viewerId, bool $filtered): array
     {
         $wanted = array_values(array_unique(array_filter($userIds, static fn (string $id): bool => '' !== $id)));
 
@@ -51,19 +74,19 @@ final readonly class ShowVisibleProfiles implements VisibleProfiles
             static fn (User $user): bool => !$user->status()->isDeleted(),
         ));
 
-        $visibility = $this->privacy->profileVisibilityOf(array_map(
+        $visibility = !$filtered ? [] : $this->privacy->profileVisibilityOf(array_map(
             static fn (User $user): string => $user->id()->value(),
             $found,
         ));
 
-        $following = $this->followedAmong($viewerId, $found, $visibility);
+        $following = !$filtered ? [] : $this->followedAmong($viewerId, $found, $visibility);
 
         $cards = [];
 
         foreach ($found as $user) {
             $id = $user->id()->value();
 
-            if (!self::isVisible($id, $viewerId, $visibility[$id] ?? PrivacyAudience::EVERYONE, $following)) {
+            if ($filtered && !self::isVisible($id, $viewerId, $visibility[$id] ?? PrivacyAudience::EVERYONE, $following)) {
                 continue;
             }
 

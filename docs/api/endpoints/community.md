@@ -16,6 +16,9 @@ tablas y ni un endpoint.
 | `DELETE /api/v1/users/{userId}/subscription` | `unsubscribeFromAuthor` | Dejar de seguir | FEAT-COM-010 | **Implementado** |
 | `GET /api/v1/users/{userId}/subscriptions` | `listAuthorSubscriptions` | A quién sigue | FEAT-COM-027 | **Implementado** |
 | `GET /api/v1/users/{userId}/subscribers` | `listSubscribers` | Quién le sigue | FEAT-COM-027 | **Implementado** |
+| `PUT /api/v1/users/{userId}/block` | `blockUser` | Bloquear | FEAT-COM-034 | **Implementado** |
+| `DELETE /api/v1/users/{userId}/block` | `unblockUser` | Levantar el bloqueo | FEAT-COM-034 | **Implementado** |
+| `GET /api/v1/me/blocked-users` | `listBlockedUsers` | A quién tengo bloqueado | FEAT-COM-034 | **Implementado** |
 
 ---
 
@@ -136,3 +139,67 @@ Las dos cifras de seguidos y seguidores las sirve `getMyProfile` (`FEAT-USR-028`
 pide a este contexto por contrato. **Cuentan a todo el mundo, sin filtrar por privacidad**,
 así que pueden ser mayores que las filas de estas listas: el contador es un dato de esa
 persona, y filtrarlo lo convertiría en un dato de quien mira.
+
+---
+
+## `PUT` y `DELETE /api/v1/users/{userId}/block`, y `GET /api/v1/me/blocked-users`
+
+**`operationId`:** `blockUser`, `unblockUser`, `listBlockedUsers` · **Funcionalidad:**
+[`FEAT-COM-034`](../../features/community/FEAT-COM-034-block-user.md)
+
+### Propósito
+
+Cortar el contacto con alguien. A diferencia de silenciar, que es una preferencia de
+visualización, **bloquear es una regla de acceso** y sus efectos atraviesan varios contextos.
+
+### Autorización
+
+Solo sobre uno mismo como sujeto: se bloquea desde la propia sesión, con la cuenta activada.
+La lista de bloqueados es solo la propia — quién ha bloqueado otra persona no es asunto de
+nadie, y no hay endpoint que lo pregunte.
+
+### Reglas aplicadas
+
+- **No se avisa al bloqueado.** Descubrirlo por el comportamiento es lo habitual; avisarle
+  convierte el bloqueo en una confrontación.
+- Al bloquear se deshacen **las dos** relaciones de seguimiento, y mientras dure ninguno puede
+  seguir al otro. Intentarlo responde como si esa cuenta no existiera: un «te ha bloqueado»
+  sería el aviso que la regla anterior evita.
+- **Desbloquear no restaura nada**: ni los seguimientos ni un acceso revocado. Lo que devuelve
+  es la posibilidad de empezar otra vez.
+- Las dos operaciones son idempotentes.
+
+### Qué hace `Community`, y qué no
+
+Guarda el bloqueo, deshace los seguimientos y **publica el hecho**. No revoca accesos de
+lector beta y no toca créditos, porque no sabe qué son.
+
+Cada contexto decide al recibirlo:
+
+| Contexto | Qué hace |
+|---|---|
+| `Reading` | Retira el acceso de lector beta del bloqueado a las obras del bloqueador |
+| `User` | Deja de aceptar comentarios entre ambos, **por encima de cualquier ajuste de privacidad** |
+
+Hacen falta los dos: con solo el primero, bloquear no serviría de nada en las obras públicas;
+con solo el segundo, el bloqueado seguiría leyendo obra inédita.
+
+> **Lo que esto se lleva por delante.** Si el bloqueado estaba corrigiendo, **pierde ese
+> trabajo y no cobra**, porque nunca llegó a entregarlo. Su borrador se conserva. Lo ya
+> entregado no se toca: el autor lo pagó y el lector lo ganó. Falta avisarle, y hoy no hay con
+> qué.
+
+### La lista no se filtra por privacidad
+
+Es la única del sistema que no lo hace, y a propósito: si se filtrara, bloquear a alguien que
+después cierra su perfil lo haría desaparecer de ahí y el bloqueo sería irreversible en la
+práctica. Quien pregunta ya sabe quiénes son.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `USER_NOT_FOUND` | 404 | No hay ninguna cuenta con ese identificador |
+| `CANNOT_BLOCK_YOURSELF` | 422 | Uno no se bloquea a sí mismo |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | Bloquear sin haber activado la cuenta |
+| `INVALID_CURSOR` | 422 | Al listar, un cursor que no produjo esta API |

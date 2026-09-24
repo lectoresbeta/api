@@ -124,6 +124,12 @@ paths:
   /users/{userId}/subscribers:
     $ref: './paths/community.yaml#/subscribers'
 
+  /users/{userId}/block:
+    $ref: './paths/community.yaml#/block'
+
+  /me/blocked-users:
+    $ref: './paths/community.yaml#/blockedUsers'
+
   /works:
     $ref: './paths/works.yaml#/collection'
 

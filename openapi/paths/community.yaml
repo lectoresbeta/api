@@ -241,3 +241,141 @@ subscribers:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+block:
+  put:
+    tags: [Community]
+    operationId: blockUser
+    summary: Bloquear a alguien
+    description: |
+      Cortar el contacto. A diferencia de silenciar, **bloquear es una regla
+      de acceso** y sus efectos atraviesan varios contextos.
+
+      Lo que hace de inmediato: guarda el bloqueo y **deshace los dos
+      seguimientos**, si los había. Lo demás lo aplica cada contexto al
+      recibir el hecho — `Reading` retira el acceso de lector beta del
+      bloqueado a las obras del bloqueador, y `User` deja de aceptar
+      comentarios entre ambos, **por encima de cualquier ajuste de
+      privacidad**.
+
+      **No se avisa al bloqueado.** Descubrirlo por el comportamiento es lo
+      habitual; avisarle convierte el bloqueo en una confrontación.
+
+      Idempotente: bloquear a quien ya está bloqueado deja el mundo igual.
+
+      > **Lo que esto se lleva por delante, dicho de frente.** Si el bloqueado
+      > estaba corrigiendo una obra del bloqueador, **pierde ese trabajo y no
+      > cobra**, porque nunca llegó a entregarlo. Su borrador se conserva. Lo
+      > ya entregado no se toca: el autor lo pagó y el lector lo ganó.
+    parameters:
+      - $ref: '#/UserIdParam'
+    responses:
+      '204':
+        description: Bloqueado. Igual si ya lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: USER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CANNOT_BLOCK_YOURSELF`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: unblockUser
+    summary: Levantar un bloqueo
+    description: |
+      Siempre `204`, estuviera bloqueado o no.
+
+      **No restaura los seguimientos** que el bloqueo deshizo ni devuelve un
+      acceso de lector beta revocado: lo que se recupera es la posibilidad de
+      empezar otra vez, no el pasado.
+    parameters:
+      - $ref: '#/UserIdParam'
+    responses:
+      '204':
+        description: Ya no está bloqueado. Igual si no lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+blockedUsers:
+  get:
+    tags: [Community]
+    operationId: listBlockedUsers
+    summary: A quién tengo bloqueado
+    description: |
+      **Hace falta**: sin esta lista el bloqueo sería irreversible en la
+      práctica, porque quien bloqueó a alguien hace tres meses no recuerda su
+      `@usuario` y no puede encontrarlo para deshacerlo.
+
+      Por eso, y a diferencia de las listas de seguidos y seguidores, **no se
+      filtra por privacidad**: quien cerró su perfil después de ser bloqueado
+      sigue apareciendo aquí. Quien pregunta ya sabe quiénes son — los bloqueó
+      él.
+
+      Solo la propia. Quién ha bloqueado otra persona no es asunto de nadie, y
+      no hay endpoint que lo pregunte.
+    parameters:
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: A quién tiene bloqueado, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, username, blockedAt]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      username:
+                        type: string
+                      name:
+                        type: [string, 'null']
+                      avatarUrl:
+                        type: [string, 'null']
+                      blockedAt:
+                        type: string
+                        format: date-time
+                pageInfo:
+                  type: object
+                  required: [nextCursor, hasNextPage]
+                  properties:
+                    nextCursor:
+                      type: [string, 'null']
+                    hasNextPage:
+                      type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
