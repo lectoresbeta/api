@@ -97,15 +97,21 @@ contestan en uno.
 |---|---|---|---|
 | `AccessRequested` | Un usuario solicita ser LB | `Notification` | `accessRequestId`, `workId`, `authorId`, `readerId` |
 | `AccessRequestRejected` | El autor rechaza | `Notification` | `accessRequestId`, `readerId` |
-| `BetaReaderAccessGranted` | Se concede acceso | `Feedback`, `Notification`, **`Credits`** | `accessId`, `workId`, `authorId`, `readerId`, `grantedVia`, `textTier`, `questionCount` |
-| `BetaReaderAccessRevoked` | Se retira el acceso | `Feedback`, `Notification` | `accessId`, `workId`, `readerId` |
+| `BetaReaderAccessGranted` | Se concede acceso | `Notification` | `accessId`, `workId`, `authorId`, `readerId`, `grantedVia`, `grantedAt` |
+| `BetaReaderAccessRevoked` | Se retira el acceso | `Notification` | `accessId`, `workId`, `readerId`, `revokedAt` |
 | `BetaReaderInvited` | El autor invita | `Notification` | `invitationId`, `workId`, `readerId` |
 | `WritingBuddyProposed` | Se propone el vínculo | `Notification` | `proposalId`, `proposerId`, `targetUserId` |
 | `WritingBuddyLinked` | Se acepta | `Notification`, `Community` | `linkId`, `userIds` |
 
-`BetaReaderAccessGranted` lleva `textTier` y `questionCount` porque `Credits` los necesita
-para calcular la retención sin consultar a `Work`
-([`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md)).
+`BetaReaderAccessGranted` llevaba `textTier` y `questionCount` «porque `Credits` los necesita
+para calcular la retención». Ya no: `textTier` no existe y
+[`decision:0006`](../decisions/0006-credit-system.md) eliminó las retenciones, así que
+**`Credits` no consume este evento en absoluto**. Conceder un acceso no mueve ni compromete
+créditos.
+
+`grantedVia` dice por qué camino se llegó —`PUBLIC_JOIN`, `REQUEST_APPROVED`,
+`AUTHOR_INVITATION`—, que es lo que permite responder meses después por qué esta persona
+tiene acceso.
 
 ## `Feedback`
 

@@ -50,49 +50,39 @@ lector beta y los vínculos entre usuarios que lo habilitan.
 
 | Modalidad de la obra | Camino | Resultado |
 |---|---|---|
-| `PUBLIC` | El usuario se convierte en LB directamente | `BetaReaderAccess` inmediato |
+| `PUBLIC` | El usuario **empieza a corregir** y con eso se convierte en LB ([`FEAT-RDG-001`](../features/reading/FEAT-RDG-001-become-beta-reader-by-correcting.md)) | `BetaReaderAccess` inmediato |
 | `ON_REQUEST` | El usuario solicita, el autor acepta | `BetaReaderAccess` tras la aprobación |
 | `PRIVATE` | El autor invita, el usuario acepta | `BetaReaderAccess` tras la aceptación |
 
 Los tres caminos producen el mismo objeto de dominio. La modalidad decide el camino, no el
 resultado.
 
-### El acceso depende del saldo del autor
+### Conceder un acceso no compromete nada
 
-Desde [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md), conceder un
-acceso **compromete créditos del autor**. Si no tiene saldo disponible, el acceso no se
-sostiene.
+Lo comprometía hasta [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md),
+que apartaba créditos del autor al conceder. Esa decisión está **sustituida por
+[`0006`](../decisions/0006-credit-system.md)** y no queda nada vigente de ella: no hay
+reserva, ni saldo disponible distinto del saldo, ni compensación entre `Reading` y `Credits`.
 
-```text
-Reading concede el acceso ──▶ BetaReaderAccessGranted ──▶ Credits intenta retener
-                                                              │
-                          ┌───────────────────────────────────┤
-                          ▼                                   ▼
-                   CreditsReserved                  CreditReservationRejected
-                   (nada que hacer)                           │
-                                                              ▼
-                                            Reading revoca el acceso y avisa
-```
+Lo que eso borra de este contexto:
 
-Dos mecanismos, y hacen falta los dos:
-
-| Mecanismo | Qué hace |
+| Antes | Ahora |
 |---|---|
-| **Proyección del saldo disponible** | `Reading` mantiene el saldo disponible de cada autor a partir de `CreditBalanceChanged` y **no concede accesos cuando sabe que no hay**. Evita el caso común |
-| **Compensación** | Ante `CreditReservationRejected`, revoca el acceso concedido. Corrige siempre, incluidas las carreras |
+| Proyección del saldo disponible del autor | No existe. Este contexto no conoce saldos |
+| `Reading` niega accesos por falta de saldo | No los niega: dar acceso no cuesta nada |
+| `CreditReservationRejected` revoca el acceso concedido | Ese evento no existe |
+| Compensación ante una reserva fallida | No hay nada que compensar |
 
-La proyección **no es una garantía**: es de consistencia eventual. Tratarla como tal
-equivaldría a una validación síncrona disfrazada de read model, que es justo lo que
-`decision:0004` descartó.
-
-`Reading` no conoce importes ni reglas de crédito: solo si hay o no saldo suficiente, y eso
-se lo dice `Credits`.
+Quién puede corregir **ahora mismo** lo decide `Credits`, lo publica como un booleano por
+capítulo y lo consume `Feedback`
+([`FEAT-CRD-009`](../features/credits/FEAT-CRD-009-balance-check-on-correction-start.md)).
+`Reading` no participa en esa conversación.
 
 ## Eventos publicados
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `BetaReaderAccessGranted` | Se concede acceso | `Feedback`, `Notification`, **`Credits`** (retiene el coste) |
+| `BetaReaderAccessGranted` | Se concede acceso | `Notification`. **`Credits` no lo consume**: conceder acceso no mueve ni compromete créditos |
 | `BetaReaderAccessRevoked` | Se retira el acceso | `Feedback`, `Notification` |
 | `AccessRequested` | Un usuario solicita ser LB | `Notification` (avisa al autor) |
 | `AccessRequestRejected` | El autor rechaza | `Notification` |
@@ -104,11 +94,15 @@ se lo dice `Credits`.
 
 | Evento | Origen | Efecto |
 |---|---|---|
+| **`CorrectionStarted`** | `Feedback` | **Concede el acceso** si no había uno vivo (`FEAT-RDG-001`) |
+| `CorrectionDraftDiscarded` | `Feedback` | Revoca el acceso nacido de esa corrección, si el lector no llegó a entregar nada |
 | `WorkAccessModeChanged` | `Work` | Actualiza qué caminos de acceso admite la obra |
 | `WorkDeleted` | `Work` | Cierra accesos y solicitudes pendientes |
 | `UserDeleted` | `User` | Cierra accesos y vínculos del usuario |
-| **`CreditReservationRejected`** | `Credits` | **Revoca el acceso concedido**: el autor no puede pagarlo |
-| `CreditBalanceChanged` | `Credits` | Actualiza la proyección del saldo disponible del autor |
+
+**Ningún evento de `Credits` llega aquí**, y esa ausencia es la huella de
+[`decision:0006`](../decisions/0006-credit-system.md): este contexto dejó de tener nada que
+ver con la economía el día que desaparecieron las retenciones.
 
 ## Contratos publicados
 
@@ -129,8 +123,10 @@ vez.
 - `RN-4` Solo el autor de la obra resuelve sus solicitudes e invitaciones.
 - `RN-5` Cambiar la modalidad de acceso de una obra no afecta a los accesos ya concedidos.
 - `RN-6` Una propuesta solo se envía si el destinatario tiene habilitada su recepción.
-- `RN-7` No se concede acceso a una obra cuyo autor no tiene saldo disponible para pagarlo.
-- `RN-8` Un acceso cuya retención sea rechazada se revoca, avisando a ambas partes.
+- `RN-7` **Conceder un acceso no cuesta ni compromete créditos.** El saldo del autor no se
+  consulta aquí (`decision:0006`).
+- `RN-8` En una obra `PUBLIC`, el acceso lo concede **empezar una corrección**, no una acción
+  aparte.
 
 ## Preguntas abiertas
 
@@ -142,5 +138,5 @@ vez.
 | R-4 | ¿Los grupos de LB conceden acceso en bloque a una obra? | Caso de uso de asignación masiva |
 | R-5 | ¿El acceso es a la obra completa o fragmento a fragmento? | Con novelas por fragmentos cambia el modelo (`D-1`) |
 | R-6 | ¿Hay límite de obras de las que ser LB simultáneamente? | Control de calidad del feedback |
-| R-7 | ¿Qué ve el lector cuando su acceso se revoca por falta de saldo del autor? | Es una revocación que no ha provocado él |
-| R-8 | ¿Una obra sin saldo del autor desaparece del catálogo o aparece marcada como cerrada? | Evita que se pidan accesos que van a fallar |
+| ~~R-7~~ | ¿Qué ve el lector cuando su acceso se revoca por falta de saldo del autor? | **Desaparece:** ya no hay revocaciones por saldo (`decision:0006`) |
+| ~~R-8~~ | ¿Una obra sin saldo del autor desaparece del catálogo o aparece marcada como cerrada? | **Resuelta de otra forma:** el catálogo filtra por `ChapterCorrectabilityChanged`, que es de `Credits` (`decision:0008`) |

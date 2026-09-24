@@ -20,19 +20,22 @@ funcionalidades que faltan. Cada paso enlaza (o enlazará) con su ficha en
 6. Al crear la obra se genera el registro de autoría (`FEAT-WRK-009`).
 7. Promociona la obra: publicación en el muro (`FEAT-COM-003`) o enlace para redes
    sociales (`FEAT-WRK-011`).
-8. Recibe solicitudes de lectores beta y las acepta (`FEAT-RDG-003`). **Al conceder cada
-   acceso se retienen los créditos** que costará ese feedback (`FEAT-CRD-009`). Si no tiene
-   saldo disponible, el acceso no se concede.
-9. Los lectores beta comentan. Cada comentario **confirma** la retención correspondiente
-   (`FEAT-CRD-006`): el autor ya sabía cuánto iba a costarle.
-10. Lee, contesta y valora los comentarios (`FEAT-FBK-004`, `FEAT-FBK-005`, `FEAT-FBK-006`).
-11. Valorar positivamente un comentario otorga **+5 créditos** a quien lo escribió
-    (`FEAT-CRD-004`).
+8. **Abre la obra a corrección** (`FEAT-WRK-016`). Es la puerta que cuesta dinero, y la abre
+   a conciencia. Mientras su saldo cubra el precio de un capítulo, ese capítulo admite
+   correcciones (`FEAT-CRD-009`); cuando deja de cubrirlo, desaparece de la vista sin que él
+   tenga que hacer nada.
+9. Los lectores beta corrigen. **Cada corrección entregada le carga los créditos**
+   (`FEAT-CRD-006`) y abona lo mismo a quien la escribió.
+10. Lee, contesta y valora las correcciones (`FEAT-FBK-004`, `FEAT-FBK-005`, `FEAT-FBK-006`).
+11. Si una le resulta especialmente útil, puede **propinar** créditos de los suyos
+    (`FEAT-CRD-017`).
 
-**Punto crítico del recorrido:** el paso 8, no el 9. El compromiso económico se adquiere al
-**conceder el acceso**, no al recibir el comentario. Un autor sin saldo disponible no puede
-sumar lectores beta, y esa es la señal de que le toca comentar obras ajenas para ganar
-créditos. Ver [`decision:0004`](../decisions/0004-credit-reservation-on-access-grant.md).
+**Punto crítico del recorrido:** el paso 9, no el 8. **No se retiene nada al abrir la obra**:
+el compromiso económico se adquiere al recibir la corrección
+([`decision:0006`](../decisions/0006-credit-system.md)). La consecuencia aceptada es que dos
+lectores pueden coincidir sobre un saldo que cubre a uno, y entonces el autor queda en
+negativo y una corrección le llega bloqueada hasta que reponga. A cambio, nadie ve dos cifras
+de saldo ni pierde trabajo por una reserva caducada.
 
 ---
 
@@ -68,15 +71,20 @@ Ver [`decision:0003`](../decisions/0003-write-operations-require-activated-accou
 
 1. Busca obras por tipo, temática o valoración (`FEAT-WRK-012`), o responde a una
    publicación de búsqueda de LB en el muro (`FEAT-COM-003`).
-2. Obtiene acceso según la modalidad de la obra: automático, solicitando o por invitación
-   (`FEAT-RDG-001`, `FEAT-RDG-002`, `FEAT-RDG-005`). Tener acceso **garantiza que su trabajo
-   se podrá pagar**: los créditos del autor quedaron retenidos al concedérselo.
-3. Lee la obra (`FEAT-WRK-004`).
-4. Deja su feedback y responde al cuestionario (`FEAT-FBK-001`, `FEAT-FBK-003`).
-5. Recibe créditos según el nivel de extensión del texto comentado (`FEAT-CRD-003`).
-6. Si el autor valora su comentario positivamente, recibe **+5 créditos** adicionales
-   (`FEAT-CRD-004`).
+2. Lee la obra (`FEAT-WRK-004`). Si es `PUBLIC` no hace falta nada más; si es `ON_REQUEST` o
+   `PRIVATE`, necesita acceso concedido (`FEAT-RDG-002`, `FEAT-RDG-005`).
+3. Pulsa «Empezar corrección». En una obra `PUBLIC`, **ese acto lo convierte en lector beta**
+   (`FEAT-RDG-001`): no hay solicitud ni espera.
+4. Responde el cuestionario y lo envía (`FEAT-FBK-003`).
+5. Recibe créditos: **lo mismo que se le carga al autor**, calculado sobre las palabras del
+   capítulo y las que exige el cuestionario (`FEAT-CRD-006`, `FEAT-CRD-016`).
+6. Si el autor quiere agradecérselo, puede **propinarle** créditos de los suyos
+   (`FEAT-CRD-017`).
 7. Su actividad lo posiciona en el ranking de lectores (`FEAT-COM-015`).
+
+**Nada queda retenido en ningún momento.** Lo que garantiza que su trabajo se pague no es una
+reserva previa sino que **el corrector cobra siempre**, aunque el autor se quede en negativo
+([`decision:0006`](../decisions/0006-credit-system.md)).
 
 ---
 

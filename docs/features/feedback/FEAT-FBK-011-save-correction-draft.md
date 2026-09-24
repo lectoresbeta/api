@@ -14,7 +14,7 @@ endpoints:
   - PUT /chapters/{chapterId}/correction/draft
   - DELETE /chapters/{chapterId}/correction/draft
 depends_on: [FEAT-FBK-003]
-events: []
+events: [CorrectionDraftDiscarded]
 updated: 2026-09-24
 ---
 
@@ -77,6 +77,10 @@ presión para enviarla.
 | Guardar o sobrescribir | `PUT /chapters/{chapterId}/correction/draft` | `saveCorrectionDraft` |
 | Descartar | `DELETE /chapters/{chapterId}/correction/draft` | `discardCorrectionDraft` |
 
+Guardar en un capítulo que no se había empezado **lo empieza**: escribir es la señal más
+clara posible de que alguien está corrigiendo, y obligar a pulsar dos botones para que el
+sistema se entere sería inventar un trámite.
+
 Se recupera junto con el cuestionario en `GET /chapters/{chapterId}/questionnaire`, para que
 abrir el panel sea una sola llamada.
 
@@ -85,7 +89,22 @@ capítulo», que es único. No hace falta `Idempotency-Key`.
 
 ## Eventos
 
-No publica ni consume ninguno. Es intencionado: un borrador no es un hecho de negocio.
+**Guardar no publica nada.** Es intencionado: un borrador a medias no es un hecho de negocio,
+y avisar de que alguien está escribiendo sería exactamente lo que `RN-4` evita.
+
+**Descartar sí lo es**, y esto corrige lo que esta ficha decía antes:
+
+| Evento | Cuándo | Consumidores |
+|---|---|---|
+| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la cotización), **`Reading`** (revoca el acceso nacido de empezar) |
+
+Descartar libera dos cosas que empezar había ocupado: **la cotización del precio**
+([`FEAT-CRD-009`](../credits/FEAT-CRD-009-balance-check-on-correction-start.md)), y con ella
+uno de los tres sitios de corrección del capítulo, y **el acceso de lector beta** si nació de
+esa corrección ([`FEAT-RDG-001`](../reading/FEAT-RDG-001-become-beta-reader-by-correcting.md)).
+
+Los dos consumidores existían antes que el publicador, lo que hasta ahora dejaba esas dos
+cosas sin soltarse nunca.
 
 ## Modelo de datos afectado
 
@@ -116,18 +135,32 @@ sincronizados y acaban divergiendo: enviar es una transición de estado, no una 
 | # | Pregunta | Impacto |
 |---|---|---|
 | R-7 | ¿Cuántos borradores simultáneos puede tener alguien? | Uno por capítulo ya está fijado; con la corrección por capítulo el número potencial se multiplica |
-| R-8 | ¿Caduca un borrador? | **Ya no bloquea nada:** sin retenciones, un borrador eterno no inmoviliza saldo ajeno |
+| **R-8** | ¿Caduca un borrador? | **Reabierta:** no inmoviliza saldo, pero sí **uno de los tres sitios del capítulo** |
 | Q-5 | Si el autor cierra la corrección, ¿qué pasa con los borradores? | Trabajo perdido sin aviso |
 | Q-8 | ¿Se guarda solo o solo al pulsar «Guardar»? | La maqueta solo muestra el botón |
 
-`R-8` está ligada a `R-4` y `R-1` de [`FEAT-FBK-003`](FEAT-FBK-003-answer-correction-questionnaire.md):
-si abrir el panel reserva crédito del autor, un borrador eterno inmoviliza saldo ajeno y
-debe caducar. Si la reserva ocurre antes, al conceder el acceso, el borrador no bloquea nada
-y puede durar.
+### `R-8` vuelve a estar viva, por otro motivo
 
-Con la corrección **por capítulo**, la pregunta gana peso: un lector con borradores abiertos
-en los treinta capítulos de una novela podría inmovilizar el saldo del autor por treinta
-correcciones que quizá nunca envíe.
+Esta ficha daba la pregunta por resuelta: sin retenciones, un borrador eterno no inmoviliza
+saldo ajeno. Sigue siendo cierto y ya no es lo único que importa.
+
+[`FEAT-CRD-009`](../credits/FEAT-CRD-009-balance-check-on-correction-start.md) `RN-8` fijó
+que **un capítulo admite tres correcciones a la vez**, y la cuenta se lleva sobre las
+cotizaciones abiertas, que nacen al empezar y mueren al entregar o descartar. Así que un
+borrador abandonado no bloquea créditos: **bloquea un sitio**. Tres lectores despistados
+dejan un capítulo popular cerrado indefinidamente, y el autor no tiene forma de verlo ni de
+arreglarlo.
+
+Opciones, para cuando toque:
+
+| Opción | A favor | En contra |
+|---|---|---|
+| No hacer nada | Ninguna complejidad | Un capítulo se puede quedar cerrado para siempre |
+| Caducar la **cotización**, no el borrador | El trabajo del lector se conserva; el sitio se libera | El precio se recalcula si vuelve, lo que contradice `RN-2` de `FEAT-CRD-016` |
+| No contar como ocupado un borrador sin tocar en N días | Igual, sin tocar el precio anotado | Hace falta guardar cuándo se tocó por última vez |
+
+La tercera parece la buena, y no bloquea esta ficha: hasta que haya volumen, tres sitios por
+capítulo sobran.
 
 ## Estado
 

@@ -198,7 +198,7 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-RDG-001 | Convertirse en LB automáticamente al empezar a corregir (obra `PUBLIC`) | Reader | PENDING | TODO | P0 | — |
+| FEAT-RDG-001 | Convertirse en LB al empezar a corregir (obra `PUBLIC`) | Reader | APPROVED | TODO | P0 | [ficha](reading/FEAT-RDG-001-become-beta-reader-by-correcting.md) |
 | FEAT-RDG-002 | Solicitar ser LB de una obra (obra `ON_REQUEST`) | Reader | PENDING | TODO | P0 | — |
 | FEAT-RDG-003 | Aceptar o rechazar una solicitud de LB | Writer | PENDING | TODO | P0 | — |
 | FEAT-RDG-004 | Invitar a un usuario a ser LB de una obra | Writer | PENDING | TODO | P1 | — |
@@ -211,8 +211,8 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 
 > **`R-4` resuelta (2026-09-24):** en una obra `PUBLIC`, **empezar a corregir concede el
 > acceso**. No hay solicitud previa ni espera. `ON_REQUEST` y `PRIVATE` mantienen su flujo.
-> `FEAT-RDG-001` pasa de ser una funcionalidad aparte a ser **el mecanismo** que dispara
-> `FEAT-FBK-003`.
+> `FEAT-RDG-001` deja de ser una pantalla y pasa a ser **el efecto en `Reading`** de un hecho
+> que ocurre en `Feedback`: no tiene endpoint ninguno.
 >
 > El motivo es de producto: el recorrido es *descubrir → leer → corregir*, y meter una espera
 > en medio cae justo donde el lector estaba dispuesto a trabajar gratis.
