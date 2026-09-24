@@ -53,6 +53,12 @@ abstract class EconomyScenario extends WebTestCase
         'FeedbackSubmitted',
         'ChapterCorrectabilityChanged',
         'ChapterPriceChanged',
+
+        // Lo que `User` proyecta para resolver las audiencias `FOLLOWERS`
+        // (`FEAT-COM-010`). Las dos mitades: sin la segunda, quien deja de
+        // seguir seguiría contando como seguidor.
+        'AuthorSubscribed',
+        'AuthorUnsubscribed',
     ];
 
     /**

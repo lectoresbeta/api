@@ -8,29 +8,35 @@ use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Privacy\Application\Contract\AuthorAudience;
 use LectoresBeta\User\Privacy\Domain\Enum\PrivacyAudience;
+use LectoresBeta\User\Privacy\Domain\Repository\AuthorFollowerRepository;
 use LectoresBeta\User\Privacy\Domain\Repository\UserPrivacySettingsRepository;
 
 /**
  * `User`'s side of the privacy ceiling (`FEAT-USR-038`).
  *
- * `FOLLOWERS` answers **`false`, and that is the correct answer today, not a
- * fallback**: nobody can follow anybody yet
- * ([`FEAT-COM-010`](../../../../../docs/features/README.md) does not exist),
- * so the follower set of every author is empty and «only my followers» means
- * «nobody». When following arrives, this method asks `Community` for the set
- * and the sentence stops being a tautology — **one place changes**, which is
- * the whole reason the contract answers a boolean instead of handing the
- * setting over.
+ * `FOLLOWERS` ya no es una tautología: desde `FEAT-COM-010` se puede seguir a
+ * alguien, y la respuesta sale de la **copia local** del grafo. `User` no le
+ * pregunta a `Community` en mitad de una respuesta, y no por comodidad — esta
+ * clase *es* un contrato publicado, y
+ * [`decision:0014`](../../../../../docs/decisions/0014-published-contracts-between-contexts.md)
+ * prohíbe que un contrato llame al de otro contexto mientras responde. Como
+ * `Community` ya llama a `RegisteredUsers` para dejar seguir a alguien, un
+ * contrato en sentido contrario cerraría justo el ciclo que esa regla evita.
  *
- * Note which way it fails. If somebody forgets to come back here,
- * `FOLLOWERS` keeps behaving as `NOBODY`: a setting that is too strict, which
- * its owner notices and complains about. The other mistake — treating it as
- * `EVERYONE` — nobody notices, and that is the one that matters.
+ * La copia va **en diferido**: entre seguir a alguien y poder comentar sus
+ * textos pasa lo que tarde la cola. Al revés no, y por eso el hecho de dejar
+ * de seguir viaja por el mismo camino y no se olvida nunca.
+ *
+ * Lo que esto abre y decide producto (`C-22`): con seguimiento unilateral,
+ * «solo mis seguidores» es «cualquiera que pulse Seguir». Hoy el ajuste hace
+ * literalmente lo que dice.
  */
 final readonly class CheckAuthorAudience implements AuthorAudience
 {
-    public function __construct(private UserPrivacySettingsRepository $settings)
-    {
+    public function __construct(
+        private UserPrivacySettingsRepository $settings,
+        private AuthorFollowerRepository $followers,
+    ) {
     }
 
     public function acceptsCommentsFrom(string $authorId, string $readerId): bool
@@ -54,12 +60,15 @@ final readonly class CheckAuthorAudience implements AuthorAudience
     }
 
     /**
-     * Aquí irá la consulta al grafo de seguidores de `Community`. Mientras
-     * nadie pueda seguir a nadie, el conjunto está vacío y la respuesta es
-     * la correcta.
+     * Un identificador ilegible no sigue a nadie. No es lo mismo que negar el
+     * acceso por privacidad, pero la respuesta coincide, y es la prudente.
      */
     private function follows(string $readerId, string $authorId): bool
     {
-        return false;
+        try {
+            return $this->followers->follows(UserId::fromString($readerId), UserId::fromString($authorId));
+        } catch (InvalidValue) {
+            return false;
+        }
     }
 }

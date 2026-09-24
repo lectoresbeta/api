@@ -1,0 +1,111 @@
+# El contexto `Community`: por ahora, seguir a un autor.
+#
+# La interfaz dice «Seguir»; el glosario llama al concepto `AuthorSubscription`
+# y es normativo, así que la ruta y los `operationId` usan su vocabulario.
+
+subscription:
+  get:
+    tags: [Community]
+    operationId: getAuthorSubscription
+    summary: ¿Sigo a esta persona?
+    description: |
+      Lo que necesita el botón «Seguir» de un perfil, y **solo sobre quien
+      pregunta**. A quién sigue otra persona, y quién la sigue a ella, son las
+      listas de `FEAT-COM-027`, y si son públicas sigue sin decidirse.
+
+      Responde `subscribed: false` para un identificador que no existe, en vez
+      de `404`: la pregunta es sobre *mi* relación con él, y «no le sigo» es
+      cierto. Un `404` contaría además si esa cuenta existe a cualquiera que
+      pruebe identificadores.
+    parameters:
+      - $ref: '#/UserIdParam'
+    responses:
+      '200':
+        description: Si le sigo y desde cuándo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subscribed]
+              properties:
+                subscribed:
+                  type: boolean
+                subscribedAt:
+                  type: [string, 'null']
+                  format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  put:
+    tags: [Community]
+    operationId: subscribeToAuthor
+    summary: Seguir a un autor
+    description: |
+      **Idempotente**: seguir a quien ya sigues deja el mundo igual y responde
+      lo mismo. De ahí el `PUT` — con `POST` tocaría devolver `201` la primera
+      vez y `409` después, y ese `409` sería decirle a alguien que ha fallado
+      cuando lo que pedía ya se cumple.
+
+      **Seguir no concede acceso a nada**: no abre obras, no da acceso de
+      lector beta y no inicia una conversación. Lo que cambia es qué avisos se
+      reciben y qué audiencias incluyen a esa persona — entre ellas los
+      ajustes `FOLLOWERS` de `FEAT-USR-038`, que se aplican **en diferido**:
+      entre seguir a alguien y poder comentar sus textos pasa lo que tarde la
+      cola.
+    parameters:
+      - $ref: '#/UserIdParam'
+    responses:
+      '204':
+        description: Ahora le sigue. Igual si ya le seguía.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: USER_NOT_FOUND`. No hay ninguna cuenta con ese identificador.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CANNOT_SUBSCRIBE_TO_YOURSELF`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: unsubscribeFromAuthor
+    summary: Dejar de seguir a un autor
+    description: |
+      Siempre `204`, se siguiera o no: dejar de seguir a quien no se sigue no
+      es un fallo, porque el estado que se pedía ya se cumple.
+
+      Retira a esa persona de las audiencias `FOLLOWERS` de quien deja de
+      seguir, también en diferido.
+    parameters:
+      - $ref: '#/UserIdParam'
+    responses:
+      '204':
+        description: Ya no le sigue. Igual si no le seguía.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+UserIdParam:
+  name: userId
+  in: path
+  required: true
+  description: La persona a la que se sigue o se deja de seguir.
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'

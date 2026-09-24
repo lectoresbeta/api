@@ -1,8 +1,4 @@
-# Rutas del bounded context `Community`. Todavía ninguna.
-#
-# El fichero existe vacío a propósito: quien añada el primer endpoint de
-# `Community` no tiene que averiguar dónde va, y `config/routes.yaml` —que lo
-# importa— sigue siendo el censo de contextos que exponen API.
+# Rutas del bounded context `Community`.
 #
 # El nombre de cada ruta es su `operationId` de OpenAPI. No es cosmético: es
 # lo que permite comprobar de forma mecánica que lo implementado y el contrato
@@ -17,3 +13,24 @@
 #         methods: [POST]
 #
 # Convención completa: docs/api/conventions/routing.md
+
+# Seguir a un autor (FEAT-COM-010). El primer endpoint de este contexto.
+#
+# `PUT` y `DELETE` sobre el mismo recurso porque lo que se manipula es **el
+# estado de la relación**, no un suceso: repetir cualquiera de los dos deja el
+# mundo igual.
+
+getAuthorSubscription:
+    path: /api/v1/users/{userId}/subscription
+    controller: LectoresBeta\Community\Subscription\Infrastructure\Controller\GetAuthorSubscriptionController::__invoke
+    methods: [GET]
+
+subscribeToAuthor:
+    path: /api/v1/users/{userId}/subscription
+    controller: LectoresBeta\Community\Subscription\Infrastructure\Controller\SubscribeToAuthorController::__invoke
+    methods: [PUT]
+
+unsubscribeFromAuthor:
+    path: /api/v1/users/{userId}/subscription
+    controller: LectoresBeta\Community\Subscription\Infrastructure\Controller\UnsubscribeFromAuthorController::__invoke
+    methods: [DELETE]

@@ -11,11 +11,14 @@ PrivacyAudience:
     Los tres ajustes comparten los mismos tres valores a propósito: son la
     misma pregunta —¿hasta dónde llega esto?— aplicada a tres cosas.
 
-    **`FOLLOWERS` se comporta hoy como `NOBODY`**, y no es un fallo: todavía
-    no se puede seguir a nadie, así que el conjunto de seguidores de cualquier
-    autor está vacío y «solo mis seguidores» significa «nadie». Cuando existan
-    los seguidores, empezará a significar lo que dice sin que haya que tocar
-    esta pantalla.
+    **`FOLLOWERS` significa quien sigue a esta persona** (`FEAT-COM-010`), y
+    se aplica **en diferido**: entre seguir a alguien y entrar en su audiencia
+    pasa lo que tarde la cola de integración.
+
+    Conviene saber lo que promete: seguir es **unilateral**, así que «solo mis
+    seguidores» es, en la práctica, «cualquiera que pulse Seguir». Lo que sí
+    está garantizado es que seguir a alguien **no abre lo que ha cerrado**: con
+    `NOBODY` no ve el perfil ni comenta nadie, seguidor o no.
 
 PrivacySettings:
   type: object

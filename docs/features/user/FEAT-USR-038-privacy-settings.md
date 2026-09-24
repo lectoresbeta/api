@@ -268,17 +268,28 @@ aspiracional.
   donde una cuenta se puede encontrar.
 - Publica `PrivacySettingsChanged` con los tres ajustes y nada del perfil.
 
-### `FOLLOWERS` se comporta como `NOBODY`, y es la respuesta correcta
+### `FOLLOWERS` ya significa lo que dice
 
-No es un apaño: **nadie puede seguir a nadie todavía** ([`FEAT-COM-010`](../README.md) no
-existe), así que el conjunto de seguidores de cualquier autor está vacío y «solo mis
-seguidores» significa «nadie». Cuando existan los seguidores, `CheckAuthorAudience` consultará
-el grafo y la frase dejará de ser una tautología; **cambia un solo sitio**, que es la razón de
-que el contrato devuelva un booleano en vez de entregar el ajuste.
+Durante un tiempo se comportó como `NOBODY`, y era la respuesta correcta: nadie podía seguir a
+nadie, así que el conjunto de seguidores de cualquier autor estaba vacío. Con
+[`FEAT-COM-010`](../community/FEAT-COM-010-subscribe-to-author.md) dejó de serlo, y **cambió
+un solo sitio** —que es la razón de que el contrato devuelva un booleano en vez de entregar el
+ajuste—: `CheckAuthorAudience` y `VisibleProfile` consultan la copia del grafo que `User`
+mantiene con los hechos de `Community`.
 
-Conviene ver hacia qué lado falla si alguien olvida volver: `FOLLOWERS` seguiría comportándose
-como `NOBODY`, un ajuste demasiado estricto que su dueño nota y del que se queja. La
-equivocación contraria —tratarlo como `EVERYONE`— no la nota nadie, y es la que importa.
+Esa copia hace las dos audiencias **consistentes en diferido**: entre seguir a alguien y ver
+su perfil, o poder comentar sus textos, pasa lo que tarde la cola.
+
+> **Lo que hay que decidir** (`C-22`): seguir es **unilateral**, así que «solo mis seguidores»
+> significa en la práctica **«cualquiera que pulse Seguir»**. Quien restringe su perfil a
+> `FOLLOWERS` probablemente espera algo más fuerte. Las dos salidas —que seguir a una cuenta
+> restringida requiera **aprobación**, o que `FOLLOWERS` signifique **seguimiento mutuo**— son
+> funcionalidades nuevas, no un ajuste de esta. Mientras se decide, el ajuste hace
+> literalmente lo que promete.
+
+Lo que sí está garantizado, y probado: seguir a alguien **no abre lo que ha cerrado**. Con
+`NOBODY` no ve el perfil ni comenta nadie, seguidor o no. El seguimiento decide quién entra en
+una audiencia, no cuál eligió su titular.
 
 ### Qué falta
 

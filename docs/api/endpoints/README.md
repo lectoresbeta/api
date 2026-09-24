@@ -12,7 +12,7 @@ duplica aquí.
 | `Work` | [work.md](work.md) | Crear obra y capítulos implementados |
 | `Reading` | reading.md | Por crear |
 | `Feedback` | [feedback.md](feedback.md) | Correcciones especificadas |
-| `Community` | community.md | Por crear |
+| `Community` | [community.md](community.md) | Seguir a un autor implementado |
 | `Credits` | [credits.md](credits.md) | Saldo implementado |
 | `Notification` | notification.md | Por crear |
 

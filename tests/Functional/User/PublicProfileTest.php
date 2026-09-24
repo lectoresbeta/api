@@ -189,16 +189,72 @@ final class PublicProfileTest extends EconomyScenario
     }
 
     /**
-     * `FOLLOWERS` oculta hoy igual que `NOBODY`, y es la respuesta correcta
-     * mientras nadie pueda seguir a nadie: el conjunto de seguidores está
-     * vacío.
+     * `FOLLOWERS` **enseña el perfil a quien sigue a su titular**, desde
+     * `FEAT-COM-010`. Antes ocultaba a todo el mundo, y era lo correcto: el
+     * conjunto de seguidores estaba vacío.
+     *
+     * A quien no le sigue —y a quien pasa sin sesión— le responde lo mismo
+     * que un perfil que no existe. Ese es el punto del ajuste: un `403`
+     * confirmaría que la cuenta está ahí.
      */
-    public function testFollowersHidesTheProfileWhileNobodyCanFollow(): void
+    public function testFollowersShowsTheProfileToAFollowerAndToNobodyElse(): void
     {
         $person = $this->namedPerson('persona', 'Ana García');
+        $seguidora = $this->activatedPerson('seguidora');
+        $extrana = $this->activatedPerson('extrana');
+
         $this->restrict($person['token'], 'FOLLOWERS');
 
+        $this->byId($person['userId'], $seguidora['token']);
+        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND, 'Todavía no le sigue.');
+
+        $this->follow($seguidora['token'], $person['userId']);
+
+        $this->byId($person['userId'], $seguidora['token']);
+        self::assertResponseIsSuccessful();
+        self::assertSame('Ana García', $this->payload()['name']);
+
+        $this->byId($person['userId'], $extrana['token']);
+        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND, 'Y quien no le sigue, no.');
+
         $this->byId($person['userId']);
+        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND, 'Ni quien pasa sin sesión.');
+    }
+
+    /**
+     * Y dejar de seguir vuelve a cerrarlo. Es la mitad que se olvida, y la
+     * que envejece hacia el lado peligroso.
+     */
+    public function testUnfollowingHidesTheProfileAgain(): void
+    {
+        $person = $this->namedPerson('persona', 'Ana García');
+        $seguidora = $this->activatedPerson('seguidora');
+
+        $this->restrict($person['token'], 'FOLLOWERS');
+        $this->follow($seguidora['token'], $person['userId']);
+        $this->byId($person['userId'], $seguidora['token']);
+        self::assertResponseIsSuccessful();
+
+        $this->unfollow($seguidora['token'], $person['userId']);
+
+        $this->byId($person['userId'], $seguidora['token']);
+        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    /**
+     * Seguir a alguien **no abre lo que ha cerrado**: con el perfil en
+     * `NOBODY` no lo ve nadie, seguidor o no. El seguimiento decide quién
+     * entra en una audiencia, no cuál eligió su dueño.
+     */
+    public function testFollowingDoesNotOpenAProfileSetToNobody(): void
+    {
+        $person = $this->namedPerson('persona', 'Ana García');
+        $seguidora = $this->activatedPerson('seguidora');
+
+        $this->restrict($person['token'], 'NOBODY');
+        $this->follow($seguidora['token'], $person['userId']);
+
+        $this->byId($person['userId'], $seguidora['token']);
 
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
@@ -269,6 +325,33 @@ final class PublicProfileTest extends EconomyScenario
         $this->client->request('GET', \sprintf('/api/v1/profiles/%s', $username), server: null === $token
             ? []
             : ['HTTP_AUTHORIZATION' => 'Bearer '.$token]);
+    }
+
+    /**
+     * Seguir por su endpoint **y entregar la cola**: lo que `User` consulta
+     * es su copia del grafo, alimentada por un hecho de `Community`, así que
+     * sin consumirlo el seguimiento todavía no ha llegado.
+     */
+    private function follow(string $token, string $userId): void
+    {
+        $this->client->request('PUT', \sprintf('/api/v1/users/%s/subscription', $userId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $this->capture();
+        $this->consumeEverything();
+    }
+
+    private function unfollow(string $token, string $userId): void
+    {
+        $this->client->request('DELETE', \sprintf('/api/v1/users/%s/subscription', $userId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $this->capture();
+        $this->consumeEverything();
     }
 
     private function restrict(string $token, string $audience): void

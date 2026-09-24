@@ -106,6 +106,9 @@ paths:
   /profiles/{username}:
     $ref: './paths/profiles.yaml#/byUsername'
 
+  /users/{userId}/subscription:
+    $ref: './paths/community.yaml#/subscription'
+
   /works:
     $ref: './paths/works.yaml#/collection'
 

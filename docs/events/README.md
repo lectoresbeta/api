@@ -219,6 +219,31 @@ hecho económico; qué se ve lo decide `Feedback`, que es quien posee la correcc
 
 ---
 
+## `Community`
+
+| Evento | Cuándo | Consumidores | Payload |
+|---|---|---|---|
+| `AuthorSubscribed` | Alguien empieza a seguir a un autor | **`User`** (proyección de audiencias), `Notification` | `subscriberId`, `authorId`, `subscribedAt` |
+| `AuthorUnsubscribed` | Alguien deja de seguir a un autor | **`User`** | `subscriberId`, `authorId`, `unsubscribedAt` |
+
+Los dos llevan **los dos identificadores y nada más**. Ni nombres ni perfiles: quien los
+consume tiene su propia copia de las personas, y copiar un nombre aquí solo añadiría un sitio
+donde envejece.
+
+`AuthorUnsubscribed` existe porque la otra mitad no basta, y es la que se olvida. Quien
+proyecta el grafo lo necesita para no quedarse con una copia que envejece **hacia el lado
+peligroso**: alguien contando como seguidor —y por tanto dentro de una audiencia
+`FOLLOWERS`— después de haberse ido.
+
+Que `User` consuma estos dos hechos es lo que hace verdad `FOLLOWERS` en
+[`FEAT-USR-038`](../features/user/FEAT-USR-038-privacy-settings.md) sin que `User` llame a
+`Community`: `CheckAuthorAudience` es un contrato publicado, y un contrato no llama al de
+otro contexto mientras responde ([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md),
+regla 4). Nadie notifica el segundo: dejar de seguir es asunto de quien lo hace, y avisar al
+autor convertiría una acción discreta en un desaire con acuse de recibo.
+
+---
+
 ## Evolución de los contratos
 
 | Cambio | ¿Compatible? | Qué hacer |

@@ -113,7 +113,7 @@ preferencias y presencia pública como autor.
 | `ActivationLinkProvider` | El enlace de activación, en el momento de enviar el correo | `Notification` |
 | `ReaderMaturity` | **Un booleano**: ¿tiene edad? Ni la fecha de nacimiento ni la edad | `Work`, `Feedback` |
 | `GenreCatalogue` | Cuáles de estos códigos de temática **no** existen | `Work` |
-| `RegisteredUsers` | **Un booleano**: ¿existe este usuario? Nada más de él | `Reading` |
+| `RegisteredUsers` | **Un booleano**: ¿existe este usuario? Nada más de él | `Reading`, `Community` |
 | `ReaderDirectory` | Hasta N personas cuyo nombre o `@usuario` encajan, como tarjeta de perfil | `Reading` |
 | `AuthorAudience` | **Un booleano**: ¿acepta este autor comentarios de esta persona? Nunca el ajuste | `Feedback` |
 
@@ -140,8 +140,24 @@ se aplica aquí, y ya funciona: quien tenga el perfil en `NOBODY` no aparece.
 
 `AuthorAudience` es el **techo** de [`FEAT-USR-038`](../features/user/FEAT-USR-038-privacy-settings.md):
 el perfil pone el máximo y cada obra puede bajarlo, nunca subirlo. Devuelve un booleano y no
-el ajuste, y eso es lo que permite que `FOLLOWERS` signifique hoy «nadie» —el grafo de
-seguidores no existe— y mañana lo que dice, **cambiando un solo sitio**.
+el ajuste, y eso es lo que permitió que `FOLLOWERS` significara «nadie» mientras no existía el
+grafo de seguidores y pasara a decir lo que dice **cambiando un solo sitio**, con
+[`FEAT-COM-010`](../features/community/FEAT-COM-010-subscribe-to-author.md).
+
+### La copia del grafo de seguidores
+
+`User` mantiene su propia tabla de quién sigue a quién (`user_ctx.author_follower`),
+alimentada por `AuthorSubscribed` y `AuthorUnsubscribed` de `Community`. No es un modelo
+propio del seguimiento: lleva el par y la fecha, lo justo para responder «¿me sigue?».
+
+Existe por la **regla 4** de [`decision:0014`](../decisions/0014-published-contracts-between-contexts.md):
+un contrato no llama al de otro contexto mientras responde. `AuthorAudience` es un contrato
+publicado, y `Community` ya llama a `RegisteredUsers` para dejar seguir a alguien — un
+contrato en sentido contrario cerraría el ciclo de llamadas que esa regla evita.
+
+El precio es que las audiencias `FOLLOWERS` son **consistentes en diferido**: entre seguir a
+alguien y entrar en su audiencia pasa lo que tarde la cola. Al revés no, y por eso el hecho de
+dejar de seguir viaja por el mismo camino y no se olvida nunca.
 
 ## Preguntas abiertas
 

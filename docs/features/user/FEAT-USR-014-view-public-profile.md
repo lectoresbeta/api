@@ -108,10 +108,10 @@ Las pestañas se piden aparte y paginadas.
 - [ ] Los relatos ajenos no muestran la insignia de estado. *Misma pestaña.*
 - [ ] No existe forma de listar el feedback que otro usuario ha dado. *Se cumple por construcción —no hay endpoint— pero no hay nada que probar hasta que existan las pestañas.*
 - [ ] El contador de correcciones sí se devuelve. *Es de `Feedback` y llegará con los contadores.*
-- [ ] La respuesta indica si le sigo y si me sigue. *`Community` no existe: no hay relación que indicar.*
+- [ ] La respuesta indica si le sigo y si me sigue. *Sigue sin llevarla: «si le sigo» ya se puede preguntar aparte, con `getAuthorSubscription` ([`FEAT-COM-010`](../community/FEAT-COM-010-subscribe-to-author.md)); «si me sigue» no tiene todavía quien lo responda, y meter la relación en el perfil obligaría a `User` a proyectar las dos direcciones para pintarlas.*
 - [x] El perfil de una cuenta eliminada devuelve `404`.
 - [x] Una cuenta sin activar puede consultar perfiles.
-- [ ] Editar el perfil de otro usuario se rechaza, aunque la interfaz muestre los lápices. *Editar el perfil es [`FEAT-USR-008`](FEAT-USR-008-edit-profile.md) y no existe.*
+- [x] Editar el perfil de otro usuario se rechaza, aunque la interfaz muestre los lápices. *Se cumple por construcción: [`FEAT-USR-008`](FEAT-USR-008-edit-profile.md) edita `/me/profile` y no admite decir de quién.*
 
 El último responde a un error de maqueta: los lápices de edición aparecen en el perfil ajeno.
 El backend debe rechazarlo con independencia de lo que pinte el cliente.

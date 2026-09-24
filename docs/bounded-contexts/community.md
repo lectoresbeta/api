@@ -74,7 +74,8 @@ periodo.
 | Evento | Cuándo | Consumidores |
 |---|---|---|
 | `PostPublished` | Se publica en el muro | `Notification` (suscriptores del autor) |
-| `AuthorSubscribed` | Un usuario sigue a un autor | `Notification` |
+| `AuthorSubscribed` | Un usuario sigue a un autor | **`User`** (proyección de audiencias `FOLLOWERS`), `Notification` |
+| `AuthorUnsubscribed` | Un usuario deja de seguir a un autor | **`User`**. Nadie lo notifica: dejar de seguir es asunto de quien lo hace |
 | `DirectMessageSent` | Se envía un mensaje directo | `Notification` |
 
 ## Eventos consumidos
@@ -90,6 +91,9 @@ periodo.
 
 - `RN-1` Un mensaje directo solo se entrega si el destinatario los tiene habilitados.
 - `RN-2` Un usuario no se suscribe a sí mismo.
+- `RN-2b` Seguir y dejar de seguir son **idempotentes**, y seguir **no concede acceso a nada**
+  (`FEAT-COM-010`). Lo que cambia son los avisos y qué audiencias incluyen a esa persona; qué
+  audiencia eligió su titular no lo decide quien le sigue.
 - `RN-3` Una reacción por usuario y publicación; cambiarla sustituye la anterior.
 - `RN-4` El apoyo (`Like`) y la reacción con emoji son mecanismos distintos y coexisten.
   **El diseño de la Home solo muestra el apoyo**, así que la coexistencia está en duda (`H-5`).

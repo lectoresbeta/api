@@ -285,7 +285,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-007 | Reaccionar con emoji a una publicación | User | PENDING | TODO | P2 | — |
 | FEAT-COM-008 | Apoyar una publicación con un "me gusta" | User | PENDING | TODO | P2 | — |
 | FEAT-COM-009 | Filtrar y buscar publicaciones (tipo, texto, usuario, fecha) | User | PENDING | TODO | P2 | — |
-| FEAT-COM-010 | Suscribirse a un autor | User | PENDING | TODO | P2 | — |
+| FEAT-COM-010 | Suscribirse a un autor | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-010-subscribe-to-author.md) |
 | FEAT-COM-011 | Enviar un mensaje directo | User | PENDING | TODO | P2 | — |
 | FEAT-COM-012 | Ver y gestionar conversaciones de mensajes directos | User | PENDING | TODO | P2 | — |
 | FEAT-COM-013 | Ver y filtrar el ranking de escritores | User | PENDING | BLOCKED | P2 | — |

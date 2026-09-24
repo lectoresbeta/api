@@ -121,25 +121,73 @@ final class PrivacySettingsTest extends EconomyScenario
     }
 
     /**
-     * `FOLLOWERS` se comporta hoy como `NOBODY`, y **es la respuesta
-     * correcta**: nadie puede seguir a nadie todavía, así que el conjunto de
-     * seguidores de cualquier autor está vacío.
+     * **`FOLLOWERS` ya no es una tautología** (`FEAT-COM-010`). Antes
+     * respondía `false` siempre, y era la respuesta correcta: nadie podía
+     * seguir a nadie, así que el conjunto de seguidores de cualquiera estaba
+     * vacío.
      *
-     * Conviene ver hacia qué lado falla. Si algún día se olvida volver aquí,
-     * `FOLLOWERS` sigue comportándose como `NOBODY`: un ajuste demasiado
-     * estricto, que su dueño nota y del que se queja. La equivocación
-     * contraria no la nota nadie.
+     * Lo que esta prueba recorre entero es el camino que lo hace verdad, y no
+     * es una llamada: `Community` publica el hecho, `User` lo proyecta en su
+     * copia, y `CheckAuthorAudience` la consulta sin salir de casa. Ese rodeo
+     * es la regla 4 de `decision:0014` —un contrato no llama al de otro
+     * contexto mientras responde— y esta clase **es** un contrato publicado.
      */
-    public function testFollowersMeansNobodyWhileNobodyCanFollow(): void
+    public function testWithFollowersOnlyAFollowerMayCorrect(): void
     {
         [$author, $lectora, $chapterId] = $this->aWorkOpenForCorrection();
 
         $this->change($author['token'], ['commentPermission' => 'FOLLOWERS']);
 
+        // Todavía no le sigue.
+        $this->start($chapterId, $lectora['token']);
+        self::assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+        self::assertSame('AUTHOR_DOES_NOT_ACCEPT_COMMENTS', $this->payload()['code']);
+
+        $this->follow($lectora['token'], $author['userId']);
+
+        $this->start($chapterId, $lectora['token']);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+    }
+
+    /**
+     * Y dejar de seguir lo retira. Es la mitad que se olvida, y la que
+     * envejece hacia el lado peligroso: sin ella alguien seguiría contando
+     * como seguidor —y dentro de la audiencia— después de haberse ido.
+     */
+    public function testUnfollowingClosesTheDoorAgain(): void
+    {
+        [$author, $lectora, $chapterId] = $this->aWorkOpenForCorrection();
+
+        $this->change($author['token'], ['commentPermission' => 'FOLLOWERS']);
+        $this->follow($lectora['token'], $author['userId']);
+
+        $this->start($chapterId, $lectora['token']);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $this->discard($chapterId, $lectora['token']);
+
+        $this->unfollow($lectora['token'], $author['userId']);
+
+        $this->start($chapterId, $lectora['token']);
+        self::assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+        self::assertSame('AUTHOR_DOES_NOT_ACCEPT_COMMENTS', $this->payload()['code']);
+    }
+
+    /**
+     * Seguir al autor **no abre lo que el autor cerró**: con
+     * `commentPermission` en `NOBODY` no corrige nadie, seguidor o no. El
+     * seguimiento decide quién entra en una audiencia, no qué audiencia
+     * eligió su dueño.
+     */
+    public function testFollowingDoesNotOverrideNobody(): void
+    {
+        [$author, $lectora, $chapterId] = $this->aWorkOpenForCorrection();
+
+        $this->change($author['token'], ['commentPermission' => 'NOBODY']);
+        $this->follow($lectora['token'], $author['userId']);
+
         $this->start($chapterId, $lectora['token']);
 
         self::assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
-        self::assertSame('AUTHOR_DOES_NOT_ACCEPT_COMMENTS', $this->payload()['code']);
     }
 
     /**
@@ -232,6 +280,34 @@ final class PrivacySettingsTest extends EconomyScenario
         $this->capture();
 
         return $person;
+    }
+
+    /**
+     * Seguir de verdad, por su endpoint, **y entregar la cola**: la copia que
+     * `User` consulta se alimenta de un hecho de `Community`, así que sin
+     * consumirlo el seguimiento no ha llegado todavía. Es la consistencia en
+     * diferido de la que habla la ficha, aquí a la vista.
+     */
+    private function follow(string $token, string $userId): void
+    {
+        $this->client->request('PUT', \sprintf('/api/v1/users/%s/subscription', $userId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $this->capture();
+        $this->consumeEverything();
+    }
+
+    private function unfollow(string $token, string $userId): void
+    {
+        $this->client->request('DELETE', \sprintf('/api/v1/users/%s/subscription', $userId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $this->capture();
+        $this->consumeEverything();
     }
 
     private function settings(string $token): void

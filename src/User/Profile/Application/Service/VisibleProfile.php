@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace LectoresBeta\User\Profile\Application\Service;
 
+use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\User\Account\Domain\Entity\User;
+use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Privacy\Domain\Enum\PrivacyAudience;
+use LectoresBeta\User\Privacy\Domain\Repository\AuthorFollowerRepository;
 use LectoresBeta\User\Privacy\Domain\Repository\UserPrivacySettingsRepository;
 use LectoresBeta\User\Profile\Application\DTO\PublicProfile;
 use LectoresBeta\User\Profile\Domain\Enum\ProfileResolution;
@@ -28,14 +31,22 @@ use LectoresBeta\User\Profile\Domain\Exception\ProfileNotFound;
  * absurdo, y es lo que hace que el ajuste se pueda deshacer: quien lo cierra
  * sigue entrando a abrirlo.
  *
- * `FOLLOWERS` oculta hoy como `NOBODY`, y es la respuesta correcta mientras
- * nadie pueda seguir a nadie: el conjunto de seguidores está vacío. Cuando
- * exista el grafo, aquí se comparará al visitante contra él.
+ * `FOLLOWERS` enseña el perfil **a quien sigue a su titular** desde
+ * `FEAT-COM-010`. Sale de la copia local del grafo, alimentada por los hechos
+ * de `Community`, así que va en diferido: quien acaba de seguir a alguien
+ * puede tardar un momento en ver su perfil.
+ *
+ * Conviene saber lo que ese ajuste promete de verdad, porque seguir es
+ * **unilateral**: «solo mis seguidores» es, en la práctica, «cualquiera que
+ * pulse Seguir». Está anotado como `C-22` y lo decide producto; mientras
+ * tanto el ajuste hace literalmente lo que dice.
  */
 final readonly class VisibleProfile
 {
-    public function __construct(private UserPrivacySettingsRepository $privacy)
-    {
+    public function __construct(
+        private UserPrivacySettingsRepository $privacy,
+        private AuthorFollowerRepository $followers,
+    ) {
     }
 
     public function of(User $user, ?string $viewerId, ProfileResolution $via, string $asked): PublicProfile
@@ -71,6 +82,19 @@ final readonly class VisibleProfile
         // la cuenta.
         $visibility = $this->privacy->ofUser($user->id())?->profileVisibility() ?? PrivacyAudience::EVERYONE;
 
-        return PrivacyAudience::EVERYONE === $visibility;
+        return match ($visibility) {
+            PrivacyAudience::EVERYONE => true,
+            PrivacyAudience::FOLLOWERS => null !== $viewerId && $this->follows($viewerId, $user->id()),
+            PrivacyAudience::NOBODY => false,
+        };
+    }
+
+    private function follows(string $viewerId, UserId $ownerId): bool
+    {
+        try {
+            return $this->followers->follows(UserId::fromString($viewerId), $ownerId);
+        } catch (InvalidValue) {
+            return false;
+        }
     }
 }
