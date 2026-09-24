@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Shared\Infrastructure\Http\Problem;
 
 use LectoresBeta\Shared\Domain\Exception\BusinessFailure;
+use LectoresBeta\Shared\Domain\Exception\FailureDetails;
 use LectoresBeta\Shared\Domain\Exception\FailureKind;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,6 +31,7 @@ final readonly class ProblemFactory
             self::statusFor($failure->kind()),
             $failure->errorCode(),
             $failure->getMessage(),
+            extensions: $failure instanceof FailureDetails ? $failure->failureDetails() : [],
         );
     }
 
@@ -73,13 +75,19 @@ final readonly class ProblemFactory
             FailureKind::CONFLICT => Response::HTTP_CONFLICT,
             FailureKind::FORBIDDEN => Response::HTTP_FORBIDDEN,
             FailureKind::GONE => Response::HTTP_GONE,
+            FailureKind::RATE_LIMITED => Response::HTTP_TOO_MANY_REQUESTS,
         };
     }
 
     /**
      * @param list<array{field: string, code: string, message: string}> $violations
+     * @param array<string, scalar>                                     $extensions miembros de extensión
+     *                                                                              de RFC 9457. Van al
+     *                                                                              nivel superior y
+     *                                                                              **nunca** pisan los
+     *                                                                              campos del formato
      */
-    private function build(int $status, string $code, string $detail, array $violations = []): JsonResponse
+    private function build(int $status, string $code, string $detail, array $violations = [], array $extensions = []): JsonResponse
     {
         $body = [
             'type' => self::TYPE_PREFIX.self::slug($code),
@@ -88,6 +96,12 @@ final readonly class ProblemFactory
             'code' => $code,
             'detail' => $detail,
         ];
+
+        foreach ($extensions as $member => $value) {
+            if (!\array_key_exists($member, $body)) {
+                $body[$member] = $value;
+            }
+        }
 
         if ([] !== $violations) {
             $body['errors'] = $violations;

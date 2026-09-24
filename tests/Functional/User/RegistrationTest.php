@@ -10,6 +10,10 @@ use LectoresBeta\User\Account\Application\Contract\ActivationLinkProvider;
 use LectoresBeta\User\Account\Domain\Enum\AccountStatus;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
+use LectoresBeta\User\Account\Domain\ValueObject\UserId;
+use LectoresBeta\User\Account\Domain\ValueObject\Username;
+use LectoresBeta\User\Profile\Domain\Entity\UsernameAlias;
+use LectoresBeta\User\Profile\Domain\Repository\UsernameAliasRepository;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\HttpFoundation\Response;
@@ -94,6 +98,73 @@ final class RegistrationTest extends WebTestCase
 
         self::assertNotNull($second);
         self::assertSame('carmen_1', $second->username()->value());
+    }
+
+    /**
+     * `FEAT-USR-033` `RN-5`. Sin esto, registrarse con `soporte@…` bastaría
+     * para llamarse `soporte` y contestar mensajes como si fuera la
+     * plataforma, que es la suplantación que la lista de reservados existe
+     * para evitar.
+     *
+     * El sufijo resuelve el caso sin dejar a nadie sin cuenta: el correo es
+     * legítimo, el nombre no.
+     */
+    public function testARegistrationCannotLandOnAReservedUsername(): void
+    {
+        $this->register('soporte@ejemplo.com');
+
+        $user = $this->users()->ofEmail(Email::fromString('soporte@ejemplo.com'));
+
+        self::assertNotNull($user);
+        self::assertSame('soporte_1', $user->username()->value());
+    }
+
+    /**
+     * **Un alias vigente ocupa el nombre igual que una cuenta**
+     * (`FEAT-USR-033` `RN-1`), y esto es lo que ninguna restricción de base
+     * de datos puede cubrir: la respuesta está en dos tablas.
+     *
+     * Sin ello, alguien se cambia el nombre y al día siguiente el primero que
+     * se registre con ese correo hereda sus enlaces.
+     */
+    public function testALiveAliasBlocksTheNameAtRegistration(): void
+    {
+        $this->reserve('ocupada', expired: false);
+
+        $this->register('ocupada@ejemplo.com');
+
+        $user = $this->users()->ofEmail(Email::fromString('ocupada@ejemplo.com'));
+
+        self::assertNotNull($user);
+        self::assertSame('ocupada_1', $user->username()->value());
+    }
+
+    /**
+     * Y uno caducado no ocupa nada, **aunque su fila siga ahí**: la purga
+     * (`FEAT-USR-036`) pasa cuando pasa, y la caducidad se comprueba al
+     * mirar.
+     */
+    public function testAnExpiredAliasDoesNotBlockAnything(): void
+    {
+        $this->reserve('libre', expired: true);
+
+        $this->register('libre@ejemplo.com');
+
+        $user = $this->users()->ofEmail(Email::fromString('libre@ejemplo.com'));
+
+        self::assertNotNull($user);
+        self::assertSame('libre', $user->username()->value());
+    }
+
+    /**
+     * `UserRegistered` lleva el nombre asignado: quien lo consume no puede
+     * preguntarlo después sin acabar leyendo la tabla de otro contexto.
+     */
+    public function testTheFactCarriesTheAssignedUsername(): void
+    {
+        $this->register('anunciada@ejemplo.com');
+
+        self::assertSame(['anunciada'], $this->usernamesAnnounced());
     }
 
     #[\PHPUnit\Framework\Attributes\DataProvider('unacceptablePasswords')]
@@ -226,6 +297,48 @@ final class RegistrationTest extends WebTestCase
         $doctrine->getManager()->flush();
 
         return $link->token;
+    }
+
+    /**
+     * Un nombre retenido por un alias de alguien que no es nadie en
+     * particular: aquí lo que se prueba es que el nombre esté ocupado, no de
+     * quién era.
+     */
+    private function reserve(string $username, bool $expired): void
+    {
+        /** @var UsernameAliasRepository $aliases */
+        $aliases = self::getContainer()->get(UsernameAliasRepository::class);
+        $aliases->save(UsernameAlias::afterRename(
+            Username::fromString($username),
+            UserId::generate(),
+            new \DateTimeImmutable($expired ? '-40 days' : 'now'),
+        ));
+
+        /** @var ManagerRegistry $doctrine */
+        $doctrine = self::getContainer()->get('doctrine');
+        $doctrine->getManager()->flush();
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function usernamesAnnounced(): array
+    {
+        /** @var InMemoryTransport $transport */
+        $transport = self::getContainer()->get('messenger.transport.integration');
+
+        $usernames = [];
+
+        foreach ($transport->getSent() as $envelope) {
+            $event = $envelope->getMessage();
+            self::assertInstanceOf(IntegrationEvent::class, $event);
+
+            /** @var array<string, mixed> $payload */
+            $payload = $event->payload();
+            $usernames[] = (string) $payload['username'];
+        }
+
+        return $usernames;
     }
 
     private function users(): UserRepository

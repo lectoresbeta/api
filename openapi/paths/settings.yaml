@@ -133,7 +133,7 @@ privacySettings:
 
 EditableProfile:
   type: object
-  required: [userId, username]
+  required: [userId, username, usernameChangeableOn]
   properties:
     userId:
       type: string
@@ -161,6 +161,16 @@ EditableProfile:
       type: [string, 'null']
     coverUrl:
       type: [string, 'null']
+    usernameChangeableOn:
+      type: string
+      format: date-time
+      description: |
+        Desde cuándo se puede volver a cambiar el nombre de usuario
+        (`FEAT-USR-034`). Va aquí, en la lectura que abre la pantalla, para
+        que el campo pueda salir ya desactivado: enterarse con un `429`
+        después de escribir un nombre es enterarse tarde.
+
+        Con una cuenta que nunca lo ha cambiado es el momento actual.
 
 myProfile:
   get:
@@ -257,3 +267,121 @@ myProfile:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+username:
+  put:
+    tags: [User]
+    operationId: changeUsername
+    summary: Cambiar mi nombre de usuario
+    description: |
+      **Una vez cada 30 días.** El nombre que se deja no queda libre: se
+      reserva como **alias** de la cuenta durante 30 días.
+
+      Esa reserva no está solo para que los enlaces ya compartidos sigan
+      funcionando —que también—, sino sobre todo para que **nadie más pueda
+      ocupar el nombre y heredar el tráfico dirigido a otra persona**.
+
+      **Recuperar un nombre propio que siga reservado se permite aunque no
+      hayan pasado los 30 días**, y renueva el plazo. Las dos mitades
+      importan: sin la primera, arrepentirse de un cambio obligaría a esperar
+      un mes con un nombre que no se quiere; sin la segunda se podría alternar
+      entre dos nombres indefinidamente, y cada vuelta rompería los enlaces
+      que el plazo existe para proteger.
+
+      Pedir el nombre que ya se tiene **no es un cambio**: se acepta sin
+      efecto y sin gastar el cupo. Guardar dos veces el formulario sin tocar
+      este campo no puede costar treinta días.
+
+      Tiene endpoint propio aunque la pantalla lo enseñe junto al nombre y la
+      biografía: un fallo aquí no debe llevarse por delante lo que sí se podía
+      guardar.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [username]
+            properties:
+              username:
+                type: string
+                minLength: 3
+                maxLength: 30
+                pattern: '^[a-z0-9_]+$'
+    responses:
+      '200':
+        description: |
+          Cómo ha quedado. `changeableOn` va **siempre**, incluso cuando no ha
+          habido cambio, para que el formulario pueda desactivarse sin fallar
+          primero.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, changeableOn]
+              properties:
+                username:
+                  type: string
+                previousUsername:
+                  type: [string, 'null']
+                  description: Nulo cuando no ha habido cambio.
+                aliasExpiresAt:
+                  type: [string, 'null']
+                  format: date-time
+                  description: |
+                    Hasta cuándo el nombre anterior sigue llevando a este
+                    perfil y sigue sin estar disponible para nadie.
+                changeableOn:
+                  type: string
+                  format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: USERNAME_TAKEN`. Alguien lo usa, **o** un alias vigente lo
+          retiene — incluido el de una cuenta eliminada.
+
+          Los dos casos devuelven el mismo código **a propósito**:
+          distinguirlos contaría que alguien tuvo ese nombre y lo dejó hace
+          menos de un mes, que es información sobre una persona y no sobre la
+          disponibilidad de una palabra.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: USERNAME_RESERVED` para los nombres que nadie puede tener
+          —los que se confundirían con una voz oficial—, o `INVALID_VALUE` si
+          el formato no encaja.
+
+          El reservado **sí** se distingue del ocupado: ahí no hay nadie a
+          quien proteger, y quien lo pide merece saber que no es cuestión de
+          esperar.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '429':
+        description: |
+          `code: USERNAME_CHANGE_TOO_SOON`, con **`availableOn`** como miembro
+          de extensión. La fecha es el motivo de que esto sea un `429` y no un
+          conflicto: un cliente que no pueda saberla dejará el formulario
+          activo y permitirá reintentar mañana, y pasado, que es justo lo que
+          el límite pretende evitar.
+        content:
+          application/problem+json:
+            schema:
+              allOf:
+                - $ref: '../openapi.yaml#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    availableOn:
+                      type: string
+                      format: date-time

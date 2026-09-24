@@ -283,9 +283,10 @@ final class PublicProfileTest extends EconomyScenario
     }
 
     /**
-     * Cambiarse de nombre todavía no tiene endpoint (`FEAT-USR-034`), así que
-     * el alias se escribe directamente: lo que esta prueba defiende es la
-     * resolución, no cómo nace el alias.
+     * El alias se escribe directamente aunque cambiarse de nombre ya tenga
+     * endpoint (`FEAT-USR-034`): lo que esta prueba defiende es la
+     * resolución, y hacerla pasar por el cambio la ataría a sus reglas —el
+     * plazo de 30 días, el alias caducado— que aquí no vienen a cuento.
      */
     private function aliasFor(string $userId, string $username, bool $expired): void
     {

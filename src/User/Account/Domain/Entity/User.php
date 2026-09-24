@@ -39,6 +39,17 @@ class User
 
     private ?\DateTimeImmutable $usernameChangedAt = null;
 
+    /**
+     * Cuándo se recuperó por última vez un nombre propio, o `null` si el
+     * último cambio fue uno normal (`FEAT-USR-034` `RN-1b`).
+     *
+     * Existe para que la excepción al plazo **no se pueda encadenar**: sin
+     * ella, cada recuperación deja como alias el nombre que se abandona, con
+     * lo que la siguiente vuelta vuelve a ser una recuperación y el plazo no
+     * llega a aplicarse nunca.
+     */
+    private ?\DateTimeImmutable $usernameReclaimedAt = null;
+
     private ?string $passwordHash = null;
 
     private AuthProvider $authProvider;
@@ -348,7 +359,59 @@ class User
 
         $this->username = $username->value();
         $this->usernameChangedAt = $now;
+        $this->usernameReclaimedAt = null;
         $this->touch($now);
+    }
+
+    /**
+     * Recuperar un nombre propio que sigue reservado (`FEAT-USR-034`
+     * `RN-1b`).
+     *
+     * **Esquiva el plazo pero lo renueva**, y las dos mitades importan. Si no
+     * lo esquivara, arrepentirse de un cambio —el caso más previsible de esta
+     * funcionalidad— obligaría a esperar un mes con un nombre que no se
+     * quiere. Si no lo renovara, se podría alternar entre dos nombres
+     * indefinidamente, y cada vuelta rompería los enlaces que el plazo existe
+     * para proteger.
+     *
+     * Que sea un método aparte y no un booleano en `changeUsername()` es
+     * deliberado: un parámetro que desactiva una comprobación de seguridad
+     * acaba pasándose desde donde no debe.
+     */
+    public function reclaimUsername(Username $username, \DateTimeImmutable $now, int $cooldownDays = 30): void
+    {
+        $this->guardNotDeleted();
+
+        // **La excepción no se encadena.** Recuperar deja como alias el
+        // nombre que se abandona, así que sin esto la vuelta siguiente sería
+        // otra recuperación y el plazo no se aplicaría jamás: exactamente el
+        // vaivén que `RN-1b` dice bloquear. Deshacer un cambio es el caso
+        // previsible; deshacer un «deshacer» ya es alternar.
+        if (null !== $this->usernameReclaimedAt) {
+            $availableOn = $this->usernameReclaimedAt->modify(\sprintf('+%d days', $cooldownDays));
+
+            if ($now < $availableOn) {
+                throw UsernameChangedTooRecently::availableOn($availableOn);
+            }
+        }
+
+        $this->username = $username->value();
+        $this->usernameChangedAt = $now;
+        $this->usernameReclaimedAt = $now;
+        $this->touch($now);
+    }
+
+    /**
+     * Cuándo podrá volver a cambiarlo. Es lo que permite desactivar el
+     * formulario **sin fallar primero**.
+     */
+    public function usernameChangeableOn(\DateTimeImmutable $now, int $cooldownDays = 30): \DateTimeImmutable
+    {
+        if (null === $this->usernameChangedAt) {
+            return $now;
+        }
+
+        return $this->usernameChangedAt->modify(\sprintf('+%d days', $cooldownDays));
     }
 
     /**

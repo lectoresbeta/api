@@ -6,6 +6,7 @@ namespace LectoresBeta\User\Account\Application\Service;
 
 use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
+use LectoresBeta\User\Account\Domain\Service\ReservedUsernames;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use LectoresBeta\User\Account\Domain\ValueObject\Username;
 use LectoresBeta\User\Profile\Domain\Repository\UsernameAliasRepository;
@@ -31,6 +32,7 @@ final readonly class UsernameAllocator
     public function __construct(
         private UserRepository $users,
         private UsernameAliasRepository $aliases,
+        private ReservedUsernames $reserved,
         private Clock $clock,
     ) {
     }
@@ -48,9 +50,16 @@ final readonly class UsernameAllocator
         throw new \RuntimeException('Could not allocate a username after 1000 attempts.');
     }
 
+    /**
+     * Reservado cuenta como ocupado (`FEAT-USR-033` `RN-5`). Sin esto,
+     * registrarse con `admin@…` bastaría para llamarse `admin`, que es la
+     * suplantación que la lista existe para evitar — y el sufijo numérico
+     * resuelve el caso sin que nadie se quede sin cuenta.
+     */
     private function isTaken(Username $username): bool
     {
-        return $this->users->usernameIsTaken($username)
+        return $this->reserved->isReserved($username)
+            || $this->users->usernameIsTaken($username)
             || $this->aliases->isHeldAt($username, $this->clock->now());
     }
 }

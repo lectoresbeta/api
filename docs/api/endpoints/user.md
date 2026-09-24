@@ -42,7 +42,7 @@
 | `DELETE /me` | `deleteMyAccount` | Eliminar cuenta | FEAT-USR-013 | BLOCKED |
 | `GET /api/v1/users/{userId}` | `getUserProfile` | Perfil público por identificador | FEAT-USR-014 | **Implementado** |
 | `GET /api/v1/profiles/{username}` | `getProfileByUsername` | Perfil por nombre de usuario o alias | FEAT-USR-035 | **Implementado** |
-| `PUT /me/username` | `changeUsername` | Cambiar el nombre de usuario | FEAT-USR-034 | DRAFT |
+| `PUT /api/v1/me/username` | `changeUsername` | Cambiar el nombre de usuario | FEAT-USR-034 | **Implementado** |
 | `GET /usernames/{username}/availability` | `checkUsernameAvailability` | Comprobar si un nombre está libre | FEAT-USR-033 | DRAFT |
 | — | — | La cabecera del perfil propio la sirve `getMyProfile`, arriba. Le faltan los contadores | FEAT-USR-028 | PARTIAL |
 | `PATCH /me/profile` | `updateMyProfile` | Editar descripción y datos | FEAT-USR-028 | DRAFT |
@@ -500,6 +500,10 @@ que la regla de activación existe para impedir.
 - **El nombre de usuario y la foto no viajan aquí.** Cada uno tiene su endpoint, y no por
   purismo: mezclados, una biografía se quedaría sin guardar porque el nombre de usuario está
   ocupado o porque falló una subida.
+- El `GET` devuelve además **`usernameChangeableOn`**: desde cuándo se puede volver a cambiar
+  el nombre de usuario (`FEAT-USR-034`). Va en la lectura que abre la pantalla para que el
+  campo pueda salir ya desactivado; enterarse con un `429` después de escribir un nombre es
+  enterarse tarde.
 
 ### Errores específicos
 
@@ -515,3 +519,74 @@ quiere saber qué cambió sino con qué quedarse, porque el nombre y el avatar a
 en el muro, en los comentarios y en el catálogo.
 
 Nunca el correo ni la fecha de nacimiento.
+
+---
+
+## `PUT /api/v1/me/username`
+
+**`operationId`:** `changeUsername` · **Funcionalidad:**
+[`FEAT-USR-034`](../../features/user/FEAT-USR-034-change-username.md)
+
+### Propósito
+
+Cambiar el nombre de usuario, **una vez cada 30 días**. Lo que de verdad hace la operación no
+es asignar el nombre nuevo sino **reservar el anterior**: el nombre que se deja no queda
+libre, se convierte en alias de la cuenta durante 30 días.
+
+Esa reserva mantiene vivos los enlaces ya compartidos, sí, pero sobre todo impide que otra
+persona ocupe el nombre y **herede el tráfico dirigido a alguien distinto**. Es también la
+razón del plazo: cada cambio bloquea un nombre, así que sin límite una sola cuenta podría
+retener tantos como quisiera.
+
+Tiene endpoint propio aunque la pantalla lo enseñe junto al nombre y la biografía
+([`settings.md`](../../ui/settings.md)): un fallo aquí no debe llevarse por delante lo que sí
+se podía guardar.
+
+### Autorización
+
+Solo el titular, y **con la cuenta activada**: el nombre de usuario aparece en cada comentario
+y en cada URL.
+
+### Reglas aplicadas
+
+- El nombre nuevo debe estar **libre**: ni en uso ni retenido por un alias vigente, sea de
+  quien sea y sea cual sea su motivo.
+- **Recuperar un nombre propio que siga reservado se permite aunque no hayan pasado los 30
+  días**, y renueva el plazo. Al recuperarlo su fila de alias desaparece y el nombre que se
+  abandona ocupa su lugar: sigue habiendo un solo alias vigente.
+- El plazo que la recuperación renueva vale para **cualquier** cambio, **incluida otra
+  recuperación**. Sin esta segunda mitad se podría alternar entre dos nombres
+  indefinidamente, rompiendo en cada vuelta los enlaces que el plazo protege.
+- Pedir el nombre que ya se tiene **no es un cambio**: se acepta sin efecto, sin crear alias y
+  sin gastar el cupo.
+- El formato es el mismo que el del nombre asignado automáticamente
+  ([`FEAT-USR-033`](../../features/user/FEAT-USR-033-username-assignment.md)), lista de
+  reservados incluida.
+- El nombre de usuario **no es identidad**: el `UserId` no cambia y ninguna referencia interna
+  lo usa.
+
+### Respuesta
+
+`username`, `previousUsername`, `aliasExpiresAt` y `changeableOn`. Los dos del medio son nulos
+cuando no ha habido cambio; **`changeableOn` va siempre**, para que el formulario pueda
+desactivarse sin fallar primero.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `USERNAME_TAKEN` | 409 | El nombre está en uso **o** retenido por un alias vigente |
+| `USERNAME_RESERVED` | 422 | Es uno de los nombres que nadie puede tener |
+| `INVALID_VALUE` | 422 | El formato no encaja |
+| `USERNAME_CHANGE_TOO_SOON` | 429 | Aún no han pasado 30 días. Lleva **`availableOn`** |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | La cuenta no está activada |
+
+Que el nombre en uso y el retenido por un alias devuelvan **el mismo código** es deliberado:
+distinguirlos contaría que alguien tuvo ese nombre y lo dejó hace menos de un mes, que es
+información sobre una persona y no sobre la disponibilidad de una palabra. El reservado sí se
+distingue, porque ahí no hay nadie a quien proteger.
+
+### Efectos
+
+Publica `UsernameChanged` con los dos nombres y la caducidad del alias. **Recuperar publica el
+mismo hecho**: para quien lo consume es un cambio más.

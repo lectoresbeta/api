@@ -92,3 +92,12 @@ updateMyProfile:
     path: /api/v1/me/profile
     controller: LectoresBeta\User\Profile\Infrastructure\Controller\UpdateMyProfileController::__invoke
     methods: [PATCH]
+
+# El nombre de usuario (FEAT-USR-034). Endpoint propio aunque comparta
+# pantalla: bloquea 30 días y reserva el nombre anterior, así que un fallo
+# suyo no debe llevarse por delante el resto del formulario.
+
+changeUsername:
+    path: /api/v1/me/username
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\ChangeUsernameController::__invoke
+    methods: [PUT]

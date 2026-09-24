@@ -36,6 +36,7 @@
         <field name="email" type="string" length="254"/>
         <field name="username" type="string" length="30"/>
         <field name="usernameChangedAt" column="username_changed_at" type="datetime_immutable" nullable="true"/>
+        <field name="usernameReclaimedAt" column="username_reclaimed_at" type="datetime_immutable" nullable="true"/>
 
         <field name="passwordHash" column="password_hash" type="string" length="255" nullable="true"/>
         <field name="authProvider" column="auth_provider" type="string" length="16"

@@ -42,4 +42,18 @@ enum FailureKind
 
     /** It existed and is gone for good. */
     case GONE;
+
+    /**
+     * Allowed, and **not yet**.
+     *
+     * Distinct from `CONFLICT`, where the caller's assumption about the state
+     * is wrong: here it is right and the answer is «come back later». Telling
+     * somebody their username change conflicts with something would send them
+     * looking for what, when all they have to do is wait.
+     *
+     * A failure of this kind should say **when** through `FailureDetails`:
+     * a client that cannot disable the form until the date arrives will keep
+     * trying, which is the behaviour the limit exists to stop.
+     */
+    case RATE_LIMITED;
 }

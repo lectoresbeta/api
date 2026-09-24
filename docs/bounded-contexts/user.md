@@ -69,7 +69,7 @@ preferencias y presencia pública como autor.
 | Nombre | Reglas |
 |---|---|
 | `Email` | Formato válido, único, normalizado en minúsculas |
-| `Username` | **Único** en toda la plataforma. `a–z`, `0–9` y `_`, de 3 a 30 caracteres, en minúsculas. Se asigna solo desde el email; editable una vez cada 30 días. **No es identidad**: esa es `UserId` |
+| `Username` | **Único** en toda la plataforma. `a–z`, `0–9` y `_`, de 3 a 30 caracteres, en minúsculas. Se asigna solo desde el email; editable una vez cada 30 días, y hay una lista corta de nombres reservados que nadie puede tener. **No es identidad**: esa es `UserId` |
 | `HashedPassword` | ≥8 caracteres, una mayúscula, un número y un carácter especial. Nunca se expone ni se registra en logs |
 | `Name` | **Dato público.** Nombre visible de la persona. No es el identificador técnico: ese sigue siendo `UserId` |
 | `Description` | Dato público. Texto libre saneado |
@@ -92,7 +92,7 @@ preferencias y presencia pública como autor.
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` (+5 al invitador) |
 | `UserDeleted` | Se elimina la cuenta | Todos. **Cada contexto anonimiza lo suyo**: `User` no borra filas ajenas. En `User` convierte su nombre de usuario en alias bloqueado durante 30 días |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` (read models) |
-| `UsernameChanged` | El usuario cambia su nombre de usuario | `Community` (read models que muestran el `@`) |
+| `UsernameChanged` | El usuario cambia su nombre de usuario, o recupera uno suyo | `Community` (read models que muestran el `@`) |
 | `EmailChangeRequested` | Se pide cambiar el correo | `Notification` (confirmación al nuevo, **aviso al anterior**) |
 | `EmailChanged` | Se confirma el cambio | `Notification`. Cierra las demás sesiones |
 | `PasswordChanged` | Se cambia la contraseña | `Notification` (aviso de seguridad). **Nunca lleva la contraseña ni su hash** |

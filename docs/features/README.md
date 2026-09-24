@@ -89,8 +89,8 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-030 | Premios y reconocimientos del autor | Writer | PENDING | TODO | P3 | — *(sin diseño)* |
 | FEAT-USR-031 | ~~Nivel del usuario~~ | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-USR-032 | Compartir el perfil | User | PENDING | TODO | P3 | — |
-| FEAT-USR-033 | Nombre de usuario — formato, asignación automática y unicidad | Guest, User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-033-username-assignment.md) |
-| FEAT-USR-034 | Cambiar el nombre de usuario y alias temporal | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-034-change-username.md) |
+| FEAT-USR-033 | Nombre de usuario — formato, asignación automática y unicidad | Guest, User | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-033-username-assignment.md) |
+| FEAT-USR-034 | Cambiar el nombre de usuario y alias temporal | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-034-change-username.md) |
 | FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |
 | FEAT-USR-036 | Purga programada de alias caducados | — (sistema) | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-036-purge-expired-aliases.md) |
 | FEAT-USR-037 | Gestionar la foto de perfil — subir, editar y eliminar | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |

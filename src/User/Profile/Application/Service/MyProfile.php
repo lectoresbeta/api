@@ -41,7 +41,7 @@ final readonly class MyProfile
         return $user;
     }
 
-    public static function asView(User $user): EditableProfile
+    public static function asView(User $user, \DateTimeImmutable $now): EditableProfile
     {
         return new EditableProfile(
             $user->id()->value(),
@@ -50,6 +50,7 @@ final readonly class MyProfile
             $user->description(),
             $user->avatarUrl(),
             $user->coverUrl(),
+            $user->usernameChangeableOn($now),
         );
     }
 }

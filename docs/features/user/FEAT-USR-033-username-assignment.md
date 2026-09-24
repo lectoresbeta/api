@@ -5,7 +5,7 @@ context: User
 concept: Profile
 actors: [Guest, User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - decision:0005
@@ -109,17 +109,17 @@ models de tarjetas de autor.
 
 ## Criterios de aceptación
 
-- [ ] Registrarse con `pabloblanco@ejemplo.com` asigna el nombre `pabloblanco`.
-- [ ] Si ya existe, asigna `pabloblanco_1`; si también, `pabloblanco_2`.
-- [ ] Un email con caracteres no admitidos produce un nombre normalizado y válido.
-- [ ] Un email cuyo local sea muy corto produce un nombre de al menos 3 caracteres.
-- [ ] `Pablo` y `pablo` se consideran el mismo nombre.
-- [ ] No se asigna ningún nombre de la lista de reservados.
-- [ ] Dos altas simultáneas con el mismo email local producen nombres distintos.
-- [ ] Un nombre ocupado por un **alias vigente** no está disponible.
-- [ ] Un nombre cuyo **alias ha caducado** está disponible, aunque la fila no se haya borrado.
-- [ ] El nombre de una cuenta eliminada hace menos de 30 días **no** está disponible.
-- [ ] `UserRegistered` incluye el nombre asignado.
+- [x] Registrarse con `pabloblanco@ejemplo.com` asigna el nombre `pabloblanco`.
+- [x] Si ya existe, asigna `pabloblanco_1`; si también, `pabloblanco_2`.
+- [x] Un email con caracteres no admitidos produce un nombre normalizado y válido.
+- [x] Un email cuyo local sea muy corto produce un nombre de al menos 3 caracteres.
+- [x] `Pablo` y `pablo` se consideran el mismo nombre.
+- [x] No se asigna ningún nombre de la lista de reservados.
+- [ ] Dos altas simultáneas con el mismo email local producen nombres distintos. *Lo sostiene el índice único, no una prueba: reproducir la carrera pide dos conexiones a la vez.*
+- [x] Un nombre ocupado por un **alias vigente** no está disponible.
+- [x] Un nombre cuyo **alias ha caducado** está disponible, aunque la fila no se haya borrado.
+- [x] El nombre de una cuenta eliminada hace menos de 30 días **no** está disponible. *El alias bloquea sea cual sea su motivo; lo que no existe todavía es el borrado que lo crea (`FEAT-USR-013`).*
+- [x] `UserRegistered` incluye el nombre asignado.
 
 ## Preguntas abiertas
 
@@ -141,4 +141,23 @@ de baja. Conviene tenerlo presente al especificar `FEAT-USR-013`.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-24). La asignación automática funciona desde el
+registro: normalización, sufijo numérico, unicidad frente a nombres en uso **y frente a alias
+vigentes**, que es la parte que ninguna restricción de base de datos puede cubrir porque
+abarca dos tablas.
+
+La lista de reservados (`RN-5`) se aplica desde `FEAT-USR-034`, y también al asignar: sin eso,
+registrarse con `soporte@…` bastaba para llamarse `soporte`, que es exactamente la
+suplantación que la lista existe para evitar. El sufijo resuelve el caso sin dejar a nadie sin
+cuenta.
+
+**Falta `GET /usernames/{username}/availability`.** Hoy no hace falta: el nombre no se elige
+al registrarse, y al cambiarlo la respuesta del cambio ya distingue ocupado de reservado. Su
+día habrá que decidir antes `N-4`, porque un endpoint de disponibilidad sin límite de
+frecuencia permite enumerar nombres.
+
+`N-3` sigue abierta: la lista actual es corta y está formada por lo que alguien podría
+confundir con una voz oficial —la plataforma, quien atiende, el correo del sistema, y las
+palabras que en una interfaz se leen como un estado y no como alguien—. Se compara **exacta y
+en minúsculas**: `administradora` es un nombre legítimo, `admin` no, y una comparación por
+prefijo secuestraría nombres reales.

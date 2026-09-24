@@ -22,6 +22,21 @@ Todas las respuestas de error usan la misma estructura, basada en RFC 7807:
 - `errors` solo aparece en errores de validación.
 - `detail` es para personas y puede cambiar sin ser un cambio incompatible.
 
+### Miembros de extensión
+
+Un error puede llevar **campos propios al nivel superior**, que es lo que RFC 9457 llama
+miembros de extensión. Se usan cuando el cliente necesita **un dato, no una frase**: un texto
+que diga «inténtalo dentro de tres semanas» obliga a leerlo a una persona, y lo que hace falta
+es que el formulario se desactive solo.
+
+El primero es `availableOn` en `USERNAME_CHANGE_TOO_SOON` (`FEAT-USR-034`), y es la razón de
+que ese caso sea un `429` y no un conflicto: un cliente que no pueda saber la fecha dejará el
+formulario activo y permitirá reintentar mañana, y pasado — justo lo que el límite evita.
+
+Dos reglas: **nunca pisan los campos del formato** —`type`, `title`, `status`, `code`,
+`detail`, `errors`— y **nunca llevan nada que el error no pueda contar ya**. Un miembro de
+extensión es tan público como el `detail` que lo acompaña.
+
 ## Códigos HTTP
 
 | Código | Cuándo |
@@ -100,7 +115,9 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `UNKNOWN_GENRE` | 422 | Género no presente en el catálogo |
 | `ONBOARDING_STEP_OUT_OF_ORDER` | 409 | Se intenta un paso del onboarding sin completar el anterior |
 | `EMAIL_ALREADY_REGISTERED` | 409 | El email ya tiene cuenta (ver `RN-8` de `FEAT-USR-001`) |
-| `USERNAME_TAKEN` | 422 | Nombre de usuario ocupado |
+| `USERNAME_TAKEN` | 409 | Nombre de usuario ocupado: en uso **o** retenido por un alias vigente, que responden igual a propósito (`FEAT-USR-034`) |
+| `USERNAME_RESERVED` | 422 | Nombre de usuario de la lista de reservados. Se distingue del ocupado porque ahí no hay nadie a quien proteger |
+| `USERNAME_CHANGE_TOO_SOON` | 429 | El nombre de usuario se cambió hace menos de 30 días. Lleva `availableOn` |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |

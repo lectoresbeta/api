@@ -26,6 +26,7 @@ final readonly class EditableProfileBody
             'description' => $profile->description,
             'avatarUrl' => $profile->avatarUrl,
             'coverUrl' => $profile->coverUrl,
+            'usernameChangeableOn' => $profile->usernameChangeableOn->format(\DATE_ATOM),
         ];
     }
 }

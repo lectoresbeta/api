@@ -16,6 +16,10 @@ namespace LectoresBeta\User\Profile\Application\DTO;
  * pantalla lo hace, pero **se cambia por su propio endpoint**: sus reglas
  * —una vez cada 30 días, alias del anterior— no son negociables por compartir
  * formulario.
+ *
+ * Y con él viaja `usernameChangeableOn` (`FEAT-USR-034`): la pantalla que
+ * enseña el campo necesita saber si puede dejar escribir en él, y enterarse
+ * con un `429` es enterarse tarde.
  */
 final readonly class EditableProfile
 {
@@ -26,6 +30,7 @@ final readonly class EditableProfile
         public ?string $description,
         public ?string $avatarUrl,
         public ?string $coverUrl,
+        public \DateTimeImmutable $usernameChangeableOn,
     ) {
     }
 }

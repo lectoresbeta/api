@@ -80,7 +80,7 @@ final readonly class UpdateMyProfileHandler
             $now,
         ));
 
-        return MyProfile::asView($user);
+        return MyProfile::asView($user, $now);
     }
 
     /**

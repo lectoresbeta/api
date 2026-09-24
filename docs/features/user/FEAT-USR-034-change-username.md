@@ -5,7 +5,7 @@ context: User
 concept: Profile
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - decision:0005
@@ -90,7 +90,8 @@ Con esta regla el arrepentimiento está cubierto y el vaivén no.
 - `RN-1` Solo se permite **un cambio cada 30 días**, contados desde el último cambio.
 - `RN-1b` **Excepción:** recuperar un alias propio vigente se permite aunque no hayan pasado
   los 30 días. La recuperación renueva el plazo, de modo que después habrá que esperar otros
-  30 días para cualquier cambio.
+  30 días para cualquier cambio, **incluida otra recuperación**: la excepción no se encadena
+  (ver *La excepción no se encadena*, más abajo).
 - `RN-2` El nombre nuevo debe estar libre según `FEAT-USR-033` `RN-1`: ni en uso ni ocupado
   por un alias vigente.
 - `RN-3` Debe cumplir el mismo formato y las mismas restricciones que el asignado
@@ -202,8 +203,11 @@ fila del usuario.
 |---|---|---|
 | Cambiar nombre de usuario | `PUT /me/username` | `changeUsername` |
 
-`GET /me` y `GET /me/context` devuelven además cuándo podrá volver a cambiarlo, para que el
-formulario pueda desactivarse sin tener que fallar primero.
+La respuesta lleva siempre `changeableOn`, también cuando no ha habido cambio.
+
+Y `GET /me/profile` —la lectura que abre «Configuración › Perfil»— devuelve
+`usernameChangeableOn`, para que el campo pueda salir ya desactivado sin tener que fallar
+primero. `GET /me/context` (`FEAT-USR-027`) lo añadirá cuando exista lo que hoy no existe.
 
 ## Eventos
 
@@ -215,7 +219,7 @@ formulario pueda desactivarse sin tener que fallar primero.
 
 | Tabla | Contenido |
 |---|---|
-| `user` | `username`, `username_changed_at` |
+| `user` | `username`, `username_changed_at`, `username_reclaimed_at` |
 | `username_alias` | `username`, `user_id` (anulable), `reason`, `created_at`, `expires_at` |
 
 Al eliminar una cuenta se **crea** un alias con su nombre y `reason = ACCOUNT_DELETED`. Es un
@@ -225,40 +229,45 @@ demás cuando caducan: para él no hay diferencia.
 Índices: único sobre `username_alias(username)`, e índice sobre `expires_at` para la
 resolución y para el comando de purga.
 
+`username_reclaimed_at` guarda cuándo se recuperó por última vez un nombre propio, y es nula
+cuando el último cambio fue uno normal. Es lo que impide encadenar la excepción de `RN-1b`:
+sin ella el vaivén queda abierto, porque cada recuperación deja un alias que convierte la
+vuelta siguiente en otra recuperación.
+
 ## Criterios de aceptación
 
-- [ ] Cambiar el nombre asigna el nuevo y crea el alias con el anterior.
-- [ ] El alias caduca 30 días después del cambio.
-- [ ] Durante ese mes, el nombre anterior resuelve al mismo perfil.
-- [ ] Durante ese mes, nadie más puede registrar ese nombre.
-- [ ] Pasado el mes, el nombre anterior deja de resolver.
-- [ ] Pasado el mes, el nombre queda disponible aunque la fila del alias no se haya borrado.
-- [ ] Un segundo cambio antes de 30 días se rechaza con `429` e indica la fecha.
-- [ ] Un nombre ocupado por alias devuelve el mismo error que uno en uso.
-- [ ] El cambio y la creación del alias son atómicos.
-- [ ] Tras el cambio, el `UserId` es el mismo y todas las referencias internas siguen válidas.
-- [ ] Se publica `UsernameChanged` con el nombre anterior, el nuevo y la caducidad.
-- [ ] Recuperar un alias propio vigente funciona aunque no hayan pasado 30 días.
-- [ ] Al recuperarlo, su fila de alias desaparece y el nombre abandonado pasa a ser alias.
-- [ ] Tras recuperar, el usuario sigue teniendo un solo alias vigente.
-- [ ] Tras recuperar, hay que esperar otros 30 días para volver a cambiar.
-- [ ] Alternar entre dos nombres de forma repetida queda bloqueado por el criterio anterior.
-- [ ] Intentar recuperar el alias de otra persona devuelve `409`.
-- [ ] Un alias propio ya caducado no da derecho a saltarse el límite.
-- [ ] Al eliminar la cuenta, su nombre de usuario pasa a ser alias y **no queda disponible**.
-- [ ] Ese alias caduca 30 días después y solo entonces el nombre vuelve a estar libre.
-- [ ] Durante ese mes, resolver ese nombre devuelve `404`, no el perfil de la cuenta borrada.
-- [ ] Durante ese mes, nadie puede registrar ese nombre.
-- [ ] Los alias que la cuenta ya tuviera conservan su propia caducidad.
-- [ ] El alias de una cuenta eliminada funciona aunque no quede fila de usuario.
-- [ ] El comando de purga retira estos alias igual que los demás.
+- [x] Cambiar el nombre asigna el nuevo y crea el alias con el anterior.
+- [x] El alias caduca 30 días después del cambio.
+- [x] Durante ese mes, el nombre anterior resuelve al mismo perfil.
+- [x] Durante ese mes, nadie más puede registrar ese nombre.
+- [x] Pasado el mes, el nombre anterior deja de resolver.
+- [x] Pasado el mes, el nombre queda disponible aunque la fila del alias no se haya borrado.
+- [x] Un segundo cambio antes de 30 días se rechaza con `429` e indica la fecha.
+- [x] Un nombre ocupado por alias devuelve el mismo error que uno en uso.
+- [x] El cambio y la creación del alias son atómicos. *Una sola transacción; no hay prueba que interrumpa su mitad, que exigiría un fallo provocado dentro de ella.*
+- [x] Tras el cambio, el `UserId` es el mismo y todas las referencias internas siguen válidas.
+- [x] Se publica `UsernameChanged` con el nombre anterior, el nuevo y la caducidad.
+- [x] Recuperar un alias propio vigente funciona aunque no hayan pasado 30 días.
+- [x] Al recuperarlo, su fila de alias desaparece y el nombre abandonado pasa a ser alias.
+- [x] Tras recuperar, el usuario sigue teniendo un solo alias vigente.
+- [x] Tras recuperar, hay que esperar otros 30 días para volver a cambiar.
+- [x] Alternar entre dos nombres de forma repetida queda bloqueado por el criterio anterior. *No salía gratis: ver «La excepción no se encadena».*
+- [x] Intentar recuperar el alias de otra persona devuelve `409`.
+- [x] Un alias propio ya caducado no da derecho a saltarse el límite.
+- [ ] Al eliminar la cuenta, su nombre de usuario pasa a ser alias y **no queda disponible**. *`FEAT-USR-013` está `BLOCKED`: no hay borrado de cuenta que pueda crear ese alias.*
+- [ ] Ese alias caduca 30 días después y solo entonces el nombre vuelve a estar libre. *Lo mismo.*
+- [x] Durante ese mes, resolver ese nombre devuelve `404`, no el perfil de la cuenta borrada. *El modelo lo sostiene y se prueba en `FEAT-USR-035`; lo que falta es el borrado que crea el alias, no la regla.*
+- [x] Durante ese mes, nadie puede registrar ese nombre. *Igual: un alias con `reason = ACCOUNT_DELETED` bloquea como cualquier otro, tanto al asignar un nombre nuevo como al cambiarlo.*
+- [ ] Los alias que la cuenta ya tuviera conservan su propia caducidad. *Depende del borrado (`N-19`).*
+- [x] El alias de una cuenta eliminada funciona aunque no quede fila de usuario. *`user_id` es anulable y nada lo sigue.*
+- [ ] El comando de purga retira estos alias igual que los demás. *`FEAT-USR-036` no existe todavía. Nada depende de él: la caducidad se comprueba al mirar, no al borrar.*
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
 | N-6 | ¿Puede el usuario recuperar su propio alias sin esperar los 30 días? | **Resuelta:** sí, mientras el alias siga vigente. Ver `RN-1b` |
-| N-7 | ¿«Una vez al mes» son 30 días corridos o mes natural? | Se asume **30 días**; confirmar |
+| N-7 | ¿«Una vez al mes» son 30 días corridos o mes natural? | **Resuelta:** 30 días corridos, y la misma cuenta para el alias. Dos plazos distintos dejarían huecos en los que un nombre no está ni reservado ni disponible |
 | N-8 | ¿Se avisa al usuario de que su nombre antiguo caducará? | Podría querer recuperarlo |
 | N-9 | ¿Qué ocurre con el nombre al eliminar la cuenta? | **Resuelta:** se conserva bloqueado 30 días como alias (`RN-13`) |
 | N-17 | ¿Los enlaces antiguos pueden acabar apuntando a otra persona? | **Resuelta:** no durante el mes siguiente al borrado. Pasado ese plazo, sí |
@@ -275,4 +284,58 @@ predecible, a costa de bloquear nombres algo más de tiempo.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-24). `PUT /me/username` entero: cambio, reserva del
+nombre anterior, recuperación, plazo y evento. Una columna nueva —`username_reclaimed_at`— y
+su migración; el resto del modelo ya estaba.
+
+Falta **la mitad que depende del borrado de cuenta** (`RN-13`): `FEAT-USR-013` está `BLOCKED`,
+así que nada crea todavía un alias con `reason = ACCOUNT_DELETED`. El modelo lo admite desde
+el principio y `FEAT-USR-035` ya prueba que un alias así bloquea y no resuelve, de modo que
+cuando exista el borrado no habrá que tocar esto: solo crear la fila.
+
+### La excepción no se encadena
+
+Es lo que descubrió la prueba, y el hueco era real. `RN-1b` dice que recuperar un alias propio
+esquiva el plazo, y eso, implementado literalmente, **no bloquea el vaivén que la propia
+ficha dice bloquear**: cada recuperación deja como alias el nombre que se abandona, así que
+la vuelta siguiente vuelve a ser una recuperación, esquiva el plazo otra vez, y así
+indefinidamente.
+
+La regla que faltaba: **el plazo que la recuperación renueva vale para cualquier cambio,
+incluida otra recuperación.** Deshacer un cambio es el caso previsible que la excepción
+existe para cubrir; deshacer un «deshacer» ya es alternar.
+
+Para saberlo hace falta recordar si el último cambio fue una recuperación, y de ahí
+`username_reclaimed_at`: se escribe al recuperar, se borra al cambiar de forma normal.
+Conviene que sea un dato y no una deducción — la fecha del alias y la del cambio coinciden en
+los dos casos, así que no hay forma de distinguirlos mirando lo que ya había.
+
+### Recuperar es un método aparte, no un parámetro
+
+`reclaimUsername()` no es `changeUsername($nombre, $ahora, saltarPlazo: true)`. Un parámetro
+que desactiva una comprobación acaba pasándose desde donde no debe, y aquí lo que desactiva
+es el único límite que impide retener nombres ajenos.
+
+### Un alias y un nombre en uso responden lo mismo
+
+`409 USERNAME_TAKEN` en los dos casos, a propósito. Distinguirlos —«ese nombre está
+reservado»— contaría que alguien lo tuvo y lo dejó hace menos de un mes, que es información
+sobre una persona concreta y no sobre la disponibilidad de una palabra.
+
+Un nombre **reservado** sí se distingue, con `422 USERNAME_RESERVED`: ahí no hay nadie a
+quien proteger, y quien lo pide merece saber que no es cuestión de esperar.
+
+### Pedir el nombre que ya se tiene no gasta el cupo
+
+Se acepta sin efecto y sin crear ningún alias. La pantalla comparte el «Guardar» con el resto
+de la pestaña, así que guardar dos veces sin tocar este campo es lo normal, y no puede costar
+treinta días.
+
+### `429` con la fecha, y la fecha también antes de fallar
+
+`USERNAME_CHANGE_TOO_SOON` lleva `availableOn` como miembro de extensión de RFC 9457, que es
+lo que justifica el `429` frente a un conflicto: un cliente que no pueda saber la fecha dejará
+el formulario activo y permitirá reintentar mañana, y pasado.
+
+Mejor aún es no fallar: `GET /me/profile` devuelve `usernameChangeableOn`, de modo que el
+campo puede salir desactivado desde que se abre la pantalla.
