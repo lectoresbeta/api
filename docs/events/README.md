@@ -45,7 +45,7 @@ aplicar el efecto.
 | `ActivationEmailRequested` | Se pide reenviar el correo de activación | `Notification` | `userId` |
 | `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros | `Community` | `userId`, `genres` |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models | `userId`, `completedAt` |
-| `UserProfileUpdated` | Cambian datos públicos | `Community` | `userId`, campos modificados |
+| `UserProfileUpdated` | Cambian datos públicos | `Community` | `userId`, `name`, `description`, `updatedAt`. **Los valores nuevos, no un diff**: quien lo consume quiere con qué quedarse |
 | `UsernameChanged` | El usuario cambia su nombre de usuario | `Community` (read models con el `@`) | `userId`, `previousUsername`, `newUsername`, `aliasExpiresAt` |
 | `EmailChangeRequested` | Se pide cambiar el correo | `Notification` | `userId`, `requestId`, `expiresAt` |
 | `EmailChanged` | Se confirma el cambio de correo | `Notification`, read models | `userId`, `changedAt` |

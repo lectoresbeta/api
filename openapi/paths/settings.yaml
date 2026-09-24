@@ -130,3 +130,130 @@ privacySettings:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+EditableProfile:
+  type: object
+  required: [userId, username]
+  properties:
+    userId:
+      type: string
+      format: uuid
+    username:
+      type: string
+      description: |
+        **De solo lectura aquí.** Se enseña junto a los demás campos porque la
+        pantalla lo hace, y se cambia por su propio endpoint: sus reglas —una
+        vez cada 30 días, y el nombre anterior reservado como alias— no son
+        negociables por compartir formulario.
+    name:
+      type: [string, 'null']
+      maxLength: 80
+      description: El nombre **público**. No es único y no es identidad.
+    description:
+      type: [string, 'null']
+      maxLength: 300
+      description: |
+        La biografía, y es **el mismo campo** que la descripción que se edita
+        en línea bajo la foto del perfil. Un solo texto con dos puntos de
+        edición: si uno admitiera más que el otro, alguien escribiría algo que
+        después no puede guardar.
+    avatarUrl:
+      type: [string, 'null']
+    coverUrl:
+      type: [string, 'null']
+
+myProfile:
+  get:
+    tags: [User]
+    operationId: getMyProfile
+    summary: Mi perfil editable
+    description: |
+      Lo que «Configuración › Perfil» necesita para abrirse.
+
+      No lleva correo ni fecha de nacimiento: el primero se cambia por su
+      propio camino y la segunda no se cambia, y mezclarlos haría de una
+      pantalla de presentación una pantalla de seguridad.
+    responses:
+      '200':
+        description: Mi perfil.
+        content:
+          application/json:
+            schema:
+              $ref: '#/EditableProfile'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  patch:
+    tags: [User]
+    operationId: updateMyProfile
+    summary: Cambiar mi nombre o mi biografía
+    description: |
+      `PATCH` y no `PUT` porque el mismo recurso se edita **campo a campo**
+      desde el perfil y **en bloque** desde Configuración. Un `PUT` obligaría
+      a la edición en línea a reenviar campos que no está tocando, que es como
+      se borra una biografía sin querer.
+
+      **Lo que no se envía se queda como estaba; enviar `description: null` la
+      borra.** Son cosas distintas y el cuerpo las distingue por la presencia
+      de la clave, no por su valor.
+
+      **El nombre de usuario y la foto no viajan aquí**, y no por purismo:
+      mezclados, una biografía se quedaría sin guardar porque el nombre de
+      usuario que alguien quería está ocupado, o porque falló una subida. Un
+      solo «Guardar» en la interfaz no obliga a una sola llamada.
+
+      **Exige cuenta activada.** La biografía es texto libre que aparece en un
+      perfil público, y dejar publicarlo a una cuenta cuyo correo nadie ha
+      verificado es justo lo que la regla de activación existe para impedir.
+      Leer el propio perfil sí se puede sin activar: es solo lectura.
+
+      La biografía se guarda **como texto plano**: el marcado se retira en vez
+      de rechazarse, porque lo que hay que garantizar es que no sobreviva nada
+      que un cliente pueda interpretar. La respuesta devuelve lo que ha
+      quedado guardado, que no siempre es lo que se escribió.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                maxLength: 80
+                description: |
+                  No puede quedar vacío: es lo que identifica a la persona en
+                  toda la interfaz. **No enviarlo** lo deja como estaba, que
+                  es distinto de enviarlo vacío.
+              description:
+                type: [string, 'null']
+                maxLength: 300
+    responses:
+      '200':
+        description: |
+          El perfil **tal y como ha quedado**, no tal y como se envió: la
+          biografía puede haber perdido marcado, y verlo ahora evita
+          descubrirlo más tarde y por sorpresa.
+        content:
+          application/json:
+            schema:
+              $ref: '#/EditableProfile'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: INVALID_VALUE`. El nombre enviado vacío o de más de 80
+          caracteres, o una biografía de más de 300 **una vez retirado el
+          marcado** — contar las etiquetas contra el límite castigaría a quien
+          pega desde un procesador de textos por algo que ni siquiera se
+          guarda.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

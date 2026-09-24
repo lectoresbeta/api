@@ -26,8 +26,8 @@
 | `GET /me/legal-acceptances` | `getMyLegalAcceptances` | Qué aceptó el usuario y cuándo | FEAT-USR-024 | DRAFT |
 | `GET /me/context` | `getSessionContext` | Contexto de sesión para el layout | FEAT-USR-027 | DRAFT |
 | `GET /me` | `getCurrentUser` | Datos de la cuenta propia | FEAT-USR-008 | PENDING |
-| `GET /me/profile` | `getMyProfile` | Perfil editable: nombre, biografía, foto | FEAT-USR-008 | DRAFT |
-| `PUT /me/profile` | `updateMyProfile` | Editar nombre y biografía | FEAT-USR-008 | DRAFT |
+| `GET /api/v1/me/profile` | `getMyProfile` | Perfil editable: nombre, biografía, foto | FEAT-USR-008 | **Implementado** |
+| `PATCH /api/v1/me/profile` | `updateMyProfile` | Editar nombre y biografía | FEAT-USR-008 | **Implementado** |
 | `PATCH /me` | `updateCurrentUser` | Editar datos personales | FEAT-USR-008 | PENDING |
 | `POST /me/email-change` | `requestEmailChange` | Solicitar cambio de correo | FEAT-USR-040 | DRAFT |
 | `POST /me/email-change/confirm` | `confirmEmailChange` | Confirmarlo desde el correo nuevo | FEAT-USR-040 | DRAFT |
@@ -44,7 +44,7 @@
 | `GET /api/v1/profiles/{username}` | `getProfileByUsername` | Perfil por nombre de usuario o alias | FEAT-USR-035 | **Implementado** |
 | `PUT /me/username` | `changeUsername` | Cambiar el nombre de usuario | FEAT-USR-034 | DRAFT |
 | `GET /usernames/{username}/availability` | `checkUsernameAvailability` | Comprobar si un nombre está libre | FEAT-USR-033 | DRAFT |
-| `GET /me/profile` | `getMyProfile` | Cabecera del perfil propio | FEAT-USR-028 | DRAFT |
+| — | — | La cabecera del perfil propio la sirve `getMyProfile`, arriba. Le faltan los contadores | FEAT-USR-028 | PARTIAL |
 | `PATCH /me/profile` | `updateMyProfile` | Editar descripción y datos | FEAT-USR-028 | DRAFT |
 | `PUT /me/profile/avatar` | `updateAvatar` | Subir o reencuadrar la foto de perfil | FEAT-USR-037 | DRAFT |
 | `DELETE /me/profile/avatar` | `deleteAvatar` | Eliminar la foto de perfil | FEAT-USR-037 | DRAFT |
@@ -464,3 +464,54 @@ efecto.
 
 Contadores y estado de la relación —si le sigo, si me sigue, si hay bloqueo—, que son de
 `Community`. Y las pestañas, que se piden aparte y paginadas.
+
+
+---
+
+## `GET` y `PATCH /api/v1/me/profile`
+
+**`operationId`:** `getMyProfile`, `updateMyProfile` · **Funcionalidad:**
+[`FEAT-USR-008`](../../features/user/FEAT-USR-008-edit-profile.md)
+
+### Propósito
+
+El nombre y la biografía que una persona muestra de sí misma. No el correo ni la contraseña
+—son operaciones de seguridad y tienen su propia pantalla— ni la fecha de nacimiento.
+
+### Autorización
+
+Solo el titular. El `PATCH` **exige cuenta activada**; el `GET` no, porque es solo lectura y
+la pantalla tiene que poder abrirse para enseñar el botón de activar.
+
+Que escribir exija activación es una decisión, no una herencia: la biografía es texto libre
+que aparece en un perfil público, y dejar publicarlo a una cuenta sin verificar es justo lo
+que la regla de activación existe para impedir.
+
+### Reglas aplicadas
+
+- `PATCH` y no `PUT`: el mismo recurso se edita campo a campo desde el perfil y en bloque
+  desde Configuración. **Lo que no se envía se queda como estaba; `description: null` la
+  borra**, y la diferencia la marca la presencia de la clave, no su valor.
+- El nombre **no puede quedar vacío**: es lo que identifica a la persona en toda la interfaz.
+  Hasta 80 caracteres, y no tiene por qué ser único.
+- La biografía admite **300 caracteres**, medidos **después** de retirar el marcado.
+- La biografía se guarda como **texto plano**. El marcado se retira en vez de rechazarse, y
+  la respuesta devuelve lo que ha quedado guardado.
+- **El nombre de usuario y la foto no viajan aquí.** Cada uno tiene su endpoint, y no por
+  purismo: mezclados, una biografía se quedaría sin guardar porque el nombre de usuario está
+  ocupado o porque falló una subida.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `INVALID_VALUE` | 422 | Nombre vacío o de más de 80 caracteres; biografía de más de 300 ya limpia |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | Escribir sin haber activado la cuenta |
+
+### Efectos
+
+Publica `UserProfileUpdated` con **los valores nuevos y no un diff**: quien lo consume no
+quiere saber qué cambió sino con qué quedarse, porque el nombre y el avatar aparecen copiados
+en el muro, en los comentarios y en el catálogo.
+
+Nunca el correo ni la fecha de nacimiento.

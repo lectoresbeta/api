@@ -56,6 +56,19 @@ final readonly class JsonBody
     }
 
     /**
+     * Whether the field was sent at all.
+     *
+     * It is what a `PATCH` needs and `string()` cannot answer: «not sent» and
+     * «sent as null» mean different things there — leave it alone, or clear
+     * it. Everywhere else the distinction is noise, which is why the other
+     * readers collapse it.
+     */
+    public function has(string $field): bool
+    {
+        return \array_key_exists($field, $this->values);
+    }
+
+    /**
      * A flag, such as whether a work is adults-only.
      *
      * A missing or non-boolean value comes back as `null` rather than

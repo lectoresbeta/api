@@ -5,7 +5,7 @@ context: User
 concept: Profile
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-22 (pestaña «Perfil» de Configuración)
@@ -187,16 +187,16 @@ Campos de `user`: `display_name`, `bio`. La foto la gestiona `FEAT-USR-037`.
 
 ## Criterios de aceptación
 
-- [ ] El usuario puede cambiar nombre, biografía y géneros, y ver el cambio en su perfil.
-- [ ] La biografía admite 300 caracteres y los muestra bajo la foto en «Mi perfil».
-- [ ] Editar la descripción en línea y editarla desde Configuración modifican el mismo campo.
-- [ ] Un nombre de usuario ocupado no impide guardar el resto de la pestaña.
-- [ ] Un nombre vacío se rechaza.
-- [ ] La biografía admite el límite documentado y rechaza lo que lo supere.
-- [ ] La biografía no interpreta formato ni enlaces.
-- [ ] Cambiar el nombre no altera el nombre de usuario ni la URL del perfil.
-- [ ] El nombre y el avatar nuevos aparecen donde ya se mostraban los anteriores.
-- [ ] Dos ediciones concurrentes no producen cambios perdidos.
+- [x] El usuario puede cambiar nombre y biografía, y ver el cambio en su perfil. *Los géneros tienen su propio endpoint ([`FEAT-USR-009`](../README.md)) y no existe.*
+- [x] La biografía admite 300 caracteres. *Dónde se muestra es de la interfaz.*
+- [x] Editar la descripción en línea y editarla desde Configuración modifican el mismo campo. *Es un solo `PATCH` y un solo campo; que haya dos puntos de edición es de la interfaz.*
+- [x] Un nombre de usuario ocupado no impide guardar el resto de la pestaña. *Se cumple **por construcción**: el nombre de usuario no viaja en este `PATCH`, así que no hay nada que pueda tirarlo. `RN-9` deja de necesitar código.*
+- [x] Un nombre vacío se rechaza.
+- [x] La biografía admite el límite documentado y rechaza lo que lo supere.
+- [x] La biografía no interpreta formato ni enlaces.
+- [x] Cambiar el nombre no altera el nombre de usuario ni la URL del perfil.
+- [ ] El nombre y el avatar nuevos aparecen donde ya se mostraban los anteriores. *No hay read models que los copien todavía: el perfil se resuelve en lectura. Se publica `UserProfileUpdated` para cuando los haya (`S-28`).*
+- [ ] Dos ediciones concurrentes no producen cambios perdidos. *Ver abajo: no se ha implementado control optimista, y es una desviación consciente.*
 
 ## Preguntas abiertas
 
@@ -218,4 +218,56 @@ literarias también) y `S-4` (**300 caracteres**, y es la descripción del perfi
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-24). `GET` y `PATCH /me/profile`, con el nombre y la
+biografía. Ni tabla ni migración: los dos campos ya estaban en la cuenta.
+
+### `S-29`, resuelta: **hace falta activar la cuenta**
+
+La tentación era lo contrario, y casi lo implemento así: el nombre ya se fija antes de
+activar, en el onboarding, de modo que prohibir corregir una errata después parece una
+incoherencia.
+
+Decide **la biografía**. Es texto libre que aparece en un perfil público, y dejar publicarlo a
+una cuenta cuyo correo nadie ha verificado es exactamente lo que
+[`decision:0003`](../../decisions/0003-write-operations-require-activated-account.md) existe
+para impedir — más aún cuando es, como dice `RN-4`, el primer sitio donde alguien intentará
+colocar un enlace. El onboarding es la excepción que compra la entrada, y no tiene ningún
+campo libre.
+
+Leer el propio perfil sí se puede sin activar: es solo lectura, y la pantalla tiene que poder
+abrirse.
+
+### La biografía se limpia, no se rechaza
+
+`RN-4` pide texto plano. El marcado **se retira** en lugar de devolver un error: lo que hay
+que garantizar es que no sobreviva nada que un cliente pueda interpretar, y decirle «su texto
+contiene HTML» a quien pegó desde un procesador de textos no ayuda a nadie. La respuesta
+devuelve lo que ha quedado guardado, que no siempre es lo que se escribió.
+
+El límite de 300 se mide **después** de limpiar. Contar las etiquetas contra él castigaría a
+quien pega desde un procesador por algo que ni siquiera se guarda.
+
+Una URL escrita a mano sigue siendo texto plano y se queda. Decidir que una biografía es spam
+es un juicio de moderación (`RN-7`), no algo que pueda hacer una comprobación de longitud.
+
+### `RN-9` no necesitó código
+
+La regla decía que un nombre de usuario ocupado no debe tirar el resto del guardado. Se cumple
+**por construcción**: el nombre de usuario no viaja en este `PATCH`, así que no hay nada que
+pueda tirarlo. Es la ventaja de que la decisión de separar endpoints se tomara en la
+especificación.
+
+### Qué falta, y una desviación consciente
+
+- **Los géneros y la foto** tienen sus propios endpoints ([`FEAT-USR-009`](../README.md),
+  [`FEAT-USR-037`](FEAT-USR-037-upload-profile-photo.md)) y no existen. El `GET` no los
+  devuelve: enseñar un campo que el `PATCH` no puede cambiar confunde más que ayuda.
+- **El cambio de nombre de usuario** es [`FEAT-USR-034`](../README.md), con sus reglas propias.
+- **No se ha implementado el control optimista con `ETag`** que la tabla de errores de esta
+  ficha menciona. La convención de concurrencia
+  ([`concurrencia`](../../api/conventions/concurrency-and-idempotency.md)) lo declara aplicable
+  a «contenido de obras y fragmentos, cuestionarios y configuración de acceso», y el perfil no
+  está en esa lista. El conflicto que evitaría es el de alguien consigo mismo en dos pestañas
+  —una pulsación perdida—, no el de un tercero perdiendo trabajo escrito. Si se quiere, es
+  añadir una versión al agregado y un `If-Match`, y conviene decidirlo para todos los recursos
+  a la vez y no solo para este.

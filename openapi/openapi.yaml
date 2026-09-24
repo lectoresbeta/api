@@ -88,6 +88,9 @@ paths:
   /genres:
     $ref: './paths/onboarding.yaml#/catalogue'
 
+  /me/profile:
+    $ref: './paths/settings.yaml#/myProfile'
+
   /me/privacy-settings:
     $ref: './paths/settings.yaml#/privacySettings'
 

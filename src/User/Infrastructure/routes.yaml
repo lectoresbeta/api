@@ -79,3 +79,16 @@ getProfileByUsername:
     path: /api/v1/profiles/{username}
     controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetProfileByUsernameController::__invoke
     methods: [GET]
+
+# Mi perfil (FEAT-USR-008). `PATCH` y no `PUT`: el mismo recurso se edita
+# campo a campo desde el perfil y en bloque desde Configuración.
+
+getMyProfile:
+    path: /api/v1/me/profile
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetMyProfileController::__invoke
+    methods: [GET]
+
+updateMyProfile:
+    path: /api/v1/me/profile
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\UpdateMyProfileController::__invoke
+    methods: [PATCH]
