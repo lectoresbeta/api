@@ -54,6 +54,12 @@ abstract class EconomyScenario extends WebTestCase
         'ChapterCorrectabilityChanged',
     ];
 
+    /**
+     * Un hecho provoca otro, y ese otro puede provocar un tercero. Más allá
+     * de esto es un ciclo, y conviene que el test lo diga en vez de colgarse.
+     */
+    private const MAX_CASCADE_ROUNDS = 6;
+
     protected KernelBrowser $client;
 
     protected string $run;
@@ -67,6 +73,15 @@ abstract class EconomyScenario extends WebTestCase
      * @var list<array{body: string, headers: array<string, string>}>
      */
     protected array $queue = [];
+
+    /**
+     * Identificadores ya encolados. El transporte en memoria conserva lo
+     * enviado hasta que el kernel lo reinicia, así que sin esto un hecho se
+     * encolaría de nuevo cada vez que se mira.
+     *
+     * @var array<string, true>
+     */
+    private array $seen = [];
 
     protected function setUp(): void
     {
@@ -97,6 +112,13 @@ abstract class EconomyScenario extends WebTestCase
                 continue;
             }
 
+            $eventId = $wire['headers']['X-Event-Id'] ?? '';
+
+            if (isset($this->seen[$eventId])) {
+                continue;
+            }
+
+            $this->seen[$eventId] = true;
             $this->queue[] = $wire;
 
             if (null === $name || $published === $name) {
@@ -132,6 +154,19 @@ abstract class EconomyScenario extends WebTestCase
     }
 
     /**
+     * Todo lo encolado de ese tipo, se haya recogido cuando se haya recogido.
+     *
+     * @return list<array{body: string, headers: array<string, string>}>
+     */
+    protected function queued(string $eventName): array
+    {
+        return array_values(array_filter(
+            $this->queue,
+            static fn (array $wire): bool => ($wire['headers']['X-Event-Name'] ?? null) === $eventName,
+        ));
+    }
+
+    /**
      * El último aviso de ese tipo, que es el que refleja el estado actual.
      *
      * @return array<string, mixed>
@@ -146,12 +181,30 @@ abstract class EconomyScenario extends WebTestCase
     }
 
     /**
-     * Entrega todo lo encolado. La cola no se vacía: volver a llamar
-     * reentrega los mismos hechos, que es lo que RabbitMQ puede hacer.
+     * Entrega todo lo encolado, **y lo que aparezca al entregarlo**.
+     *
+     * Un consumidor publica: `Credits` cobra una corrección y anuncia que el
+     * saldo cambió, lo que cambia qué capítulos son corregibles, lo que el
+     * catálogo proyecta. En producción eso lo hace el broker sin que nadie
+     * lo piense; aquí hay que recoger la cascada a mano.
+     *
+     * La cola no se vacía: volver a llamar reentrega los mismos hechos, que
+     * es lo que RabbitMQ puede hacer.
      */
     protected function consumeEverything(): void
     {
-        $this->deliver($this->queue);
+        for ($round = 0; $round < self::MAX_CASCADE_ROUNDS; ++$round) {
+            $this->deliver($this->queue);
+
+            $pending = \count($this->queue);
+            $this->capture();
+
+            if (\count($this->queue) === $pending) {
+                return;
+            }
+        }
+
+        self::fail('Los hechos no dejan de producir hechos: hay un ciclo en la cascada.');
     }
 
     /**

@@ -64,6 +64,27 @@ final class CorrectabilityTest extends TestCase
         self::assertFalse($policy->allows(100, 2, 3));
     }
 
+    /**
+     * Lo único de la aritmética de `Credits` que sale de `Credits`: cuánto
+     * trabajo produce enseñar una obra, que es con lo que ordena el catálogo
+     * (`decision:0008`). No es un saldo y no es un precio.
+     */
+    public function testHowManyCorrectionsTheAuthorCanPayForLeavesTheContext(): void
+    {
+        $policy = new CorrectabilityPolicy();
+
+        self::assertSame(3, $policy->affordableCorrections(authorBalance: 10, price: 3));
+        self::assertSame(0, $policy->affordableCorrections(authorBalance: 2, price: 3));
+        self::assertSame(0, $policy->affordableCorrections(authorBalance: -5, price: 3));
+
+        // El tope impide que un autor con mucho saldo monopolice el catálogo,
+        // y de paso hace que por encima de diez todos se parezcan.
+        self::assertSame(
+            CorrectabilityPolicy::MAX_AFFORDABLE_CORRECTIONS,
+            $policy->affordableCorrections(authorBalance: 5_000, price: 2),
+        );
+    }
+
     public function testOnlyChangesAreAnnounced(): void
     {
         $this->balanceOf(30);
@@ -109,7 +130,7 @@ final class CorrectabilityTest extends TestCase
 
         $payload = $this->published->payloadsOf('ChapterCorrectabilityChanged')[0];
 
-        self::assertSame(['chapterId', 'workId', 'correctable', 'changedAt'], array_keys($payload));
+        self::assertSame(['chapterId', 'workId', 'correctable', 'affordableCorrections', 'changedAt'], array_keys($payload));
     }
 
     public function testThreeOpenCorrectionsCloseTheChapterAndFinishingOneReopensIt(): void

@@ -4,6 +4,143 @@
 # PENDING_ACTIVATION recibe 403 con ACCOUNT_NOT_ACTIVATED (FEAT-USR-025).
 
 collection:
+  get:
+    tags: [Works]
+    operationId: listWorks
+    summary: Catálogo — la sección «Leer»
+    description: |
+      La puerta de entrada al ciclo del producto: de aquí sale lo que alguien
+      leerá y, si la obra está en corrección, lo que corregirá.
+
+      **Ordena por reparto de trabajo, nunca por popularidad**
+      ([`decision:0008`](../../docs/decisions/0008-catalogue-ordering.md)):
+
+      ```text
+      puntuación = capacidad × desatención × frescura
+      ```
+
+      Ninguno de los tres factores mide éxito. Un catálogo que pusiera delante
+      lo más popular concentraría las correcciones en pocos textos y dejaría a
+      la mayoría de los autores sin ninguna, que es exactamente el fracaso que
+      este producto no se puede permitir.
+
+      La propiedad que lo sostiene: **aparecer arriba consume lo que te puso
+      arriba**. Cada corrección recibida gasta saldo del autor y sube su
+      contador, así que la obra baja sola y deja sitio a otra.
+
+      Una obra **sin capítulos corregibles ahora mismo puntúa cero** y cae al
+      final: enseñar algo que no se puede corregir desperdicia el sitio más
+      valioso de la pantalla.
+
+      Devuelve **metadatos, nunca contenido**. Que una obra aparezca aquí no
+      significa que quien la ve pueda abrirla: eso lo decide `getWork`.
+
+      Nunca incluye borradores, obras bloqueadas por reclamación ni las obras
+      propias de quien consulta.
+    parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [PUBLISHED, IN_CORRECTION]
+        description: |
+          **`DRAFT` no es un valor de este filtro.** Se rechaza con `422`
+          aunque se fuerce el parámetro: un desplegable que no lo ofrece no es
+          una autorización.
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [relevance, recent]
+          default: relevance
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: perPage
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+    responses:
+      '200':
+        description: |
+          Una página del catálogo, con el total. La paginación es **numerada**
+          y no por cursor, como excepción justificada a la convención: un
+          catálogo filtrado no es un flujo cronológico, y quien lo usa quiere
+          saber cuántos resultados hay y saltar a la página 4.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [total, totalPages, page, perPage, works]
+              properties:
+                total:
+                  type: integer
+                  description: Refleja **los filtros aplicados**, no el catálogo entero.
+                totalPages:
+                  type: integer
+                page:
+                  type: integer
+                perPage:
+                  type: integer
+                works:
+                  type: array
+                  items:
+                    type: object
+                    required: [workId, title, status, wordCount, chapterCount, adultsOnly, correctableChapters, correctionsReceived]
+                    properties:
+                      workId:
+                        type: string
+                        format: uuid
+                      title:
+                        type: string
+                      synopsis:
+                        type: string
+                        nullable: true
+                        description: Truncada para la tarjeta.
+                      status:
+                        type: string
+                        enum: [PUBLISHED, IN_CORRECTION]
+                      wordCount:
+                        type: integer
+                      chapterCount:
+                        type: integer
+                      adultsOnly:
+                        type: boolean
+                      correctableChapters:
+                        type: integer
+                        description: |
+                          Cuántos capítulos admiten corrección ahora mismo.
+                          **Cero significa que la obra se puede leer pero no
+                          corregir**, y es lo que la manda al final de la
+                          ordenación por relevancia.
+                      correctionsReceived:
+                        type: integer
+                        description: |
+                          Correcciones ya entregadas. Cuenta **hacia abajo**:
+                          es el factor de desatención, no una métrica de
+                          éxito.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: |
+          Un filtro con un valor que no existe. `code: UNKNOWN_FILTER_VALUE` o
+          `INVALID_PAGE`. **No se ignora**: devolver los resultados de otra
+          consulta es peor que devolver un error, porque quien pregunta no
+          tiene forma de notarlo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
   post:
     tags: [Works]
     operationId: createWork

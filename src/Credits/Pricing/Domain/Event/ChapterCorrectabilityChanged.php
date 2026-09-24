@@ -13,8 +13,9 @@ use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
  * A chapter has started, or stopped, admitting corrections
  * (`FEAT-CRD-009`).
  *
- * **A boolean, never an amount.** No other context has any business knowing
- * a balance or a price, and this is the event that keeps it that way:
+ * **Ni un saldo ni un precio.** Lleva la conclusión de este contexto —si se
+ * puede corregir, y cuánto trabajo produciría enseñarlo— y nunca las dos
+ * cifras con las que se calcula:
  * `Feedback` opens the correction panel against its own projection of this
  * fact, with no round trip and no idea what anything costs.
  *
@@ -30,6 +31,7 @@ final readonly class ChapterCorrectabilityChanged implements IntegrationEvent
         private ChapterId $chapterId,
         private WorkId $workId,
         private bool $correctable,
+        private int $affordableCorrections,
         private \DateTimeImmutable $changedAt,
     ) {
     }
@@ -55,6 +57,12 @@ final readonly class ChapterCorrectabilityChanged implements IntegrationEvent
             'chapterId' => $this->chapterId->value(),
             'workId' => $this->workId->value(),
             'correctable' => $this->correctable,
+            // Cuántas correcciones de este capítulo puede pagar su autor,
+            // con tope de diez. **No es un saldo ni un precio**: es lo que el
+            // catálogo necesita para ordenar por trabajo producido
+            // (`decision:0008`), y lo único de esa aritmética que sale de
+            // aquí.
+            'affordableCorrections' => $this->affordableCorrections,
             'changedAt' => $this->changedAt->format(\DATE_ATOM),
         ];
     }

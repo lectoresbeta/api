@@ -9,10 +9,12 @@ use LectoresBeta\Shared\Domain\Event\IncomingIntegrationEvent;
 /**
  * `ChapterCorrectabilityChanged`, as `Feedback` models it (`FEAT-CRD-009`).
  *
- * **A boolean, and this context wants nothing more.** `Credits` weighed a
- * balance against a price and counted how many corrections are under way;
- * what arrives here is the conclusion. Asking for the reasoning would drag
- * the economy into a context that has no business knowing it.
+ * **Un booleano, y este contexto no quiere nada más.** El hecho trae también
+ * cuántas correcciones puede pagar el autor, que el catálogo usa para
+ * ordenar; aquí no se lee siquiera. Abrir el panel es sí o no.
+ *
+ * Es lo que `decision:0013` permite: un consumidor declara lo que necesita,
+ * no lo que el publicador manda.
  */
 final readonly class ChapterCorrectabilityChanged implements IncomingIntegrationEvent
 {

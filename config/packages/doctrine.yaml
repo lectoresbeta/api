@@ -252,6 +252,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Work/Catalog/Infrastructure/Persistence/Doctrine/Mapping'
                 prefix: 'LectoresBeta\Work\Catalog\Domain\Entity'
                 alias: WorkCatalog
+            WorkCatalogue:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work/Catalogue/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Work\Catalogue\Domain\Entity'
+                alias: WorkCatalogue
             WorkChapter:
                 type: xml
                 is_bundle: false

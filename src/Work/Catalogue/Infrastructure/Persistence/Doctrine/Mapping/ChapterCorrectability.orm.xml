@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Proyección de lo que decide `Credits`. El catálogo la consulta en la
+         misma SQL que filtra y pagina, que es la razón de que exista: no se
+         puede hacer `JOIN` con las tablas de otro contexto acotado. -->
+    <entity name="LectoresBeta\Work\Catalogue\Domain\Entity\ChapterCorrectability"
+            table="catalogue_chapter_signal" schema="work_ctx">
+
+        <indexes>
+            <!-- El catálogo agrupa por obra en cada consulta. -->
+            <index name="idx_catalogue_signal_work" columns="work_id,correctable"/>
+        </indexes>
+
+        <id name="chapterId" column="chapter_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="workId" column="work_id" type="guid"/>
+        <field name="correctable" type="boolean"/>
+        <field name="affordableCorrections" column="affordable_corrections" type="smallint"/>
+        <field name="changedAt" column="changed_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

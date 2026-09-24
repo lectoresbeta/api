@@ -48,3 +48,8 @@ updateWorkQuestionnaire:
     path: /api/v1/works/{workId}/questionnaire
     controller: LectoresBeta\Work\Questionnaire\Infrastructure\Controller\ReplaceQuestionnaireController::__invoke
     methods: [PUT]
+
+listWorks:
+    path: /api/v1/works
+    controller: LectoresBeta\Work\Catalogue\Infrastructure\Controller\ListWorksController::__invoke
+    methods: [GET]

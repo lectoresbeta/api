@@ -5,7 +5,7 @@ context: Work
 concept: Manuscript
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-22 (capturas de la sección «Leer»)
@@ -180,20 +180,24 @@ explícitamente. Hace falta un read model o un contrato de consulta (`L-9`).
 
 ## Criterios de aceptación
 
-- [ ] El catálogo nunca devuelve obras en `DRAFT`, ni siquiera forzando el parámetro.
-- [ ] Nunca devuelve obras ni capítulos bloqueados por reclamación.
-- [ ] El contenido excluido por preferencias **no llega al cliente**.
-- [ ] Filtrar por varias temáticas a la vez funciona.
-- [ ] El total refleja los filtros aplicados.
-- [ ] Cambiar un filtro vuelve a la página 1.
-- [ ] La respuesta incluye `total` y `totalPages`.
-- [ ] Un valor de filtro desconocido produce `422`, no una lista vacía.
-- [ ] Las obras propias del usuario no aparecen.
-- [ ] La insignia de créditos no se obtiene consultando tablas de `Credits`.
-- [ ] Con el catálogo vacío se devuelve `200` con lista vacía.
-- [ ] Una obra que recibe una corrección **baja de posición**.
-- [ ] Un capítulo que deja de ser corregible desaparece del catálogo.
-- [ ] No existe ningún `JOIN` entre tablas de `Work` y de `Credits`.
+- [x] El catálogo nunca devuelve obras en `DRAFT`, ni siquiera forzando el parámetro.
+- [x] Nunca devuelve obras ni capítulos bloqueados por reclamación.
+- [ ] El contenido excluido por preferencias **no llega al cliente**. *Las preferencias no
+      existen ([`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)); sí funciona el
+      filtro de edad, que es de otro eje.*
+- [ ] Filtrar por varias temáticas a la vez funciona. *Una obra todavía no tiene temáticas.*
+- [x] El total refleja los filtros aplicados.
+- [x] La respuesta incluye `total` y `totalPages`.
+- [x] Un valor de filtro desconocido produce `422`, no una lista vacía.
+- [x] Las obras propias del usuario no aparecen.
+- [x] Con el catálogo vacío se devuelve `200` con lista vacía.
+- [x] Una obra que recibe una corrección **baja de posición**.
+- [x] Un capítulo que deja de ser corregible no ocupa el sitio de cabeza.
+- [x] No existe ningún `JOIN` entre tablas de `Work` y de `Credits`.
+- [ ] Cambiar un filtro vuelve a la página 1. *Es de la interfaz: la API recibe `page=1`.*
+- [ ] La insignia de créditos no se obtiene consultando tablas de `Credits`. *La insignia es
+      [`FEAT-CRD-013`](../credits/FEAT-CRD-013-work-credit-badge.md) y no se sirve todavía; lo
+      que sí llega por evento es si el capítulo admite corrección.*
 
 ## Preguntas abiertas
 
@@ -217,29 +221,70 @@ parecen en nada, y la maqueta no lo aclara. Lo habitual en un catálogo de descu
 [`decision:0008`](../../decisions/0008-catalogue-ordering.md). Las preguntas que quedan son
 detalles de filtro que no afectan al modelo.
 
-**Implementación:** `TODO`. **Ya no está bloqueada.**
+**Implementación:** `PARTIAL` (2026-09-24). **La pantalla existe y ordena como decía
+`decision:0008`.**
 
-La ordenación por relevancia —`RN-4`, y el corazón de
-[`decision:0008`](../../decisions/0008-catalogue-ordering.md)— necesita datos de `Credits` que
-llegan por eventos. De los cinco que alimentan el read model, hoy se publican cuatro:
+### Hecho
 
-```text
-Credits ──CreditBalanceChanged──────────────▶ ┐  se publica (FEAT-CRD-006)
-Credits ──ChapterCorrectabilityChanged──────▶ │  se publica (FEAT-CRD-009)
-Work    ──WorkOpenedForCorrection───────────▶ ├─▶ catalogue_entry
-Work    ──ChapterContentUpdated─────────────▶ │  se publica (FEAT-CRD-016)
-Feedback──FeedbackSubmitted─────────────────▶ ┘  nadie lo publica todavía
-```
+- `GET /api/v1/works`, con `status`, `sort`, `page` y `perPage`, páginas numeradas y `total`.
+- La ordenación por relevancia entera —capacidad × desatención × frescura— resuelta en una
+  sola consulta a PostgreSQL, que es lo que permite ordenar y paginar sin traerse el catálogo
+  a memoria. La fórmula está declarada en `CatalogueRelevance`; sus constantes se interpolan
+  en la SQL, no se reescriben.
+- Los dos tests que `decision:0008` pide por su nombre: **una obra que recibe una corrección
+  baja de posición**, y **lo que no se puede corregir no ocupa el sitio de cabeza**.
+- Nunca aparecen borradores —ni forzando `status=DRAFT`—, obras bloqueadas por reclamación ni
+  las obras propias de quien consulta. Una obra `ADULTS_ONLY` no se sirve a quien no ha
+  declarado su fecha de nacimiento.
+- Un valor de filtro desconocido devuelve `422`: ignorarlo daría los resultados de otra
+  consulta sin que nadie lo notase.
 
-La división por cero desapareció: `ChapterCorrectabilityChanged` **es** el filtro duro —solo
-entran los capítulos corregibles ahora mismo— y el saldo y el precio llegan por su cuenta.
+### `L-9` resuelta, y sin un solo `JOIN` entre contextos
 
-El único que falta es `FeedbackSubmitted`, y falta porque `Feedback` no existe todavía como
-código ([`FEAT-FBK-003`](../feedback/FEAT-FBK-003-answer-correction-questionnaire.md)). Sin
-él, el término de **desatención** —`1 ÷ (1 + correcciones recibidas)`— vale 1 para todas las
-obras.
+Lo que `Credits` y `Feedback` saben llega por eventos y vive en dos tablas de `work_ctx`:
 
-Eso no es una ordenación mal hecha: es la ordenación correcta en una plataforma donde
-todavía nadie ha corregido nada. El día que existan correcciones, el contador empieza a
-moverse y el orden se separa solo. Conviene, eso sí, que el read model tenga el campo desde
-el principio, para no tener que reconstruirlo después.
+| Tabla | La alimenta | Guarda |
+|---|---|---|
+| `catalogue_chapter_signal` | `ChapterCorrectabilityChanged` | Si el capítulo admite corrección y **cuántas correcciones puede pagar el autor**, con tope de diez |
+| `catalogue_delivered_correction` | `FeedbackSubmitted` | Una fila por corrección entregada |
+
+La segunda guarda filas en vez de un contador a propósito: la clave primaria es lo que hace
+idempotente la reentrega del mismo hecho, y contar es un `COUNT(*)` con índice.
+
+### La capacidad cruza la frontera, el dinero no
+
+La fórmula necesitaba «saldo del autor ÷ precio del capítulo», y las dos cifras son de
+`Credits`, que no publica importes. Eso era una contradicción entre dos documentos aprobados,
+y se resuelve publicando **la conclusión en vez de los sumandos**:
+`ChapterCorrectabilityChanged` lleva ahora `affordableCorrections`, cuántas correcciones de ese
+capítulo puede pagar su autor, acotado a diez por la propia fórmula.
+
+No es un saldo y no es un precio: es la respuesta a «¿cuánto trabajo produce enseñar esta
+obra?», que es lo único que el catálogo necesita. Y el tope hace de paso que por encima de
+diez todos los autores se parezcan.
+
+### Qué significa exactamente esa señal
+
+`Credits` responde si el autor **puede pagar** ese capítulo y si le queda hueco de los tres
+simultáneos. **Que la obra esté abierta a corrección es dato de `Work`**, y se combina aquí.
+
+La alternativa era proyectar el estado de cada obra dentro de `Credits` para que la señal
+fuese completa. No compensa: el catálogo ya tiene el estado delante, en la misma fila.
+
+### Falta
+
+- **Los filtros de temática y de etiquetas de contenido** (`RN-5`, `RN-10`). No es que falte
+  el filtro: es que **una obra todavía no tiene temáticas ni etiquetas**. Las temáticas existen
+  para las personas —el onboarding las usa— pero nunca se le han puesto a una obra, y las
+  etiquetas son [`FEAT-WRK-017`](FEAT-WRK-017-content-rating.md).
+- **El filtro de tiempo de lectura** (`L-1`): sigue sin estar definido qué rangos son.
+- **Las preferencias de contenido sensible** (`RN-9`,
+  [`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)) y **las obras de usuarios
+  bloqueados** (`RN-8`): dependen de funcionalidades que no existen. El filtro de edad, que es
+  otro eje, sí está.
+- **La insignia de créditos** ([`FEAT-CRD-013`](../credits/FEAT-CRD-013-work-credit-badge.md)):
+  la tarjeta lleva `correctableChapters` y `correctionsReceived`, que son señales del reparto,
+  no un importe.
+- **La portada**: una obra no tiene imagen todavía.
+- `L-2` —qué otras ordenaciones hay— se implementa como `recent`, que era la única alternativa
+  evidente. `L-6`, `L-7` y `L-8` siguen abiertas tal cual.

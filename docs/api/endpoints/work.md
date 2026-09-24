@@ -12,7 +12,7 @@
 | `GET /works/{workId}/content` | `getWorkContent` | Contenido completo | FEAT-WRK-004 | PENDING |
 | `PATCH /works/{workId}` | `updateWork` | Editar metadatos | FEAT-WRK-005 | PENDING |
 | `DELETE /works/{workId}` | `deleteWork` | Eliminar obra | FEAT-WRK-006 | PENDING |
-| `GET /works` | `listWorks` | Catálogo: sección «Leer» | FEAT-WRK-012 | DRAFT |
+| `GET /api/v1/works` | `listWorks` | Catálogo: sección «Leer» | FEAT-WRK-012 | **Implementado** |
 | `GET /me/works` | `listMyWorks` | Obras propias | FEAT-WRK-004 | PENDING |
 | `POST /api/v1/works/{workId}/chapters` | `addChapter` | Añadir capítulo. El contenido se sanea al guardarlo | FEAT-WRK-001 | **Implementado** |
 | `GET /works/{workId}/chapters` | `listChapters` | Listar fragmentos | FEAT-WRK-003 | PENDING |
@@ -179,7 +179,7 @@ de la API: devuelven obra inédita.
 
 ---
 
-## `GET /works`
+## `GET /api/v1/works`
 
 **`operationId`:** `listWorks` · **Funcionalidad:** [`FEAT-WRK-012`](../../features/work/FEAT-WRK-012-browse-catalogue.md)
 
@@ -192,28 +192,59 @@ paginación **numerada**.
 
 Sesión iniciada. Si es público para invitados está pendiente de `L-8`.
 
+### Cómo ordena
+
+Por **reparto de trabajo, nunca por popularidad**
+([`decision:0008`](../../decisions/0008-catalogue-ordering.md)):
+
+```text
+puntuación = capacidad × desatención × frescura
+```
+
+Una obra **sin capítulos corregibles ahora mismo puntúa cero** y cae al final. Sigue
+apareciendo —se puede leer— pero no ocupa el sitio más valioso de la pantalla.
+
+La propiedad que lo sostiene: aparecer arriba trae correcciones, cada corrección gasta saldo
+del autor y sube su contador, y los dos primeros factores bajan a la vez. La obra desciende
+sola.
+
 ### Reglas aplicadas
 
 - Nunca devuelve obras en `DRAFT`, **tampoco si el parámetro lo pide** (`FEAT-WRK-012` `RN-2`).
-- Excluye las obras propias del usuario y las de usuarios bloqueados.
-- La insignia de créditos procede de `Credits`, nunca de un `JOIN` con sus tablas (`L-9`).
+- Excluye las obras propias del usuario, las bloqueadas por reclamación y —para quien no ha
+  declarado su fecha de nacimiento— las marcadas para adultos.
+- Los datos de `Credits` y `Feedback` llegan **por evento**, a dos tablas de `work_ctx`: no
+  hay ningún `JOIN` con las tablas de otro contexto (`L-9`).
 
 ### Entrada
 
-`genres[]`, `readingTime`, `status`, `sort`, `page`, `perPage`.
+`status`, `sort`, `page`, `perPage`.
+
+`genres[]`, `readingTime` y `contentWarnings[]` están especificados y **no implementados**: no
+es que falte el filtro, es que una obra todavía no tiene temáticas ni etiquetas de contenido.
 
 ### Respuesta
 
-Elementos del catálogo más `pageInfo` con `page`, `perPage`, `total` y `totalPages`. Es una
-de las dos excepciones a la paginación por cursor
-([`paginación`](../conventions/pagination.md)).
+`total`, `totalPages`, `page`, `perPage` y `works`. **Metadatos, nunca contenido**: que una
+obra aparezca aquí no significa que quien la ve pueda abrirla, y eso lo decide `getWork`.
+
+Cada tarjeta lleva `correctableChapters` y `correctionsReceived`, que son señales del reparto
+—cuánto queda por corregir y cuánto se ha corregido ya— y no importes. La insignia de créditos
+es [`FEAT-CRD-013`](../../features/credits/FEAT-CRD-013-work-credit-badge.md) y no se sirve
+todavía.
+
+Es una de las dos excepciones a la paginación por cursor
+([`paginación`](../conventions/pagination.md)): un catálogo filtrado no es un flujo, y quien
+lo usa quiere saber cuántos resultados hay y saltar a la página 4.
 
 ### Errores específicos
 
 | Caso | Código |
 |---|---|
-| Valor de filtro desconocido | `422` |
-| `status=DRAFT` | `422` |
+| Valor de filtro desconocido | `422` con `UNKNOWN_FILTER_VALUE` |
+| `status=DRAFT` | `422`. Un desplegable que no lo ofrece no es una autorización |
+| `page` menor que 1 | `422` con `INVALID_PAGE` |
+| Página fuera de rango | `200` con lista vacía |
 
 Un filtro con valor inválido **no se ignora**: devolver resultados de otra consulta es peor
 que devolver un error.

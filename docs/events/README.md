@@ -156,7 +156,7 @@ es de la obra entera.
 |---|---|---|---|
 | `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance`, `addedAt` |
 | `CreditsSpent` | Se carga una corrección recibida | `Notification` | `userId`, `amount`, `reason`, `balance`, `spentAt` |
-| `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, `Work` | `chapterId`, `workId`, `correctable`, `changedAt`. **Sin importes** |
+| `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, **`Work`** | `chapterId`, `workId`, `correctable`, `affordableCorrections`, `changedAt`. **Sin importes** |
 | `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` | `userId`, `balance`, `changedAt` |
 | `CreditBalanceWentNegative` | El saldo **cruza** a negativo | `Notification`, `Feedback` | `userId`, `balance`, `crossedAt` |
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` | `userId`, `balance` |
@@ -168,9 +168,23 @@ abre el panel de corrección contra su propia proyección de `ChapterCorrectabil
 esperar respuesta. Que la proyección vaya ligeramente retrasada solo puede producir un
 descubierto, que es un caso aceptado.
 
-`ChapterCorrectabilityChanged` lleva **un booleano, no un importe**: ningún contexto ajeno
-tiene por qué conocer saldos. Se publica **solo cuando la respuesta cambia**: el precio de un
-capítulo se recalcula muchas más veces de las que su corregibilidad se mueve.
+`ChapterCorrectabilityChanged` **no lleva ni un saldo ni un precio**, y lleva dos cosas:
+
+- `correctable`, que `Feedback` usa para abrir el panel sin preguntar nada;
+- `affordableCorrections`, cuántas correcciones de ese capítulo puede pagar su autor **con
+  tope de diez**, que es el primer factor de la ordenación del catálogo
+  ([`decision:0008`](../decisions/0008-catalogue-ordering.md)).
+
+El segundo es la conclusión de una aritmética cuyos sumandos no salen de aquí. Sin él, el
+catálogo no podía ordenar por capacidad de pago sin que alguien le contase el saldo del autor
+y el precio del capítulo; con él, ordena sin saber lo que cuesta nada. El tope hace además que
+por encima de diez todos los autores se parezcan.
+
+**Dice que el autor puede pagarlo y que queda hueco**, no que la obra esté abierta a
+corrección: ese dato es de `Work`, y cada consumidor lo combina con lo que ya sabe.
+
+Se publica **solo cuando la respuesta cambia**: el precio de un capítulo se recalcula muchas
+más veces de las que su corregibilidad se mueve.
 
 `CreditBalanceWentNegative` es el **cruce**, no el estado. Se publica en el movimiento que
 hunde la cuenta y no otra vez mientras siga hundida: quien recibiera uno por cada cargo no

@@ -112,6 +112,24 @@ Feedback──FeedbackSubmitted────────────────�
 fecha de apertura, etiquetas, géneros— y **nada de contenido**. Se reconstruye entero
 reprocesando eventos.
 
+### Nota de implementación (2026-09-24): la capacidad viaja calculada
+
+Al implementarlo apareció una contradicción entre esta decisión, que necesita «el saldo del
+autor y el precio del capítulo», y la regla de que **`Credits` no publica importes**.
+
+Se resuelve publicando **la conclusión en vez de los sumandos**:
+`ChapterCorrectabilityChanged` lleva `affordableCorrections`, cuántas correcciones de ese
+capítulo puede pagar su autor, ya acotado a diez por esta misma fórmula. No es un saldo ni un
+precio, y es lo único de esa aritmética que sale de `Credits`.
+
+La señal dice además que el capítulo **tiene hueco** —menos de tres correcciones abiertas—
+pero no que la obra esté abierta a corrección, que es dato de `Work` y se combina en la propia
+consulta del catálogo.
+
+El read model acabó siendo dos tablas pequeñas en `work_ctx` en vez de un `catalogue_entry`
+con todo dentro: lo que `Work` ya sabe de sus obras no hace falta copiarlo, y copiarlo habría
+añadido una sincronización que puede desincronizarse.
+
 Que el catálogo vaya unos segundos por detrás no importa: el peor caso es enseñar un capítulo
 que acaba de dejar de ser corregible, y ahí el lector recibe el mismo mensaje que si hubiera
 llegado tarde.

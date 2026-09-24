@@ -127,7 +127,7 @@ final class CorrectionDraftTest extends EconomyScenario
         $this->discardDraft($chapterId, $reader['token']);
         self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
 
-        $descartes = $this->capture('CorrectionDraftDiscarded');
+        $descartes = $this->queued('CorrectionDraftDiscarded');
         self::assertCount(1, $descartes);
 
         /** @var array<string, mixed> $payload */

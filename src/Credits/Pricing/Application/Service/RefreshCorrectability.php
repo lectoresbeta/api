@@ -28,8 +28,14 @@ use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
  * discarded — rather than being computed when somebody asks.
  *
  * **Only changes are published.** A price is recomputed far more often than
- * its yes-or-no answer actually moves, and a context that received an event
- * every time would learn nothing from receiving one.
+ * its answer actually moves, and a context that received an event every time
+ * would learn nothing from receiving one.
+ *
+ * What travels is that answer: whether the chapter takes corrections, and how
+ * many of them its author could pay for, capped at ten. Neither is a balance
+ * or a price — the catalogue orders by the work a listing would produce
+ * ([`decision:0008`](../../../../../docs/decisions/0008-catalogue-ordering.md)),
+ * and that is the only part of this arithmetic that leaves.
  *
  * It runs **after** the transaction of whatever called it. The read model is
  * the source of truth of nothing, so there is no atomicity to preserve here;
@@ -91,7 +97,9 @@ final readonly class RefreshCorrectability
                 $this->quotations->openCorrectionsOn($chapter->chapterId()),
             );
 
-            if ($chapter->updateCorrectability($correctable, $now)) {
+            $affordable = $this->policy->affordableCorrections($balances[$author], $chapter->price());
+
+            if ($chapter->updateCorrectability($correctable, $affordable, $now)) {
                 $changed[] = $chapter;
             }
         }
@@ -112,6 +120,7 @@ final readonly class RefreshCorrectability
                 $chapter->chapterId(),
                 $chapter->workId(),
                 $chapter->isCorrectable(),
+                $chapter->affordableCorrections(),
                 $now,
             ),
             $changed,

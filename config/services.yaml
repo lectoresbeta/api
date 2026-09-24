@@ -96,6 +96,8 @@ services:
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionStarted
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionDraftDiscarded
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\FeedbackSubmitted
+                - LectoresBeta\Work\Catalogue\Application\Event\ChapterCorrectabilityChanged
+                - LectoresBeta\Work\Catalogue\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
 
     # Los consumidores de eventos se etiquetan aquí y no con
@@ -192,6 +194,14 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\Reading\BetaReaderAccess\Application\Handler\MarkAccessEarnedOnFeedbackSubmitted:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Work\Catalogue\Application\Handler\TrackCorrectability:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Work\Catalogue\Application\Handler\CountDeliveredCorrection:
         tags:
             - { name: messenger.message_handler }
 

@@ -175,7 +175,7 @@ final class CorrectionTest extends EconomyScenario
         $questionId = $this->firstQuestionId($chapterId, $reader['token']);
         $this->submit($chapterId, $reader['token'], [$questionId => 'Ryn '.$this->words(60)]);
 
-        $delivered = $this->capture('FeedbackSubmitted');
+        $delivered = $this->queued('FeedbackSubmitted');
         self::assertCount(1, $delivered);
 
         $body = $delivered[0]['body'];

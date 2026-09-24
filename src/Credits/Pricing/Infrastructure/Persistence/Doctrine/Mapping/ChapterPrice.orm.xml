@@ -26,6 +26,7 @@
         <field name="price" type="smallint"/>
         <!-- La respuesta anterior, para poder publicar solo los cambios. -->
         <field name="correctable" type="boolean"/>
+        <field name="affordableCorrections" column="affordable_corrections" type="smallint"/>
         <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
 
     </entity>

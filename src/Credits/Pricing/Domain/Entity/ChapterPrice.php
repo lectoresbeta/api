@@ -47,6 +47,13 @@ class ChapterPrice
      */
     private bool $correctable = false;
 
+    /**
+     * Cuántas correcciones de este capítulo puede pagar el autor, con el tope
+     * de `decision:0008`. Sale del contexto porque el catálogo ordena con
+     * ello; el saldo y el precio con los que se calcula, no.
+     */
+    private int $affordableCorrections = 0;
+
     private \DateTimeImmutable $updatedAt;
 
     public function __construct(
@@ -109,18 +116,24 @@ class ChapterPrice
         return $this->correctable;
     }
 
+    public function affordableCorrections(): int
+    {
+        return $this->affordableCorrections;
+    }
+
     /**
      * Returns whether this is news. Only a change is worth an event: the
      * price of a chapter is recomputed far more often than its answer to
      * «can this be corrected?» actually moves.
      */
-    public function updateCorrectability(bool $correctable, \DateTimeImmutable $now): bool
+    public function updateCorrectability(bool $correctable, int $affordableCorrections, \DateTimeImmutable $now): bool
     {
-        if ($correctable === $this->correctable) {
+        if ($correctable === $this->correctable && $affordableCorrections === $this->affordableCorrections) {
             return false;
         }
 
         $this->correctable = $correctable;
+        $this->affordableCorrections = $affordableCorrections;
         $this->updatedAt = $now;
 
         return true;

@@ -121,7 +121,11 @@ final class CorrectionEconomyTest extends EconomyScenario
 
         $last = $this->lastAnnouncementOf('ChapterCorrectabilityChanged');
         self::assertTrue($last['correctable']);
-        self::assertSame(['chapterId', 'workId', 'correctable', 'changedAt'], array_keys($last));
+
+        // Ni un saldo ni un precio: la conclusión, y cuánto trabajo produce
+        // enseñar esta obra, con tope de diez (`decision:0008`).
+        self::assertSame(['chapterId', 'workId', 'correctable', 'affordableCorrections', 'changedAt'], array_keys($last));
+        self::assertSame(3, $last['affordableCorrections'], 'Diez créditos y un capítulo de tres.');
 
         // La autora recibe una corrección de 3 y se queda con 7, que todavía
         // llega; hace falta algo más caro para que deje de llegar.
