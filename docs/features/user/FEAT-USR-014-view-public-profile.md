@@ -5,7 +5,7 @@ context: User
 concept: Profile
 actors: [User, Guest]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - _sources/use-cases.pdf#p3
@@ -102,16 +102,16 @@ Las pestañas se piden aparte y paginadas.
 
 ## Criterios de aceptación
 
-- [ ] El perfil devuelve nombre, `@usuario`, avatar, portada, descripción y contadores.
-- [ ] **No devuelve email ni fecha de nacimiento.**
-- [ ] **La pestaña de relatos no incluye borradores ajenos.**
-- [ ] Los relatos ajenos no muestran la insignia de estado.
-- [ ] No existe forma de listar el feedback que otro usuario ha dado.
-- [ ] El contador de correcciones sí se devuelve.
-- [ ] La respuesta indica si le sigo y si me sigue.
-- [ ] El perfil de una cuenta eliminada devuelve `404`.
-- [ ] Una cuenta sin activar puede consultar perfiles.
-- [ ] Editar el perfil de otro usuario se rechaza, aunque la interfaz muestre los lápices.
+- [x] El perfil devuelve nombre, `@usuario`, avatar, portada y descripción. *Los contadores no: son de `Community`, que no existe. Ver abajo.*
+- [x] **No devuelve email ni fecha de nacimiento.**
+- [ ] **La pestaña de relatos no incluye borradores ajenos.** *Las pestañas se piden aparte y todavía no existen.*
+- [ ] Los relatos ajenos no muestran la insignia de estado. *Misma pestaña.*
+- [ ] No existe forma de listar el feedback que otro usuario ha dado. *Se cumple por construcción —no hay endpoint— pero no hay nada que probar hasta que existan las pestañas.*
+- [ ] El contador de correcciones sí se devuelve. *Es de `Feedback` y llegará con los contadores.*
+- [ ] La respuesta indica si le sigo y si me sigue. *`Community` no existe: no hay relación que indicar.*
+- [x] El perfil de una cuenta eliminada devuelve `404`.
+- [x] Una cuenta sin activar puede consultar perfiles.
+- [ ] Editar el perfil de otro usuario se rechaza, aunque la interfaz muestre los lápices. *Editar el perfil es [`FEAT-USR-008`](FEAT-USR-008-edit-profile.md) y no existe.*
 
 El último responde a un error de maqueta: los lápices de edición aparecen en el perfil ajeno.
 El backend debe rechazarlo con independencia de lo que pinte el cliente.
@@ -131,4 +131,40 @@ El backend debe rechazarlo con independencia de lo que pinte el cliente.
 **Especificación:** `APPROVED` (2026-09-24). `U-20` resuelta: la lista de seguidores es pública. Lo que
 queda son detalles de presentación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-24). Sin tabla ni migración: el perfil ya estaba en la
+cuenta.
+
+`GET /users/{userId}` y `GET /profiles/{username}` devuelven la misma forma, y con la segunda
+se implementa de paso [`FEAT-USR-035`](FEAT-USR-035-resolve-profile-by-username.md): resuelve
+primero entre los nombres en uso y solo después entre los **alias vigentes**, con
+`canonicalUsername` y `resolvedVia` para que el cliente sustituya la URL sin recargar. No
+redirige: este endpoint sirve datos, no páginas.
+
+### Son públicos, y el ajuste de privacidad es lo que los cierra
+
+Un perfil sin restringir es una URL que se comparte; exigir sesión para abrirla haría inútil
+compartirla (`FEAT-USR-035` `RN-6`). La sesión se lee **si la hay**, y para una sola cosa: que
+su titular se vea siempre a sí mismo. Esconderle su propio perfil sería absurdo, y es lo que
+permite deshacer el ajuste — quien lo cierra sigue entrando a abrirlo.
+
+Va en `access_control` y no en un firewall sin seguridad, precisamente para que un visitante
+con sesión siga siendo reconocido.
+
+**Con esto, `profileVisibility` significa por fin lo que promete**
+([`FEAT-USR-038`](FEAT-USR-038-privacy-settings.md)): hasta ahora en `NOBODY` solo retiraba a
+alguien del buscador de a quién invitar; ahora su perfil responde igual que el de alguien que
+no existe. `404` y no `403`, porque un `403` confirmaría que la cuenta está ahí y dejaría sin
+efecto un ajuste cuya razón de ser es **no ser encontrado**.
+
+Cinco situaciones responden lo mismo: no existe, el identificador está mal escrito, el alias
+caducó, la cuenta está eliminada, o su titular ha restringido el perfil.
+
+### Qué falta
+
+- **Los contadores** —seguidos, seguidores, relatos, correcciones— y **el estado de la
+  relación**. Son de `Community` y de `Feedback`. Devolver ceros habría sido peor que no
+  devolverlos: un contador a cero se lee como «no ha hecho nada», no como «aún no se sabe».
+- **Las pestañas** (muro, relatos, amigos, obras publicadas), que la propia ficha dice que se
+  piden aparte y paginadas.
+- `U-17` sigue abierta, y ahora importa menos de lo que parecía: **no hay pestaña de
+  correcciones ni forma de listarlas**, que es lo que la ficha pedía garantizar.

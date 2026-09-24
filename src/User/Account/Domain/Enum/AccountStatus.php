@@ -28,6 +28,17 @@ enum AccountStatus: string
     }
 
     /**
+     * A deleted account is **anonymised**: there is nothing left to show, and
+     * its profile answers as if it had never existed (`FEAT-USR-014` `RN-7`).
+     * What survives is the identifier, which corrections and credit movements
+     * still point at.
+     */
+    public function isDeleted(): bool
+    {
+        return self::DELETED === $this;
+    }
+
+    /**
      * A blocked account does **not** authenticate
      * ([`FEAT-MOD-006`](../../../../../docs/features/moderation/FEAT-MOD-006-sanctions.md),
      * [`decision:0007`](../../../../../docs/decisions/0007-jwt-sessions.md)).

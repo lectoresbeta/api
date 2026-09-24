@@ -40,8 +40,8 @@
 | `PUT /me/notification-preferences` | `updateMyNotificationPreferences` | Modificarlas | FEAT-USR-039 | DRAFT |
 | `PATCH /me/settings` | `updateAccountSettings` | MD y propuestas de LB | FEAT-USR-010/011 | PENDING |
 | `DELETE /me` | `deleteMyAccount` | Eliminar cuenta | FEAT-USR-013 | BLOCKED |
-| `GET /users/{userId}` | `getUserProfile` | Perfil público por identificador | FEAT-USR-014 | PENDING |
-| `GET /profiles/{username}` | `getProfileByUsername` | Perfil por nombre de usuario o alias | FEAT-USR-035 | DRAFT |
+| `GET /api/v1/users/{userId}` | `getUserProfile` | Perfil público por identificador | FEAT-USR-014 | **Implementado** |
+| `GET /api/v1/profiles/{username}` | `getProfileByUsername` | Perfil por nombre de usuario o alias | FEAT-USR-035 | **Implementado** |
 | `PUT /me/username` | `changeUsername` | Cambiar el nombre de usuario | FEAT-USR-034 | DRAFT |
 | `GET /usernames/{username}/availability` | `checkUsernameAvailability` | Comprobar si un nombre está libre | FEAT-USR-033 | DRAFT |
 | `GET /me/profile` | `getMyProfile` | Cabecera del perfil propio | FEAT-USR-028 | DRAFT |
@@ -416,3 +416,51 @@ y un interruptor que nada lee es peor que ninguno.
 ### Efectos
 
 Publica `PrivacySettingsChanged` con los tres ajustes y **nada del perfil**.
+
+
+---
+
+## `GET /api/v1/users/{userId}` y `GET /api/v1/profiles/{username}`
+
+**`operationId`:** `getUserProfile`, `getProfileByUsername` · **Funcionalidades:**
+[`FEAT-USR-014`](../../features/user/FEAT-USR-014-view-public-profile.md),
+[`FEAT-USR-035`](../../features/user/FEAT-USR-035-resolve-profile-by-username.md)
+
+### Propósito
+
+El perfil de otra persona. Las dos rutas devuelven **lo mismo**: piden el mismo recurso por
+caminos distintos, y dos formas obligarían al cliente a saber por cuál entró.
+
+### Autorización
+
+**Públicos.** Un perfil que su dueño no ha restringido es una URL que se comparte, y exigir
+sesión para abrirla haría inútil compartirla.
+
+La sesión se lee si la hay, y sirve para una sola cosa: que su titular se vea siempre a sí
+mismo. Es lo que permite deshacer el ajuste — quien restringe su perfil sigue entrando a
+abrirlo.
+
+### Reglas aplicadas
+
+- **Nunca el correo ni la fecha de nacimiento.**
+- Se resuelve primero entre los nombres en uso y solo después entre los **alias vigentes**. Un
+  alias caducado no resuelve aunque su fila siga ahí.
+- Los alias que dejó una cuenta eliminada bloquean el nombre y **nunca resuelven**.
+- `canonicalUsername` va siempre; `resolvedVia` dice `USER_ID`, `USERNAME` o `ALIAS`.
+- **No redirige.** Con `301` sería más cómodo y este endpoint sirve datos, no páginas: quien
+  construye la barra de direcciones es el cliente.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `PROFILE_NOT_FOUND` | 404 | No existe, el identificador está mal escrito, el alias caducó, la cuenta está eliminada, o su titular ha restringido el perfil |
+
+**Una sola respuesta para las cinco**, y la última es la que obliga: un `403` confirmaría que
+la cuenta existe, y para un ajuste cuya razón de ser es no ser encontrado eso lo deja sin
+efecto.
+
+### Qué no está todavía
+
+Contadores y estado de la relación —si le sigo, si me sigue, si hay bloqueo—, que son de
+`Community`. Y las pestañas, que se piden aparte y paginadas.

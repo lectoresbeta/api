@@ -91,6 +91,12 @@ paths:
   /me/privacy-settings:
     $ref: './paths/settings.yaml#/privacySettings'
 
+  /users/{userId}:
+    $ref: './paths/profiles.yaml#/byUserId'
+
+  /profiles/{username}:
+    $ref: './paths/profiles.yaml#/byUsername'
+
   /works:
     $ref: './paths/works.yaml#/collection'
 

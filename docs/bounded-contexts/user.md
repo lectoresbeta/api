@@ -39,11 +39,11 @@ preferencias y presencia pública como autor.
 | `Account` | Ciclo de vida de la cuenta: alta, activación, modificación, baja |
 | `Authentication` | Credenciales, sesión, proveedores externos, recuperación |
 | `Onboarding` | Los tres pasos posteriores al registro y su estado |
-| `Profile` | Datos públicos, nombre de usuario y sus alias, preferencias literarias |
+| `Profile` | Datos públicos, nombre de usuario y sus alias, preferencias literarias. Resuelve el perfil ajeno por identificador, por nombre y por alias vigente |
 | `AuthorPage` | Perfil público: portada, descripción, obras publicadas y premios |
 | `Invitation` | Invitaciones por email y su seguimiento |
 | `Legal` | Documentos legales vigentes y el registro de aceptaciones |
-| `Privacy` | Quién puede ver el perfil, comentar los textos y mandar mensajes |
+| `Privacy` | Quién puede ver el perfil, comentar los textos y mandar mensajes. **Reglas de autorización**, no preferencias |
 | `Preferences` | Qué avisos recibe el usuario y por qué canal; apariencia |
 
 > El nombre de usuario y sus alias sobreviven al borrado de la cuenta durante 30 días, así

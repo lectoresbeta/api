@@ -46,6 +46,13 @@ security:
 
     access_control:
         - { path: '^/api/v1/admin(/|$)', roles: ROLE_MODERATOR }
+
+        # El perfil ajeno se abre sin sesión (FEAT-USR-014, FEAT-USR-035): es
+        # una URL que se comparte. Va en `access_control` y no en un firewall
+        # sin seguridad a propósito — así un visitante con sesión sigue siendo
+        # reconocido, que es lo que permite que su titular se vea a sí mismo
+        # aunque haya restringido su perfil.
+        - { path: '^/api/v1/(users|profiles)/[^/]+$', methods: [GET], roles: PUBLIC_ACCESS }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

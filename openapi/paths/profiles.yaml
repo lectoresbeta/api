@@ -1,0 +1,138 @@
+# El perfil ajeno, por identificador o por nombre de usuario.
+#
+# Las dos rutas devuelven **lo mismo**: piden el mismo recurso por caminos
+# distintos, y dos formas obligarían al cliente a saber por cuál entró.
+
+ProfileResolution:
+  type: string
+  enum: [USER_ID, USERNAME, ALIAS]
+  description: |
+    Por dónde se ha llegado. `ALIAS` es el que importa: significa que el
+    enlace lleva un nombre que su titular ya no usa, y que conviene sustituir
+    la URL por la canónica.
+
+PublicProfile:
+  type: object
+  required: [userId, username, canonicalUsername, resolvedVia]
+  properties:
+    userId:
+      type: string
+      format: uuid
+    username:
+      type: string
+      description: El nombre por el que se preguntó.
+    canonicalUsername:
+      type: string
+      description: |
+        El nombre actual de su titular. Va **siempre**, no solo al resolver
+        por alias, para que el cliente pueda comparar sin preguntarse si el
+        campo aplica.
+    resolvedVia:
+      $ref: '#/ProfileResolution'
+    name:
+      type: [string, 'null']
+    description:
+      type: [string, 'null']
+    avatarUrl:
+      type: [string, 'null']
+    coverUrl:
+      type: [string, 'null']
+  description: |
+    Lo que importa de esta respuesta es **lo que no lleva**: ni correo ni
+    fecha de nacimiento, nunca. Son datos privados y no salen de su contexto.
+
+    Tampoco lleva contadores ni el estado de la relación —si le sigo, si me
+    sigue, si hay bloqueo—, porque esos datos son de `Community`, que todavía
+    no existe. Devolver ceros habría sido peor: un contador a cero se lee como
+    «no ha hecho nada», no como «aún no se sabe».
+
+byUserId:
+  get:
+    tags: [User]
+    operationId: getUserProfile
+    summary: Ver el perfil público de un usuario
+    security: []
+    description: |
+      **Público.** Un perfil que su dueño no ha restringido es una URL que se
+      comparte, y exigir sesión para abrirla haría inútil compartirla.
+
+      Si hay sesión se lee, y sirve para una sola cosa: que su titular se vea
+      siempre a sí mismo. Esconderle su propio perfil sería absurdo, y es lo
+      que permite deshacer el ajuste — quien lo cierra sigue entrando a
+      abrirlo.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: El perfil público.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PublicProfile'
+      '404':
+        description: |
+          `code: PROFILE_NOT_FOUND`. **Cuatro situaciones, una respuesta**: no
+          existe, el identificador está mal escrito, la cuenta está eliminada
+          —y anonimizada, así que no queda nada que enseñar— o su titular ha
+          restringido el perfil.
+
+          La última obliga a que sean la misma. Un `403` confirmaría que la
+          cuenta existe, y para un ajuste cuya razón de ser es **no ser
+          encontrado** eso lo deja sin efecto: bastaría leer el código de
+          estado para saber si alguien está en la plataforma.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+byUsername:
+  get:
+    tags: [User]
+    operationId: getProfileByUsername
+    summary: Ver el perfil público por nombre de usuario
+    security: []
+    description: |
+      Resuelve **primero entre los nombres en uso** y solo después entre los
+      alias, de modo que un alias nunca tape a quien tenga ese nombre ahora.
+
+      Un alias solo resuelve si está **vigente**. Es la regla crítica de toda
+      esta funcionalidad: comprobar que la fila existe en lugar de que siga en
+      plazo haría que un enlace caducado funcionase durante días, que es justo
+      lo que el mes de reserva pretende acotar.
+
+      Los alias que dejó una cuenta eliminada **bloquean el nombre y nunca
+      resuelven**: no hay perfil al que llevar.
+
+      **No redirige.** Sería natural responder `301` a la URL canónica, y no
+      se hace porque este endpoint sirve datos y no páginas: quien construye
+      la barra de direcciones es el cliente. Con `canonicalUsername` y
+      `resolvedVia` puede sustituir la URL sin recargar.
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: |
+          El perfil público. Con `resolvedVia: ALIAS`, el nombre pedido ya no
+          es el de su titular.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PublicProfile'
+      '404':
+        description: |
+          `code: PROFILE_NOT_FOUND`. Nadie usa ese nombre, el alias caducó, el
+          alias es de una cuenta eliminada, la cuenta está eliminada o su
+          titular ha restringido el perfil. **Una sola respuesta para todas.**
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

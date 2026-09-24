@@ -70,7 +70,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-011 | Configurar recepción de propuestas de LB y writing buddy | User | PENDING | TODO | P2 | — |
 | FEAT-USR-012 | ~~Configurar notificaciones por email~~ → `FEAT-USR-039` | User | PENDING | DEPRECATED | P3 | — |
 | FEAT-USR-013 | Eliminar la cuenta — anonimización | User | APPROVED | BLOCKED | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
-| FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-014-view-public-profile.md) |
+| FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-014-view-public-profile.md) |
 | FEAT-USR-015 | Configurar información de la página de autor (bio, foto, referencias) | Writer | PENDING | TODO | P2 | — |
 | FEAT-USR-016 | Personalizar página de autor (fuentes, colores, fondos) | Writer | PENDING | TODO | P3 | — |
 | FEAT-USR-017 | Buscar autores por nombre o temática | User | PENDING | TODO | P1 | — |
@@ -91,7 +91,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-032 | Compartir el perfil | User | PENDING | TODO | P3 | — |
 | FEAT-USR-033 | Nombre de usuario — formato, asignación automática y unicidad | Guest, User | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-033-username-assignment.md) |
 | FEAT-USR-034 | Cambiar el nombre de usuario y alias temporal | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-034-change-username.md) |
-| FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |
+| FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |
 | FEAT-USR-036 | Purga programada de alias caducados | — (sistema) | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-036-purge-expired-aliases.md) |
 | FEAT-USR-037 | Gestionar la foto de perfil — subir, editar y eliminar | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |
 | FEAT-USR-038 | Ajustes de privacidad del usuario | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-038-privacy-settings.md) |

@@ -5,7 +5,7 @@ context: User
 concept: Profile
 actors: [Guest, User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - decision:0005
@@ -168,4 +168,18 @@ pueda acortar sin más.
 **Especificación:** `APPROVED` (2026-09-24). `N-11` resuelta con la propuesta `/@{username}`, pendiente de
 tu visto bueno. El mecanismo de resolución ya estaba completo.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-24), con
+[`FEAT-USR-014`](FEAT-USR-014-view-public-profile.md): son el mismo endpoint.
+
+Las reglas que había que no equivocarse están las tres probadas: primero los nombres en uso y
+solo después los alias, solo resuelven los **vigentes** —comprobando el plazo y no la
+existencia de la fila, que es la diferencia entre un enlace caducado y uno que sigue
+funcionando días de más— y los alias de cuentas eliminadas bloquean el nombre sin resolver
+nunca.
+
+Lo que no se puede probar todavía es el camino real por el que nace un alias: cambiarse de
+nombre es [`FEAT-USR-034`](../README.md) y no existe, así que el test escribe el alias
+directamente. Lo que defiende es la resolución, no cómo se creó.
+
+La forma `/@{username}` de la URL es del frontend: la API expone `/profiles/{username}` y
+devuelve el nombre canónico para que el cliente construya la que quiera.

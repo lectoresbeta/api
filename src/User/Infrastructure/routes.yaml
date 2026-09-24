@@ -65,3 +65,17 @@ updateMyPrivacySettings:
     path: /api/v1/me/privacy-settings
     controller: LectoresBeta\User\Privacy\Infrastructure\Controller\UpdatePrivacySettingsController::__invoke
     methods: [PUT]
+
+# El perfil ajeno (FEAT-USR-014 y FEAT-USR-035). Públicos: un perfil que su
+# dueño no ha restringido es una URL que se comparte, y exigir sesión para
+# abrirla haría inútil compartirla.
+
+getUserProfile:
+    path: /api/v1/users/{userId}
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetUserProfileController::__invoke
+    methods: [GET]
+
+getProfileByUsername:
+    path: /api/v1/profiles/{username}
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetProfileByUsernameController::__invoke
+    methods: [GET]
