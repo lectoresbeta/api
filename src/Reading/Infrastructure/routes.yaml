@@ -45,3 +45,33 @@ resolveBetaReaderAccessRequest:
     path: /api/v1/access-requests/{requestId}/resolution
     controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\ResolveAccessRequestController::__invoke
     methods: [PUT]
+
+# El camino `PRIVATE` (FEAT-RDG-004 y FEAT-RDG-005). Se llama
+# `beta-reader-invitations` y no `invitations` porque `User` ya tiene
+# invitaciones —a la plataforma— y dos cosas distintas con el mismo nombre en
+# la misma API se confunden una vez y ya no se dejan de confundir.
+
+inviteBetaReader:
+    path: /api/v1/works/{workId}/beta-reader-invitations
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\InviteBetaReaderController::__invoke
+    methods: [POST]
+
+listWorkBetaReaderInvitations:
+    path: /api/v1/works/{workId}/beta-reader-invitations
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\ListWorkInvitationsController::__invoke
+    methods: [GET]
+
+listMyBetaReaderInvitations:
+    path: /api/v1/me/beta-reader-invitations
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\ListMyInvitationsController::__invoke
+    methods: [GET]
+
+cancelBetaReaderInvitation:
+    path: /api/v1/beta-reader-invitations/{invitationId}
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\CancelInvitationController::__invoke
+    methods: [DELETE]
+
+resolveBetaReaderInvitation:
+    path: /api/v1/beta-reader-invitations/{invitationId}/resolution
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\ResolveInvitationController::__invoke
+    methods: [PUT]

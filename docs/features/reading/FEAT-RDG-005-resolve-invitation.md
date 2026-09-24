@@ -5,7 +5,7 @@ context: Reading
 concept: AccessInvitation
 actors: [Reader]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - _sources/use-cases.pdf
@@ -156,16 +156,16 @@ el mismo índice único parcial sobre los accesos vivos sosteniendo `RN-4`.
 
 ## Criterios de aceptación
 
-- [ ] El invitado acepta y queda como lector beta de la obra.
-- [ ] Tras aceptar, lee una obra `PRIVATE` que antes no podía abrir.
-- [ ] El invitado rechaza y el autor se entera; no queda acceso ninguno.
-- [ ] Resolver dos veces la misma invitación responde `409`.
-- [ ] Resolver la invitación de otra persona responde `404`.
-- [ ] Una invitación retirada por el autor ya no se puede aceptar.
-- [ ] Aceptar cuando ya se tenía acceso no crea un segundo acceso.
-- [ ] Aceptar sobre una obra borrada responde `410`.
-- [ ] La lista de invitaciones enseña la clasificación de contenido antes de aceptar.
-- [ ] Rechazar no impide una invitación posterior a la misma obra.
+- [x] El invitado acepta y queda como lector beta de la obra.
+- [x] Tras aceptar, lee una obra `PRIVATE` que antes no podía abrir.
+- [x] El invitado rechaza y el autor se entera; no queda acceso ninguno.
+- [x] Resolver dos veces la misma invitación responde `409`.
+- [x] Resolver la invitación de otra persona responde `404`.
+- [x] Una invitación retirada por el autor ya no se puede aceptar.
+- [x] Aceptar cuando ya se tenía acceso no crea un segundo acceso.
+- [ ] Aceptar sobre una obra borrada responde `410`. *El código está y se ejecuta en cada aceptación; no hay forma de provocarlo porque `Work` no tiene borrado de obras.*
+- [x] La lista de invitaciones enseña la clasificación de contenido antes de aceptar.
+- [x] Rechazar no impide una invitación posterior a la misma obra.
 
 ## Preguntas abiertas
 
@@ -182,5 +182,18 @@ explícitas: `RN-6` —avisar al autor del rechazo, con el evento nuevo que eso 
 lista de invitaciones enseñe sinopsis y clasificación de una obra que el invitado todavía no
 puede leer.
 
-**Implementación:** `TODO`. Se implementa junto a
+**Implementación:** `DONE` (2026-09-24), junto a
 [`FEAT-RDG-004`](FEAT-RDG-004-invite-beta-reader.md).
+
+Con esto **los tres caminos de acceso funcionan** y una obra `PRIVATE` admite por fin a
+alguien.
+
+Lo que esta mitad estrena es el evento `BetaReaderInvitationDeclined`, que no estaba en el
+catálogo, y el motivo está en `RN-6`: rechazar una invitación contesta a alguien que esperaba
+respuesta, y cancelar una solicitud no. La lista de invitaciones lleva además sinopsis y
+clasificación de contenido, y ahí está su razón de ser — es el único sitio del producto donde
+alguien se compromete a leer algo que no ha podido ojear.
+
+Un detalle que apareció al escribir la proyección: una obra que ha dejado de existir deja la
+fila **marcada como para adultos**. Ante la duda, el aviso prudente es el que no promete que
+algo es inofensivo.

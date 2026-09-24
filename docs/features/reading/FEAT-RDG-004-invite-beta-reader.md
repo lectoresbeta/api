@@ -5,7 +5,7 @@ context: Reading
 concept: AccessInvitation
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - _sources/use-cases.pdf
@@ -173,15 +173,15 @@ Ninguna tabla nueva.
 
 ## Criterios de aceptación
 
-- [ ] El autor invita a un usuario y este recibe el aviso.
-- [ ] Invitar dos veces a la misma persona no crea dos invitaciones.
-- [ ] Invitar a la obra de otra persona responde `404`.
-- [ ] Invitar a un usuario inexistente responde `422` nombrando el motivo.
-- [ ] Invitar a quien ya es lector beta responde `409`.
-- [ ] Invitar a quien tiene una solicitud pendiente responde `409` y no crea una segunda vía.
-- [ ] El autor no puede invitarse a sí mismo.
-- [ ] Se puede invitar sobre una obra `PUBLIC` y sobre un borrador.
-- [ ] Retirar una invitación pendiente la hace desaparecer para el invitado.
+- [x] El autor invita a un usuario y este recibe el aviso.
+- [x] Invitar dos veces a la misma persona no crea dos invitaciones.
+- [x] Invitar a la obra de otra persona responde `404`.
+- [x] Invitar a un usuario inexistente responde `422` nombrando el motivo.
+- [x] Invitar a quien ya es lector beta responde `409`.
+- [x] Invitar a quien tiene una solicitud pendiente responde `409` y no crea una segunda vía.
+- [x] El autor no puede invitarse a sí mismo.
+- [x] Se puede invitar sobre una obra `PUBLIC` y sobre un borrador.
+- [x] Retirar una invitación pendiente la hace desaparecer para el invitado.
 
 ## Preguntas abiertas
 
@@ -198,5 +198,16 @@ Ninguna tabla nueva.
 explícitas: `RN-3` —invitar vale en `PUBLIC` aunque solicitar no— y `RN-12` —invitar a un
 borrador, con la espera que eso implica—.
 
-**Implementación:** `TODO`. Se implementa junto a
+**Implementación:** `DONE` (2026-09-24), junto a
 [`FEAT-RDG-005`](FEAT-RDG-005-resolve-invitation.md).
+
+Sin tabla nueva y sin migración: `access_invitation` estaba en el esquema desde el andamiaje
+inicial, con su índice único parcial. Lo nuevo fuera de este concepto es **`RegisteredUsers`**,
+el contrato de `User` que responde un booleano —existe o no— y nada más.
+
+`RN-6` resultó tener un efecto que no se veía al especificar: como no se puede invitar a quien
+tiene una solicitud abierta **ni** a quien ya es lector beta, la única forma de que coexistan
+una invitación pendiente y un acceso vivo es que el acceso llegue por la **tercera** puerta —
+el autor abre la obra y el invitado entra poniéndose a corregir. Es lo que prueba el test de
+`RN-4` de la ficha gemela, y de paso deja escrito que las tres vías se cruzan en un solo
+sitio.

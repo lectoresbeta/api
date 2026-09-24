@@ -8,6 +8,8 @@ use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBrief;
 use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
 use LectoresBeta\Work\Manuscript\Domain\Entity\Work;
+use LectoresBeta\Work\Manuscript\Domain\Enum\ContentWarning;
+use LectoresBeta\Work\Manuscript\Domain\Repository\WorkContentWarningRepository;
 use LectoresBeta\Work\Manuscript\Domain\Repository\WorkRepository;
 use LectoresBeta\Work\Manuscript\Domain\ValueObject\WorkId;
 
@@ -27,8 +29,10 @@ use LectoresBeta\Work\Manuscript\Domain\ValueObject\WorkId;
  */
 final readonly class ResolveWorkAccessBriefs implements WorkAccessBriefs
 {
-    public function __construct(private WorkRepository $works)
-    {
+    public function __construct(
+        private WorkRepository $works,
+        private WorkContentWarningRepository $warnings,
+    ) {
     }
 
     public function ofWork(string $workId): ?WorkAccessBrief
@@ -39,7 +43,7 @@ final readonly class ResolveWorkAccessBriefs implements WorkAccessBriefs
             return null;
         }
 
-        return null === $work ? null : self::briefOf($work);
+        return null === $work ? null : $this->briefOf($work);
     }
 
     public function ofWorks(array $workIds): array
@@ -55,17 +59,22 @@ final readonly class ResolveWorkAccessBriefs implements WorkAccessBriefs
             }
         }
 
-        return array_map(self::briefOf(...), $this->works->ofIds($ids));
+        return array_map($this->briefOf(...), $this->works->ofIds($ids));
     }
 
-    private static function briefOf(Work $work): WorkAccessBrief
+    private function briefOf(Work $work): WorkAccessBrief
     {
         return new WorkAccessBrief(
             $work->id()->value(),
             $work->authorId()->value(),
             $work->title()->value(),
+            $work->synopsis(),
             $work->accessMode()->value,
             $work->isAdultsOnly(),
+            array_map(
+                static fn (ContentWarning $warning): string => $warning->value,
+                $this->warnings->of($work->id()),
+            ),
             $work->status()->isReadableByOthers() && !$work->isBlocked(),
         );
     }

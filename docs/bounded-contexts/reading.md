@@ -52,19 +52,19 @@ lector beta y los vínculos entre usuarios que lo habilitan.
 |---|---|---|
 | `PUBLIC` | El usuario **empieza a corregir** y con eso se convierte en LB ([`FEAT-RDG-001`](../features/reading/FEAT-RDG-001-become-beta-reader-by-correcting.md)) | `BetaReaderAccess` inmediato |
 | `ON_REQUEST` | El usuario solicita, el autor acepta ([`FEAT-RDG-002`](../features/reading/FEAT-RDG-002-request-beta-reader-access.md), [`FEAT-RDG-003`](../features/reading/FEAT-RDG-003-resolve-access-request.md)) | `BetaReaderAccess` tras la aprobación |
-| `PRIVATE` | El autor invita, el usuario acepta | `BetaReaderAccess` tras la aceptación |
+| `PRIVATE` | El autor invita, el usuario acepta ([`FEAT-RDG-004`](../features/reading/FEAT-RDG-004-invite-beta-reader.md), [`FEAT-RDG-005`](../features/reading/FEAT-RDG-005-resolve-invitation.md)) | `BetaReaderAccess` tras la aceptación |
 
 Los tres caminos producen el mismo objeto de dominio. La modalidad decide el camino, no el
 resultado.
 
-Los dos primeros funcionan. El de invitación está especificado y aprobado
-([`FEAT-RDG-004`](../features/reading/FEAT-RDG-004-invite-beta-reader.md),
-[`FEAT-RDG-005`](../features/reading/FEAT-RDG-005-resolve-invitation.md)) y todavía no
-implementado, lo que significa que **una obra `PRIVATE` no admite a nadie por ahora**.
+**Los tres funcionan.** Resolver una solicitud o una invitación **cierra el objeto y concede
+el acceso en la misma transacción**: son las dos únicas escrituras del proyecto que cambian
+dos agregados a la vez, y se puede porque los dos son de este contexto — en cuanto uno fuese
+de otro, volvería a ser un evento.
 
-Aceptar una solicitud **cierra el objeto y concede el acceso en la misma transacción**. Es la
-única escritura del proyecto que cambia dos agregados a la vez, y se puede porque los dos son
-de este contexto: en cuanto uno fuese de otro, volvería a ser un evento.
+Los tres se cruzan en un solo sitio, y conviene saber cuál: no se puede invitar a quien tiene
+una solicitud abierta ni a quien ya es lector beta, así que la única forma de tener una oferta
+pendiente **y** acceso vivo es que el acceso haya llegado por la tercera vía, corrigiendo.
 
 ### Conceder un acceso no compromete nada
 

@@ -127,6 +127,9 @@ services:
     LectoresBeta\User\Account\Application\Contract\ReaderMaturity:
         alias: LectoresBeta\User\Account\Application\Service\CheckReaderMaturity
 
+    LectoresBeta\User\Account\Application\Contract\RegisteredUsers:
+        alias: LectoresBeta\User\Account\Application\Service\CheckRegisteredUsers
+
     LectoresBeta\Work\Chapter\Application\Contract\CorrectionBriefs:
         alias: LectoresBeta\Work\Chapter\Application\Service\ResolveCorrectionBriefs
 

@@ -45,7 +45,7 @@ Los publicados hasta ahora:
 | `GenreCatalogue` | `User` | Cuáles de estos códigos de temática **no** existen |
 | `CorrectionBriefs` | `Work` | Qué se pregunta en un capítulo, de quién es la obra y si admite correcciones |
 | `BetaReaderAccessCheck` | `Reading` | Un booleano: ¿es lector beta de esta obra? |
-| `WorkAccessBriefs` | `Work` | De quién es una obra, cómo está abierta y si existe para quien pregunta |
+| `WorkAccessBriefs` | `Work` | De quién es una obra, cómo está abierta, qué declara contener y si existe para quien pregunta |
 | `RegisteredUsers` | `User` | Un booleano: ¿existe este usuario? |
 
 Casi todos devuelven **un booleano o poco más**, y no es casualidad: un contrato que devuelve

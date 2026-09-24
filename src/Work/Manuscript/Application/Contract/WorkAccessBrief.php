@@ -21,6 +21,13 @@ namespace LectoresBeta\Work\Manuscript\Application\Contract;
  * `CorrectionBrief` carries it: who is of age belongs to `User`, and the
  * caller already asks it.
  *
+ * `synopsis` and `contentWarnings` are here for one screen only, and it is
+ * the screen that justifies them: somebody deciding whether to accept an
+ * invitation (`FEAT-RDG-005`). **It is the one place in the product where a
+ * person agrees to read something they could not look at first** — the work
+ * may be private, or still a draft — so what would otherwise be on the
+ * catalogue card has to travel with the offer.
+ *
  * Note what it does not carry: not a word of the work's text, and nothing
  * about who already has access — that question is `Reading`'s own, and
  * answering it here would be this contract calling that one
@@ -28,12 +35,18 @@ namespace LectoresBeta\Work\Manuscript\Application\Contract;
  */
 final readonly class WorkAccessBrief
 {
+    /**
+     * @param list<string> $contentWarnings lo que la obra declara contener
+     *                                      (`FEAT-WRK-017`)
+     */
     public function __construct(
         public string $workId,
         public string $authorId,
         public string $title,
+        public ?string $synopsis,
         public string $accessMode,
         public bool $adultsOnly,
+        public array $contentWarnings,
         public bool $visibleToOthers,
     ) {
     }

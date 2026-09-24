@@ -103,7 +103,7 @@ dinero — `affordableCorrections` es una conclusión acotada a diez, no un sald
 | Contrato | Responde | Quién pregunta |
 |---|---|---|
 | `CorrectionBriefs` | Qué pregunta el autor en **un capítulo concreto**, de quién es la obra, si admite correcciones y bajo qué modalidad | `Feedback` |
-| `WorkAccessBriefs` | De quién es una obra, en qué modalidad está, si es para adultos y si existe para alguien que no sea su autor | `Reading` |
+| `WorkAccessBriefs` | De quién es una obra, cómo está abierta, qué declara contener y si existe para alguien que no sea su autor | `Reading` |
 
 Es síncrono a conciencia: los enunciados del cuestionario son **texto del autor**, y por eso
 `QuestionnaireUpdated` no los transporta. Quien abre el panel de corrección los necesita en
@@ -119,6 +119,12 @@ sabe este contexto.
 por la obra. Los motivos y la regla que lo mantiene inofensivo están en
 [`decision:0015`](../decisions/0015-work-and-reading-ask-each-other.md). Devuelve **hechos, no
 un veredicto**: quién puede pedir qué lo decide `Reading`.
+
+Lleva sinopsis y clasificación de contenido por una pantalla concreta: la lista de
+invitaciones ([`FEAT-RDG-005`](../features/reading/FEAT-RDG-005-resolve-invitation.md)). Es el
+único sitio del producto donde alguien acepta leer algo que no ha podido ojear —la obra puede
+ser privada, o un borrador—, así que lo que en otro caso estaría en la tarjeta del catálogo
+tiene que viajar con la oferta.
 
 ## Reglas de negocio
 

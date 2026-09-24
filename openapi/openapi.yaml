@@ -127,6 +127,18 @@ paths:
   /access-requests/{requestId}/resolution:
     $ref: './paths/reading.yaml#/resolution'
 
+  /works/{workId}/beta-reader-invitations:
+    $ref: './paths/reading.yaml#/invitations'
+
+  /me/beta-reader-invitations:
+    $ref: './paths/reading.yaml#/myInvitations'
+
+  /beta-reader-invitations/{invitationId}:
+    $ref: './paths/reading.yaml#/invitation'
+
+  /beta-reader-invitations/{invitationId}/resolution:
+    $ref: './paths/reading.yaml#/invitationResolution'
+
   /works/{workId}/questionnaire:
     $ref: './paths/works.yaml#/questionnaire'
 

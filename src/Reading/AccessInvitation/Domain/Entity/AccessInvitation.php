@@ -74,6 +74,30 @@ class AccessInvitation
         return $this->status;
     }
 
+    public function isOpen(): bool
+    {
+        return $this->status->isOpen();
+    }
+
+    /**
+     * What the author wrote with the offer. On an unpublished work, «te
+     * invito a leer lo que llevo» says far more than a bare notice.
+     */
+    public function message(): ?string
+    {
+        return $this->message;
+    }
+
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function resolvedAt(): ?\DateTimeImmutable
+    {
+        return $this->resolvedAt;
+    }
+
     public function accept(\DateTimeImmutable $now): void
     {
         $this->resolve(AccessInvitationStatus::ACCEPTED, $now);

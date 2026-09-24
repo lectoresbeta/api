@@ -391,3 +391,395 @@ resolution:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+AccessInvitationStatus:
+  type: string
+  enum: [PENDING, ACCEPTED, DECLINED, CANCELLED]
+
+BetaReaderInvitation:
+  type: object
+  required: [invitationId, workId, adultsOnly, contentWarnings, authorId, readerId, status, invitedAt]
+  properties:
+    invitationId:
+      type: string
+      format: uuid
+    workId:
+      type: string
+      format: uuid
+    workTitle:
+      type: [string, 'null']
+    workSynopsis:
+      type: [string, 'null']
+      description: |
+        Sin truncar, al contrario que en la tarjeta del catálogo: quien decide
+        si acepta **no ha podido ojear la obra** —puede ser privada o un
+        borrador— y esto es lo único que tiene para decidir.
+    adultsOnly:
+      type: boolean
+      description: |
+        Una obra que ha dejado de existir sale marcada como para adultos: ante
+        la duda, el aviso prudente es el que no promete que algo es
+        inofensivo.
+    contentWarnings:
+      type: array
+      items:
+        $ref: './works.yaml#/ContentWarning'
+      description: |
+        **Antes de aceptar**, que es cuando sirve de algo. Es el único sitio
+        del producto donde alguien decide leer algo sin haberlo visto en el
+        catálogo.
+    authorId:
+      type: string
+      format: uuid
+    readerId:
+      type: string
+      format: uuid
+    status:
+      $ref: '#/AccessInvitationStatus'
+    message:
+      type: [string, 'null']
+      description: |
+        Lo que el autor escribió con la oferta. En una obra inédita, «te
+        invito a leer lo que llevo» dice mucho más que un aviso seco.
+    invitedAt:
+      type: string
+      format: date-time
+    resolvedAt:
+      type: [string, 'null']
+      format: date-time
+
+BetaReaderInvitationPage:
+  type: object
+  required: [invitations, pageInfo]
+  properties:
+    invitations:
+      type: array
+      items:
+        $ref: '#/BetaReaderInvitation'
+    pageInfo:
+      type: object
+      required: [nextCursor, hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
+invitations:
+  post:
+    tags: [Reading]
+    operationId: inviteBetaReader
+    summary: Invitar a alguien a ser lector beta
+    description: |
+      El autor elige a quién quiere dentro. Es el **único camino de entrada a
+      una obra privada** y el único de los tres que empieza por el autor.
+
+      Una invitación no concede nada: es una oferta, y decide quien la recibe.
+
+      **Se puede invitar en cualquier modalidad, incluida la abierta**, aunque
+      solicitar en una obra abierta se rechace. La asimetría parece
+      incoherente hasta que se mira quién trabaja: una solicitud le pide al
+      autor que haga algo por alguien que ya podía entrar solo, y una
+      invitación es el autor decidiendo hacerlo. Además dice algo que la
+      modalidad no dice: *quiero que tú la leas*.
+
+      **Y se puede invitar a un borrador**, que es probablemente el caso más
+      valioso. El invitado acepta y **no lee nada hasta que la obra se
+      publique**: la invitación espera.
+
+      Se invita por identificador de usuario, no por correo. Invitar por
+      correo sería otra cosa —una invitación a la plataforma— y conviene no
+      mezclarlas: una ofrece leer una obra, la otra ofrece una cuenta.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [userId]
+            properties:
+              userId:
+                type: string
+                format: uuid
+              message:
+                type: string
+    responses:
+      '201':
+        description: La invitación queda pendiente.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invitationId, status]
+              properties:
+                invitationId: { type: string, format: uuid }
+                status: { $ref: '#/AccessInvitationStatus' }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND`. La obra de otra persona responde igual que
+          una inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: ALREADY_A_BETA_READER`, `INVITATION_ALREADY_PENDING`, o
+          `REQUEST_ALREADY_PENDING` si esa persona ya pidió acceso — ahí lo
+          que toca es aceptar su solicitud, no crear un segundo objeto que
+          significa lo mismo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: USER_NOT_FOUND` si no existe esa persona — se nombra el
+          motivo porque el autor la eligió, y decirle que la obra no existe
+          sería contestar a otra cosa. `AUTHOR_CANNOT_BE_BETA_READER` si se
+          invita a sí mismo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  get:
+    tags: [Reading]
+    operationId: listWorkBetaReaderInvitations
+    summary: A quién le he ofrecido mi obra
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [PENDING, ACCEPTED, DECLINED, CANCELLED, ALL]
+          default: PENDING
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    responses:
+      '200':
+        description: Una página de invitaciones, por cursor.
+        content:
+          application/json:
+            schema:
+              $ref: '#/BetaReaderInvitationPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: '`code: UNKNOWN_FILTER_VALUE` o `INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+myInvitations:
+  get:
+    tags: [Reading]
+    operationId: listMyBetaReaderInvitations
+    summary: Lo que me han ofrecido
+    description: |
+      Cada fila lleva **sinopsis y clasificación de contenido** de la obra,
+      además del mensaje de quien invita. No es adorno: aceptar una invitación
+      es el único momento del producto en que alguien se compromete a leer
+      algo que no ha podido ojear.
+    parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [PENDING, ACCEPTED, DECLINED, CANCELLED, ALL]
+          default: PENDING
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    responses:
+      '200':
+        description: Mis invitaciones, de la más reciente a la más antigua.
+        content:
+          application/json:
+            schema:
+              $ref: '#/BetaReaderInvitationPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_FILTER_VALUE` o `INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+invitation:
+  delete:
+    tags: [Reading]
+    operationId: cancelBetaReaderInvitation
+    summary: Retirar una invitación
+    description: |
+      Solo el autor, y solo mientras siga pendiente.
+
+      **No avisa al invitado**, y es discutible: ya recibió el aviso y puede
+      llegar a una oferta que ya no está. Se ha preferido no inventar un
+      evento cuyo consumidor no está especificado, y que quien llegue tarde
+      reciba un `409` claro.
+    parameters:
+      - name: invitationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Retirada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: INVITATION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: INVITATION_ALREADY_RESOLVED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+invitationResolution:
+  put:
+    tags: [Reading]
+    operationId: resolveBetaReaderInvitation
+    summary: Aceptar o rechazar una invitación
+    description: |
+      **Aceptar concede el acceso en el acto**, en la misma transacción que
+      cierra la invitación. A partir de ahí se lee la obra sea cual sea su
+      modalidad — salvo que siga siendo un borrador, en cuyo caso la
+      invitación queda aceptada y se espera a la publicación.
+
+      Rechazar la cierra y **sí se lo dice al autor**, al contrario que
+      cancelar una solicitud. No es incoherente: quien cancela retira una
+      pregunta suya y nadie esperaba; quien rechaza contesta a alguien que sí,
+      y un autor que ofreció su obra inédita a una persona concreta merece
+      saber que es un no.
+
+      `DECLINED` y no `REJECTED`: un autor **rechaza** la petición de un
+      desconocido, un lector **declina** una oferta que le han hecho.
+
+      Solo el destinatario resuelve. Ni siquiera el autor que la envió — él la
+      retira.
+    parameters:
+      - name: invitationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [decision]
+            properties:
+              decision:
+                type: string
+                enum: [ACCEPTED, DECLINED]
+    responses:
+      '200':
+        description: Cómo ha quedado la invitación.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invitationId, status]
+              properties:
+                invitationId: { type: string, format: uuid }
+                status: { $ref: '#/AccessInvitationStatus' }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: INVITATION_NOT_FOUND`. La invitación dirigida a otra persona
+          responde igual que una inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: INVITATION_ALREADY_RESOLVED`, también si el autor la retiró.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '410':
+        description: '`code: WORK_GONE`. Le invitaron a algo que existió.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNKNOWN_DECISION`. Nunca se interpreta como un rechazo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

@@ -120,9 +120,10 @@ Los cuatro son de lectura y devuelven lo justo
 es el que más importa: la fecha de nacimiento es dato privado y **no sale de aquí**, así que lo
 que cruza la frontera es la respuesta a la única pregunta que los demás necesitan hacer.
 
-`RegisteredUsers` nace con [`FEAT-RDG-004`](../features/reading/FEAT-RDG-004-invite-beta-reader.md):
+`RegisteredUsers` nació con [`FEAT-RDG-004`](../features/reading/FEAT-RDG-004-invite-beta-reader.md):
 invitar a un identificador inventado crearía una invitación que nadie puede aceptar. Responde
-si existe y **nada más** — ni nombre, ni perfil, ni estado de la cuenta.
+si existe y **nada más** — ni nombre, ni perfil, ni estado de la cuenta. Una cuenta eliminada
+responde `false`, que es la respuesta correcta: la invitación no llegaría a ninguna parte.
 
 ## Preguntas abiertas
 
