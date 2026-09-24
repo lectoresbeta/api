@@ -20,6 +20,7 @@ una solicitud que nadie puede contestar es peor que no poder pedirla.
 | `DELETE /api/v1/beta-reader-invitations/{invitationId}` | `cancelBetaReaderInvitation` | Retirar una invitación | FEAT-RDG-004 | **Implementado** |
 | `GET /api/v1/me/beta-reader-invitations` | `listMyBetaReaderInvitations` | Lo que me han ofrecido | FEAT-RDG-005 | **Implementado** |
 | `PUT /api/v1/beta-reader-invitations/{invitationId}/resolution` | `resolveBetaReaderInvitation` | Aceptar o rechazar | FEAT-RDG-005 | **Implementado** |
+| `GET /api/v1/works/{workId}/invitable-readers` | `searchInvitableBetaReaders` | Buscar a quién invitar | FEAT-RDG-006 | **Implementado** |
 
 Convertirse en lector beta de una obra `PUBLIC` **no tiene endpoint**: es el efecto de empezar
 una corrección ([`FEAT-RDG-001`](../../features/reading/FEAT-RDG-001-become-beta-reader-by-correcting.md)).
@@ -88,7 +89,12 @@ mensaje reentregado: resolver lo ya resuelto no hace nada. Las dos cosas convive
 
 ## Paginación
 
-Las cuatro listas van **por cursor**, con filtro por estado y `PENDING` por defecto
+El buscador de a quién invitar **no se pagina, y es la excepción**: no es una colección que
+alguien recorre, es una ayuda a escribir un nombre. Un tope duro de diez y ahí se acaba.
+Con cursor, veinte peticiones devolverían el directorio entero igual, solo que más despacio —
+y un directorio de personas que se puede enumerar es uno que alguien acabará descargando.
+
+Las cuatro bandejas, en cambio, van **por cursor**, con filtro por estado y `PENDING` por defecto
 ([`paginación`](../conventions/pagination.md)). Son bandejas cronológicas, no catálogos sobre
 los que se salte a la página 4, y lo que se abre es lo que queda por resolver.
 

@@ -783,3 +783,81 @@ invitationResolution:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+invitableReaders:
+  get:
+    tags: [Reading]
+    operationId: searchInvitableBetaReaders
+    summary: Buscar a quién invitar
+    description: |
+      Escritura anticipada para la pantalla de invitar: el autor teclea un
+      nombre y elige de una lista corta.
+
+      **No es un buscador de personas nuevo.** El índice es del contexto que
+      posee los perfiles; lo que esta operación añade es el descarte — quita
+      de la lista al propio autor, a quien ya es lector beta de la obra y a
+      quien tiene una invitación o una solicitud abierta. Enseñar a alguien
+      para después negar su invitación sería peor que no enseñarlo.
+
+      Que cuelgue de la obra no es decorativo: liga recorrer personas a **un
+      autor con una obra**, que es la única razón legítima para hacerlo aquí.
+
+      Se busca por **nombre y nombre de usuario, nunca por correo**. Un
+      buscador que acepta una dirección responde sin querer a otra pregunta
+      —«¿esta persona tiene cuenta aquí?»— y convierte el formulario en un
+      comprobador de direcciones.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: query
+        in: query
+        required: false
+        description: |
+          Mínimo **dos caracteres**. Menos devuelve lista vacía y no un error:
+          el cliente manda la consulta en cada pulsación, y la primera letra
+          de un nombre no es una equivocación de nadie.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: |
+          Hasta **diez** personas. **Sin paginación y sin total**, como
+          excepción justificada a la convención: no es una colección que
+          alguien recorre, es una ayuda a escribir un nombre. Con cursor,
+          veinte peticiones devolverían el directorio entero igual, solo que
+          más despacio — y un directorio de personas que se puede enumerar es
+          uno que alguien acabará descargando.
+
+          Cada fila es **una tarjeta de perfil y nada más**: ni correo, ni
+          fecha de nacimiento, ni estado de la cuenta.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [readers]
+              properties:
+                readers:
+                  type: array
+                  maxItems: 10
+                  items:
+                    type: object
+                    required: [userId, username]
+                    properties:
+                      userId: { type: string, format: uuid }
+                      username: { type: string }
+                      name: { type: [string, 'null'] }
+                      avatarUrl: { type: [string, 'null'] }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND`. La obra de otra persona responde igual que
+          una inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

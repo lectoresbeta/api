@@ -75,3 +75,12 @@ resolveBetaReaderInvitation:
     path: /api/v1/beta-reader-invitations/{invitationId}/resolution
     controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\ResolveInvitationController::__invoke
     methods: [PUT]
+
+# A quién puede invitar todavía el autor (FEAT-RDG-006). Cuelga de la obra a
+# propósito: liga recorrer personas a un autor con una obra, que es la única
+# razón legítima para hacerlo aquí.
+
+searchInvitableBetaReaders:
+    path: /api/v1/works/{workId}/invitable-readers
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\SearchInvitableReadersController::__invoke
+    methods: [GET]

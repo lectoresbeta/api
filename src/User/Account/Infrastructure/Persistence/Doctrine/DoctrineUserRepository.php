@@ -6,6 +6,7 @@ namespace LectoresBeta\User\Account\Infrastructure\Persistence\Doctrine;
 
 use LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\DoctrineRepository;
 use LectoresBeta\User\Account\Domain\Entity\User;
+use LectoresBeta\User\Account\Domain\Enum\AccountStatus;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
@@ -34,6 +35,28 @@ final class DoctrineUserRepository extends DoctrineRepository implements UserRep
     public function ofUsername(Username $username): ?User
     {
         return $this->repository()->findOneBy(['username' => $username->value()]);
+    }
+
+    public function matching(string $query, int $limit): array
+    {
+        // `ILIKE` y no `LOWER(...) LIKE`: PostgreSQL lo entiende directamente
+        // y no hay que normalizar el acento de quien escribe. El comodín va
+        // **escapado**: un `%` tecleado por alguien no puede convertir su
+        // búsqueda en «devuélvemelo todo».
+        $pattern = '%'.addcslashes($query, '%_\\').'%';
+
+        /** @var list<User> $found */
+        $found = $this->repository()->createQueryBuilder('u')
+            ->where('u.status = :active')
+            ->andWhere('LOWER(u.username) LIKE LOWER(:pattern) OR LOWER(u.name) LIKE LOWER(:pattern)')
+            ->setParameter('active', AccountStatus::ACTIVE)
+            ->setParameter('pattern', $pattern)
+            ->orderBy('u.username', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        return $found;
     }
 
     public function emailIsTaken(Email $email): bool

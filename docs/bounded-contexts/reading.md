@@ -14,7 +14,8 @@ lector beta y los vínculos entre usuarios que lo habilitan.
 - Invitaciones del autor a usuarios concretos.
 - Grupos de lectores beta gestionados por el autor.
 - Vínculos de writing buddy.
-- Búsqueda de lectores beta.
+- El **descarte** de la búsqueda de lectores beta: quién ya está dentro de una obra. El índice
+  de personas es de `User` ([`FEAT-RDG-006`](../features/reading/FEAT-RDG-006-find-beta-readers.md)).
 
 ## Qué NO posee
 
@@ -136,6 +137,7 @@ vez.
 | `WorkAccessBriefs` | `Work` | De quién es la obra, en qué modalidad está y si existe para quien pregunta |
 | `ReaderMaturity` | `User` | Si quien pide tiene edad, ante una obra para adultos |
 | `RegisteredUsers` | `User` | Si existe la persona a la que se invita |
+| `ReaderDirectory` | `User` | Quién encaja con lo que el autor está tecleando, para invitar |
 
 El primero es el que crea **el primer ciclo entre contextos** —`Work` ya preguntaba aquí por
 el acceso— y tiene su propia decisión:

@@ -139,6 +139,9 @@ paths:
   /beta-reader-invitations/{invitationId}/resolution:
     $ref: './paths/reading.yaml#/invitationResolution'
 
+  /works/{workId}/invitable-readers:
+    $ref: './paths/reading.yaml#/invitableReaders'
+
   /works/{workId}/questionnaire:
     $ref: './paths/works.yaml#/questionnaire'
 

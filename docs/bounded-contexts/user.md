@@ -114,6 +114,7 @@ preferencias y presencia pública como autor.
 | `ReaderMaturity` | **Un booleano**: ¿tiene edad? Ni la fecha de nacimiento ni la edad | `Work`, `Feedback` |
 | `GenreCatalogue` | Cuáles de estos códigos de temática **no** existen | `Work` |
 | `RegisteredUsers` | **Un booleano**: ¿existe este usuario? Nada más de él | `Reading` |
+| `ReaderDirectory` | Hasta N personas cuyo nombre o `@usuario` encajan, como tarjeta de perfil | `Reading` |
 
 Los cuatro son de lectura y devuelven lo justo
 ([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md)). `ReaderMaturity`
@@ -124,6 +125,17 @@ que cruza la frontera es la respuesta a la única pregunta que los demás necesi
 invitar a un identificador inventado crearía una invitación que nadie puede aceptar. Responde
 si existe y **nada más** — ni nombre, ni perfil, ni estado de la cuenta. Una cuenta eliminada
 responde `false`, que es la respuesta correcta: la invitación no llegaría a ninguna parte.
+
+`ReaderDirectory` es **el índice de personas**, y vive aquí porque aquí viven los perfiles.
+Que `Reading` lo consuma en vez de construir el suyo es lo que evita dos emparejamientos de
+nombres sobre las mismas personas; [`FEAT-USR-017`](../features/README.md) expondrá este mismo
+servicio por su propio endpoint.
+
+Tres reglas viajan **con la implementación y no con quien llama**, y es deliberado: nunca se
+busca por correo —un buscador que acepta una dirección responde sin querer a «¿esta persona
+tiene cuenta aquí?»—, solo aparecen cuentas activas, y el techo de privacidad de
+[`FEAT-USR-038`](../features/user/FEAT-USR-038-privacy-settings.md) se aplica aquí. La última
+todavía no descarta a nadie porque ese ajuste no existe; el sitio donde irá está escrito.
 
 ## Preguntas abiertas
 

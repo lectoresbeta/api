@@ -27,6 +27,22 @@ interface UserRepository
     public function ofUsername(Username $username): ?User;
 
     /**
+     * People whose **name or username** match, for the directory
+     * (`FEAT-RDG-006`).
+     *
+     * Never matches on email, and never returns an account that is not
+     * `ACTIVE`: a deleted one is anonymised and has nothing left to match.
+     * The two rules live in the query rather than in whoever calls it,
+     * because a caller that has to remember them is a caller that one day
+     * will not.
+     *
+     * @param int<1, 100> $limit
+     *
+     * @return list<User>
+     */
+    public function matching(string $query, int $limit): array;
+
+    /**
      * Whether the address is taken. The caller must not leak the answer: the
      * registration response may not reveal whether a given email has an
      * account (`FEAT-USR-001` `RN-14`).

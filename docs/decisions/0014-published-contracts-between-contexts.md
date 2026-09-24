@@ -47,6 +47,7 @@ Los publicados hasta ahora:
 | `BetaReaderAccessCheck` | `Reading` | Un booleano: ¿es lector beta de esta obra? |
 | `WorkAccessBriefs` | `Work` | De quién es una obra, cómo está abierta, qué declara contener y si existe para quien pregunta |
 | `RegisteredUsers` | `User` | Un booleano: ¿existe este usuario? |
+| `ReaderDirectory` | `User` | Las personas cuyo nombre o `@usuario` encajan con un texto |
 
 Casi todos devuelven **un booleano o poco más**, y no es casualidad: un contrato que devuelve
 mucho suele ser un modelo compartido con otro nombre.

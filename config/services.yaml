@@ -130,6 +130,9 @@ services:
     LectoresBeta\User\Account\Application\Contract\RegisteredUsers:
         alias: LectoresBeta\User\Account\Application\Service\CheckRegisteredUsers
 
+    LectoresBeta\User\Account\Application\Contract\ReaderDirectory:
+        alias: LectoresBeta\User\Account\Application\Service\SearchReaderDirectory
+
     LectoresBeta\Work\Chapter\Application\Contract\CorrectionBriefs:
         alias: LectoresBeta\Work\Chapter\Application\Service\ResolveCorrectionBriefs
 

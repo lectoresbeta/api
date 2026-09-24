@@ -51,7 +51,22 @@ insertan elementos constantemente. Con `offset` se repiten o se saltan elementos
    }
    ```
 
-El criterio que separa los dos casos: **un flujo cronológico se pagina por cursor; un
+**Una tercera excepción, y de otra naturaleza: la búsqueda de personas no se pagina en
+absoluto.**
+
+```text
+GET /works/{workId}/invitable-readers?query=ana
+```
+
+No es una colección que alguien recorre, es una ayuda a escribir un nombre
+([`FEAT-RDG-006`](../../features/reading/FEAT-RDG-006-find-beta-readers.md)): un tope duro de
+diez resultados, sin cursor y sin total. La razón no es de rendimiento sino de protección —
+con paginación, veinte peticiones devolverían el directorio entero igual, solo que más
+despacio, y **un directorio de personas que se puede enumerar es uno que alguien acabará
+descargando**. Quien no encuentre a quien busca teclea dos letras más, que es lo que se hace
+de verdad con un desplegable de autocompletado.
+
+El criterio que separa los dos primeros casos: **un flujo cronológico se pagina por cursor; un
 catálogo estable sobre el que se salta, por página.** El cursor evita repetir o perder
 elementos cuando se insertan constantemente por arriba, que es lo que le pasa a un muro y no
 a un catálogo.

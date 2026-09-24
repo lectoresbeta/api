@@ -203,7 +203,7 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 | FEAT-RDG-003 | Aceptar o rechazar una solicitud de LB | Writer | APPROVED | DONE | P0 | [ficha](reading/FEAT-RDG-003-resolve-access-request.md) |
 | FEAT-RDG-004 | Invitar a un usuario a ser LB de una obra | Writer | APPROVED | DONE | P1 | [ficha](reading/FEAT-RDG-004-invite-beta-reader.md) |
 | FEAT-RDG-005 | Aceptar o rechazar una invitación de LB | Reader | APPROVED | DONE | P1 | [ficha](reading/FEAT-RDG-005-resolve-invitation.md) |
-| FEAT-RDG-006 | Buscar lectores beta | Writer | PENDING | TODO | P2 | — |
+| FEAT-RDG-006 | Buscar lectores beta a quienes invitar | Writer | APPROVED | DONE | P2 | [ficha](reading/FEAT-RDG-006-find-beta-readers.md) |
 | FEAT-RDG-007 | Gestionar grupos de lectores beta (CRUD y miembros) | Writer | PENDING | TODO | P2 | — |
 | FEAT-RDG-008 | Proponer a un usuario ser writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-RDG-009 | Aceptar o rechazar una propuesta de writing buddy | User | PENDING | TODO | P2 | — |
