@@ -119,7 +119,7 @@ tiene acceso.
 |---|---|---|---|
 | `CorrectionStarted` | Un LB pulsa «Empezar corrección» | **`Credits`** (anota el precio), `Notification` | `chapterId`, `workId`, `authorId`, `readerId`, `startedAt` |
 | `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification`, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `questionnaireVersion`, `submittedAt` |
-| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación) | `chapterId`, `readerId`, `discardedAt` |
+| `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación), **`Reading`** (revoca el acceso) | `chapterId`, `workId`, `readerId`, `discardedAt` |
 | `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` | `correctionId`, `authorId`, `readerId`, `amount` |
 | `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` NO lo consume** | `correctionId`, `workId`, `chapterId`, `authorId`, `authorLabel?` |
 | `FeedbackRatedPositively` | El autor lo valora como útil | `Notification`, `Community`. **`Credits` ya no lo consume**: la bonificación automática se sustituyó por la propina | `correctionId`, `readerId`, `authorId` |
@@ -145,6 +145,10 @@ mueve créditos. Confundir ambos haría que cada comentario suelto cobrase al au
 `chapterId` **es obligatorio**: la corrección es por capítulo (`R-2`), y es la longitud de
 ese capítulo la que pesa en el precio junto con el cuestionario. Un evento sin `chapterId`
 dejaría a `Credits` sin poder calcular nada.
+
+`CorrectionDraftDiscarded` lleva además `workId` porque sus dos consumidores sueltan cosas de
+distinto tamaño: `Credits` una cotización, que es de un capítulo, y `Reading` un acceso, que
+es de la obra entera.
 
 ## `Credits`
 

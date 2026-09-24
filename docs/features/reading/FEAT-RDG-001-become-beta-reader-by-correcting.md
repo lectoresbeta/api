@@ -5,7 +5,7 @@ context: Reading
 concept: BetaReaderAccess
 actors: [Reader]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P0
 sources:
   - conversation:2026-09-22 (modalidades de acceso)
@@ -177,15 +177,17 @@ No hay tabla nueva ni endpoint nuevo.
 
 ## Criterios de aceptación
 
-- [ ] Empezar una corrección en una obra `PUBLIC` deja al lector como lector beta de la obra.
-- [ ] Corregir varios capítulos de la misma obra no crea varios accesos.
-- [ ] Reentregar el hecho no crea un segundo acceso.
-- [ ] El acceso sobrevive a que el autor pase la obra a `PRIVATE`.
-- [ ] Descartar el borrador sin haber entregado nada revoca el acceso.
-- [ ] Descartar el borrador **después** de haber entregado una corrección de esa obra no lo revoca.
-- [ ] Un acceso concedido por solicitud o invitación no se revoca al descartar un borrador.
-- [ ] El autor nunca acaba siendo lector beta de su propia obra.
-- [ ] `Reading` no consulta a `Work` ni a `Credits` en todo el proceso.
+- [x] Empezar una corrección en una obra `PUBLIC` deja al lector como lector beta de la obra.
+- [x] Corregir varios capítulos de la misma obra no crea varios accesos.
+- [x] Reentregar el hecho no crea un segundo acceso.
+- [x] El acceso sobrevive a que el autor pase la obra a `PRIVATE`.
+- [x] Descartar el borrador sin haber entregado nada revoca el acceso.
+- [x] Descartar el borrador **después** de haber entregado una corrección de esa obra no lo revoca.
+- [x] Un acceso concedido por solicitud o invitación no se revoca al descartar un borrador. *Lo
+      garantiza el propio modelo: solo se deshace lo que vino por `PUBLIC_JOIN`. No hay prueba
+      funcional porque no existe todavía ninguna otra vía de conceder acceso.*
+- [x] El autor nunca acaba siendo lector beta de su propia obra.
+- [x] `Reading` no consulta a `Work` ni a `Credits` en todo el proceso.
 
 ## Preguntas abiertas
 
@@ -202,4 +204,31 @@ No hay tabla nueva ni endpoint nuevo.
 falta pantalla, en qué momento se concede y si abandonar revoca— se responden arriba, en
 `RN-4`, `RN-5` y la sección «Esto no es una pantalla».
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-24). Tres consumidores, ninguna ruta nueva, ninguna tabla
+nueva: un booleano en `beta_reader_access` —si el acceso se **ganó** entregando— y nada más.
+
+### Lo que hizo falta arreglar por el camino
+
+Esta ficha es la primera en que **un mismo hecho tiene dos dueños**: `CorrectionStarted` lo
+escuchan `Credits`, para anotar el precio, y `Reading`, para conceder el acceso, cada uno con
+su clase.
+
+`Messenger` decodifica un mensaje del transporte en **un** objeto, y el serializador se
+quedaba con la primera clase registrada. Hasta hoy no se notaba porque ningún hecho tenía dos
+consumidores; el síntoma habría sido el peor posible: **el segundo contexto no se entera de
+nada, en silencio**.
+
+Ahora la decodificación produce todas las reconstrucciones y un repartidor las despacha una a
+una. En un despliegue con un proceso por contexto esto no haría falta —cada worker tendría su
+cola y su única clase—, y conviene saber que la pieza existe por ejecutarlos juntos.
+
+La consecuencia a tener presente: si el consumidor de un contexto falla, **el hecho entero se
+reintenta** y los demás lo ven otra vez. No rompe nada porque la idempotencia ya era requisito
+de todos ellos, pero es la razón de que lo sea.
+
+### Y una consecuencia que sí se ve
+
+`FEAT-WRK-004` gana su quinta puerta: **un lector beta lee la obra sea cual sea la modalidad**.
+Hasta ahora `WorkReadPolicy` terminaba en «¿es `PUBLIC`?», así que conceder acceso a alguien le
+dejaba corregir una obra que no podía leer. Ya no: el acceso llega a esa regla como un
+booleano, por el contrato publicado de este contexto.

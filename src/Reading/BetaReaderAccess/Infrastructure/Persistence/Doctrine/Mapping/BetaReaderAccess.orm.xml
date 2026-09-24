@@ -44,6 +44,10 @@
         <field name="authorId" column="author_id" type="guid"/>
         <field name="source" type="string" length="24"
                enum-type="LectoresBeta\Reading\BetaReaderAccess\Domain\Enum\AccessSource"/>
+        <!-- Si el acceso se ganó entregando una corrección. Es lo que
+             distingue revocar a quien se echó atrás de quitarle el acceso a
+             quien ya trabajó (`FEAT-RDG-001` `RN-5`). -->
+        <field name="earned" type="boolean"/>
         <field name="grantedAt" column="granted_at" type="datetime_immutable"/>
         <field name="revokedAt" column="revoked_at" type="datetime_immutable" nullable="true"/>
 

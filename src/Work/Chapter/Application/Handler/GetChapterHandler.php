@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Work\Chapter\Application\Handler;
 
+use LectoresBeta\Reading\BetaReaderAccess\Application\Contract\BetaReaderAccessCheck;
 use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\User\Account\Application\Contract\ReaderMaturity;
 use LectoresBeta\Work\Chapter\Application\DTO\ChapterView;
@@ -34,6 +35,7 @@ final readonly class GetChapterHandler
         private WorkRepository $works,
         private WorkReadPolicy $policy,
         private ReaderMaturity $maturity,
+        private BetaReaderAccessCheck $access,
     ) {
     }
 
@@ -52,7 +54,12 @@ final readonly class GetChapterHandler
         $work = $this->works->ofId($chapter->workId());
         $reader = AuthorId::fromString($query->readerId);
 
-        if (null === $work || !$this->policy->allows($work, $reader, $this->maturity->isOfAge($query->readerId))) {
+        if (null === $work || !$this->policy->allows(
+            $work,
+            $reader,
+            $this->maturity->isOfAge($query->readerId),
+            $this->access->hasAccessTo($work->id()->value(), $query->readerId),
+        )) {
             throw ChapterNotFound::create();
         }
 

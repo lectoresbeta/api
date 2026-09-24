@@ -126,7 +126,7 @@ Ninguno. Es una consulta.
 - [ ] Otra persona recibe `404` sobre una obra en `DRAFT`, **con el mismo cuerpo** que sobre
       una obra inexistente.
 - [ ] Una obra `PUBLISHED` con modalidad `PUBLIC` la lee cualquier usuario autenticado.
-- [ ] Una obra con modalidad `ON_REQUEST` no la lee quien no tiene acceso concedido.
+- [x] Una obra con modalidad `ON_REQUEST` no la lee quien no tiene acceso concedido, **y sí quien lo tiene**.
 - [ ] Una cuenta sin activar puede leer.
 - [ ] Sin sesión, `401`.
 - [ ] Un capítulo oculto no aparece en el índice de quien no es el autor.
@@ -157,12 +157,17 @@ Cubierto por `tests/Unit/Work/WorkReadPolicyTest.php` —la regla entera, sin ba
 `tests/Functional/Work/ReadWorkTest.php`, que comprueba que un borrador ajeno y una obra
 inexistente responden **byte a byte igual**.
 
+**`ON_REQUEST` y `PRIVATE` ya funcionan** (2026-09-24). Ocurrió lo que esta ficha anticipó:
+no hubo que corregir nada, solo **añadir** la puerta que faltaba. `WorkReadPolicy` recibe ahora
+un quinto argumento —si quien lee es lector beta de la obra— y lo responde `Reading` por su
+contrato publicado, como un booleano.
+
+Hasta entonces, conceder acceso a alguien le dejaba corregir una obra que no podía leer. La
+puerta llega con [`FEAT-RDG-001`](../reading/FEAT-RDG-001-become-beta-reader-by-correcting.md),
+que es la primera vía por la que alguien obtiene acceso.
+
 **Falta, y depende de contextos que no existen:**
 
-- `ON_REQUEST` y `PRIVATE`: hoy devuelven `404` a cualquiera que no sea el autor, porque
-  «acceso concedido» es de `Reading` y `Reading` no tiene todavía ningún caso de uso. Es el
-  lado seguro y no habrá que cambiarlo cuando llegue: habrá que **añadir** el caso que hoy
-  falta, no corregir uno equivocado;
 - las preferencias de contenido sensible del lector
   ([`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)), más allá del filtro de edad
   que sí está;

@@ -198,7 +198,7 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-RDG-001 | Convertirse en LB al empezar a corregir (obra `PUBLIC`) | Reader | APPROVED | TODO | P0 | [ficha](reading/FEAT-RDG-001-become-beta-reader-by-correcting.md) |
+| FEAT-RDG-001 | Convertirse en LB al empezar a corregir (obra `PUBLIC`) | Reader | APPROVED | DONE | P0 | [ficha](reading/FEAT-RDG-001-become-beta-reader-by-correcting.md) |
 | FEAT-RDG-002 | Solicitar ser LB de una obra (obra `ON_REQUEST`) | Reader | PENDING | TODO | P0 | — |
 | FEAT-RDG-003 | Aceptar o rechazar una solicitud de LB | Writer | PENDING | TODO | P0 | — |
 | FEAT-RDG-004 | Invitar a un usuario a ser LB de una obra | Writer | PENDING | TODO | P1 | — |

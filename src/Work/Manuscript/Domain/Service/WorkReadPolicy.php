@@ -16,21 +16,24 @@ use LectoresBeta\Work\Manuscript\Domain\ValueObject\AuthorId;
  * backend: this platform custodies unpublished writing, and a leak here is
  * the worst failure the product has.
  *
- * Four gates, and they are deliberately ordered from the most secret outwards:
+ * Five gates, and they are deliberately ordered from the most secret
+ * outwards:
  *
  * 1. **the author always reads their own work**, in any state;
  * 2. a draft **does not exist** for anybody else;
  * 3. a blocked work disappears for everybody but its author;
- * 4. `ADULTS_ONLY` needs somebody of age, and «has not said» counts as «no».
+ * 4. `ADULTS_ONLY` needs somebody of age, and «has not said» counts as «no»;
+ * 5. a beta reader reads what they were given access to, whatever the mode.
  *
- * What it does **not** decide is the restricted access modes: `ON_REQUEST`
- * and `PRIVATE` depend on an access granted in `Reading`, a context that does
- * not exist yet. Until it does, the answer is no — the safe side, and the one
- * that will not have to be changed when it arrives.
+ * The fifth is what makes `ON_REQUEST` and `PRIVATE` mean anything: until it
+ * existed, granting somebody access let them correct a work they could not
+ * read. Whether they hold that access is decided in `Reading` and arrives
+ * here as **a boolean**, through its published contract — this rule stays a
+ * pure function of what it is given, testable without a database.
  */
 final class WorkReadPolicy
 {
-    public function allows(Work $work, AuthorId $reader, bool $readerIsOfAge): bool
+    public function allows(Work $work, AuthorId $reader, bool $readerIsOfAge, bool $isBetaReader): bool
     {
         if ($work->authorId()->equals($reader)) {
             return true;
@@ -44,6 +47,6 @@ final class WorkReadPolicy
             return false;
         }
 
-        return BetaReaderAccessMode::PUBLIC === $work->accessMode();
+        return $isBetaReader || BetaReaderAccessMode::PUBLIC === $work->accessMode();
     }
 }

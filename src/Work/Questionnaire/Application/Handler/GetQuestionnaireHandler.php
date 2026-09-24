@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Work\Questionnaire\Application\Handler;
 
+use LectoresBeta\Reading\BetaReaderAccess\Application\Contract\BetaReaderAccessCheck;
 use LectoresBeta\User\Account\Application\Contract\ReaderMaturity;
 use LectoresBeta\Work\Manuscript\Domain\Exception\WorkNotFound;
 use LectoresBeta\Work\Manuscript\Domain\Repository\WorkRepository;
@@ -32,6 +33,7 @@ final readonly class GetQuestionnaireHandler
         private QuestionnaireRepository $questionnaires,
         private WorkReadPolicy $policy,
         private ReaderMaturity $maturity,
+        private BetaReaderAccessCheck $access,
     ) {
     }
 
@@ -40,7 +42,12 @@ final readonly class GetQuestionnaireHandler
         $work = $this->works->ofId(WorkId::fromString($query->workId));
         $reader = AuthorId::fromString($query->readerId);
 
-        if (null === $work || !$this->policy->allows($work, $reader, $this->maturity->isOfAge($query->readerId))) {
+        if (null === $work || !$this->policy->allows(
+            $work,
+            $reader,
+            $this->maturity->isOfAge($query->readerId),
+            $this->access->hasAccessTo($work->id()->value(), $query->readerId),
+        )) {
             throw WorkNotFound::create();
         }
 

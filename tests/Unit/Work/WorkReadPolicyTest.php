@@ -91,9 +91,43 @@ final class WorkReadPolicyTest extends TestCase
         self::assertTrue($this->allows($work, self::AUTHOR, readerIsOfAge: false));
     }
 
-    private function allows(Work $work, string $reader, bool $readerIsOfAge = true): bool
+    /**
+     * La quinta puerta, y la que hace que `ON_REQUEST` y `PRIVATE` signifiquen
+     * algo: hasta que existió, conceder acceso a alguien le dejaba corregir
+     * una obra que no podía leer.
+     */
+    public function testABetaReaderReadsWhateverTheModeSays(): void
     {
-        return (new WorkReadPolicy())->allows($work, AuthorId::fromString($reader), $readerIsOfAge);
+        $restringida = $this->published(BetaReaderAccessMode::PRIVATE);
+
+        self::assertFalse($this->allows($restringida, self::STRANGER));
+        self::assertTrue($this->allows($restringida, self::STRANGER, isBetaReader: true));
+    }
+
+    /**
+     * Pero el acceso concedido no salta las puertas anteriores: un borrador
+     * sigue sin existir para nadie más que su autor, y la edad sigue siendo
+     * la edad.
+     */
+    public function testAccessDoesNotOpenTheGatesBeforeIt(): void
+    {
+        self::assertFalse(
+            $this->allows($this->draft(BetaReaderAccessMode::PRIVATE), self::STRANGER, isBetaReader: true),
+            'Un borrador no lo lee nadie más que su autor.',
+        );
+
+        $adultos = $this->published(BetaReaderAccessMode::PRIVATE);
+        $adultos->classify(true, new \DateTimeImmutable());
+
+        self::assertFalse(
+            $this->allows($adultos, self::STRANGER, readerIsOfAge: false, isBetaReader: true),
+            'Tener acceso no da la edad.',
+        );
+    }
+
+    private function allows(Work $work, string $reader, bool $readerIsOfAge = true, bool $isBetaReader = false): bool
+    {
+        return (new WorkReadPolicy())->allows($work, AuthorId::fromString($reader), $readerIsOfAge, $isBetaReader);
     }
 
     private function draft(BetaReaderAccessMode $mode = BetaReaderAccessMode::PUBLIC): Work

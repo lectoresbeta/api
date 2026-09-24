@@ -4,9 +4,15 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Tests\Functional\Credits;
 
-use LectoresBeta\Credits\Account\Application\Event\FeedbackSubmitted;
-use LectoresBeta\Credits\Pricing\Application\Event\CorrectionDraftDiscarded;
-use LectoresBeta\Credits\Pricing\Application\Event\CorrectionStarted;
+use LectoresBeta\Feedback\Correction\Domain\Event\CorrectionDraftDiscarded;
+use LectoresBeta\Feedback\Correction\Domain\Event\CorrectionStarted;
+use LectoresBeta\Feedback\Correction\Domain\Event\FeedbackSubmitted;
+use LectoresBeta\Feedback\Correction\Domain\ValueObject\AuthorId;
+use LectoresBeta\Feedback\Correction\Domain\ValueObject\ChapterId;
+use LectoresBeta\Feedback\Correction\Domain\ValueObject\CorrectionId;
+use LectoresBeta\Feedback\Correction\Domain\ValueObject\ReaderId;
+use LectoresBeta\Feedback\Correction\Domain\ValueObject\WorkId;
+use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Tests\Functional\Support\EconomyScenario;
 
 /**
@@ -16,11 +22,11 @@ use LectoresBeta\Tests\Functional\Support\EconomyScenario;
  * corrección entregada → los dos saldos se mueven, y la persona lo ve por la
  * API con su propia sesión.
  *
- * `Feedback` todavía no existe como código, así que sus hechos se fabrican
- * aquí **con el payload que el catálogo de eventos define** y viajan por el
- * serializador real. El día que ese contexto los publique, lo único que tiene
- * que coincidir es el nombre del hecho y la forma de su payload: eso es todo
- * lo que comparten dos contextos.
+ * Los hechos se fabrican aquí **con las clases del contexto que los publica**
+ * y viajan por el serializador real, en vez de recorrer la interfaz entera:
+ * lo que se prueba es la economía, no el panel de corrección, que tiene sus
+ * propias pruebas. Lo que comparten los dos lados sigue siendo solo el nombre
+ * del hecho y la forma de su payload.
  */
 final class CorrectionEconomyTest extends EconomyScenario
 {
@@ -142,10 +148,13 @@ final class CorrectionEconomyTest extends EconomyScenario
 
         self::assertSame(10, $this->balanceOf($author['userId']));
 
-        $this->enqueue(CorrectionDraftDiscarded::fromPayload($this->eventId(), new \DateTimeImmutable(), [
-            'chapterId' => $chapterId,
-            'readerId' => $reader['userId'],
-        ]));
+        $this->enqueue(new CorrectionDraftDiscarded(
+            EventId::generate(),
+            ChapterId::fromString($chapterId),
+            WorkId::fromString($workId),
+            ReaderId::fromString($reader['userId']),
+            new \DateTimeImmutable(),
+        ));
         $this->consumeEverything();
 
         self::assertSame(10, $this->balanceOf($author['userId']), 'Nunca se le quitó nada.');
@@ -198,23 +207,28 @@ final class CorrectionEconomyTest extends EconomyScenario
 
     private function correctionStarted(string $chapterId, string $workId, string $authorId, string $readerId): void
     {
-        $this->enqueue(CorrectionStarted::fromPayload($this->eventId(), new \DateTimeImmutable(), [
-            'chapterId' => $chapterId,
-            'workId' => $workId,
-            'authorId' => $authorId,
-            'readerId' => $readerId,
-        ]));
+        $this->enqueue(new CorrectionStarted(
+            EventId::generate(),
+            ChapterId::fromString($chapterId),
+            WorkId::fromString($workId),
+            AuthorId::fromString($authorId),
+            ReaderId::fromString($readerId),
+            new \DateTimeImmutable(),
+        ));
     }
 
     private function feedbackSubmitted(string $chapterId, string $workId, string $authorId, string $readerId): void
     {
-        $this->enqueue(FeedbackSubmitted::fromPayload($this->eventId(), new \DateTimeImmutable(), [
-            'correctionId' => '0199c7f2-0000-7000-8000-0000000000ff',
-            'chapterId' => $chapterId,
-            'workId' => $workId,
-            'authorId' => $authorId,
-            'readerId' => $readerId,
-        ]));
+        $this->enqueue(new FeedbackSubmitted(
+            EventId::generate(),
+            CorrectionId::generate(),
+            ChapterId::fromString($chapterId),
+            WorkId::fromString($workId),
+            AuthorId::fromString($authorId),
+            ReaderId::fromString($readerId),
+            1,
+            new \DateTimeImmutable(),
+        ));
     }
 
     /**

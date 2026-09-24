@@ -59,6 +59,9 @@ services:
             # quien las crea: el token, con su secreto dentro; el usuario
             # autenticado, con el identificador que venía en la petición.
             - '../src/Shared/Application/Security/SecureToken.php'
+            # Un mensaje, no un servicio: lo construye el serializador con el
+            # hecho que acaba de llegar dentro.
+            - '../src/Shared/Infrastructure/Messenger/IncomingFacts.php'
             - '../src/User/Authentication/Infrastructure/Security/AuthenticatedUser.php'
             - '../src/Shared/Infrastructure/Symfony/Kernel.php'
             - '../src/Shared/Infrastructure/Symfony/PublicServicesForTestsPass.php'
@@ -73,6 +76,13 @@ services:
     # ajeno es una decisión de integración, y una decisión que vive en un
     # fichero se puede revisar. Con descubrimiento automático, una suscripción
     # nueva aparecería porque alguien añadió una clase.
+    # Reparte un hecho entre los contextos que lo escuchan. Ver la clase:
+    # `Messenger` decodifica en un objeto y aquí un hecho puede tener varios
+    # dueños.
+    LectoresBeta\Shared\Infrastructure\Messenger\DispatchIncomingFacts:
+        tags:
+            - { name: messenger.message_handler }
+
     LectoresBeta\Shared\Infrastructure\Messenger\IncomingEventRegistry:
         arguments:
             $eventClasses:
@@ -83,6 +93,9 @@ services:
                 - LectoresBeta\Credits\Pricing\Application\Event\CorrectionDraftDiscarded
                 - LectoresBeta\Credits\Account\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Feedback\Correction\Application\Event\ChapterCorrectabilityChanged
+                - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionStarted
+                - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionDraftDiscarded
+                - LectoresBeta\Reading\BetaReaderAccess\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
 
     # Los consumidores de eventos se etiquetan aquí y no con
@@ -167,6 +180,18 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\Feedback\Correction\Application\Handler\TrackChapterCorrectability:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Reading\BetaReaderAccess\Application\Handler\GrantAccessOnCorrectionStarted:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Reading\BetaReaderAccess\Application\Handler\RevokeAccessOnDraftDiscarded:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Reading\BetaReaderAccess\Application\Handler\MarkAccessEarnedOnFeedbackSubmitted:
         tags:
             - { name: messenger.message_handler }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Shared\Infrastructure\Messenger;
 
+use LectoresBeta\Shared\Domain\Event\IncomingIntegrationEvent;
 use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\MessageDecodingFailedException;
@@ -84,11 +85,17 @@ final readonly class IntegrationEventSerializer implements SerializerInterface
             throw new MessageDecodingFailedException(\sprintf('%s carries no event id, so it cannot be deduplicated.', $name));
         }
 
-        // One fact, one message, even when several contexts subscribe: each
-        // class is handled in turn and each deduplicates on its own.
-        $first = $classes[0];
+        // Un hecho puede tener varios dueños: `CorrectionStarted` lo usan
+        // `Credits` para anotar el precio y `Reading` para conceder el
+        // acceso, cada uno con su clase. `Messenger` decodifica en **un**
+        // objeto, así que viajan juntos y `DispatchIncomingFacts` los
+        // reparte.
+        $events = array_map(
+            static fn (string $class): IncomingIntegrationEvent => $class::fromPayload($eventId, $occurredAt, $payload),
+            $classes,
+        );
 
-        return new Envelope($first::fromPayload($eventId, $occurredAt, $payload));
+        return new Envelope(new IncomingFacts($name, $events));
     }
 
     /**

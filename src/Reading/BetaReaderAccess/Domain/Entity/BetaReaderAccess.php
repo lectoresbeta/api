@@ -37,6 +37,16 @@ class BetaReaderAccess
 
     private \DateTimeImmutable $grantedAt;
 
+    /**
+     * Whether this access has been **earned** by delivering a correction of
+     * the work (`FEAT-RDG-001` `RN-5`).
+     *
+     * A boolean and not a count: what it decides is one thing only — whether
+     * discarding a draft may take the access away again — and for that, one
+     * delivered correction is as good as twenty.
+     */
+    private bool $earned = false;
+
     private ?\DateTimeImmutable $revokedAt = null;
 
     public function __construct(
@@ -87,6 +97,35 @@ class BetaReaderAccess
     public function isLive(): bool
     {
         return null === $this->revokedAt;
+    }
+
+    public function isEarned(): bool
+    {
+        return $this->earned;
+    }
+
+    /**
+     * The reader delivered a correction of this work. From here on, walking
+     * away from another draft does not take the access with it: they did the
+     * work once, and that is what the access records.
+     */
+    public function markEarned(): void
+    {
+        $this->earned = true;
+    }
+
+    /**
+     * Whether abandoning a draft should undo this access
+     * (`FEAT-RDG-001` `RN-5`).
+     *
+     * Two conditions, and both matter. It has to have come from **this**
+     * route — a request the author accepted, or an invitation they sent, is
+     * not undone because somebody discarded a draft — and the reader must
+     * never have delivered anything.
+     */
+    public function isUndoneByWalkingAway(): bool
+    {
+        return AccessSource::PUBLIC_JOIN === $this->source && !$this->earned;
     }
 
     /**
