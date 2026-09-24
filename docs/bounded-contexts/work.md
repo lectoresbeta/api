@@ -103,6 +103,7 @@ dinero — `affordableCorrections` es una conclusión acotada a diez, no un sald
 | Contrato | Responde | Quién pregunta |
 |---|---|---|
 | `CorrectionBriefs` | Qué pregunta el autor en **un capítulo concreto**, de quién es la obra, si admite correcciones y bajo qué modalidad | `Feedback` |
+| `WorkAccessBriefs` | De quién es una obra, en qué modalidad está, si es para adultos y si existe para alguien que no sea su autor | `Reading` |
 
 Es síncrono a conciencia: los enunciados del cuestionario son **texto del autor**, y por eso
 `QuestionnaireUpdated` no los transporta. Quien abre el panel de corrección los necesita en
@@ -112,6 +113,12 @@ contrato.
 
 Filtra las preguntas por capítulo antes de entregarlas: cuál es el último capítulo solo lo
 sabe este contexto.
+
+`WorkAccessBriefs` es su hermano por obra, y el que **cierra el primer ciclo del sistema**:
+`Work` ya preguntaba a `Reading` si alguien es lector beta, y ahora `Reading` le pregunta a él
+por la obra. Los motivos y la regla que lo mantiene inofensivo están en
+[`decision:0015`](../decisions/0015-work-and-reading-ask-each-other.md). Devuelve **hechos, no
+un veredicto**: quién puede pedir qué lo decide `Reading`.
 
 ## Reglas de negocio
 

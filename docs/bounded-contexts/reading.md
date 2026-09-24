@@ -87,6 +87,7 @@ capítulo y lo consume `Feedback`
 | `AccessRequested` | Un usuario solicita ser LB | `Notification` (avisa al autor) |
 | `AccessRequestRejected` | El autor rechaza | `Notification` |
 | `BetaReaderInvited` | El autor invita a un usuario | `Notification` |
+| `BetaReaderInvitationDeclined` | El invitado rechaza | `Notification` (avisa al autor, que esperaba respuesta) |
 | `WritingBuddyProposed` | Se propone el vínculo | `Notification` |
 | `WritingBuddyLinked` | Se acepta el vínculo | `Notification`, `Community` |
 
@@ -96,9 +97,13 @@ capítulo y lo consume `Feedback`
 |---|---|---|
 | **`CorrectionStarted`** | `Feedback` | **Concede el acceso** si no había uno vivo (`FEAT-RDG-001`) |
 | `CorrectionDraftDiscarded` | `Feedback` | Revoca el acceso nacido de esa corrección, si el lector no llegó a entregar nada |
-| `WorkAccessModeChanged` | `Work` | Actualiza qué caminos de acceso admite la obra |
 | `WorkDeleted` | `Work` | Cierra accesos y solicitudes pendientes |
 | `UserDeleted` | `User` | Cierra accesos y vínculos del usuario |
+
+`WorkAccessModeChanged` **ya no se consume**. Estaba aquí para mantener una proyección de
+«qué caminos admite la obra», y [`decision:0015`](../decisions/0015-work-and-reading-ask-each-other.md)
+la sustituyó por el contrato `WorkAccessBriefs`: copiar dentro de `Reading` la regla de qué
+obra es visible para quién sería tener la regla más peligrosa del backend escrita dos veces.
 
 **Ningún evento de `Credits` llega aquí**, y esa ausencia es la huella de
 [`decision:0006`](../decisions/0006-credit-system.md): este contexto dejó de tener nada que
@@ -115,6 +120,23 @@ fuera, y entregarlos convertiría la forma de un registro de acceso en asunto aj
 solo por accesos **vivos**, que es lo que hace que revocar tenga efecto en todas partes a la
 vez.
 
+## Contratos consumidos
+
+| Contrato | De | Para qué |
+|---|---|---|
+| `WorkAccessBriefs` | `Work` | De quién es la obra, en qué modalidad está y si existe para quien pregunta |
+| `ReaderMaturity` | `User` | Si quien pide tiene edad, ante una obra para adultos |
+| `RegisteredUsers` | `User` | Si existe la persona a la que se invita |
+
+El primero es el que crea **el primer ciclo entre contextos** —`Work` ya preguntaba aquí por
+el acceso— y tiene su propia decisión:
+[`0015`](../decisions/0015-work-and-reading-ask-each-other.md). La regla que lo mantiene
+inofensivo es que ninguno de los dos llama al otro mientras responde.
+
+[`FEAT-RDG-001`](../features/reading/FEAT-RDG-001-become-beta-reader-by-correcting.md) sigue
+sin preguntar nada a nadie: el camino `PUBLIC` no lo necesita, y esa sigue siendo la razón de
+que sea el más barato de los tres.
+
 ## Reglas de negocio
 
 - `RN-1` El autor de una obra no puede ser lector beta de ella.
@@ -127,15 +149,26 @@ vez.
   consulta aquí (`decision:0006`).
 - `RN-8` En una obra `PUBLIC`, el acceso lo concede **empezar una corrección**, no una acción
   aparte.
+- `RN-9` Una obra `PUBLIC` **tampoco admite solicitudes**, por el motivo contrario a `RN-3`:
+  ahí no hace falta pedir nada, y aceptarlas le daría trabajo al autor para nada
+  ([`FEAT-RDG-002`](../features/reading/FEAT-RDG-002-request-beta-reader-access.md) `RN-2`).
+- `RN-10` **Invitar sí vale en cualquier modalidad**, incluida `PUBLIC`. La asimetría con
+  `RN-9` es deliberada: una solicitud le pide trabajo al autor, una invitación es el autor
+  decidiendo hacerlo.
+- `RN-11` Resolver una solicitud o una invitación **cierra el objeto y concede el acceso en la
+  misma transacción**. Los dos agregados son de este contexto, así que no hay frontera que
+  cruzar ni evento que esperar.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
 | R-1 | ¿El autor puede revocar un acceso ya concedido? (`A-4`) | Funcionalidad nueva y sus consecuencias sobre el feedback existente |
-| R-2 | ¿Las solicitudes e invitaciones expiran? | Ciclo de vida y limpieza |
+| ~~R-2~~ | ¿Las solicitudes e invitaciones expiran? | **Resuelta: no.** Se cancelan, se retiran y se rechazan; caducar exige un reloj, un estado y un proceso para un problema que esas tres ya resuelven (`FEAT-RDG-002` `RN-10`). Se revisará si aparece volumen |
 | R-3 | ¿Qué habilita exactamente el vínculo de writing buddy? (`A-1`) | Podría conceder accesos automáticos |
-| R-4 | ¿Los grupos de LB conceden acceso en bloque a una obra? | Caso de uso de asignación masiva |
+| R-4 | ¿Los grupos de LB conceden acceso en bloque a una obra? | Caso de uso de asignación masiva. Sería una operación por lotes sobre `FEAT-RDG-004`, no un camino de acceso nuevo |
+| R-9 | ¿Hace falta un enfriamiento entre un rechazo y la siguiente solicitud? | Hoy se puede volver a pedir sin límite (`FEAT-RDG-002` `RN-9`) |
+| R-16 | ¿Hay tope de invitaciones pendientes por obra? | Sin tope, invitar es un canal de mensajería con otro nombre |
 | R-5 | ¿El acceso es a la obra completa o fragmento a fragmento? | Con novelas por fragmentos cambia el modelo (`D-1`) |
 | R-6 | ¿Hay límite de obras de las que ser LB simultáneamente? | Control de calidad del feedback |
 | ~~R-7~~ | ¿Qué ve el lector cuando su acceso se revoca por falta de saldo del autor? | **Desaparece:** ya no hay revocaciones por saldo (`decision:0006`) |

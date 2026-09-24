@@ -45,6 +45,8 @@ Los publicados hasta ahora:
 | `GenreCatalogue` | `User` | Cuáles de estos códigos de temática **no** existen |
 | `CorrectionBriefs` | `Work` | Qué se pregunta en un capítulo, de quién es la obra y si admite correcciones |
 | `BetaReaderAccessCheck` | `Reading` | Un booleano: ¿es lector beta de esta obra? |
+| `WorkAccessBriefs` | `Work` | De quién es una obra, cómo está abierta y si existe para quien pregunta |
+| `RegisteredUsers` | `User` | Un booleano: ¿existe este usuario? |
 
 Casi todos devuelven **un booleano o poco más**, y no es casualidad: un contrato que devuelve
 mucho suele ser un modelo compartido con otro nombre.
@@ -63,6 +65,10 @@ Tres reglas, y las tres importan:
    por él, y entonces el modelo interno vuelve a estar compartido.
 3. **Un contrato no depende de su propio contexto.** Solo de `Shared` y de tipos propios. Si
    necesitase algo de dentro, dejaría de ser una puerta y pasaría a ser una rendija.
+4. **Un contrato no llama al contrato de otro contexto mientras responde.** La añadió
+   [`0015`](0015-work-and-reading-ask-each-other.md), cuando `Work` y `Reading` pasaron a
+   preguntarse mutuamente: es lo único que separa un ciclo de referencias —tolerable— de un
+   ciclo de llamadas, que es el que encadena dos contextos en tiempo de ejecución.
 
 La carpeta va bajo `Application/` y no en un cuarto nivel nuevo: la estructura
 `<Contexto>/<Concepto>/{Domain,Application,Infrastructure}` se mantiene intacta, y un contrato

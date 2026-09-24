@@ -77,7 +77,7 @@ síncrona entre contextos en el diseño actual.
 | Origen | Destino | Mecanismo | Motivo |
 |---|---|---|---|
 | `User` | todos | Evento `UserRegistered` | Crear la cuenta de créditos, el perfil, las preferencias |
-| `Work` | `Reading` | Evento `WorkPublished`, `WorkAccessModeChanged` | Conocer qué obras admiten accesos y en qué modalidad |
+| `Work` | `Reading` | Evento `WorkPublished`, `WorkDeleted` | Saber qué obras existen y cerrar lo pendiente de las que dejan de existir |
 | `Reading` | `Feedback` | Evento `BetaReaderAccessGranted` / `Revoked` | Saber quién puede comentar |
 | `Work` | `Credits` | Eventos `ChapterContentUpdated`, `QuestionnaireUpdated` | Las palabras del capítulo y las exigidas, que fijan el precio |
 | `Feedback` | `Credits` | Eventos `CorrectionStarted`, `FeedbackSubmitted`, `CorrectionTipped` | Hechos que mueven créditos |
@@ -86,6 +86,16 @@ síncrona entre contextos en el diseño actual.
 | `Moderation` | `Credits`, `Work`, `User` | Evento `ClaimUpheld` | Aplicar, cada uno en su modelo, lo que la decisión significa |
 | cualquiera | `Notification` | Eventos de negocio | Avisar al usuario |
 | `Feedback`, `Community` | `Community` (rankings) | Eventos | Alimentar los read models de ranking |
+| `Reading` | `Work` | **Contrato** `WorkAccessBriefs` | De quién es una obra, cómo está abierta y si existe para quien pregunta |
+| `Work` | `Reading` | **Contrato** `BetaReaderAccessCheck` | Si alguien es lector beta, para decidir si puede leer |
+
+> Las dos últimas filas son **el primer ciclo del sistema**: `Work` y `Reading` se preguntan
+> el uno al otro. Es tolerable porque las dos direcciones preguntan, cada una responde sobre
+> estado propio y ninguna llama a la otra mientras responde. Los motivos, las alternativas y
+> la regla que lo sostiene están en
+> [`decision:0015`](../decisions/0015-work-and-reading-ask-each-other.md). Deptrac **no lo
+> ve**, porque todos los contratos viven en una sola capa: un segundo ciclo tendría que
+> argumentarse contra esa decisión, no contra la herramienta.
 
 > El flujo de «recibir feedback cuesta créditos» es el más delicado del sistema: implica
 > `Feedback` y `Credits` en contextos separados con comunicación asíncrona. Está resuelto en

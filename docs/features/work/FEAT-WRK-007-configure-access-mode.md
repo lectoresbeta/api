@@ -85,7 +85,7 @@ puede entrar a partir de ahora**, no quién está dentro.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| W-22 | ¿El techo de `FEAT-USR-038` se evalúa al leer o al conceder acceso? | Pertenece a `Reading`, que aún no existe |
+| ~~W-22~~ | ¿El techo de `FEAT-USR-038` se evalúa al leer o al conceder acceso? | **Resuelta: al leer.** El techo es una propiedad del perfil y puede cambiar después de conceder; evaluarlo al conceder obligaría a repasar los accesos ya dados cada vez que alguien toca su privacidad. El acceso se queda; lo que se comprueba es la lectura ([`FEAT-RDG-003`](../reading/FEAT-RDG-003-resolve-access-request.md)) |
 
 ## Estado
 
@@ -105,6 +105,10 @@ autor. Era el eslabón que faltaba para que publicar sirviera de algo.
 
 **Falta:**
 
-- `RN-3` y `RN-5` no se pueden comprobar todavía: no hay accesos que revocar ni ajuste global
-  de privacidad ([`FEAT-USR-038`](../user/FEAT-USR-038-privacy-settings.md)) con el que
-  contrastar el techo. La regla está escrita para quien implemente `Reading`.
+- `RN-3` y `RN-5` no se pueden comprobar todavía: no hay ajuste global de privacidad
+  ([`FEAT-USR-038`](../user/FEAT-USR-038-privacy-settings.md)) con el que contrastar el techo,
+  y los accesos que `RN-3` protege los conceden a mano
+  [`FEAT-RDG-003`](../reading/FEAT-RDG-003-resolve-access-request.md) y
+  [`FEAT-RDG-005`](../reading/FEAT-RDG-005-resolve-invitation.md), que están en `REVIEW`.
+  Las dos fichas recogen `RN-3` como propia: resolver **no comprueba la modalidad**, porque la
+  modalidad gobierna quién puede entrar a partir de ahora, no quién ya estaba pidiendo entrar.

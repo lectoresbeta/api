@@ -113,11 +113,16 @@ preferencias y presencia pública como autor.
 | `ActivationLinkProvider` | El enlace de activación, en el momento de enviar el correo | `Notification` |
 | `ReaderMaturity` | **Un booleano**: ¿tiene edad? Ni la fecha de nacimiento ni la edad | `Work`, `Feedback` |
 | `GenreCatalogue` | Cuáles de estos códigos de temática **no** existen | `Work` |
+| `RegisteredUsers` | **Un booleano**: ¿existe este usuario? Nada más de él | `Reading` |
 
-Los tres son de lectura y devuelven lo justo
+Los cuatro son de lectura y devuelven lo justo
 ([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md)). `ReaderMaturity`
 es el que más importa: la fecha de nacimiento es dato privado y **no sale de aquí**, así que lo
 que cruza la frontera es la respuesta a la única pregunta que los demás necesitan hacer.
+
+`RegisteredUsers` nace con [`FEAT-RDG-004`](../features/reading/FEAT-RDG-004-invite-beta-reader.md):
+invitar a un identificador inventado crearía una invitación que nadie puede aceptar. Responde
+si existe y **nada más** — ni nombre, ni perfil, ni estado de la cuenta.
 
 ## Preguntas abiertas
 

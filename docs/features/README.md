@@ -199,10 +199,10 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-RDG-001 | Convertirse en LB al empezar a corregir (obra `PUBLIC`) | Reader | APPROVED | DONE | P0 | [ficha](reading/FEAT-RDG-001-become-beta-reader-by-correcting.md) |
-| FEAT-RDG-002 | Solicitar ser LB de una obra (obra `ON_REQUEST`) | Reader | PENDING | TODO | P0 | — |
-| FEAT-RDG-003 | Aceptar o rechazar una solicitud de LB | Writer | PENDING | TODO | P0 | — |
-| FEAT-RDG-004 | Invitar a un usuario a ser LB de una obra | Writer | PENDING | TODO | P1 | — |
-| FEAT-RDG-005 | Aceptar o rechazar una invitación de LB | Reader | PENDING | TODO | P1 | — |
+| FEAT-RDG-002 | Solicitar ser LB de una obra (obra `ON_REQUEST`) | Reader | REVIEW | TODO | P0 | [ficha](reading/FEAT-RDG-002-request-beta-reader-access.md) |
+| FEAT-RDG-003 | Aceptar o rechazar una solicitud de LB | Writer | REVIEW | TODO | P0 | [ficha](reading/FEAT-RDG-003-resolve-access-request.md) |
+| FEAT-RDG-004 | Invitar a un usuario a ser LB de una obra | Writer | REVIEW | TODO | P1 | [ficha](reading/FEAT-RDG-004-invite-beta-reader.md) |
+| FEAT-RDG-005 | Aceptar o rechazar una invitación de LB | Reader | REVIEW | TODO | P1 | [ficha](reading/FEAT-RDG-005-resolve-invitation.md) |
 | FEAT-RDG-006 | Buscar lectores beta | Writer | PENDING | TODO | P2 | — |
 | FEAT-RDG-007 | Gestionar grupos de lectores beta (CRUD y miembros) | Writer | PENDING | TODO | P2 | — |
 | FEAT-RDG-008 | Proponer a un usuario ser writing buddy | Writer | PENDING | TODO | P2 | — |

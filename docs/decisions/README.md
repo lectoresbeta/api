@@ -26,6 +26,7 @@ Plantilla: [`../_templates/adr.md`](../_templates/adr.md).
 | [0012](0012-api-version-prefix-in-the-path.md) | La versión de la API va en la ruta, **escrita entera** en cada una. `/health` queda fuera | Aceptada | 2026-09-23 |
 | [0013](0013-integration-events-travel-without-class-names.md) | Los eventos de integración viajan **sin nombre de clase**: nombre del hecho y payload plano | Aceptada | 2026-09-23 |
 | [0014](0014-published-contracts-between-contexts.md) | Un contexto expone **contratos publicados** en `Application/Contract/`, y son su única puerta | Aceptada | 2026-09-23 |
+| [0015](0015-work-and-reading-ask-each-other.md) | `Work` y `Reading` se preguntan **el uno al otro**: el primer ciclo, y la regla que lo mantiene inofensivo | Aceptada | 2026-09-24 |
 
 ## Decisiones pendientes
 

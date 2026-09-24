@@ -99,7 +99,8 @@ contestan en uno.
 | `AccessRequestRejected` | El autor rechaza | `Notification` | `accessRequestId`, `readerId` |
 | `BetaReaderAccessGranted` | Se concede acceso | `Notification` | `accessId`, `workId`, `authorId`, `readerId`, `grantedVia`, `grantedAt` |
 | `BetaReaderAccessRevoked` | Se retira el acceso | `Notification` | `accessId`, `workId`, `readerId`, `revokedAt` |
-| `BetaReaderInvited` | El autor invita | `Notification` | `invitationId`, `workId`, `readerId` |
+| `BetaReaderInvited` | El autor invita | `Notification` | `invitationId`, `workId`, `authorId`, `readerId` |
+| `BetaReaderInvitationDeclined` | El invitado rechaza | `Notification` | `invitationId`, `workId`, `authorId`, `readerId` |
 | `WritingBuddyProposed` | Se propone el vínculo | `Notification` | `proposalId`, `proposerId`, `targetUserId` |
 | `WritingBuddyLinked` | Se acepta | `Notification`, `Community` | `linkId`, `userIds` |
 
@@ -108,6 +109,15 @@ para calcular la retención». Ya no: `textTier` no existe y
 [`decision:0006`](../decisions/0006-credit-system.md) eliminó las retenciones, así que
 **`Credits` no consume este evento en absoluto**. Conceder un acceso no mueve ni compromete
 créditos.
+
+Ni `AccessRequested` ni `BetaReaderInvited` llevan **el mensaje** que escribe quien los
+origina. Es texto de usuario, puede ser largo y no hace falta para avisar: el aviso dice que
+hay algo que resolver y quien resuelve lo abre. Es la misma razón por la que
+`QuestionnaireUpdated` no transporta los enunciados del cuestionario.
+
+Cancelar una solicitud no publica nada —nadie estaba esperando esa pregunta— y rechazar una
+invitación sí: el autor ofreció su obra a una persona concreta y espera respuesta
+([`FEAT-RDG-005`](../features/reading/FEAT-RDG-005-resolve-invitation.md) `RN-6`).
 
 `grantedVia` dice por qué camino se llegó —`PUBLIC_JOIN`, `REQUEST_APPROVED`,
 `AUTHOR_INVITATION`—, que es lo que permite responder meses después por qué esta persona

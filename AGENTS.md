@@ -358,7 +358,10 @@ Three rules:
 - **a contract hands over data, never entities.** Whoever receives an aggregate ends up
   navigating it, and the internal model is shared again;
 - **a contract depends only on `Shared` and its own types.** If it needed something from
-  inside its context it would stop being a door and become a crack.
+  inside its context it would stop being a door and become a crack;
+- **a contract never calls another context's contract while answering.** `Work` and `Reading`
+  ask each other ([`decision:0015`](docs/decisions/0015-work-and-reading-ask-each-other.md)),
+  and this rule is what keeps that a cycle of references rather than a cycle of calls.
 
 Asynchronous communication remains the default. A contract is for when the answer is needed
 **now**; the fact that already happened still travels as an event. The activation email uses
