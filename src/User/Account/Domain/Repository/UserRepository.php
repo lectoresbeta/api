@@ -68,6 +68,27 @@ interface UserRepository
     public function matching(string $query, int $limit): array;
 
     /**
+     * El buscador de personas de `FEAT-USR-017`.
+     *
+     * Hermano de `matching()` y no el mismo: aquel sirve al selector de
+     * lectores y busca solo por texto; este **filtra además por los géneros
+     * que cada persona declaró**, y son dos preguntas con dos respuestas.
+     *
+     * Como aquel, **nunca busca por correo** (`RN-2`): responder si una
+     * dirección tiene cuenta es justo lo que el alta y la recuperación de
+     * contraseña se cuidan de no decir.
+     *
+     * Lo que no hace es aplicar la privacidad: eso depende de quién pregunta
+     * y se resuelve arriba, sobre la página ya traída.
+     *
+     * @param list<string> $genreCodes
+     * @param int<1, 100>  $limit
+     *
+     * @return list<User>
+     */
+    public function discoverable(?string $term, array $genreCodes, int $limit): array;
+
+    /**
      * La búsqueda del backoffice (`FEAT-MOD-005`).
      *
      * Es la hermana ancha de `matching()`, y las dos diferencias son las que

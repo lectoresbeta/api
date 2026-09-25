@@ -298,3 +298,15 @@ completeOAuth:
     path: /api/v1/auth/oauth/{provider}/callback
     controller: LectoresBeta\User\Authentication\Infrastructure\Controller\CompleteOAuthController::__invoke
     methods: [POST]
+
+# Buscar personas (`FEAT-USR-017`). **Con sesión**, al contrario que abrir un
+# perfil suelto: abrir el que alguien te ha pasado es una cosa y recorrer el
+# padrón de la plataforma es otra.
+#
+# No es `searchUsers`: ese `operationId` lo ocupa el buscador del backoffice
+# desde `FEAT-MOD-005`, que busca por correo y devuelve cuentas en cualquier
+# estado. Son dos cosas distintas y conviene que se llamen distinto.
+searchAuthors:
+    path: /api/v1/authors
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\SearchAuthorsController::__invoke
+    methods: [GET]

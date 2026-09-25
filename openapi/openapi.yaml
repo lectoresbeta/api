@@ -164,6 +164,9 @@ paths:
   /profiles/{username}:
     $ref: './paths/profiles.yaml#/byUsername'
 
+  /authors:
+    $ref: './paths/profiles.yaml#/search'
+
   # La bibliografía del autor (FEAT-USR-029). Una obra publicada **no es una
   # `Work`**: está editada y a la venta fuera, no tiene contenido aquí y no
   # cuenta como «Relato» en ningún contador.

@@ -65,7 +65,7 @@
 | `DELETE /api/v1/me/published-books/{publishedBookId}` | `deletePublishedBook` | Quitarla | FEAT-USR-029 | **Implementado** |
 | `PUT /api/v1/me/published-books/{publishedBookId}/cover` | `updatePublishedBookCover` | Subir su portada | FEAT-USR-029 | **Implementado** |
 | `DELETE /api/v1/me/published-books/{publishedBookId}/cover` | `deletePublishedBookCover` | Quitar su portada | FEAT-USR-029 | **Implementado** |
-| `GET /users` | `searchUsers` | Buscar autores | FEAT-USR-017 | PENDING |
+| `GET /api/v1/authors` | `searchAuthors` | Buscar personas por nombre o temática | FEAT-USR-017 | **Implementado** |
 | `GET /authors/{userId}/page` | `getAuthorPage` | Página pública de autor | FEAT-USR-015 | PENDING |
 | `PUT /me/author-page` | `updateAuthorPage` | Información de la página de autor | FEAT-USR-015 | PENDING |
 | `PUT /me/author-page/theme` | `updateAuthorPageTheme` | Personalización visual | FEAT-USR-016 | PENDING |

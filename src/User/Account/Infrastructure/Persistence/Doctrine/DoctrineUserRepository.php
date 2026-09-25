@@ -12,6 +12,7 @@ use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Account\Domain\ValueObject\Username;
+use LectoresBeta\User\Profile\Domain\Entity\LiteraryPreference;
 
 /**
  * @extends DoctrineRepository<User>
@@ -73,6 +74,40 @@ final class DoctrineUserRepository extends DoctrineRepository implements UserRep
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+
+        return $found;
+    }
+
+    public function discoverable(?string $term, array $genreCodes, int $limit): array
+    {
+        $query = $this->repository()->createQueryBuilder('u')
+            ->where('u.status = :active')
+            ->setParameter('active', AccountStatus::ACTIVE)
+            ->orderBy('u.username', 'ASC')
+            ->setMaxResults($limit);
+
+        if (null !== $term && '' !== trim($term)) {
+            // El comodín va **escapado**: un `%` tecleado por alguien no
+            // puede convertir su búsqueda en «devuélvemelo todo» (`RN-6`).
+            $query
+                ->andWhere('LOWER(u.username) LIKE LOWER(:pattern) OR LOWER(u.name) LIKE LOWER(:pattern)')
+                ->setParameter('pattern', '%'.addcslashes(trim($term), '%_\\').'%');
+        }
+
+        if ([] !== $genreCodes) {
+            // Los géneros viven en otra tabla del mismo contexto, y basta con
+            // que coincida uno: quien busca «fantasía y terror» busca a quien
+            // hace cualquiera de las dos, no a quien hace las dos.
+            $query
+                ->andWhere(\sprintf(
+                    'EXISTS (SELECT 1 FROM %s g WHERE g.userId = u.id AND g.genreCode IN (:genres))',
+                    LiteraryPreference::class,
+                ))
+                ->setParameter('genres', $genreCodes);
+        }
+
+        /** @var list<User> $found */
+        $found = $query->getQuery()->getResult();
 
         return $found;
     }

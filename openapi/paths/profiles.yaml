@@ -185,3 +185,84 @@ byUsername:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# Buscar personas (`FEAT-USR-017`).
+
+search:
+  get:
+    tags: [Account]
+    operationId: searchAuthors
+    summary: Buscar personas por nombre o temática
+    description: |
+      **Con sesión**, al contrario que abrir un perfil suelto. No es
+      incoherente: abrir el perfil que alguien te ha pasado es una cosa, y
+      poder recorrer el padrón de la plataforma es otra. Un buscador de
+      personas abierto es una superficie de extracción de datos, y quien la
+      use no deja rastro de quién es.
+
+      **No busca por correo, nunca.** Responder si una dirección tiene cuenta
+      es exactamente lo que el alta y la recuperación de contraseña se cuidan
+      de no decir.
+
+      No es la **búsqueda global** del encabezado, que busca también obras y
+      publicaciones: esa es `FEAT-COM-025` y está en backlog. Ni el buscador
+      del **backoffice**, que sí busca por correo, devuelve cuentas en
+      cualquier estado y deja traza de cada consulta.
+
+      La privacidad manda: quien tiene el perfil en `NOBODY` no aparece, quien
+      lo tiene en `FOLLOWERS` aparece solo para quien le sigue, y un bloqueo
+      esconde en los dos sentidos. Quien busca sí se ve a sí mismo.
+
+      **Sin criterios no devuelve nada**, y no es un error: un buscador que
+      con la caja vacía devuelve el padrón entero **es** el padrón entero.
+    parameters:
+      - name: q
+        in: query
+        required: false
+        description: Texto contra el nombre y el nombre de usuario. Sin distinguir mayúsculas, y un `%` es solo un carácter.
+        schema:
+          type: string
+      - name: genre
+        in: query
+        required: false
+        description: |
+          Código de género, de los que esa persona declaró en sus preferencias
+          literarias. Se puede repetir, y basta con que coincida uno.
+
+          Son los géneros que **declaró**, no los de las obras que ha escrito:
+          eso lo responde `Work` y es otra pregunta (`U-24`).
+        schema:
+          type: array
+          items:
+            type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 20
+    responses:
+      '200':
+        description: Las personas que encajan y que se pueden enseñar a quien pregunta.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [authors]
+              properties:
+                authors:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, username, name, avatarUrl]
+                    properties:
+                      userId: { type: string, format: uuid }
+                      username: { type: string }
+                      name:
+                        type: [string, 'null']
+                        description: Nulo mientras no haya terminado el onboarding.
+                      avatarUrl: { type: [string, 'null'] }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

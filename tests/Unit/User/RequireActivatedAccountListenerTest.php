@@ -192,6 +192,11 @@ final class InMemoryUsers implements UserRepository
         return null === $this->user ? [] : [$this->user];
     }
 
+    public function discoverable(?string $term, array $genreCodes, int $limit): array
+    {
+        return null === $this->user ? [] : [$this->user];
+    }
+
     public function forAdministration(?string $term, int $limit, int $offset): array
     {
         return null === $this->user ? [] : [$this->user];
