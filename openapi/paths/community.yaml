@@ -1326,3 +1326,68 @@ repost:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+homeAuthorSuggestions:
+  get:
+    tags: [Community]
+    operationId: listHomeAuthorSuggestions
+    summary: El bloque «todavía no sigues a ningún autor»
+    description: |
+      Cierra el cabo suelto del onboarding: el paso 3 es opcional y además
+      **se omite solo** cuando no hay autores suficientes, así que sin este
+      bloque quien lo saltara se quedaría con un muro pobre y sin una vía
+      evidente de arreglarlo.
+
+      **Es el mismo caso de uso que `listAuthorSuggestions`**: mismas
+      tarjetas, mismo criterio, misma cadena de relleno. Lo que cambia es
+      dónde se pinta, cuántas caben —cuatro, no diez— y una condición: el
+      bloque **solo aparece a quien no sigue a nadie**, y desaparece en cuanto
+      sigue a alguien.
+
+      Son dos rutas y un solo motor a propósito: el contexto de uso es
+      distinto y es previsible que el tamaño diverja, pero duplicar el
+      criterio sería tener dos sitios donde cambiarlo.
+
+      Sin candidatos el bloque no se muestra: no se sustituye por un mensaje
+      vacío que no ofrece salida.
+    responses:
+      '200':
+        description: Las sugerencias, o la instrucción de no pintar el bloque.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shouldDisplay, reason, suggestions]
+              properties:
+                shouldDisplay:
+                  type: boolean
+                reason:
+                  type: [string, 'null']
+                  enum: [NOT_ENOUGH_AUTHORS, ALREADY_FOLLOWING_ALL, ALREADY_FOLLOWING_SOMEBODY, null]
+                  description: |
+                    `ALREADY_FOLLOWING_SOMEBODY` es el caso normal: el bloque
+                    ha cumplido su función y no hace falta.
+                suggestions:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, followerCount, publicationCount, matchedGenres, following]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      displayName:
+                        type: [string, 'null']
+                      avatarUrl:
+                        type: [string, 'null']
+                      followerCount:
+                        type: integer
+                      publicationCount:
+                        type: integer
+                      matchedGenres:
+                        type: array
+                        items:
+                          type: string
+                      following:
+                        type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

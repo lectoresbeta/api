@@ -39,11 +39,21 @@ final readonly class ListAuthorSuggestionsHandler
     {
         $member = MemberId::fromString($query->memberId);
         $genres = $this->suggestions->genresOf($member);
+        $following = $this->subscriptions->followedBy($member);
+
+        // El bloque del muro existe para quien no sigue a nadie, y desaparece
+        // en cuanto sigue a alguien (`FEAT-COM-018` `RN-1`, `RN-6`). No es un
+        // criterio de sugerencia distinto: es una condición de dónde se pinta.
+        if ($query->onlyIfFollowingNobody && [] !== $following) {
+            return new AuthorSuggestions(false, 'ALREADY_FOLLOWING_SOMEBODY', []);
+        }
+
+        $howMany = $query->howMany ?? $this->maximum;
 
         // Ni uno mismo ni a quien ya se sigue (`RN-3`, `RN-4`).
-        $excluded = [$member->value(), ...$this->subscriptions->followedBy($member)];
+        $excluded = [$member->value(), ...$following];
 
-        $found = $this->suggestions->byGenres($genres, $excluded, $this->maximum);
+        $found = $this->suggestions->byGenres($genres, $excluded, $howMany);
 
         // Segundo tramo: los más seguidos, sin filtrar por género. Es
         // preferible proponer autores populares aunque no encajen que enseñar
@@ -51,7 +61,7 @@ final readonly class ListAuthorSuggestionsHandler
         if (\count($found) < $this->minimum) {
             $seen = array_map(static fn (AuthorStats $one): string => $one->authorId()->value(), $found);
 
-            foreach ($this->suggestions->mostFollowed([...$excluded, ...$seen], $this->maximum - \count($found)) as $extra) {
+            foreach ($this->suggestions->mostFollowed([...$excluded, ...$seen], $howMany - \count($found)) as $extra) {
                 $found[] = $extra;
             }
         }

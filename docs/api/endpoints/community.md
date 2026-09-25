@@ -33,6 +33,7 @@ sitio donde leer lo escrito.
 | `POST /api/v1/posts/{postId}/repost` | `repostPost` | Repostear, o deshacerlo | FEAT-COM-019 | **Implementado** |
 | `DELETE /api/v1/posts/{postId}/repost` | `undoRepost` | Retirar el repost propio | FEAT-COM-019 | **Implementado** |
 | `GET /api/v1/onboarding/author-suggestions` | `listAuthorSuggestions` | A quién proponer seguir | FEAT-COM-016 | **Implementado** |
+| `GET /api/v1/home/author-suggestions` | `listHomeAuthorSuggestions` | El mismo bloque, en el muro | FEAT-COM-018 | **Implementado** |
 
 ---
 
@@ -553,3 +554,13 @@ suscripción «de onboarding» distinta**, así que tampoco una ruta distinta.
 El filtro de **cuentas activadas**. La proyección de autores no distingue todavía una cuenta
 activada de una que no lo está; mientras tanto solo se sugiere a quien ha publicado una obra,
 lo que ya exige tenerla activada.
+
+### El mismo motor en la Home
+
+`GET /api/v1/home/author-suggestions` es el bloque «todavía no sigues a ningún autor» y **usa
+el mismo caso de uso**. Lo propio suyo son tres cosas: la ruta, cuántas tarjetas caben —cuatro,
+no diez— y una condición, que solo se pinta a quien no sigue a nadie y desaparece en cuanto
+sigue a alguien (`ALREADY_FOLLOWING_SOMEBODY`).
+
+Dos rutas y un motor a propósito: el contexto de uso es distinto y es previsible que el tamaño
+diverja, pero duplicar el criterio sería tener dos sitios donde cambiarlo.

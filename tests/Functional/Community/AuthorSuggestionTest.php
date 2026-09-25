@@ -242,6 +242,93 @@ final class AuthorSuggestionTest extends EconomyScenario
         self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }
 
+    /**
+     * `FEAT-COM-018`: el mismo motor en la Home, con una condición más —solo
+     * a quien no sigue a nadie— y menos tarjetas. Cierra el cabo suelto del
+     * onboarding: quien saltó el paso 3, o a quien se le omitió, encuentra
+     * aquí la vía de arreglarlo.
+     */
+    public function testTheHomeBlockShowsTheSameSuggestionsToSomebodyFollowingNobody(): void
+    {
+        $uno = $this->authorPublishing('una', ['DRAMA']);
+        $this->authorPublishing('otra', ['DRAMA']);
+        $this->authorPublishing('tercera', ['DRAMA']);
+
+        $person = $this->onboarded('nueva', ['DRAMA', 'FANTASY', 'ROMANCE']);
+
+        $this->homeSuggestions($person['token']);
+
+        self::assertResponseIsSuccessful();
+        self::assertTrue($this->payload()['shouldDisplay']);
+        self::assertContains($uno['userId'], $this->ids());
+    }
+
+    /**
+     * `RN-6`: el bloque desaparece en cuanto sigue a alguien, porque deja de
+     * cumplirse la razón por la que existe. Y no se muestra a quien ya sigue
+     * a alguien **aunque su muro esté vacío**: el problema que resuelve es no
+     * seguir a nadie, no tener poco que leer.
+     */
+    public function testTheHomeBlockDisappearsAsSoonAsTheyFollowSomebody(): void
+    {
+        $uno = $this->authorPublishing('una', ['DRAMA']);
+        $this->authorPublishing('otra', ['DRAMA']);
+        $this->authorPublishing('tercera', ['DRAMA']);
+
+        $person = $this->onboarded('nueva', ['DRAMA', 'FANTASY', 'ROMANCE']);
+        $this->follow($person['token'], $uno['userId']);
+
+        $this->homeSuggestions($person['token']);
+
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->payload()['shouldDisplay']);
+        self::assertSame('ALREADY_FOLLOWING_SOMEBODY', $this->payload()['reason']);
+        self::assertSame([], $this->payload()['suggestions']);
+    }
+
+    /**
+     * `RN-5`: sin candidatos el bloque no se pinta. No se sustituye por un
+     * mensaje vacío que no ofrece salida.
+     */
+    public function testWithoutCandidatesTheHomeBlockIsNotShownEither(): void
+    {
+        $person = $this->onboarded('nueva', ['DRAMA', 'FANTASY', 'ROMANCE']);
+
+        $this->homeSuggestions($person['token']);
+
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->payload()['shouldDisplay']);
+        self::assertSame('NOT_ENOUGH_AUTHORS', $this->payload()['reason']);
+    }
+
+    /**
+     * `RN-2` y `RN-3`: las sugerencias son **las mismas** en los dos sitios.
+     * La prueba de que el criterio no está escrito dos veces.
+     */
+    public function testBothScreensAgreeForTheSamePersonAtTheSameMoment(): void
+    {
+        $this->authorPublishing('una', ['DRAMA']);
+        $this->authorPublishing('otra', ['DRAMA']);
+        $this->authorPublishing('tercera', ['DRAMA']);
+
+        $person = $this->onboarded('nueva', ['DRAMA', 'FANTASY', 'ROMANCE']);
+
+        $this->suggestions($person['token']);
+        $enOnboarding = $this->ids();
+
+        $this->homeSuggestions($person['token']);
+        $enHome = $this->ids();
+
+        self::assertSame($enOnboarding, $enHome);
+    }
+
+    private function homeSuggestions(string $token): void
+    {
+        $this->client->request('GET', '/api/v1/home/author-suggestions', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+    }
+
     private function suggestions(string $token): void
     {
         $this->client->request('GET', '/api/v1/onboarding/author-suggestions', server: [

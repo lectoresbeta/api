@@ -166,3 +166,13 @@ listAuthorSuggestions:
     path: /api/v1/onboarding/author-suggestions
     controller: LectoresBeta\Community\Recommendation\Infrastructure\Controller\ListAuthorSuggestionsController::__invoke
     methods: [GET]
+
+# El bloque «todavía no sigues a ningún autor» del muro (`FEAT-COM-018`).
+#
+# Ruta aparte y **mismo caso de uso** que el paso 3 del onboarding: el
+# contexto de uso es distinto y es previsible que el tamaño de la lista
+# diverja, pero duplicar el criterio sería tener dos sitios donde cambiarlo.
+listHomeAuthorSuggestions:
+    path: /api/v1/home/author-suggestions
+    controller: LectoresBeta\Community\Recommendation\Infrastructure\Controller\ListHomeAuthorSuggestionsController::__invoke
+    methods: [GET]

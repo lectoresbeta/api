@@ -17,8 +17,8 @@ namespace LectoresBeta\Community\Recommendation\Application\DTO;
 final readonly class AuthorSuggestions
 {
     /**
-     * @param list<AuthorSuggestion>                            $suggestions
-     * @param 'NOT_ENOUGH_AUTHORS'|'ALREADY_FOLLOWING_ALL'|null $reason
+     * @param list<AuthorSuggestion>                                                         $suggestions
+     * @param 'ALREADY_FOLLOWING_SOMEBODY'|'NOT_ENOUGH_AUTHORS'|'ALREADY_FOLLOWING_ALL'|null $reason
      */
     public function __construct(
         public bool $shouldDisplay,

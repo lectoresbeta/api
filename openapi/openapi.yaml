@@ -165,6 +165,9 @@ paths:
   /me/blocked-users:
     $ref: './paths/community.yaml#/blockedUsers'
 
+  /home/author-suggestions:
+    $ref: './paths/community.yaml#/homeAuthorSuggestions'
+
   /posts:
     $ref: './paths/community.yaml#/posts'
 
