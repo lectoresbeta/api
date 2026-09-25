@@ -858,3 +858,68 @@ emailChangeConfirm:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+sessionContext:
+  get:
+    tags: [Account]
+    operationId: getSessionContext
+    summary: El contexto de sesión que necesita el layout
+    description: |
+      **Una petición por navegación en vez de cuatro.** Identidad, estado de
+      la cuenta, onboarding, saldo y avisos sin leer son lo que el menú
+      lateral y la cabecera necesitan en todas las pantallas, y pedirlos por
+      separado sería pagar cuatro viajes para pintar algo que no cambia.
+
+      Es de **solo lectura** y solo del propio contexto: no hay forma de pedir
+      el de otra persona. No lleva correo ni fecha de nacimiento.
+
+      Funciona con la cuenta **sin activar**: es justo entonces cuando hace
+      falta para avisar del estado.
+
+      `credits.balance` y `unreadNotifications` pueden venir a **`null`**, y
+      no es un error: significa «ahora mismo no se sabe». Que no se pueda
+      pintar el saldo no debe impedir navegar.
+
+      El saldo llega de una copia que se actualiza por eventos, así que
+      **puede ir un poco retrasado**. Quien necesite el número exacto —para
+      gastar— lo pide a `GET /credits/balance`.
+    responses:
+      '200':
+        description: El contexto del usuario autenticado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, username, accountStatus, onboardingStatus, credits, pendingTours]
+              properties:
+                userId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                username:
+                  type: string
+                name:
+                  type: [string, 'null']
+                avatarUrl:
+                  type: [string, 'null']
+                accountStatus:
+                  type: string
+                  enum: [PENDING_ACTIVATION, ACTIVE, BLOCKED, DELETED]
+                onboardingStatus:
+                  type: string
+                credits:
+                  type: object
+                  required: [balance]
+                  properties:
+                    balance:
+                      type: [integer, 'null']
+                      description: |
+                        Un solo número, que **puede ser negativo**
+                        (`FEAT-CRD-018`). `null` mientras no se conozca.
+                unreadNotifications:
+                  type: [integer, 'null']
+                  minimum: 0
+                pendingTours:
+                  type: array
+                  items:
+                    type: string
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

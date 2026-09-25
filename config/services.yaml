@@ -121,6 +121,7 @@ services:
                 - LectoresBeta\Notification\Delivery\Application\Event\EmailChangeRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\CreditBalanceWentNegative
                 - LectoresBeta\Notification\Delivery\Application\Event\CreditDebtCleared
+                - LectoresBeta\User\Profile\Application\Event\CreditBalanceChanged
                 - LectoresBeta\User\Privacy\Application\Event\AuthorSubscribed
                 - LectoresBeta\User\Privacy\Application\Event\AuthorUnsubscribed
                 - LectoresBeta\User\Privacy\Application\Event\UserBlocked
@@ -189,6 +190,14 @@ services:
     # porque el correo operativo *es* la defensa de la cuenta.
     LectoresBeta\User\Account\Application\Contract\MailingAddresses:
         alias: LectoresBeta\User\Account\Application\Service\ResolveMailingAddress
+
+    LectoresBeta\Notification\Delivery\Application\Contract\UnreadNotificationCount:
+        alias: LectoresBeta\Notification\Delivery\Application\Service\CountUnreadFor
+
+    # `RN-7` de FEAT-USR-027 vive aquí: si el contexto de al lado no responde,
+    # el resto del menú se pinta igual.
+    LectoresBeta\User\Profile\Application\Port\SessionSideloads:
+        alias: LectoresBeta\User\Profile\Infrastructure\Composition\NotificationSideloads
 
     LectoresBeta\User\Account\Application\Contract\EmailChangeLinkProvider:
         alias: LectoresBeta\User\Account\Application\Service\IssueEmailChangeLink
@@ -349,6 +358,13 @@ services:
     # La copia del grafo de seguidores que `User` necesita para resolver las
     # audiencias `FOLLOWERS` (FEAT-COM-010). Las dos mitades: sin la segunda,
     # quien deja de seguir seguiría contando como seguidor.
+    # La copia del saldo, que `User` necesita para pintar el menú en una sola
+    # petición. Es una proyección y no un contrato porque `Credits` no publica
+    # ninguno, ni siquiera de consulta (AGENTS.md, decision:0002).
+    LectoresBeta\User\Profile\Application\Handler\TrackCreditBalance:
+        tags:
+            - { name: messenger.message_handler }
+
     LectoresBeta\User\Privacy\Application\Handler\RememberFollower:
         tags:
             - { name: messenger.message_handler }

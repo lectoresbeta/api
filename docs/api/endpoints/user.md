@@ -17,6 +17,7 @@
 | `PUT /api/v1/me/password` | `changeMyPassword` | Cambiar o establecer la contraseña | FEAT-USR-041 | **Implementado** |
 | `POST /api/v1/me/email-change` | `requestEmailChange` | Pedir el cambio de correo | FEAT-USR-040 | **Implementado** |
 | `POST /api/v1/me/email-change/confirm` | `confirmEmailChange` | Confirmarlo desde el correo nuevo | FEAT-USR-040 | **Implementado** |
+| `GET /api/v1/me/context` | `getSessionContext` | Lo que el layout necesita, en una petición | FEAT-USR-027 | **Implementado** |
 | `POST /api/v1/auth/login` | `login` | Login con email y contraseña | FEAT-USR-004 | **Implementado** |
 | `POST /api/v1/auth/refresh` | `refreshSession` | Renovar la sesión. El refresco **rota** | FEAT-USR-004 | **Implementado** |
 | `POST /api/v1/auth/logout` | `logout` | Cerrar sesión | FEAT-USR-004 | **Implementado** |

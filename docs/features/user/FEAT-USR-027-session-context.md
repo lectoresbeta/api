@@ -5,7 +5,7 @@ context: User
 concept: Account
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - docs/ui/app-layout-and-navigation.md
@@ -109,14 +109,14 @@ Respuesta `200`. Sin sesión, `401`.
 
 ## Criterios de aceptación
 
-- [ ] Devuelve identidad, estados, créditos, no leídas y tours pendientes en una sola llamada.
-- [ ] `credits` es **un solo número**, que puede ser negativo.
-- [ ] No devuelve email ni fecha de nacimiento.
-- [ ] No permite consultar el contexto de otro usuario.
-- [ ] Si `Credits` no responde, devuelve el resto con el saldo marcado como no disponible.
-- [ ] Funciona con la cuenta en `PENDING_ACTIVATION` e indica ese estado.
-- [ ] La composición no accede a repositorios ni entidades de otros contextos.
-- [ ] Es de solo lectura: no provoca ninguna escritura.
+- [x] Devuelve identidad, estados, créditos, no leídas y tours pendientes en una sola llamada.
+- [x] `credits` es **un solo número**, que puede ser negativo.
+- [x] No devuelve email ni fecha de nacimiento.
+- [x] No permite consultar el contexto de otro usuario.
+- [x] Si `Credits` no responde, devuelve el resto con el saldo marcado como no disponible.
+- [x] Funciona con la cuenta en `PENDING_ACTIVATION` e indica ese estado.
+- [x] La composición no accede a repositorios ni entidades de otros contextos.
+- [x] Es de solo lectura: no provoca ninguna escritura.
 
 ## Preguntas abiertas
 
@@ -133,4 +133,30 @@ Respuesta `200`. Sin sesión, `401`.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25), con dos desviaciones de la ficha que conviene ver.
+
+**El saldo no llega por un contrato de `Credits`, sino por una copia.** La ficha dibuja tres
+contratos de consulta, uno por contexto. `Notification` publica el suyo, `User` se pregunta a
+sí mismo — y `Credits` **no publica contratos**, ni siquiera para leer: es regla dura de
+`AGENTS.md` y de [`decision:0002`](../../decisions/0002-credits-as-isolated-bounded-context.md),
+y una excepción «solo para consultar» abre la misma puerta que mañana alguien usa para otra
+cosa. Así que se hace lo que el proyecto ya hace con el grafo de seguidores y con los
+bloqueos: escuchar `CreditBalanceChanged` y guardar un número.
+
+Tiene un coste declarado: el saldo **puede ir retrasado**. La propia ficha ya lo asumía en
+«Frescura del saldo», y la fuente de verdad para gastar sigue siendo `GET /credits/balance`.
+Un matiz que la copia sí resuelve: un hecho más viejo que lo ya sabido no retrocede el
+número, porque la cola no promete orden.
+
+**`credits` devuelve un solo número y no tres.** La ficha pedía total, disponible y retenido
+citando [`decision:0004`](../../decisions/0004-credit-reservation-on-access-grant.md), pero
+[`decision:0006`](../../decisions/0006-credit-system.md) eliminó las retenciones: hoy
+«disponible» y «total» son el mismo número, y tres campos iguales serían tres formas de
+equivocarse.
+
+`pendingTours` viaja siempre, y de momento vacío: `FEAT-USR-026` no existe como modelo. Una
+lista vacía es la respuesta correcta —no hay ninguno pendiente— y deja al cliente ya escrito.
+
+`RN-7` vive en `NotificationSideloads`, en Infrastructure, porque de fallos y tiempos de
+espera sabe Infrastructure y no el caso de uso. El handler solo sabe que `null` es una
+respuesta posible.

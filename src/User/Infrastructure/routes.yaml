@@ -55,6 +55,13 @@ confirmEmailChange:
     controller: LectoresBeta\User\Account\Infrastructure\Controller\ConfirmEmailChangeController::__invoke
     methods: [POST]
 
+# Todo lo que el layout necesita en una sola petición, en vez de cuatro por
+# navegación (`FEAT-USR-027`). Solo lectura, y solo del propio contexto.
+getSessionContext:
+    path: /api/v1/me/context
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetSessionContextController::__invoke
+    methods: [GET]
+
 login:
     path: /api/v1/auth/login
     controller: LectoresBeta\User\Authentication\Infrastructure\Controller\LogInController::__invoke
