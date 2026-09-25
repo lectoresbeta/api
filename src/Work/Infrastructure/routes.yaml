@@ -74,3 +74,17 @@ listContentWarnings:
     path: /api/v1/content-warnings
     controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ListContentWarningsController::__invoke
     methods: [GET]
+
+# Editar (`FEAT-WRK-005`). Hasta aquí una obra se creaba y ya no se podía
+# tocar: ni una errata.
+updateWork:
+    path: /api/v1/works/{workId}
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\UpdateWorkController::__invoke
+    methods: [PATCH]
+
+# `PUT` porque se sustituye el texto entero. Si alguien había empezado a
+# corregir esta versión, el guardado archiva una copia antes de pisarla.
+updateChapter:
+    path: /api/v1/chapters/{chapterId}
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\UpdateChapterController::__invoke
+    methods: [PUT]

@@ -61,6 +61,7 @@ final readonly class ResolveCorrectionBriefs implements CorrectionBriefs
             $work->accessMode()->value,
             $work->isAdultsOnly(),
             $questionnaire?->version() ?? 0,
+            $chapter->version(),
             $this->asked($questions, $isLast),
         );
     }

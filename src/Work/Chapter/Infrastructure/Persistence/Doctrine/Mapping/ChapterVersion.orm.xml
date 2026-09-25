@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!--
+        El texto de un capítulo tal y como estaba cuando alguien lo corrigió
+        (`FEAT-WRK-005`). Se escribe una vez: no hay mutadores en la entidad y
+        el repositorio no ofrece actualización.
+    -->
+    <entity name="LectoresBeta\Work\Chapter\Domain\Entity\ChapterVersion"
+            table="chapter_version" schema="work_ctx">
+
+        <unique-constraints>
+            <!-- Una versión por número y capítulo. Bajo concurrencia, el
+                 índice es la única garantía real de que dos ediciones
+                 simultáneas no archivan la misma. -->
+            <unique-constraint name="uniq_chapter_version" columns="chapter_id,version"/>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="chapterId" column="chapter_id" type="guid"/>
+        <field name="version" type="smallint"/>
+        <field name="title" type="string" length="180" nullable="true"/>
+        <field name="contentHtml" column="content_html" type="text"/>
+        <field name="contentText" column="content_text" type="text"/>
+        <field name="wordCount" column="word_count" type="integer"/>
+        <field name="archivedAt" column="archived_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

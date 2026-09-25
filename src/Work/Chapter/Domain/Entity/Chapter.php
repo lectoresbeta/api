@@ -45,6 +45,24 @@ class Chapter
 
     private int $wordCount = 0;
 
+    /**
+     * Qué número de versión tiene el texto que hay ahora
+     * ([`FEAT-WRK-005`](../../../../../docs/features/work/FEAT-WRK-005-edit-work-and-chapter.md)).
+     *
+     * Empieza en 1 y solo sube cuando se archiva la anterior, que es cuando
+     * alguien la ha leído. Un autor que teclea y guarda veinte veces antes de
+     * abrir su obra a nadie sigue en la 1.
+     */
+    private int $version = 1;
+
+    /**
+     * Cuándo empezó alguien a corregir **esta** versión, si es que alguien lo
+     * hizo. Es lo que convierte el texto en algo que ya no se puede
+     * sobrescribir sin dejar copia: hay una corrección escribiéndose sobre
+     * él, o escrita.
+     */
+    private ?\DateTimeImmutable $currentVersionReadAt = null;
+
     private ChapterVisibility $visibility;
 
     /** Blocked by an upheld claim (`FEAT-MOD-003`, `MOD-13`). */
@@ -98,6 +116,44 @@ class Chapter
     public function wordCount(): int
     {
         return $this->wordCount;
+    }
+
+    public function version(): int
+    {
+        return $this->version;
+    }
+
+    /**
+     * Alguien ha empezado a corregir el texto que hay ahora. A partir de
+     * aquí, editarlo cuesta una copia.
+     */
+    public function markVersionRead(\DateTimeImmutable $now): void
+    {
+        $this->currentVersionReadAt ??= $now;
+        $this->updatedAt = $now;
+    }
+
+    /**
+     * Si sobrescribir el texto perdería algo que alguien leyó.
+     *
+     * Es la regla entera de `RN-2` en una línea, y la razón de que viva aquí
+     * y no en el caso de uso: la pregunta «¿se puede pisar este texto?» es
+     * del capítulo.
+     */
+    public function needsArchivingBeforeEditing(): bool
+    {
+        return null !== $this->currentVersionReadAt;
+    }
+
+    /**
+     * La versión actual ya está archivada: este capítulo pasa a ser la
+     * siguiente, todavía sin leer por nadie.
+     */
+    public function openNextVersion(\DateTimeImmutable $now): void
+    {
+        ++$this->version;
+        $this->currentVersionReadAt = null;
+        $this->updatedAt = $now;
     }
 
     public function visibility(): ChapterVisibility

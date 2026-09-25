@@ -155,6 +155,7 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `CLAIM_DECISION_UNKNOWN` | 422 | La decisión no es `UPHELD` ni `REJECTED` |
 | `CORRECTION_NOT_FOUND` | 404 | La corrección no existe, o no es suya para leerla. Una ajena responde como una inexistente (`FEAT-FBK-004`) |
 | `CORRECTION_LOCKED` | 409 | Retenida por descubierto. Se distingue del `404` a propósito: existe, es suya, y se lee reponiendo saldo |
+| `CHAPTER_BLOCKED` | 409 | El capítulo está bloqueado por una reclamación estimada y su contenido se conserva tal cual (`FEAT-WRK-005` `RN-7`) |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |

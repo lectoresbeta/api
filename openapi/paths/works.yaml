@@ -519,6 +519,47 @@ work:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
 
+  patch:
+    tags: [Works]
+    operationId: updateWork
+    summary: Editar el título o la sinopsis
+    description: |
+      Campos sueltos: **lo que no se envía, no se toca**. La diferencia entre
+      no enviar `synopsis` y enviarla a `null` es real y se respeta — lo
+      primero la deja como está, lo segundo la borra.
+
+      **No versiona nada y no toca el precio.** Nadie corrige una sinopsis, y
+      el precio de un capítulo sale de sus palabras y de su cuestionario.
+
+      Géneros y clasificación de contenido tienen sus propias operaciones
+      (`setWorkGenres`, `setWorkContentRating`) y no se duplican aquí. La
+      portada queda fuera mientras `FEAT-USR-028` siga abierta.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                maxLength: 180
+              synopsis:
+                type: [string, 'null']
+    responses:
+      '204':
+        description: Guardado. También cuando no había nada que cambiar.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suya. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/ValidationFailed'
+
 chapter:
   get:
     tags: [Works]
@@ -563,6 +604,65 @@ chapter:
         description: |
           No existe, está oculto, está bloqueado, o pertenece a una obra que
           no puedes abrir. `code: CHAPTER_NOT_FOUND`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  put:
+    tags: [Works]
+    operationId: updateChapter
+    summary: Sustituir el texto de un capítulo
+    description: |
+      El contenido entero, que es lo que hace un editor al guardar.
+
+      **Si alguien había empezado a corregir esta versión, el guardado archiva
+      una copia antes de pisarla** y el capítulo pasa a la siguiente versión
+      ([`FEAT-WRK-005`](../../docs/features/work/FEAT-WRK-005-edit-work-and-chapter.md)).
+      Quien esté corrigiendo sigue viendo el texto que empezó a leer, y una
+      corrección ya entregada sigue hablando de un texto que existe. Si nadie
+      lo había leído, se sobrescribe y la versión no cambia.
+
+      El recuento de palabras **lo calcula el servidor**: de él depende el
+      precio de cada corrección, y dejar que lo fije quien llama sería dejar
+      que lo fije quien paga. Guardar reprecia el capítulo para las
+      correcciones que empiecen después; las ya empezadas conservan su
+      cotización.
+
+      El HTML se sanea con las mismas reglas que al crearlo. Una puerta de
+      edición que acepta lo que la de creación rechaza es la puerta que se
+      usa.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [contentHtml]
+            properties:
+              title:
+                type: [string, 'null']
+              contentHtml:
+                type: string
+    responses:
+      '204':
+        description: Guardado. También cuando no había nada que cambiar.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suyo. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CHAPTER_BLOCKED`. Bloqueado por una reclamación estimada: el contenido reclamado se conserva tal cual.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'El contenido queda vacío tras sanear. `code: EMPTY_CHAPTER`.'
         content:
           application/problem+json:
             schema:

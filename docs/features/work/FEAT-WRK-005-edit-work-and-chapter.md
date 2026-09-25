@@ -5,7 +5,7 @@ context: Work
 concept: Chapter
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P0
 sources:
   - conversation:2026-09-25 (bloque de ciclo de vida de la obra)
@@ -177,17 +177,17 @@ cómo se versiona.
 
 ## Criterios de aceptación
 
-- [ ] El autor edita el título y la sinopsis de su obra.
-- [ ] El autor edita el título y el contenido de un capítulo.
-- [ ] Editar un capítulo que nadie ha empezado a corregir **no** crea una versión.
-- [ ] Editar un capítulo con una corrección empezada **sí** la crea, y el número sube.
-- [ ] Quien tenía una corrección en curso sigue viendo el texto que empezó a leer.
-- [ ] Una corrección entregada recuerda la versión sobre la que se escribió.
-- [ ] Editar recalcula las palabras y reprecia el capítulo para las correcciones futuras.
-- [ ] Una corrección ya empezada conserva su cotización aunque el texto crezca.
-- [ ] Un capítulo bloqueado por moderación no se puede editar.
-- [ ] Guardar sin cambios no versiona, no publica nada y no cambia la fecha.
-- [ ] Nadie que no sea el autor puede editar, y recibe `404`.
+- [x] El autor edita el título y la sinopsis de su obra.
+- [x] El autor edita el título y el contenido de un capítulo.
+- [x] Editar un capítulo que nadie ha empezado a corregir **no** crea una versión.
+- [x] Editar un capítulo con una corrección empezada **sí** la crea, y el número sube.
+- [x] Quien tenía una corrección en curso sigue viendo el texto que empezó a leer.
+- [x] Una corrección entregada recuerda la versión sobre la que se escribió.
+- [x] Editar recalcula las palabras y reprecia el capítulo para las correcciones futuras.
+- [x] Una corrección ya empezada conserva su cotización aunque el texto crezca.
+- [x] Un capítulo bloqueado por moderación no se puede editar.
+- [x] Guardar sin cambios no versiona, no publica nada y no cambia la fecha.
+- [x] Nadie que no sea el autor puede editar, y recibe `404`.
 
 ## Preguntas abiertas
 
@@ -204,4 +204,29 @@ cómo se versiona.
 del versionado (cuándo se crea, qué texto ve quien corrige, quién lee una versión antigua y
 qué entra en ella) se tomaron el 2026-09-25.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25).
+
+El versionado quedó tal y como se decidió: copia solo cuando alguien ha empezado a corregir
+esa versión, texto congelado para quien está escribiendo, y la corrección entregada enlazando
+al texto sobre el que se escribió.
+
+**Lo que marca una versión como leída llega por evento.** `Work` consume `CorrectionStarted`
+—un hecho que ya viajaba para `Credits` y `Reading`— y marca el capítulo. La alternativa era
+preguntarle a `Feedback` de forma síncrona en cada guardado, que convertiría cada pulsación de
+«Guardar» en una llamada a otro contexto. Queda la ventana de `W-24`, sin cerrar y sin
+esconder.
+
+Dos detalles que solo aparecen al escribirlo:
+
+- **el `DEFAULT 1` de la columna nueva hay que retirarlo en la misma migración.** Sirve para
+  las filas que ya existen y, si se queda, `doctrine:schema:validate` canta una diferencia con
+  el mapeo en cada despliegue;
+- **el recuento de la obra se ajusta por diferencia**, restando las palabras que tenía el
+  capítulo y sumando las que tiene ahora. Volver a sumarlas todas leería un estado en el que
+  el capítulo recién tocado todavía no es visible.
+
+Con esto, `FEAT-FBK-004` `RN-8` queda entero: `getCorrectedChapterText` sirve la versión
+archivada cuando la hay, sin que su API cambiara.
+
+`W-23`, `W-24`, `W-25` y `W-26` siguen abiertas. `W-25` (purgar las versiones que ninguna
+corrección referencia) gana importancia ahora que la tabla existe y crece.

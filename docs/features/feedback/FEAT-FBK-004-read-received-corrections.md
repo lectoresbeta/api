@@ -5,7 +5,7 @@ context: Feedback
 concept: Correction
 actors: [Writer]
 spec_status: APPROVED
-impl_status: PARTIAL
+impl_status: DONE
 priority: P0
 sources:
   - conversation:2026-09-25 (bloque «que el autor pueda leer lo que compró»)
@@ -176,7 +176,7 @@ Las dos ya están implementadas (`FEAT-CRD-018`).
 **Especificación:** `APPROVED` (2026-09-25). Resuelve la forma de acceso
 (bandeja global con detalle) decidida el 2026-09-25.
 
-**Implementación:** `PARTIAL` (2026-09-25). Las tres operaciones funcionan, con la
+**Implementación:** `DONE` (2026-09-25). Las tres operaciones funcionan, con la
 autorización de las dos partes, el filtrado de la bandeja, la marca de lectura y el aviso que
 se retira al abrirla. Los enunciados llegan **de la versión que se respondió**, por un
 contrato nuevo de `Work` (`AnsweredQuestionnaires`) distinto del que sirve el panel de
@@ -187,11 +187,10 @@ a las dos partes, así que quien corrigió podía saber si el autor había abier
 justo la confirmación de lectura que `F-14` decide no tener. Ahora el campo es **nulo para
 quien la escribió**; el dato es del destinatario.
 
-**Falta** `RN-8` a medias: `getCorrectedChapterText` responde siempre el texto **vigente**,
-con `isCurrentVersion: true`, porque el capítulo todavía no se versiona. La ficha ya preveía
-este caso para las correcciones anteriores al versionado, y el contrato `ChapterTexts` ya
-acepta la versión: cuando [`FEAT-WRK-005`](../work/FEAT-WRK-005-edit-work-and-chapter.md)
-entre, empezará a servir la archivada sin tocar la API.
+`RN-8` quedó entero al entrar [`FEAT-WRK-005`](../work/FEAT-WRK-005-edit-work-and-chapter.md),
+y sin tocar esta API: `getCorrectedChapterText` sirve la versión archivada cuando la hay, y el
+texto vigente marcado con `isCurrentVersion: true` cuando no — que es el caso de las
+correcciones anteriores al versionado, como la ficha ya preveía.
 
 `F-15` (el contador de no leídas en la cabecera) y `F-16` (agrupar por capítulo) siguen
 abiertas.

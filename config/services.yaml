@@ -114,6 +114,10 @@ services:
                 - LectoresBeta\Work\Catalogue\Application\Event\ChapterCorrectabilityChanged
                 - LectoresBeta\Work\Catalogue\Application\Event\ChapterPriceChanged
                 - LectoresBeta\Work\Catalogue\Application\Event\FeedbackSubmitted
+
+                # Alguien ha empezado a corregir: a partir de ahí, editar ese
+                # capítulo cuesta una copia (FEAT-WRK-005).
+                - LectoresBeta\Work\Chapter\Application\Event\CorrectionStarted
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
                 - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordResetRequested
@@ -441,6 +445,10 @@ services:
     # Y qué significa esa misma decisión para el saldo, que lo decide
     # `Credits` a solas: el hecho no lleva importes.
     LectoresBeta\Credits\Account\Application\Handler\ReverseCorrectionOnClaimUpheld:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Work\Chapter\Application\Handler\MarkChapterVersionRead:
         tags:
             - { name: messenger.message_handler }
 

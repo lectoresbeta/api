@@ -22,6 +22,8 @@
              que depende el precio de toda corrección (`FEAT-CRD-016`). -->
         <field name="contentText" column="content_text" type="text"/>
         <field name="wordCount" column="word_count" type="integer"/>
+        <field name="version" type="smallint"/>
+        <field name="currentVersionReadAt" column="current_version_read_at" type="datetime_immutable" nullable="true"/>
         <field name="visibility" type="string" length="16"
                enum-type="LectoresBeta\Work\Chapter\Domain\Enum\ChapterVisibility"/>
         <field name="blockedAt" column="blocked_at" type="datetime_immutable" nullable="true"/>

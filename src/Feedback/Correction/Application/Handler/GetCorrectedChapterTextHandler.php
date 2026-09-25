@@ -62,7 +62,7 @@ final readonly class GetCorrectedChapterTextHandler
             throw CorrectionLocked::create();
         }
 
-        $text = $this->chapters->ofChapter($correction->chapterId()->value())
+        $text = $this->chapters->ofChapter($correction->chapterId()->value(), $correction->chapterVersion())
             ?? throw CorrectionNotFound::withId($query->correctionId);
 
         return new CorrectedChapterText(

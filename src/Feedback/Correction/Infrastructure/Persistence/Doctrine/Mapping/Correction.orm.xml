@@ -50,6 +50,7 @@
         <field name="authorLabel" column="author_label" type="string" length="80" nullable="true"/>
         <field name="ownerId" column="owner_id" type="guid"/>
         <field name="questionnaireVersion" column="questionnaire_version" type="smallint"/>
+        <field name="chapterVersion" column="chapter_version" type="smallint" nullable="true"/>
         <field name="status" type="string" length="16"
                enum-type="LectoresBeta\Feedback\Correction\Domain\Enum\CorrectionStatus"/>
         <field name="origin" type="string" length="16"

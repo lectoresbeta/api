@@ -51,6 +51,17 @@ class Correction
 
     private int $questionnaireVersion;
 
+    /**
+     * La versión del **texto** del capítulo que esta persona leyó
+     * ([`FEAT-WRK-005`](../../../../../docs/features/work/FEAT-WRK-005-edit-work-and-chapter.md)).
+     *
+     * Es el hermano de `questionnaireVersion` y existe por lo mismo: quien
+     * empezó a trabajar sobre unas condiciones las conserva. Nula en las
+     * correcciones anteriores al versionado, que no tienen versión que
+     * recordar.
+     */
+    private ?int $chapterVersion = null;
+
     private CorrectionStatus $status;
 
     private CorrectionOrigin $origin;
@@ -114,6 +125,7 @@ class Correction
         AuthorId $ownerId,
         int $questionnaireVersion,
         \DateTimeImmutable $now,
+        ?int $chapterVersion = null,
     ): self {
         $correction = new self(
             $id,
@@ -125,6 +137,7 @@ class Correction
             $now,
         );
         $correction->readerId = $readerId->value();
+        $correction->chapterVersion = $chapterVersion;
 
         return $correction;
     }
@@ -141,6 +154,7 @@ class Correction
         int $questionnaireVersion,
         \DateTimeImmutable $now,
         ?string $authorLabel = null,
+        ?int $chapterVersion = null,
     ): self {
         $correction = new self(
             $id,
@@ -152,6 +166,7 @@ class Correction
             $now,
         );
         $correction->authorLabel = $authorLabel;
+        $correction->chapterVersion = $chapterVersion;
 
         return $correction;
     }
@@ -184,6 +199,11 @@ class Correction
     public function questionnaireVersion(): int
     {
         return $this->questionnaireVersion;
+    }
+
+    public function chapterVersion(): ?int
+    {
+        return $this->chapterVersion;
     }
 
     public function status(): CorrectionStatus

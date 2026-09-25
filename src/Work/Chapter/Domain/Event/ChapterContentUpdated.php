@@ -38,6 +38,8 @@ final readonly class ChapterContentUpdated implements IntegrationEvent
         private int $position,
         private int $wordCount,
         private \DateTimeImmutable $updatedAt,
+        /** La versión del texto, que sube solo cuando se archiva la anterior. */
+        private int $version = 1,
     ) {
     }
 
@@ -64,6 +66,7 @@ final readonly class ChapterContentUpdated implements IntegrationEvent
             'authorId' => $this->authorId->value(),
             'position' => $this->position,
             'wordCount' => $this->wordCount,
+            'version' => $this->version,
             'updatedAt' => $this->updatedAt->format(\DATE_ATOM),
         ];
     }
