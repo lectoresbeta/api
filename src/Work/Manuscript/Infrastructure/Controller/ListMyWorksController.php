@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Work\Manuscript\Infrastructure\Controller;
 
+use LectoresBeta\Work\Chapter\Domain\Service\ReadingTime;
 use LectoresBeta\Work\Manuscript\Application\DTO\MyWork;
 use LectoresBeta\Work\Manuscript\Application\Handler\ListMyWorksHandler;
 use LectoresBeta\Work\Manuscript\Application\Query\ListMyWorks;
@@ -62,6 +63,7 @@ final readonly class ListMyWorksController
                     'accessMode' => $work->accessMode,
                     'adultsOnly' => $work->adultsOnly,
                     'wordCount' => $work->wordCount,
+                    'readingMinutes' => ReadingTime::minutesFor($work->wordCount),
                     'chapterCount' => $work->chapterCount,
                     'genres' => $work->genres,
                     'blocked' => $work->blocked,

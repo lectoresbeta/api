@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Work\Manuscript\Infrastructure\Controller;
 
+use LectoresBeta\Work\Chapter\Domain\Service\ReadingTime;
 use LectoresBeta\Work\Manuscript\Application\DTO\ChapterSummary;
 use LectoresBeta\Work\Manuscript\Application\Handler\GetWorkHandler;
 use LectoresBeta\Work\Manuscript\Application\Query\GetWork;
@@ -50,6 +51,7 @@ final readonly class GetWorkController
             'adultsOnly' => $work->adultsOnly,
             'contentWarnings' => $work->contentWarnings,
             'wordCount' => $work->wordCount,
+            'readingMinutes' => ReadingTime::minutesFor($work->wordCount),
             'blocked' => $work->blocked,
             'genres' => $work->genres,
             'chapters' => array_map(
@@ -58,6 +60,7 @@ final readonly class GetWorkController
                     'position' => $chapter->position,
                     'title' => $chapter->title,
                     'wordCount' => $chapter->wordCount,
+                    'readingMinutes' => ReadingTime::minutesFor($chapter->wordCount),
                 ],
                 $work->chapters,
             ),

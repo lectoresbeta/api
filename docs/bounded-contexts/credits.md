@@ -295,7 +295,7 @@ créditos que nadie pagó.
 | C-39 | ¿Se avisa al autor de que alguien ha empezado a corregirle? | Le permitiría reponer saldo y evitar que la corrección llegue bloqueada |
 | C-41 | ¿Cuántas correcciones simultáneas admite un capítulo? | Es la palanca para acotar el descubierto por carrera **sin apartar créditos** |
 | ~~C-42~~ | ¿Qué cupo de descubierto y con qué periodicidad? | **Resuelta:** 3 por semana, en `app.overdraft.weekly_quota`. A cero apaga el mecanismo entero |
-| C-13 | ¿Cómo se cuentan las palabras de un texto con formato enriquecido? | Debe coincidir con lo que ve el lector |
+| ~~C-13~~ | ¿Cómo se cuentan las palabras de un texto con formato enriquecido? | **Resuelta** en [`FEAT-WRK-013`](../features/work/FEAT-WRK-013-word-count-and-reading-time.md): sobre el texto plano derivado del HTML ya saneado, con las etiquetas de bloque separando palabras, y una palabra es lo que separa un espacio. La regla vive en `Work`, nunca aquí |
 | C-15 | ¿Qué se hace con un `FeedbackSubmitted` sin retención asociada? | `FEAT-CRD-006` |
 | C-3 | ¿Las cantidades son configurables en caliente o van en el código? | La bienvenida y las dos constantes del precio son las palancas del sistema |
 | C-8 | ¿Existe ajuste manual por parte de la plataforma? | Requiere `MANUAL_ADJUSTMENT` y un actor `Admin` (`V-1`) |

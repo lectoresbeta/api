@@ -528,7 +528,7 @@ myWorks:
                   type: array
                   items:
                     type: object
-                    required: [workId, title, status, accessMode, adultsOnly, wordCount, chapterCount, genres, blocked, archived, createdAt, updatedAt]
+                    required: [workId, title, status, accessMode, adultsOnly, wordCount, readingMinutes, chapterCount, genres, blocked, archived, createdAt, updatedAt]
                     properties:
                       workId:
                         $ref: '../openapi.yaml#/components/schemas/Uuid'
@@ -545,6 +545,9 @@ myWorks:
                         type: boolean
                       wordCount:
                         type: integer
+                      readingMinutes:
+                        type: integer
+                        description: Derivado del recuento a 200 palabras por minuto (`FEAT-WRK-013`).
                       chapterCount:
                         type: integer
                       genres:
@@ -606,7 +609,7 @@ work:
           application/json:
             schema:
               type: object
-              required: [workId, authorId, title, status, accessMode, adultsOnly, contentWarnings, wordCount, blocked, chapters]
+              required: [workId, authorId, title, status, accessMode, adultsOnly, contentWarnings, wordCount, readingMinutes, blocked, chapters]
               properties:
                 workId: { type: string, format: uuid }
                 authorId: { type: string, format: uuid }
@@ -625,17 +628,25 @@ work:
                   items:
                     $ref: '#/ContentWarning'
                 wordCount: { type: integer }
+                readingMinutes:
+                  type: integer
+                  description: |
+                    Derivado del recuento a 200 palabras por minuto,
+                    redondeando hacia arriba (`FEAT-WRK-013`). **No se
+                    guarda**: se calcula al servir, porque cambia cada vez
+                    que cambia el texto.
                 blocked: { type: boolean }
                 chapters:
                   type: array
                   items:
                     type: object
-                    required: [chapterId, position, wordCount]
+                    required: [chapterId, position, wordCount, readingMinutes]
                     properties:
                       chapterId: { type: string, format: uuid }
                       position: { type: integer }
                       title: { type: [string, 'null'] }
                       wordCount: { type: integer }
+                      readingMinutes: { type: integer }
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
       '404':

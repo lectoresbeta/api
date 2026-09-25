@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Work\PublicLink\Infrastructure\Controller;
 
 use LectoresBeta\Work\Chapter\Application\Contract\BriefQuestion;
+use LectoresBeta\Work\Chapter\Domain\Service\ReadingTime;
 use LectoresBeta\Work\PublicLink\Application\Handler\OpenPublicLinkHandler;
 use LectoresBeta\Work\PublicLink\Application\Query\OpenPublicLink;
 use LectoresBeta\Work\PublicLink\Infrastructure\Http\NoIndex;
@@ -50,6 +51,7 @@ final readonly class GetPublicChapterController
             'title' => $chapter->title,
             'contentHtml' => $chapter->contentHtml,
             'wordCount' => $chapter->wordCount,
+            'readingMinutes' => ReadingTime::minutesFor($chapter->wordCount),
             'chapterVersion' => $chapter->chapterVersion,
             'questionnaireVersion' => $chapter->questionnaireVersion,
             'wouldBeWorth' => $chapter->wouldBeWorth,

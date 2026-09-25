@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Work\PublicLink\Infrastructure\Controller;
 
+use LectoresBeta\Work\Chapter\Domain\Service\ReadingTime;
 use LectoresBeta\Work\PublicLink\Application\DTO\PublicChapterSummary;
 use LectoresBeta\Work\PublicLink\Application\Handler\OpenPublicLinkHandler;
 use LectoresBeta\Work\PublicLink\Application\Query\OpenPublicLink;
@@ -57,6 +58,7 @@ final readonly class GetPublicCorrectionPageController
                     'position' => $chapter->position,
                     'title' => $chapter->title,
                     'wordCount' => $chapter->wordCount,
+                    'readingMinutes' => ReadingTime::minutesFor($chapter->wordCount),
                 ],
                 $page->chapters,
             ),

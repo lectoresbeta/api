@@ -51,7 +51,7 @@ page:
                   type: array
                   items:
                     type: object
-                    required: [chapterId, position, title, wordCount]
+                    required: [chapterId, position, title, wordCount, readingMinutes]
                     properties:
                       chapterId:
                         $ref: '../openapi.yaml#/components/schemas/Uuid'
@@ -60,6 +60,8 @@ page:
                       title:
                         type: [string, 'null']
                       wordCount:
+                        type: integer
+                      readingMinutes:
                         type: integer
       '404':
         description: '`code: PUBLIC_LINK_NOT_FOUND`. Ese token nunca existió.'
@@ -98,7 +100,7 @@ chapter:
           application/json:
             schema:
               type: object
-              required: [chapterId, workId, workTitle, position, title, contentHtml, wordCount, chapterVersion, questionnaireVersion, wouldBeWorth, questions]
+              required: [chapterId, workId, workTitle, position, title, contentHtml, wordCount, readingMinutes, chapterVersion, questionnaireVersion, wouldBeWorth, questions]
               properties:
                 chapterId:
                   $ref: '../openapi.yaml#/components/schemas/Uuid'
@@ -113,6 +115,8 @@ chapter:
                 contentHtml:
                   type: string
                 wordCount:
+                  type: integer
+                readingMinutes:
                   type: integer
                 chapterVersion:
                   type: integer
