@@ -273,8 +273,19 @@ myClaims:
           application/json:
             schema:
               type: object
-              required: [claims]
+              required: [claims, total]
               properties:
+                total:
+                  type: integer
+                  minimum: 0
+                  description: |
+                    Cuántas hay en la cola, **con los mismos filtros que la
+                    lista** (`FEAT-MOD-008` `RN-4`).
+
+                    Es lo que convierte una página en una cola: sin la cifra,
+                    quien modera ve veinte expedientes y no sabe si detrás hay
+                    cero o mil, que es justo la información con la que se
+                    decide si hoy hay que pedir ayuda.
                 claims:
                   type: array
                   items:
@@ -314,7 +325,36 @@ adminClaims:
       No lleva identidades. El moderador decide sobre lo que se escribió —el
       objeto reclamado, el motivo y lo que contó quien reclama—, y saber de
       quién es antes de mirarlo solo puede inclinar la decisión.
+
+      **La prioridad es la antigüedad y no es configurable** (`FEAT-MOD-008`
+      `RN-1`): no hay parámetro de ordenación, y la ausencia es la regla. En
+      una cola cuyo orden elige quien la trabaja, los casos incómodos se
+      hunden, y una reclamación sin resolver es alguien esperando.
+
+      Se puede **acotar** por motivo y por clase de objeto, que es otra cosa:
+      elegir a qué dedicarse no es elegir qué atender antes. Dentro de lo
+      acotado sigue mandando la más antigua, y **acotar no alcanza lo que la
+      cola esconde** — ni en la lista ni en el total.
     parameters:
+      - name: reason
+        in: query
+        required: false
+        description: |
+          Acota por motivo (`FEAT-MOD-008` `RN-2`). Son doce, y no piden ni el
+          mismo criterio ni, a veces, la misma persona.
+
+          Un valor que no está en el catálogo **se rechaza**, no se ignora.
+        schema:
+          type: string
+      - name: targetType
+        in: query
+        required: false
+        description: |
+          Y por clase de objeto reclamado. Revisar textos y revisar conducta
+          son dos trabajos distintos.
+        schema:
+          type: string
+          enum: [WORK, CHAPTER, CORRECTION, POST, POST_COMMENT, USER]
       - name: limit
         in: query
         required: false
@@ -331,6 +371,16 @@ adminClaims:
           minimum: 0
           default: 0
     responses:
+      '422':
+        description: |
+          `code: VALIDATION_ERROR`. Un filtro que no es un valor del catálogo.
+          Se rechaza en lugar de ignorarse: devolver la cola entera porque
+          alguien escribió mal un motivo le haría creer que de ese motivo hay
+          muchas más de las que hay.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
       '200':
         description: Las reclamaciones abiertas que este moderador puede resolver.
         content:

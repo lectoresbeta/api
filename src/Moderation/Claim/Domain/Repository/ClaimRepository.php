@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Moderation\Claim\Domain\Repository;
 
 use LectoresBeta\Moderation\Claim\Domain\Entity\Claim;
+use LectoresBeta\Moderation\Claim\Domain\Enum\ClaimReason;
 use LectoresBeta\Moderation\Claim\Domain\Enum\ClaimTargetType;
 use LectoresBeta\Moderation\Claim\Domain\ValueObject\ClaimId;
 use LectoresBeta\Moderation\Claim\Domain\ValueObject\PartyId;
@@ -43,9 +44,39 @@ interface ClaimRepository
      * ver el expediente de una reclamación que te señala ya es saber quién te
      * denunció.
      *
+     * **De la más antigua a la más reciente, siempre** (`FEAT-MOD-008`
+     * `RN-1`). No hay parámetro de ordenación: en una cola cuyo orden elige
+     * quien la trabaja, los casos incómodos se hunden, y una reclamación sin
+     * resolver es alguien esperando.
+     *
+     * @param ?ClaimReason     $reason     el motivo por el que se acota
+     *                                     (`RN-2`), o `null` para toda la
+     *                                     cola
+     * @param ?ClaimTargetType $targetType sobre qué clase de cosa
+     *
      * @return list<Claim>
      */
-    public function openExcludingParty(PartyId $moderator, int $limit, int $offset = 0): array;
+    public function openExcludingParty(
+        PartyId $moderator,
+        int $limit,
+        int $offset = 0,
+        ?ClaimReason $reason = null,
+        ?ClaimTargetType $targetType = null,
+    ): array;
+
+    /**
+     * Cuántas hay en esa cola, con los mismos filtros (`FEAT-MOD-008`
+     * `RN-4`).
+     *
+     * Es lo que convierte una página en una cola: sin la cifra, quien modera
+     * ve veinte expedientes y no sabe si detrás hay cero o mil, que es la
+     * única información con la que se decide si hoy hay que pedir ayuda.
+     */
+    public function countOpenExcludingParty(
+        PartyId $moderator,
+        ?ClaimReason $reason = null,
+        ?ClaimTargetType $targetType = null,
+    ): int;
 
     /**
      * La misma reclamación, con la fila bloqueada hasta que cierre la

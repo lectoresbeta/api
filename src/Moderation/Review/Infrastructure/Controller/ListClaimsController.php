@@ -23,6 +23,11 @@ use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
  *
  * La cola **excluye** las reclamaciones en las que quien mira es parte. No
  * las muestra bloqueadas: verlas ya sería enterarse de quién le denunció.
+ *
+ * Se puede acotar por motivo y por clase de objeto (`FEAT-MOD-008`), pero
+ * **no reordenar**: siempre va de lo más antiguo a lo más reciente. Acotar es
+ * elegir a qué dedicarse; reordenar sería elegir qué atender antes, y así los
+ * casos incómodos se hunden.
  */
 #[AsController]
 final readonly class ListClaimsController
@@ -45,9 +50,16 @@ final readonly class ListClaimsController
             $moderator->getUserIdentifier(),
             $request->query->getInt('limit', 50),
             $request->query->getInt('offset'),
+            self::text($request, 'reason'),
+            self::text($request, 'targetType'),
         ));
 
         return new JsonResponse([
+            // Cuántas hay detrás, con los mismos filtros (`FEAT-MOD-008`).
+            // Es lo que convierte una página en una cola: sin la cifra, quien
+            // modera ve veinte expedientes y no sabe si detrás hay cero o
+            // mil.
+            'total' => $queue->total,
             'claims' => array_map(
                 static fn (ClaimInQueue $claim): array => [
                     'claimId' => $claim->claimId,
@@ -59,8 +71,15 @@ final readonly class ListClaimsController
                     'status' => $claim->status,
                     'submittedAt' => $claim->submittedAt,
                 ],
-                $queue,
+                $queue->claims,
             ),
         ]);
+    }
+
+    private static function text(Request $request, string $field): ?string
+    {
+        $value = $request->query->get($field);
+
+        return \is_string($value) && '' !== $value ? $value : null;
     }
 }

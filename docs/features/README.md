@@ -392,7 +392,7 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 | FEAT-MOD-005 | Gestión de usuarios desde el backoffice | Admin, Moderator | APPROVED | PARTIAL | P2 | [ficha](moderation/FEAT-MOD-005-user-management.md) |
 | FEAT-MOD-006 | Catálogo de sanciones | Moderator | APPROVED | PARTIAL | P2 | [ficha](moderation/FEAT-MOD-006-sanctions.md) |
 | FEAT-MOD-007 | Registro de auditoría de acciones administrativas | Admin | APPROVED | DONE | P1 | [ficha](moderation/FEAT-MOD-007-audit-log.md) |
-| FEAT-MOD-008 | Cola de reclamaciones con filtros y prioridad | Moderator | PENDING | TODO | P2 | — |
+| FEAT-MOD-008 | Cola de reclamaciones con filtros y prioridad | Moderator | APPROVED | DONE | P2 | [ficha](moderation/FEAT-MOD-008-claim-queue.md) |
 | FEAT-MOD-009 | Conversación entre el moderador y las partes | Moderator, User | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-009-moderator-conversation.md) |
 | FEAT-MOD-010 | Mis reclamaciones — sección del usuario | User | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-010-my-claims.md) |
 | FEAT-MOD-011 | Revisión automática de contenido | — (sistema) | APPROVED | DONE | P1 | [ficha](moderation/FEAT-MOD-011-automated-content-review.md) |

@@ -12,6 +12,8 @@ irán trayendo aquí.
 
 | Método y ruta | `operationId` | Propósito | Ficha | Estado |
 |---|---|---|---|---|
+| `GET /api/v1/admin/claims` | `listClaims` | La cola de reclamaciones | FEAT-MOD-002, FEAT-MOD-008 | **Implementado** |
+| `POST /api/v1/admin/claims/{claimId}/review` | `reviewClaim` | Tomar y resolver | FEAT-MOD-002 | **Implementado** |
 | `POST /api/v1/admin/sanctions` | `imposeSanction` | Sancionar a alguien | FEAT-MOD-006 | **Implementado** |
 | `POST /api/v1/admin/sanctions/{sanctionId}/lift` | `liftSanction` | Levantar la sanción | FEAT-MOD-006 | **Implementado** |
 | `POST /api/v1/admin/claims/{claimId}/messages` | `writeToClaimParty` | Escribir a una parte | FEAT-MOD-009 | **Implementado** |
@@ -264,3 +266,43 @@ comprobaciones, con tres diferencias:
 Las dos lecturas escriben en el registro de auditoría y nada más. El ajuste publica
 `CreditAdjustmentOrdered`. La reclamación en nombre de otro crea la reclamación y **no produce
 ningún efecto** sobre lo reclamado, igual que una ordinaria.
+
+---
+
+## `GET /api/v1/admin/claims`
+
+**`operationId`:** `listClaims` · **Funcionalidades:** [`FEAT-MOD-002`](../../features/moderation/FEAT-MOD-002-review-claim.md), [`FEAT-MOD-008`](../../features/moderation/FEAT-MOD-008-claim-queue.md)
+
+### Propósito
+
+La pantalla desde la que se trabaja la moderación.
+
+### Autorización
+
+`ROLE_MODERATOR`, resuelto contra la base de datos en cada petición
+([`decision:0007`](../../decisions/0007-jwt-sessions.md)).
+
+### Semántica
+
+**La prioridad es la antigüedad y no es configurable.** No hay parámetro de ordenación, y la
+ausencia es la regla: en una cola cuyo orden elige quien la trabaja, los casos incómodos se
+hunden —los largos, los ambiguos, los de alguien conocido—, y una reclamación sin resolver es
+alguien esperando.
+
+Lo que sí se puede es **acotar**, por `reason` y por `targetType`, y no es lo mismo: elegir a
+qué dedicarse esta tarde no es elegir qué atender antes. Dentro de lo acotado sigue mandando la
+más antigua.
+
+La respuesta trae **`total`**, con los mismos filtros que la lista. Es lo que convierte una
+página en una cola: sin la cifra, quien modera ve veinte expedientes y no sabe si detrás hay
+cero o mil, que es justo la información con la que se decide si hoy hay que pedir ayuda.
+
+**Acotar no alcanza lo que la cola esconde.** La exclusión de las reclamaciones en las que
+quien mira es parte (`FEAT-MOD-002` `RN-1`) se aplica antes que cualquier filtro, y tampoco
+entran en el total: filtrar por el motivo exacto de una reclamación que te señala no la hace
+aparecer.
+
+Un filtro que no está en el catálogo se rechaza con `422` en lugar de ignorarse.
+
+La cola **no lleva identidades**: el moderador decide sobre lo que se escribió, y saber de
+quién es antes de mirarlo solo puede inclinar la decisión.
