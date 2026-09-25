@@ -48,6 +48,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Community/Interaction/Infrastructure/Persistence/Doctrine/Mapping'
                 prefix: 'LectoresBeta\Community\Interaction\Domain\Entity'
                 alias: CommunityInteraction
+            CommunityMention:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Mention/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Mention\Domain\Entity'
+                alias: CommunityMention
             CommunityMessaging:
                 type: xml
                 is_bundle: false

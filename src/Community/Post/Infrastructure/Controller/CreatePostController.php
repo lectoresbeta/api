@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Community\Post\Infrastructure\Controller;
 
+use LectoresBeta\Community\Mention\Infrastructure\Http\MentionsInBody;
 use LectoresBeta\Community\Post\Application\Command\CreatePost;
 use LectoresBeta\Community\Post\Application\Handler\CreatePostHandler;
 use LectoresBeta\Shared\Infrastructure\Http\JsonBody;
@@ -55,6 +56,10 @@ final readonly class CreatePostController
             $image instanceof UploadedFile ? (string) file_get_contents($image->getPathname()) : null,
             self::field($request, $fields, 'linkUrl'),
             self::field($request, $fields, 'workId'),
+            // Solo por JSON: una publicación con imagen viaja en un
+            // formulario, y meter una lista de objetos en un campo de
+            // formulario sería inventarse una codificación.
+            null === $fields ? [] : MentionsInBody::of($fields),
         ));
 
         return new JsonResponse(['postId' => $postId], Response::HTTP_CREATED);

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Community\Post\Application\Handler;
 
+use LectoresBeta\Community\Mention\Application\Service\ResolveMentions;
+use LectoresBeta\Community\Mention\Domain\Enum\MentionSubject;
 use LectoresBeta\Community\Post\Application\DTO\PostCard;
 use LectoresBeta\Community\Post\Application\DTO\PostPage;
 use LectoresBeta\Community\Post\Application\Query\ListPosts;
@@ -37,6 +39,7 @@ final readonly class ListPostsHandler
         private AuthorSubscriptionRepository $subscriptions,
         private UserBlockRepository $blocks,
         private VisibleProfiles $profiles,
+        private ResolveMentions $mentions,
     ) {
     }
 
@@ -63,10 +66,9 @@ final readonly class ListPostsHandler
             array_map(static fn (Post $post): string => $post->authorId()->value(), $rows),
         )));
 
-        $attachments = $this->posts->attachmentsOf(array_map(
-            static fn (Post $post): string => $post->id()->value(),
-            $rows,
-        ));
+        $postIds = array_map(static fn (Post $post): string => $post->id()->value(), $rows);
+        $attachments = $this->posts->attachmentsOf($postIds);
+        $mentions = $this->mentions->of(MentionSubject::POST, $postIds);
 
         $cards = [];
 
@@ -97,6 +99,7 @@ final readonly class ListPostsHandler
                 $post->repostCount(),
                 $post->wasEdited(),
                 $post->createdAt(),
+                $mentions[$post->id()->value()] ?? [],
             );
         }
 

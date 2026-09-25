@@ -493,6 +493,10 @@ PostCard:
     createdAt:
       type: string
       format: date-time
+    mentions:
+      type: array
+      items:
+        $ref: '#/MentionView'
 
 WallPage:
   type: object
@@ -517,6 +521,50 @@ WallPage:
           type: [string, 'null']
         hasNextPage:
           type: boolean
+
+MentionView:
+  type: object
+  required: [position]
+  description: |
+    Alguien nombrado en el texto, **servido aparte y no incrustado en él**:
+    que cliente y servidor tengan que coincidir en cómo se parsea una cadena
+    es una fuente clásica de discrepancias, y aquí la discrepancia sería un
+    enlace apuntando a quien no es.
+
+    `name` es **el de ahora**. Se guarda el identificador y no el texto, así
+    que cambiar de nombre actualiza todas las menciones pasadas a la vez, y
+    cambiar de `@usuario` no mueve ninguna de sitio — un nombre de usuario se
+    recicla a los 30 días y una mención guardada como texto acabaría
+    atribuyendo palabras a quien no las dijo.
+
+    Los dos vienen a `null` cuando el mencionado ya no está: la mención se
+    pinta de forma neutra, sin enlace, en vez de llevar a ninguna parte.
+  properties:
+    userId:
+      type: [string, 'null']
+    name:
+      type: [string, 'null']
+    position:
+      type: integer
+      description: Dónde empieza en el texto, en caracteres.
+
+MentionInput:
+  type: object
+  required: [userId, position]
+  description: |
+    Una mención tal y como se envía: **el identificador de a quién se
+    seleccionó**, nunca el nombre que se escribió. Si el servidor la
+    resolviera leyendo el texto, cualquiera podría fabricar una que pareciera
+    apuntar a otra persona.
+
+    Un identificador que no existe **rechaza la publicación entera**: quien
+    escribe cree que ha nombrado a alguien, y guardar el texto sin la mención
+    le enseñaría el resultado cuando ya no puede corregirlo.
+  properties:
+    userId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    position:
+      type: integer
 
 PostIdParam:
   name: postId
@@ -605,6 +653,19 @@ posts:
                 description: Solo `http` y `https`. Cualquier otro esquema es una forma de que el cliente ejecute algo al pulsar.
               workId:
                 $ref: '../openapi.yaml#/components/schemas/Uuid'
+              mentions:
+                type: array
+                maxItems: 10
+                description: |
+                  A quién se nombra en el texto. El tope está para lo que se
+                  ve venir: sin él, una publicación con doscientas menciones
+                  es un envío masivo de avisos que cualquiera puede disparar.
+
+                  **Solo por JSON.** Una publicación con imagen viaja en un
+                  formulario, y meter una lista de objetos en un campo de
+                  formulario sería inventarse una codificación.
+                items:
+                  $ref: '#/MentionInput'
         multipart/form-data:
           schema:
             type: object
@@ -658,8 +719,10 @@ posts:
         description: |
           `code: EMPTY_POST` si no lleva ni texto ni adjunto,
           `TOO_MANY_ATTACHMENTS` si lleva dos, `UNSUPPORTED_FILE_TYPE` si el
-          fichero no es una imagen legible, o `INVALID_VALUE` si el texto pasa
-          del máximo o el enlace no es `http`/`https`.
+          fichero no es una imagen legible, `INVALID_VALUE` si el texto pasa
+          del máximo o el enlace no es `http`/`https`,
+          `MENTIONED_USER_NOT_FOUND` si se nombra a alguien que no existe, o
+          `TOO_MANY_MENTIONS`.
         content:
           application/problem+json:
             schema:
@@ -829,6 +892,10 @@ CommentCard:
     createdAt:
       type: string
       format: date-time
+    mentions:
+      type: array
+      items:
+        $ref: '#/MentionView'
 
 CommentsPage:
   type: object
@@ -926,6 +993,11 @@ postComments:
               body:
                 type: string
                 maxLength: 1000
+              mentions:
+                type: array
+                maxItems: 10
+                items:
+                  $ref: '#/MentionInput'
     responses:
       '201':
         description: Comentado.
@@ -952,7 +1024,10 @@ postComments:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
       '422':
-        description: '`code: INVALID_VALUE`. Vacío o más largo que el máximo.'
+        description: |
+          `code: INVALID_VALUE` si está vacío o pasa del máximo,
+          `MENTIONED_USER_NOT_FOUND` si se nombra a alguien que no existe, o
+          `TOO_MANY_MENTIONS`.
         content:
           application/problem+json:
             schema:

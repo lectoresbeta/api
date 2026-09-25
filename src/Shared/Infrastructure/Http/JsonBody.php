@@ -117,6 +117,34 @@ final readonly class JsonBody
     }
 
     /**
+     * A field holding a list of objects, such as the mentions of a comment.
+     *
+     * Anything in the list that is not an object is dropped rather than
+     * coerced, for the same reason as `stringList()`: turning nonsense into a
+     * value only moves the failure somewhere it is harder to explain.
+     *
+     * @return list<self>
+     */
+    public function objectList(string $field): array
+    {
+        $value = $this->values[$field] ?? null;
+
+        if (!\is_array($value)) {
+            return [];
+        }
+
+        $objects = [];
+
+        foreach ($value as $item) {
+            if (\is_array($item)) {
+                $objects[] = new self($item);
+            }
+        }
+
+        return $objects;
+    }
+
+    /**
      * A field that is itself an object, such as `acceptedLegalVersions`.
      */
     public function nested(string $field): self

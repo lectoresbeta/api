@@ -6,6 +6,7 @@ namespace LectoresBeta\Community\Interaction\Infrastructure\Controller;
 
 use LectoresBeta\Community\Interaction\Application\Command\CreatePostComment;
 use LectoresBeta\Community\Interaction\Application\Handler\CreatePostCommentHandler;
+use LectoresBeta\Community\Mention\Infrastructure\Http\MentionsInBody;
 use LectoresBeta\Shared\Infrastructure\Http\JsonBody;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -34,10 +35,14 @@ final readonly class CreatePostCommentController
             throw new UnauthorizedHttpException('Bearer');
         }
 
+        $body = JsonBody::of($request);
+
         $commentId = ($this->comment)(new CreatePostComment(
             $postId,
             $user->getUserIdentifier(),
-            JsonBody::of($request)->string('body'),
+            $body->string('body'),
+            null,
+            MentionsInBody::of($body),
         ));
 
         return new JsonResponse(['commentId' => $commentId], Response::HTTP_CREATED);

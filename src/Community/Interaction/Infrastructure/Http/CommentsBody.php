@@ -6,6 +6,7 @@ namespace LectoresBeta\Community\Interaction\Infrastructure\Http;
 
 use LectoresBeta\Community\Interaction\Application\DTO\CommentCard;
 use LectoresBeta\Community\Interaction\Application\DTO\CommentPage;
+use LectoresBeta\Community\Mention\Application\DTO\MentionView;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -68,6 +69,14 @@ final readonly class CommentsBody
             'mine' => $comment->mine,
             'edited' => $comment->edited,
             'createdAt' => $comment->createdAt->format(\DATE_ATOM),
+            'mentions' => array_map(
+                static fn (MentionView $mention): array => [
+                    'userId' => $mention->userId,
+                    'name' => $mention->name,
+                    'position' => $mention->position,
+                ],
+                $comment->mentions,
+            ),
         ];
     }
 }

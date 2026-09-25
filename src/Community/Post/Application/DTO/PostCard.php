@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Community\Post\Application\DTO;
 
+use LectoresBeta\Community\Mention\Application\DTO\MentionView;
 use LectoresBeta\User\Account\Application\Contract\DirectoryEntry;
 
 /**
@@ -38,6 +39,15 @@ final readonly class PostCard
         public int $repostCount,
         public bool $edited,
         public \DateTimeImmutable $createdAt,
+        /**
+         * Aparte del texto, y no incrustadas en él: que cliente y servidor
+         * tengan que coincidir en cómo se parsea una cadena es una fuente
+         * clásica de discrepancias, y aquí la discrepancia sería un enlace
+         * apuntando a quien no es.
+         *
+         * @var list<MentionView>
+         */
+        public array $mentions = [],
     ) {
     }
 }

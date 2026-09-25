@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Community\Post\Infrastructure\Http;
 
+use LectoresBeta\Community\Mention\Application\DTO\MentionView;
 use LectoresBeta\Community\Post\Application\DTO\PostCard;
 use LectoresBeta\Community\Post\Application\DTO\PostPage;
 use Symfony\Component\HttpFoundation\Request;
@@ -72,6 +73,14 @@ final readonly class WallBody
             'repostCount' => $post->repostCount,
             'edited' => $post->edited,
             'createdAt' => $post->createdAt->format(\DATE_ATOM),
+            'mentions' => array_map(
+                static fn (MentionView $mention): array => [
+                    'userId' => $mention->userId,
+                    'name' => $mention->name,
+                    'position' => $mention->position,
+                ],
+                $post->mentions,
+            ),
         ];
     }
 }

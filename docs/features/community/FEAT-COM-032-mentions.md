@@ -5,7 +5,7 @@ context: Community
 concept: Interaction
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P2
 sources:
   - conversation:2026-09-22 (compositor de respuesta con mención precargada)
@@ -13,7 +13,7 @@ sources:
 endpoints: []
 events: [UserMentioned]
 depends_on: [FEAT-COM-006, FEAT-USR-034]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-COM-032 — Menciones a usuarios
@@ -68,6 +68,15 @@ parsea una cadena, que es una fuente clásica de discrepancias.
 - `RN-6` Una mención a un usuario eliminado se muestra de forma neutra, sin enlace.
 - `RN-7` Las menciones no se pueden falsificar: el `UserId` lo resuelve el servidor a partir
   de lo que el usuario seleccionó, no de lo que escribió.
+- `RN-8` Se puede mencionar en el texto de una **publicación** y en un comentario (`I-10`,
+  resuelta). Son el mismo concepto en dos sitios, así que una sola tabla: «dónde me han
+  mencionado» es **una** pregunta, y con dos tablas cada quien que la haga tendrá que
+  acordarse de unirlas.
+- `RN-9` Hay un **tope de diez** por publicación o comentario (`I-11`, resuelta). No sale de
+  ninguna pantalla: sale de lo que pasa sin él, que es un envío masivo de avisos que cualquiera
+  puede disparar.
+- `RN-10` Nombrar dos veces a la misma persona en un texto **avisa una vez**. Repetir a
+  alguien al escribir es normal; avisarle dos veces, no.
 
 `RN-3` y `RN-4` son la pareja que evita el uso de las menciones como vía de fuga. Sin ellas,
 mencionar a alguien en una publicación restringida le enviaría un aviso con contenido que no
@@ -95,15 +104,19 @@ mencionado».
 
 ## Criterios de aceptación
 
-- [ ] Una mención se guarda con el `UserId`, no con el nombre ni con el `@usuario`.
-- [ ] Al cambiar el mencionado su nombre, sus menciones pasadas muestran el nuevo.
-- [ ] Al cambiar el mencionado su nombre de usuario, ninguna mención pasada cambia de destino.
-- [ ] La API devuelve las menciones como lista aparte, no incrustadas en el texto.
-- [ ] Mencionar a alguien no le da acceso a una publicación cuya audiencia le excluye.
-- [ ] No se avisa a un mencionado que no puede ver el contenido.
-- [ ] No se avisa a quien se menciona a sí mismo.
-- [ ] Una mención a un usuario eliminado se muestra sin enlace y no falla.
-- [ ] No se puede fabricar una mención escribiendo el nombre de otro usuario a mano.
+- [x] Una mención se guarda con el `UserId`, no con el nombre ni con el `@usuario`.
+- [x] Al cambiar el mencionado su nombre, sus menciones pasadas muestran el nuevo.
+- [x] Al cambiar el mencionado su nombre de usuario, ninguna mención pasada cambia de destino.
+- [x] La API devuelve las menciones como lista aparte, no incrustadas en el texto.
+- [x] Mencionar a alguien no le da acceso a una publicación cuya audiencia le excluye.
+- [x] No se avisa a un mencionado que no puede ver el contenido.
+- [x] No se avisa a quien se menciona a sí mismo.
+- [ ] Una mención a un usuario eliminado se muestra sin enlace y no falla. **El código lo
+  contempla y no hay forma de probarlo**: borrar la cuenta es `FEAT-USR-013`, que está
+  `BLOCKED`.
+- [x] No se puede fabricar una mención escribiendo el nombre de otro usuario a mano.
+- [x] Una mención a alguien que no existe rechaza la publicación entera.
+- [x] Hay un tope de menciones.
 
 El segundo y tercer criterio son los que demuestran que la mención es una referencia y no una
 cadena.
@@ -112,9 +125,9 @@ cadena.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| I-5 | ¿Se puede mencionar escribiendo «@», o solo existe la mención automática al responder? | Si es lo primero, hace falta un buscador de usuarios en el compositor |
-| I-10 | ¿Se puede mencionar en el texto de una publicación, no solo en comentarios? | El compositor de publicación no lo muestra |
-| I-11 | ¿Hay límite de menciones por comentario? | Evitar avisos masivos |
+| ~~I-5~~ | ¿Se puede mencionar escribiendo «@»? | Resuelta: la API acepta cualquier mención; el buscador del compositor es pantalla |
+| ~~I-10~~ | ¿Se puede mencionar en una publicación? | Resuelta: sí |
+| ~~I-11~~ | ¿Hay límite de menciones? | Resuelta: diez |
 | I-12 | ¿Se puede desactivar la recepción de avisos por mención? | Encaja con `FEAT-USR-012` |
 
 ## Estado
@@ -123,4 +136,21 @@ cadena.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). En publicaciones y en comentarios, guardadas por
+identificador y servidas aparte del texto con el nombre de ahora.
+
+Dos cosas que la ficha no preveía y que la implementación obligó a decidir:
+
+- **las menciones son un concepto propio**, `src/Community/Mention/`, y no una parte de los
+  comentarios. En cuanto se pueden nombrar personas en dos sitios, dejarlas dentro de uno haría
+  que el otro dependiera de él; la tabla `comment_mention` se renombró a `mention` con el
+  sujeto explícito, porque «dónde me han mencionado» es una pregunta y con dos tablas serían
+  dos consultas que alguien tendrá que acordarse de unir;
+- **el aviso no se publica cuando el mencionado no puede ver dónde se le menciona**, en vez de
+  publicarlo y confiar en que `Notification` lo filtre. La ficha delegaba esa comprobación
+  (`RN-4`) en quien avisa; hacerla aquí es más fuerte, porque el contexto que conoce la
+  audiencia es este y el hecho que no debe existir no llega a la cola.
+
+**Falta** el buscador de usuarios del compositor, que es pantalla y no backend, y la prueba de
+`RN-6` —la mención a una cuenta eliminada—, que no se puede escribir hasta que se pueda
+eliminar una cuenta.

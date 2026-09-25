@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Community\Interaction\Application\DTO;
 
+use LectoresBeta\Community\Mention\Application\DTO\MentionView;
 use LectoresBeta\User\Account\Application\Contract\DirectoryEntry;
 
 /**
@@ -23,6 +24,8 @@ final readonly class CommentCard
         public bool $mine,
         public bool $edited,
         public \DateTimeImmutable $createdAt,
+        /** @var list<MentionView> */
+        public array $mentions = [],
     ) {
     }
 }

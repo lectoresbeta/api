@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Community\Mention\Domain\Entity\Mention"
+            table="mention" schema="community_ctx">
+
+        <indexes>
+            <!-- «Dónde me han mencionado» se lee por aquí, y es una sola
+                 pregunta: por eso una tabla y no una por cada sitio donde se
+                 pueda mencionar. -->
+            <index name="idx_mention_user" columns="mentioned_user_id"/>
+            <index name="idx_mention_subject" columns="subject_kind,subject_id"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="subjectKind" column="subject_kind" type="string" length="16"
+               enum-type="LectoresBeta\Community\Mention\Domain\Enum\MentionSubject"/>
+        <field name="subjectId" column="subject_id" type="guid"/>
+        <field name="mentionedUserId" column="mentioned_user_id" type="guid"/>
+        <field name="position" type="integer"/>
+
+    </entity>
+
+</doctrine-mapping>

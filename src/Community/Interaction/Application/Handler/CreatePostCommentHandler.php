@@ -11,6 +11,8 @@ use LectoresBeta\Community\Interaction\Domain\Exception\CommentNotFound;
 use LectoresBeta\Community\Interaction\Domain\Repository\PostCommentRepository;
 use LectoresBeta\Community\Interaction\Domain\ValueObject\CommentBody;
 use LectoresBeta\Community\Interaction\Domain\ValueObject\PostCommentId;
+use LectoresBeta\Community\Mention\Application\Service\RecordMentions;
+use LectoresBeta\Community\Mention\Domain\Enum\MentionSubject;
 use LectoresBeta\Community\Post\Application\Service\VisiblePost;
 use LectoresBeta\Community\Post\Domain\Repository\PostRepository;
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
@@ -44,6 +46,7 @@ final readonly class CreatePostCommentHandler
         private VisiblePost $visible,
         private PostRepository $posts,
         private PostCommentRepository $comments,
+        private RecordMentions $mentions,
         private TransactionalSession $session,
         private EventPublisher $events,
         private Clock $clock,
@@ -67,7 +70,14 @@ final readonly class CreatePostCommentHandler
             $parent?->id(),
         );
 
-        $this->session->execute(function () use ($comment, $post, $parent): void {
+        $mentions = $this->mentions->of(
+            MentionSubject::COMMENT,
+            $comment->id()->value(),
+            $command->mentions,
+            $comment->body(),
+        );
+
+        $this->session->execute(function () use ($comment, $post, $parent, $mentions): void {
             $this->comments->save($comment);
 
             $post->commentAdded();
@@ -76,6 +86,10 @@ final readonly class CreatePostCommentHandler
             if (null !== $parent) {
                 $parent->replyAdded();
                 $this->comments->save($parent);
+            }
+
+            foreach ($mentions as $mention) {
+                $this->mentions->save($mention);
             }
         });
 
@@ -88,6 +102,8 @@ final readonly class CreatePostCommentHandler
             $parent?->authorId(),
             $now,
         ));
+
+        $this->mentions->announce($mentions, $post, $author, $now);
 
         return $comment->id()->value();
     }

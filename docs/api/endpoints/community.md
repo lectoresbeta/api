@@ -343,3 +343,51 @@ Publica `PostCommented` con **a quién hay que avisar** —el autor de la public
 comentario, y el del comentario padre si es una respuesta— y sin el texto: un aviso no
 necesita el cuerpo de lo escrito, y copiarlo lo pondría en una cola que persiste y reintenta.
 Todavía no lo escucha nadie.
+
+
+---
+
+## Menciones
+
+**Funcionalidad:** [`FEAT-COM-032`](../../features/community/FEAT-COM-032-mentions.md)
+
+No tienen endpoint propio: viajan dentro de una publicación o de un comentario, al escribirlos
+y al leerlos.
+
+### Cómo se envían
+
+Cada mención es **un `userId` y una posición**, nunca un nombre. Si el servidor la resolviera
+leyendo el texto, cualquiera podría fabricar una que pareciera apuntar a otra persona
+escribiendo su nombre a mano.
+
+Un identificador que no existe **rechaza la publicación entera** (`MENTIONED_USER_NOT_FOUND`):
+quien escribe cree que ha nombrado a alguien, y guardar el texto sin la mención le enseñaría el
+resultado cuando ya no puede corregirlo.
+
+El tope son **diez** (`TOO_MANY_MENTIONS`). No sale de ninguna pantalla: sale de lo que pasa
+sin él, que es un envío masivo de avisos que cualquiera puede disparar.
+
+### Cómo se sirven
+
+Como **lista aparte del texto**, con la posición donde empieza cada una. El cliente no
+interpreta la cadena buscando arrobas: que cliente y servidor tengan que coincidir en cómo se
+parsea un texto es una fuente clásica de discrepancias, y aquí la discrepancia sería un enlace
+apuntando a quien no es.
+
+`name` es **el de ahora**. Como se guarda el identificador, cambiar de nombre actualiza todas
+las menciones pasadas a la vez, y cambiar de `@usuario` no mueve ninguna de sitio — un nombre
+de usuario se recicla a los 30 días, y una mención guardada como texto acabaría atribuyendo
+palabras a quien no las dijo.
+
+Una mención a una cuenta que ya no está llega con `userId` y `name` a `null`: se pinta de
+forma neutra, sin enlace.
+
+### La regla que cierra la fuga
+
+Mencionar **no concede acceso a nada**, y **no se avisa a quien no puede ver dónde se le
+menciona**. Las dos juntas son lo que impide usar una mención para filtrar lo escrito para
+otros: sin la segunda, nombrar a alguien en una publicación restringida le enviaría un aviso
+sobre contenido que no debería conocer.
+
+La comprobación se hace en `Community`, que es quien conoce la audiencia, y no se delega en
+quien envía el aviso: el hecho que no debe existir no llega a la cola.

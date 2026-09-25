@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Community\Post\Application\Handler;
 
+use LectoresBeta\Community\Mention\Application\Service\RecordMentions;
+use LectoresBeta\Community\Mention\Domain\Enum\MentionSubject;
 use LectoresBeta\Community\Post\Application\Command\CreatePost;
 use LectoresBeta\Community\Post\Domain\Entity\Post;
 use LectoresBeta\Community\Post\Domain\Entity\PostAttachment;
@@ -49,6 +51,7 @@ final readonly class CreatePostHandler
 {
     public function __construct(
         private PostRepository $posts,
+        private RecordMentions $mentions,
         private WorkAccessBriefs $works,
         private ImageProcessor $images,
         private FileStorage $storage,
@@ -105,7 +108,17 @@ final readonly class CreatePostHandler
         // está.
         $key = null === $image ? null : $this->store($image);
 
-        $this->session->execute(function () use ($post, $postId, $key): void {
+        // Se comprueban antes de abrir la transacción: una mención a quien no
+        // existe rechaza la publicación entera, y descubrirlo a medias de
+        // escribir sería descubrirlo tarde.
+        $mentions = $this->mentions->of(
+            MentionSubject::POST,
+            $postId->value(),
+            $command->mentions,
+            $post->body(),
+        );
+
+        $this->session->execute(function () use ($post, $postId, $key, $mentions): void {
             $this->posts->save($post);
 
             if (null !== $key) {
@@ -115,6 +128,10 @@ final readonly class CreatePostHandler
                     $key['url'],
                     $key['mediaType'],
                 ));
+            }
+
+            foreach ($mentions as $mention) {
+                $this->mentions->save($mention);
             }
         });
 
@@ -127,6 +144,8 @@ final readonly class CreatePostHandler
             $post->audience(),
             $now,
         ));
+
+        $this->mentions->announce($mentions, $post, $authorId, $now);
 
         return $postId->value();
     }

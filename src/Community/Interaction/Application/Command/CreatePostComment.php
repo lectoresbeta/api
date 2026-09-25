@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Community\Interaction\Application\Command;
 
+use LectoresBeta\Community\Mention\Application\DTO\MentionInput;
+
 /**
  * Comentar una publicación, o responder a un comentario suyo
  * (`FEAT-COM-006`, `FEAT-COM-031`).
@@ -18,6 +20,8 @@ final readonly class CreatePostComment
         public string $authorId,
         public ?string $body,
         public ?string $parentCommentId = null,
+        /** @var list<MentionInput> */
+        public array $mentions = [],
     ) {
     }
 }

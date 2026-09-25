@@ -8,6 +8,8 @@ use LectoresBeta\Community\Interaction\Application\DTO\CommentCard;
 use LectoresBeta\Community\Interaction\Application\DTO\CommentPage;
 use LectoresBeta\Community\Interaction\Domain\Entity\PostComment;
 use LectoresBeta\Community\Interaction\Domain\Exception\UnsupportedCommentSort;
+use LectoresBeta\Community\Mention\Application\Service\ResolveMentions;
+use LectoresBeta\Community\Mention\Domain\Enum\MentionSubject;
 use LectoresBeta\Shared\Domain\Exception\InvalidCursor;
 use LectoresBeta\Shared\Domain\Pagination\Cursor;
 use LectoresBeta\Shared\Domain\Pagination\PageSize;
@@ -28,8 +30,10 @@ use LectoresBeta\User\Account\Application\Contract\VisibleProfiles;
  */
 final readonly class PageOfComments
 {
-    public function __construct(private VisibleProfiles $profiles)
-    {
+    public function __construct(
+        private VisibleProfiles $profiles,
+        private ResolveMentions $mentions,
+    ) {
     }
 
     public function size(?int $requested): int
@@ -73,6 +77,11 @@ final readonly class PageOfComments
             array_map(static fn (PostComment $comment): string => $comment->authorId()->value(), $rows),
         )));
 
+        $mentions = $this->mentions->of(MentionSubject::COMMENT, array_map(
+            static fn (PostComment $comment): string => $comment->id()->value(),
+            $rows,
+        ));
+
         $cards = [];
 
         foreach ($rows as $comment) {
@@ -94,6 +103,7 @@ final readonly class PageOfComments
                 $comment->authorId()->value() === $readerId,
                 $comment->wasEdited(),
                 $comment->createdAt(),
+                $mentions[$comment->id()->value()] ?? [],
             );
         }
 
