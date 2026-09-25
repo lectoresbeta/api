@@ -87,6 +87,10 @@ abstract class EconomyScenario extends WebTestCase
         // lo que se cobró; el bloqueo, a su vez, avisa al autor.
         'ClaimUpheld',
         'WorkBlockedByModeration',
+
+        // Y el aviso que se retira solo cuando el autor abre lo que recibió
+        // (`FEAT-FBK-004`).
+        'CorrectionRead',
     ];
 
     /**

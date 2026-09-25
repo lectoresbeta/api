@@ -72,6 +72,24 @@ final class DoctrineNotificationRepository extends DoctrineRepository implements
         ]);
     }
 
+    public function markReadByCorrection(RecipientId $recipientId, string $correctionId, \DateTimeImmutable $now): void
+    {
+        // `payload` es `jsonb` y esto es una consulta que DQL no sabe
+        // expresar, así que es SQL de PostgreSQL — y por eso vive aquí.
+        $this->entityManager->getConnection()->executeStatement(
+            "UPDATE notification_ctx.notification
+                SET read_at = :now
+              WHERE recipient_id = :recipient
+                AND read_at IS NULL
+                AND payload->>'correctionId' = :correction",
+            ['now' => $now->format('Y-m-d H:i:s'), 'recipient' => $recipientId->value(), 'correction' => $correctionId],
+        );
+
+        // La actualización pasa por encima de la unidad de trabajo, así que lo
+        // que Doctrine tenga cargado se queda con la versión vieja.
+        $this->entityManager->clear();
+    }
+
     public function markAllRead(RecipientId $recipientId, \DateTimeImmutable $now): void
     {
         // Una sentencia, no una fila cada vez: quien lleva meses sin entrar

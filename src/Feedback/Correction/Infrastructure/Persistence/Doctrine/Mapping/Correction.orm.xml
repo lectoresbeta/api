@@ -21,6 +21,8 @@
             <index name="idx_correction_reader" columns="reader_id,status"/>
             <index name="idx_correction_chapter" columns="chapter_id,status"/>
             <index name="idx_correction_owner" columns="owner_id,submitted_at"/>
+            <!-- La bandeja filtrada por «sin leer» (`FEAT-FBK-004` `RN-6`). -->
+            <index name="idx_correction_owner_unread" columns="owner_id,read_at"/>
         </indexes>
 
         <unique-constraints>
@@ -58,6 +60,7 @@
         <field name="ratedAt" column="rated_at" type="datetime_immutable" nullable="true"/>
         <field name="tipAmount" column="tip_amount" type="smallint" nullable="true"/>
         <field name="tippedAt" column="tipped_at" type="datetime_immutable" nullable="true"/>
+        <field name="readAt" column="read_at" type="datetime_immutable" nullable="true"/>
         <field name="startedAt" column="started_at" type="datetime_immutable"/>
         <field name="submittedAt" column="submitted_at" type="datetime_immutable" nullable="true"/>
         <field name="updatedAt" column="updated_at" type="datetime_immutable"/>

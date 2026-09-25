@@ -5,7 +5,7 @@ context: Feedback
 concept: Correction
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P0
 sources:
   - conversation:2026-09-25 (bloque «que el autor pueda leer lo que compró»)
@@ -150,18 +150,18 @@ Las dos ya están implementadas (`FEAT-CRD-018`).
 
 ## Criterios de aceptación
 
-- [ ] El autor lista las correcciones recibidas de todas sus obras, la más reciente primero.
-- [ ] Filtra por obra, por capítulo y por no leídas.
-- [ ] Abre una y lee las respuestas al cuestionario.
-- [ ] Quien la escribió también puede abrirla.
-- [ ] Un tercero recibe `404`, aunque sea lector beta de la misma obra.
-- [ ] Un borrador ajeno no aparece en ninguna lista.
-- [ ] Con saldo negativo, la corrección aparece sin contenido y con el motivo.
+- [x] El autor lista las correcciones recibidas de todas sus obras, la más reciente primero.
+- [x] Filtra por obra, por capítulo y por no leídas.
+- [x] Abre una y lee las respuestas al cuestionario.
+- [x] Quien la escribió también puede abrirla.
+- [x] Un tercero recibe `404`, aunque sea lector beta de la misma obra.
+- [x] Un borrador ajeno no aparece en ninguna lista.
+- [x] Con saldo negativo, la corrección aparece sin contenido y con el motivo.
 - [ ] Al reponer saldo, la misma corrección se abre entera.
-- [ ] Abrir una corrección la marca como leída; abrir una bloqueada, no.
-- [ ] El autor obtiene el texto del capítulo tal y como lo leyó quien corrigió.
-- [ ] Una corrección sin versión registrada devuelve el texto vigente, marcado como tal.
-- [ ] Leer no mueve ningún crédito.
+- [x] Abrir una corrección la marca como leída; abrir una bloqueada, no.
+- [x] El autor obtiene el texto del capítulo tal y como lo leyó quien corrigió.
+- [x] Una corrección sin versión registrada devuelve el texto vigente, marcado como tal.
+- [x] Leer no mueve ningún crédito.
 
 ## Preguntas abiertas
 
@@ -176,4 +176,22 @@ Las dos ya están implementadas (`FEAT-CRD-018`).
 **Especificación:** `APPROVED` (2026-09-25). Resuelve la forma de acceso
 (bandeja global con detalle) decidida el 2026-09-25.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). Las tres operaciones funcionan, con la
+autorización de las dos partes, el filtrado de la bandeja, la marca de lectura y el aviso que
+se retira al abrirla. Los enunciados llegan **de la versión que se respondió**, por un
+contrato nuevo de `Work` (`AnsweredQuestionnaires`) distinto del que sirve el panel de
+corrección: uno responde qué se pregunta ahora y el otro qué se preguntaba entonces.
+
+**Una fuga que encontró la prueba, y conviene que se vea.** La primera versión devolvía `read`
+a las dos partes, así que quien corrigió podía saber si el autor había abierto su texto —
+justo la confirmación de lectura que `F-14` decide no tener. Ahora el campo es **nulo para
+quien la escribió**; el dato es del destinatario.
+
+**Falta** `RN-8` a medias: `getCorrectedChapterText` responde siempre el texto **vigente**,
+con `isCurrentVersion: true`, porque el capítulo todavía no se versiona. La ficha ya preveía
+este caso para las correcciones anteriores al versionado, y el contrato `ChapterTexts` ya
+acepta la versión: cuando [`FEAT-WRK-005`](../work/FEAT-WRK-005-edit-work-and-chapter.md)
+entre, empezará a servir la archivada sin tocar la API.
+
+`F-15` (el contador de no leídas en la cabecera) y `F-16` (agrupar por capítulo) siguen
+abiertas.

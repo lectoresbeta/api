@@ -137,6 +137,10 @@ services:
                 - LectoresBeta\Credits\Account\Application\Event\ClaimUpheld
                 - LectoresBeta\Notification\Delivery\Application\Event\WorkBlockedByModeration
 
+                # El autor ha abierto la corrección: el aviso sobra
+                # (FEAT-FBK-004).
+                - LectoresBeta\Notification\Delivery\Application\Event\CorrectionRead
+
                 # Lo que `Notification` escucha para convertir en avisos
                 # (`FEAT-NOT-001`). Son hechos de `Reading` y de `Feedback`, y
                 # cada contexto los modela por su cuenta: aquí llegan cuatro
@@ -255,6 +259,23 @@ services:
 
     LectoresBeta\Work\Chapter\Application\Contract\CorrectionBriefs:
         alias: LectoresBeta\Work\Chapter\Application\Service\ResolveCorrectionBriefs
+
+    # Lo que hace falta para **leer** una corrección entregada, y no para
+    # escribirla (FEAT-FBK-004): cómo se llama el capítulo, qué se preguntaba
+    # en la versión que se respondió, y el texto de entonces.
+    #
+    # `AnsweredQuestionnaires` es un contrato aparte de `CorrectionBriefs` a
+    # propósito: uno responde qué se pregunta **ahora** y el otro qué se
+    # preguntaba **entonces**, que son dos preguntas distintas y solo la
+    # segunda sirve para leer lo que llegó hace un mes.
+    LectoresBeta\Work\Chapter\Application\Contract\ChapterHeadings:
+        alias: LectoresBeta\Work\Chapter\Application\Service\ResolveChapterHeadings
+
+    LectoresBeta\Work\Chapter\Application\Contract\ChapterTexts:
+        alias: LectoresBeta\Work\Chapter\Application\Service\ResolveChapterText
+
+    LectoresBeta\Work\Questionnaire\Application\Contract\AnsweredQuestionnaires:
+        alias: LectoresBeta\Work\Questionnaire\Application\Service\ResolveAnsweredQuestionnaire
 
     LectoresBeta\Reading\BetaReaderAccess\Application\Contract\BetaReaderAccessCheck:
         alias: LectoresBeta\Reading\BetaReaderAccess\Application\Service\CheckBetaReaderAccess
@@ -444,6 +465,10 @@ services:
     LectoresBeta\Notification\Delivery\Application\Handler\SendWorkBlockedNotice:
         arguments:
             $appealsAddress: '%env(MODERATION_APPEALS_EMAIL)%'
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Notification\Delivery\Application\Handler\RetireTheCorrectionNotice:
         tags:
             - { name: messenger.message_handler }
 

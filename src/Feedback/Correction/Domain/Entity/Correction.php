@@ -70,6 +70,15 @@ class Correction
 
     private ?\DateTimeImmutable $tippedAt = null;
 
+    /**
+     * Cuándo la abrió el autor por primera vez (`FEAT-FBK-004` `RN-7`).
+     *
+     * Es del destinatario y de nadie más: quien la escribió **no** ve si se
+     * ha leído. Sería una confirmación de lectura entre dos personas que no
+     * han elegido tener una conversación (`F-14`).
+     */
+    private ?\DateTimeImmutable $readAt = null;
+
     private \DateTimeImmutable $startedAt;
 
     private ?\DateTimeImmutable $submittedAt = null;
@@ -192,9 +201,67 @@ class Correction
         return $this->visibility;
     }
 
+    public function startedAt(): \DateTimeImmutable
+    {
+        return $this->startedAt;
+    }
+
     public function submittedAt(): ?\DateTimeImmutable
     {
         return $this->submittedAt;
+    }
+
+    public function authorLabel(): ?string
+    {
+        return $this->authorLabel;
+    }
+
+    public function helpful(): ?bool
+    {
+        return $this->helpful;
+    }
+
+    public function ratedAt(): ?\DateTimeImmutable
+    {
+        return $this->ratedAt;
+    }
+
+    public function tipAmount(): ?int
+    {
+        return $this->tipAmount;
+    }
+
+    public function readAt(): ?\DateTimeImmutable
+    {
+        return $this->readAt;
+    }
+
+    /**
+     * Si su contenido se puede enseñar. Una retenida por descubierto existe
+     * y se ve que existe, pero no se lee (`FEAT-CRD-018`).
+     */
+    public function isReadable(): bool
+    {
+        return CorrectionVisibility::LOCKED !== $this->visibility;
+    }
+
+    /**
+     * La primera vez y solo la primera: la fecha dice **cuándo se leyó**, y
+     * pisarla en cada visita la convertiría en «cuándo se miró por última
+     * vez», que es otra cosa y no la que hace falta.
+     *
+     * Una retenida no se marca: no se ha leído nada.
+     */
+    public function markRead(\DateTimeImmutable $now): bool
+    {
+        if (null !== $this->readAt || !$this->isReadable() || CorrectionStatus::SUBMITTED !== $this->status) {
+            return false;
+        }
+
+        $this->readAt = $now;
+        $this->updatedAt = $now;
+
+        return true;
     }
 
     public function isDraft(): bool

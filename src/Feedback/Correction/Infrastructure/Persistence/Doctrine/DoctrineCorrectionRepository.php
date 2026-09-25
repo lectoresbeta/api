@@ -48,6 +48,39 @@ final class DoctrineCorrectionRepository extends DoctrineRepository implements C
         ));
     }
 
+    public function receivedBy(
+        AuthorId $ownerId,
+        ?WorkId $workId,
+        ?ChapterId $chapterId,
+        bool $unreadOnly,
+        int $limit,
+        int $offset,
+    ): array {
+        $query = $this->repository()->createQueryBuilder('c')
+            ->where('c.ownerId = :owner')
+            ->andWhere('c.status = :submitted')
+            ->setParameter('owner', $ownerId->value())
+            ->setParameter('submitted', CorrectionStatus::SUBMITTED)
+            ->orderBy('c.submittedAt', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
+
+        if (null !== $workId) {
+            $query->andWhere('c.workId = :work')->setParameter('work', $workId->value());
+        }
+
+        if (null !== $chapterId) {
+            $query->andWhere('c.chapterId = :chapter')->setParameter('chapter', $chapterId->value());
+        }
+
+        if ($unreadOnly) {
+            $query->andWhere('c.readAt IS NULL');
+        }
+
+        return array_values($query->getQuery()->getResult());
+    }
+
     public function deliveredBy(ReaderId $readerId, int $limit = 50, int $offset = 0): array
     {
         return array_values($this->repository()->findBy(

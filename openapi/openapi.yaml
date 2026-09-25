@@ -225,6 +225,15 @@ paths:
   /chapters/{chapterId}/corrections:
     $ref: './paths/corrections.yaml#/collection'
 
+  /me/corrections/received:
+    $ref: './paths/corrections.yaml#/received'
+
+  /corrections/{correctionId}:
+    $ref: './paths/corrections.yaml#/item'
+
+  /corrections/{correctionId}/chapter-text:
+    $ref: './paths/corrections.yaml#/chapterText'
+
   /chapters/{chapterId}/corrections/start:
     $ref: './paths/corrections.yaml#/start'
 

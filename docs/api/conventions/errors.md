@@ -153,6 +153,8 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `CLAIM_ALREADY_RESOLVED` | 409 | Ya está resuelta, y el estado no retrocede. También es lo que ve el segundo moderador que llega a la vez |
 | `CLAIM_MOTIVATION_REQUIRED` | 422 | Toda decisión lleva motivación escrita, también la que desestima |
 | `CLAIM_DECISION_UNKNOWN` | 422 | La decisión no es `UPHELD` ni `REJECTED` |
+| `CORRECTION_NOT_FOUND` | 404 | La corrección no existe, o no es suya para leerla. Una ajena responde como una inexistente (`FEAT-FBK-004`) |
+| `CORRECTION_LOCKED` | 409 | Retenida por descubierto. Se distingue del `404` a propósito: existe, es suya, y se lee reponiendo saldo |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |

@@ -38,3 +38,23 @@ discardCorrectionDraft:
     path: /api/v1/chapters/{chapterId}/correction/draft
     controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\DiscardCorrectionDraftController::__invoke
     methods: [DELETE]
+
+# Leer lo que se ha recibido (`FEAT-FBK-004`). Hasta aquí el autor pagaba por
+# una corrección que no podía abrir por ninguna vía.
+listCorrectionsReceived:
+    path: /api/v1/me/corrections/received
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\ListCorrectionsReceivedController::__invoke
+    methods: [GET]
+
+# La leen dos personas: su destinatario y quien la escribió.
+getCorrection:
+    path: /api/v1/corrections/{correctionId}
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\GetCorrectionController::__invoke
+    methods: [GET]
+
+# Aparte del detalle porque son decenas de miles de palabras que casi nunca
+# hacen falta.
+getCorrectedChapterText:
+    path: /api/v1/corrections/{correctionId}/chapter-text
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\GetCorrectedChapterTextController::__invoke
+    methods: [GET]

@@ -398,6 +398,178 @@ draft:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
 
+received:
+  get:
+    tags: [Feedback]
+    operationId: listCorrectionsReceived
+    summary: Las correcciones que he recibido
+    description: |
+      La bandeja del autor, con lo de todas sus obras y de lo más reciente a
+      lo más antiguo.
+
+      **Sin el contenido de ninguna corrección.** Quien abre esta pantalla
+      está decidiendo cuál leer, y devolver veinte correcciones enteras de
+      una novela sería una respuesta de cientos de miles de palabras.
+
+      Una corrección retenida por descubierto **aparece igual**, con
+      `visibility: LOCKED`: esconderla haría creer al autor que nadie le ha
+      corregido, cuando lo que ocurre es que debe créditos
+      ([`FEAT-CRD-018`](../../docs/features/credits/FEAT-CRD-018-negative-balance.md)).
+
+      Tampoco lleva lo que costó. Los importes viven en el historial de
+      créditos.
+    parameters:
+      - name: workId
+        in: query
+        required: false
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: chapterId
+        in: query
+        required: false
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: unread
+        in: query
+        required: false
+        description: Solo las que el autor todavía no ha abierto.
+        schema:
+          type: boolean
+          default: false
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Las correcciones entregadas al autor.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [corrections]
+              properties:
+                corrections:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ReceivedCorrection'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+item:
+  get:
+    tags: [Feedback]
+    operationId: getCorrection
+    summary: Una corrección entregada
+    description: |
+      La leen **dos personas y nadie más**: su destinatario y quien la
+      escribió. Cualquier otra recibe `404`, igual que si no existiera — ni
+      siquiera otro lector beta de la misma obra, que podría deducir de ella
+      qué le va a preguntar el autor.
+
+      Los enunciados son **los de la versión que se respondió**, no los de
+      ahora: el autor puede haber reescrito el cuestionario mientras el lector
+      escribía, y una respuesta bajo una pregunta que ya no existe es una
+      respuesta sin pregunta.
+
+      Abrirla la marca como leída, y solo la primera vez. Una retenida por
+      descubierto **no se marca**, porque no se ha leído nada: llega la
+      cabecera con `answers` vacío y `visibility: LOCKED`.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '200':
+        description: La corrección, con sus respuestas.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrectionDetail'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CORRECTION_NOT_FOUND`. No existe, o no es suya para leerla.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterText:
+  get:
+    tags: [Feedback]
+    operationId: getCorrectedChapterText
+    summary: El capítulo tal y como lo leyó quien corrigió
+    description: |
+      Va aparte del detalle porque son decenas de miles de palabras que casi
+      nunca hacen falta: quien abre una corrección quiere leer la corrección.
+
+      **`isCurrentVersion` es el dato que importa.** A `true` significa «esto
+      es lo que hay ahora, y puede no ser lo que se leyó». Mientras el
+      capítulo no se versione
+      ([`FEAT-WRK-005`](../../docs/features/work/FEAT-WRK-005-edit-work-and-chapter.md))
+      siempre es así, y decirlo es mejor que no responder.
+
+      La autorización es la misma que la del detalle, y vive en `Feedback`:
+      quién puede ver ese texto depende de quién corrigió ese capítulo, y eso
+      no lo sabe `Work`.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '200':
+        description: El texto del capítulo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correctionId, chapterId, contentHtml, wordCount, version, isCurrentVersion]
+              properties:
+                correctionId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                chapterId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                title:
+                  type: [string, 'null']
+                contentHtml:
+                  type: string
+                wordCount:
+                  type: integer
+                version:
+                  type: integer
+                isCurrentVersion:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CORRECTION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CORRECTION_LOCKED`. Retenida por descubierto.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
 components:
   schemas:
     SavedDraft:
@@ -446,3 +618,95 @@ components:
         answer:
           type: string
           description: Lo escrito hasta ahora. Cadena vacía si no hay nada.
+
+    ReceivedCorrection:
+      type: object
+      required: [correctionId, workId, chapterId, chapterPosition, visibility, questionnaireVersion, submittedAt, read]
+      properties:
+        correctionId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        workId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        chapterId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        chapterTitle:
+          type: [string, 'null']
+        chapterPosition:
+          type: integer
+        readerId:
+          oneOf:
+            - $ref: '../openapi.yaml#/components/schemas/Uuid'
+            - type: 'null'
+          description: Nulo en una corrección llegada por enlace público, que no tiene cuenta detrás.
+        authorLabel:
+          type: [string, 'null']
+          description: El nombre que tecleó quien corrigió por enlace público. **No es una identidad.**
+        visibility:
+          type: string
+          enum: [VISIBLE, LOCKED, HIDDEN_BY_AUTHOR]
+        questionnaireVersion:
+          type: integer
+        submittedAt:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+        helpful:
+          type: [boolean, 'null']
+          description: Lo que el autor decidió. Nulo mientras no la haya valorado.
+
+    CorrectionDetail:
+      type: object
+      required: [correctionId, workId, chapterId, origin, visibility, questionnaireVersion, submittedAt, read, answers]
+      properties:
+        correctionId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        workId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        chapterId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        chapterTitle:
+          type: [string, 'null']
+        readerId:
+          oneOf:
+            - $ref: '../openapi.yaml#/components/schemas/Uuid'
+            - type: 'null'
+        authorLabel:
+          type: [string, 'null']
+        origin:
+          type: string
+          enum: [BETA_READER, PUBLIC_LINK]
+        visibility:
+          type: string
+          enum: [VISIBLE, LOCKED, HIDDEN_BY_AUTHOR]
+        questionnaireVersion:
+          type: integer
+        submittedAt:
+          type: string
+          format: date-time
+        read:
+          type: [boolean, 'null']
+          description: |
+            Si su destinatario la ha abierto. **Nulo para quien la escribió**:
+            saberlo sería una confirmación de lectura entre dos personas que no
+            han elegido tener una conversación.
+        helpful:
+          type: [boolean, 'null']
+        answers:
+          type: array
+          description: '**Vacío** cuando `visibility` es `LOCKED`: la corrección existe y su contenido se retiene.'
+          items:
+            type: object
+            required: [questionId, position, statement, text, wordCount]
+            properties:
+              questionId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+              position:
+                type: integer
+              statement:
+                type: string
+                description: El enunciado **de la versión que se respondió**.
+              text:
+                type: string
+              wordCount:
+                type: integer

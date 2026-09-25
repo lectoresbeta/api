@@ -20,12 +20,12 @@ verdad sobre el alcance.**
 | `User` (USR) | 44 | 30 | 30 | 0 | 12 | 10 |
 | `Work` (WRK) | 17 | 12 | 12 | 0 | 0 | 9 |
 | `Reading` (RDG) | 10 | 7 | 7 | 0 | 7 | 0 |
-| `Feedback` (FBK) | 12 | 8 | 7 | 0 | 1 | 1 |
+| `Feedback` (FBK) | 12 | 8 | 7 | 0 | 1 | 2 |
 | `Community` (COM) | 38 | 11 | 10 | 0 | 2 | 1 |
 | `Moderation` (MOD) | 12 | 11 | 11 | 0 | 1 | 6 |
 | `Credits` (CRD) | 19 | 13 | 13 | 0 | 3 | 5 |
 | `Notification` (NOT) | 9 | 3 | 3 | 0 | 2 | 1 |
-| **Total** | **161** | **95** | **93** | **0** | **28** | **33** |
+| **Total** | **161** | **95** | **93** | **0** | **28** | **34** |
 
 `APPROVED` y `REVIEW` son estados de la **especificación**; `DONE` y `PARTIAL`, del **código**.
 Las columnas no suman entre sí a propósito: una funcionalidad aprobada y a medio implementar
@@ -244,7 +244,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-001 | Dejar feedback sobre una obra o fragmento | BetaReader | PENDING | TODO | P0 | — |
 | FEAT-FBK-002 | Valorar una obra | BetaReader | PENDING | TODO | P1 | — |
 | FEAT-FBK-003 | Responder y enviar el cuestionario de corrección | BetaReader | APPROVED | PARTIAL | P0 | [ficha](feedback/FEAT-FBK-003-answer-correction-questionnaire.md) |
-| FEAT-FBK-004 | Ver las correcciones recibidas | Writer | APPROVED | TODO | P0 | [ficha](feedback/FEAT-FBK-004-read-received-corrections.md) |
+| FEAT-FBK-004 | Ver las correcciones recibidas | Writer | APPROVED | PARTIAL | P0 | [ficha](feedback/FEAT-FBK-004-read-received-corrections.md) |
 | FEAT-FBK-005 | Contestar a una corrección recibida | Writer | APPROVED | TODO | P1 | [ficha](feedback/FEAT-FBK-005-reply-to-correction.md) |
 | FEAT-FBK-006 | Valorar una corrección recibida | Writer | APPROVED | TODO | P1 | [ficha](feedback/FEAT-FBK-006-rate-correction.md) |
 | FEAT-FBK-007 | Ocultar un comentario recibido | Writer | PENDING | TODO | P2 | — |

@@ -32,6 +32,25 @@ interface CorrectionRepository
     public function deliveredOnWork(WorkId $workId, int $limit = 50, int $offset = 0): array;
 
     /**
+     * La bandeja del autor: **todo lo que ha recibido, de todas sus obras**
+     * (`FEAT-FBK-004`).
+     *
+     * `deliveredOnWork` responde por obra y sigue haciendo falta; esto
+     * responde la pregunta que se hace quien abre la aplicación y quiere
+     * saber qué ha llegado, que no viene ordenada por obra.
+     *
+     * @return list<Correction>
+     */
+    public function receivedBy(
+        AuthorId $ownerId,
+        ?WorkId $workId,
+        ?ChapterId $chapterId,
+        bool $unreadOnly,
+        int $limit,
+        int $offset,
+    ): array;
+
+    /**
      * «Mis correcciones» (`FEAT-FBK-010`).
      *
      * @return list<Correction>

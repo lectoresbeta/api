@@ -1,0 +1,49 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LectoresBeta\Work\Chapter\Application\Service;
+
+use LectoresBeta\Shared\Domain\Exception\InvalidValue;
+use LectoresBeta\Work\Chapter\Application\Contract\ChapterText;
+use LectoresBeta\Work\Chapter\Application\Contract\ChapterTexts;
+use LectoresBeta\Work\Chapter\Domain\Repository\ChapterRepository;
+use LectoresBeta\Work\Chapter\Domain\ValueObject\ChapterId;
+
+/**
+ * La implementación del contrato.
+ *
+ * Mientras el capítulo no se versione ([`FEAT-WRK-005`](../../../../../docs/features/work/FEAT-WRK-005-edit-work-and-chapter.md)),
+ * pedir una versión antigua devuelve el texto vigente marcado como tal. Es
+ * deliberado: decir «no hay texto» sería peor para quien lee una corrección
+ * que decir «este es el de ahora, y puede no ser el que se leyó».
+ */
+final readonly class ResolveChapterText implements ChapterTexts
+{
+    public function __construct(private ChapterRepository $chapters)
+    {
+    }
+
+    public function ofChapter(string $chapterId, ?int $version = null): ?ChapterText
+    {
+        try {
+            $chapter = $this->chapters->ofId(ChapterId::fromString($chapterId));
+        } catch (InvalidValue) {
+            return null;
+        }
+
+        if (null === $chapter) {
+            return null;
+        }
+
+        return new ChapterText(
+            $chapter->id()->value(),
+            $chapter->workId()->value(),
+            $chapter->title(),
+            $chapter->content()->html,
+            $chapter->wordCount(),
+            1,
+            true,
+        );
+    }
+}
