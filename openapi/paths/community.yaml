@@ -778,3 +778,257 @@ postImage:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# ---------------------------------------------------------------------------
+# Comentarios y respuestas (`FEAT-COM-006`).
+# ---------------------------------------------------------------------------
+
+CommentIdParam:
+  name: commentId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+CommentCard:
+  type: object
+  required: [commentId, author, body, replyCount, mine, edited, createdAt]
+  description: |
+    Un comentario o una respuesta. Lleva **sus acciones** para que el cliente
+    no tenga que pedirlas aparte por cada fila.
+  properties:
+    commentId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    author:
+      type: object
+      required: [userId, username]
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    body:
+      type: string
+    parentCommentId:
+      type: [string, 'null']
+      description: |
+        El comentario del que cuelga, si es una respuesta. **Siempre de primer
+        nivel**: responder a una respuesta cuelga del mismo raíz, y el cliente
+        no necesita saber cuál es porque lo resuelve el servidor.
+    replyCount:
+      type: integer
+    mine:
+      type: boolean
+      description: Si lo escribió quien pregunta, que es quien puede editarlo o retirarlo.
+    edited:
+      type: boolean
+    createdAt:
+      type: string
+      format: date-time
+
+CommentsPage:
+  type: object
+  required: [comments, pageInfo]
+  properties:
+    comments:
+      type: array
+      items:
+        $ref: '#/CommentCard'
+    pageInfo:
+      type: object
+      required: [nextCursor, hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
+postComments:
+  get:
+    tags: [Community]
+    operationId: listPostComments
+    summary: Los comentarios de una publicación
+    description: |
+      Solo los de **primer nivel**: las respuestas cuelgan de su comentario y
+      se piden aparte, porque mezclarlas obligaría al cliente a reconstruir el
+      árbol desde una lista plana.
+
+      Si la publicación no existe para quien pregunta, sus comentarios
+      tampoco: es la misma regla que impide comentarla, preguntada por el otro
+      lado.
+
+      `sort` admite `RECENT` (por defecto) y `OLDEST`. **«Más relevantes» no
+      se sirve todavía**: su fórmula es `apoyos + 2 × respuestas` y los apoyos
+      son otra funcionalidad, así que servir media fórmula y llamarla
+      «relevancia» sería ordenar por algo que no es lo que dice el nombre.
+    parameters:
+      - $ref: '#/PostIdParam'
+      - name: sort
+        in: query
+        schema:
+          type: string
+          enum: [RECENT, OLDEST]
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Una página de comentarios.
+        content:
+          application/json:
+            schema:
+              $ref: '#/CommentsPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: POST_NOT_FOUND`. No existe, o su audiencia excluye a quien pregunta.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNSUPPORTED_SORT`, que lleva `supportedSorts`, o
+          `INVALID_CURSOR`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  post:
+    tags: [Community]
+    operationId: createPostComment
+    summary: Comentar una publicación
+    description: |
+      **Solo comenta quien puede ver la publicación.** Con audiencias
+      distintas de «cualquiera», comentar es la otra vía por la que alguien
+      tocaría contenido que no debería ver.
+
+      El autor es quien tiene la sesión. El texto se guarda plano, conserva
+      los emojis y no puede estar vacío: un comentario no lleva adjunto, así
+      que sin texto no hay comentario.
+
+      Comentar **no mueve créditos**. Los créditos se mueven con el feedback
+      sobre obras, que es otra cosa que la interfaz llama parecido.
+    parameters:
+      - $ref: '#/PostIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                maxLength: 1000
+    responses:
+      '201':
+        description: Comentado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [commentId]
+              properties:
+                commentId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: INVALID_VALUE`. Vacío o más largo que el máximo.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+comment:
+  patch:
+    tags: [Community]
+    operationId: editPostComment
+    summary: Cambiar el texto de un comentario propio
+    description: |
+      Solo el texto, y queda marcado como editado. El de otra persona responde
+      `404`, no `403`.
+    parameters:
+      - $ref: '#/CommentIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                maxLength: 1000
+    responses:
+      '204':
+        description: Cambiado, o ya estaba así.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: COMMENT_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: INVALID_VALUE`. Un comentario no puede quedarse vacío: para eso está eliminarlo.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: deletePostComment
+    summary: Retirar un comentario propio
+    description: |
+      Retirar un comentario raíz **se lleva sus respuestas**: lo contrario
+      dejaría respuestas contestando a una pregunta que nadie puede leer.
+
+      El contador de la publicación baja por todo lo que se va, porque cuenta
+      la conversación entera.
+    parameters:
+      - $ref: '#/CommentIdParam'
+    responses:
+      '204':
+        description: Retirado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: COMMENT_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

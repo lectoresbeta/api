@@ -84,10 +84,43 @@ class PostComment
         return $this->body;
     }
 
-    public function edit(string $body, \DateTimeImmutable $now): void
+    public function createdAt(): \DateTimeImmutable
     {
-        $this->body = trim($body);
+        return $this->createdAt;
+    }
+
+    public function replyCount(): int
+    {
+        return $this->replyCount;
+    }
+
+    public function wasEdited(): bool
+    {
+        return null !== $this->editedAt;
+    }
+
+    public function isDeleted(): bool
+    {
+        return null !== $this->deletedAt;
+    }
+
+    /**
+     * Un texto idéntico **no marca el comentario como editado**, igual que en
+     * una publicación: la marca existe para avisar a quien lee, no para
+     * contar pulsaciones.
+     */
+    public function edit(string $body, \DateTimeImmutable $now): bool
+    {
+        $body = trim($body);
+
+        if ($body === $this->body) {
+            return false;
+        }
+
+        $this->body = $body;
         $this->editedAt = $now;
+
+        return true;
     }
 
     public function delete(\DateTimeImmutable $now): void
@@ -98,5 +131,10 @@ class PostComment
     public function replyAdded(): void
     {
         ++$this->replyCount;
+    }
+
+    public function replyRemoved(): void
+    {
+        $this->replyCount = max(0, $this->replyCount - 1);
     }
 }

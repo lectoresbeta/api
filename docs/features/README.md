@@ -294,7 +294,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-003 | Publicar buscando lectores beta para una obra | Writer | PENDING | TODO | P1 | — |
 | FEAT-COM-004 | Publicar buscando writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | PENDING | TODO | P2 | — |
-| FEAT-COM-006 | Comentar una publicación | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-006-comment-on-post.md) |
+| FEAT-COM-006 | Comentar una publicación | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-006-comment-on-post.md) |
 | FEAT-COM-007 | Reaccionar con emoji a una publicación | User | PENDING | TODO | P2 | — |
 | FEAT-COM-008 | Apoyar una publicación con un "me gusta" | User | PENDING | TODO | P2 | — |
 | FEAT-COM-009 | Filtrar y buscar publicaciones (tipo, texto, usuario, fecha) | User | PENDING | TODO | P2 | — |

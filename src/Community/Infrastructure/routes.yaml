@@ -107,3 +107,28 @@ getPostImage:
     path: /api/v1/posts/{postId}/image
     controller: LectoresBeta\Community\Post\Infrastructure\Controller\GetPostImageController::__invoke
     methods: [GET]
+
+# Los comentarios de una publicación (`FEAT-COM-006`).
+#
+# Solo comenta quien puede ver la publicación: con audiencias distintas de
+# «cualquiera», comentar es la otra vía por la que alguien tocaría contenido
+# que no debería ver.
+listPostComments:
+    path: /api/v1/posts/{postId}/comments
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\ListPostCommentsController::__invoke
+    methods: [GET]
+
+createPostComment:
+    path: /api/v1/posts/{postId}/comments
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\CreatePostCommentController::__invoke
+    methods: [POST]
+
+editPostComment:
+    path: /api/v1/comments/{commentId}
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\EditPostCommentController::__invoke
+    methods: [PATCH]
+
+deletePostComment:
+    path: /api/v1/comments/{commentId}
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\DeletePostCommentController::__invoke
+    methods: [DELETE]

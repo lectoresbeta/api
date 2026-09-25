@@ -24,6 +24,10 @@ sitio donde leer lo escrito.
 | `PATCH /api/v1/posts/{postId}` | `editPost` | Cambiar el texto de lo propio | FEAT-COM-002 | **Implementado** |
 | `DELETE /api/v1/posts/{postId}` | `deletePost` | Retirar lo propio | FEAT-COM-002 | **Implementado** |
 | `GET /api/v1/posts/{postId}/image` | `getPostImage` | La imagen de una publicación | FEAT-COM-002 | **Implementado** |
+| `GET /api/v1/posts/{postId}/comments` | `listPostComments` | Los comentarios | FEAT-COM-006 | **Implementado** |
+| `POST /api/v1/posts/{postId}/comments` | `createPostComment` | Comentar | FEAT-COM-006 | **Implementado** |
+| `PATCH /api/v1/comments/{commentId}` | `editPostComment` | Editar el propio | FEAT-COM-006 | **Implementado** |
+| `DELETE /api/v1/comments/{commentId}` | `deletePostComment` | Retirar el propio | FEAT-COM-006 | **Implementado** |
 
 ---
 
@@ -280,3 +284,62 @@ la dirección que escribe cualquiera, y eso se decide aparte.
 
 Publica `PostPublished` con la audiencia incluida, que es lo que impide que `Notification`
 avise a quien no puede abrir lo que se le anuncia. Todavía no lo escucha nadie.
+
+
+---
+
+## `GET` y `POST /api/v1/posts/{postId}/comments`
+
+**`operationId`:** `listPostComments`, `createPostComment`, `editPostComment`,
+`deletePostComment` · **Funcionalidad:**
+[`FEAT-COM-006`](../../features/community/FEAT-COM-006-comment-on-post.md)
+
+### Propósito
+
+La conversación bajo una publicación.
+
+**No confundir con `Feedback`.** Un comentario es social; un feedback es la crítica de un
+lector beta sobre una obra, mueve créditos y tiene reglas de acceso propias. Son conceptos de
+contextos distintos que la interfaz llama parecido.
+
+### Autorización
+
+**Solo comenta quien puede ver la publicación**, y solo lee sus comentarios quien puede verla.
+Es la misma regla preguntada por los dos lados, resuelta en un único sitio: si la publicación
+no existe para quien pregunta, sus comentarios tampoco, y la respuesta es `404`.
+
+Escribir exige además cuenta activada.
+
+### Reglas aplicadas
+
+- El texto se guarda **plano** y conserva los emojis. **No puede estar vacío**: un comentario
+  no lleva adjunto, así que sin texto no hay comentario.
+- El **contador de la publicación cuenta toda la conversación**, respuestas incluidas, que es
+  lo que espera quien lee «3 comentarios».
+- El autor **edita y retira lo suyo**, con el mismo criterio que una publicación. Lo ajeno
+  responde `404`, no `403`.
+- Retirar un comentario raíz **se lleva sus respuestas**, y el contador baja por todo lo que
+  se va.
+- Comentar **no mueve créditos**.
+
+### Qué no está todavía
+
+**«Más relevantes»**, que es el orden que el desplegable enseña por defecto. Su fórmula está
+decidida —`apoyos + 2 × respuestas`— y los apoyos son `FEAT-COM-030`, que no existe. Hoy
+responde `422 UNSUPPORTED_SORT` con `supportedSorts`, en vez de ordenar por media fórmula y
+dejar que alguien se fíe.
+
+Hay además una razón que conviene anotar para cuando llegue: un orden que cambia mientras
+alguien lo lee —porque otro responde— no tiene una posición estable que codificar en un
+cursor. Paginarlo bien exige meter el contador en el cursor, no solo sumar el término que
+falta.
+
+Que el autor de la publicación pueda retirar comentarios ajenos de lo suyo es moderación
+propia y no tiene diseño (`I-13`).
+
+### Efectos
+
+Publica `PostCommented` con **a quién hay que avisar** —el autor de la publicación, el del
+comentario, y el del comentario padre si es una respuesta— y sin el texto: un aviso no
+necesita el cuerpo de lo escrito, y copiarlo lo pondría en una cola que persiste y reintenta.
+Todavía no lo escucha nadie.

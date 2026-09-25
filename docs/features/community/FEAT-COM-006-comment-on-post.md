@@ -5,16 +5,16 @@ context: Community
 concept: Interaction
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P2
 sources:
   - _sources/use-cases.pdf#p3
   - conversation:2026-09-22 (secuencia de interacciones)
   - docs/ui/post-interactions.md
-endpoints: [GET /posts/{postId}/comments, POST /posts/{postId}/comments]
+endpoints: [GET /posts/{postId}/comments, POST /posts/{postId}/comments, PATCH /comments/{commentId}, DELETE /comments/{commentId}]
 events: [PostCommented]
 depends_on: [FEAT-COM-002]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-COM-006 — Comentar una publicación
@@ -39,10 +39,16 @@ lista de comentarios, ordenable.
 - `RN-5` Comentar una publicación **no mueve créditos**. Los créditos solo se mueven con el
   feedback sobre obras.
 - `RN-6` Eliminar la publicación elimina sus comentarios.
-- `RN-7` El contador de comentarios de la publicación incluye **las respuestas**, o no; ver
-  `I-8`.
+- `RN-7` El contador de comentarios de la publicación incluye **las respuestas** (`I-8`,
+  resuelta): «n comentarios» significa cuánto se ha hablado ahí debajo, que es lo que espera
+  quien lo lee y lo que hace comparable una publicación con otra.
 - `RN-8` Se publica `PostCommented`, que `Notification` usa para avisar al autor de la
   publicación.
+- `RN-9` El autor puede **editar y eliminar** lo suyo (`I-3`, resuelta), con el mismo criterio
+  que una publicación: solo el texto, queda marcado como editado, y el de otra persona
+  responde `404` y no `403` — un permiso denegado confirmaría que está ahí.
+- `RN-10` Un comentario **no puede quedarse vacío**. No lleva adjunto, así que sin texto no
+  hay comentario: vaciarlo es eliminarlo, y para eso hay una operación que lo dice.
 
 `RN-1` es la que hay que probar: con audiencias distintas de «cualquiera», comentar es otra
 vía por la que alguien podría tocar contenido que no debería ver.
@@ -63,6 +69,8 @@ Hasta entonces, lo implementable es la ordenación por fecha. Ver `I-1`.
 |---|---|---|
 | Listar comentarios | `GET /posts/{postId}/comments` | `listPostComments` |
 | Comentar | `POST /posts/{postId}/comments` | `createPostComment` |
+| Editar el propio | `PATCH /comments/{commentId}` | `editPostComment` |
+| Retirar el propio | `DELETE /comments/{commentId}` | `deletePostComment` |
 
 El listado se pagina y admite el criterio de orden. Cada entrada incluye sus acciones —«me
 gusta» propio y ajeno, número de respuestas— para que el cliente no tenga que pedirlas
@@ -86,15 +94,21 @@ aparte.
 
 ## Criterios de aceptación
 
-- [ ] Comentar una publicación visible crea el comentario y devuelve `201`.
-- [ ] **No se puede comentar una publicación cuya audiencia excluye al usuario.**
-- [ ] El autor es el usuario autenticado, aunque la petición diga otra cosa.
-- [ ] El texto se almacena saneado y conserva los emojis.
-- [ ] Comentar no mueve créditos.
-- [ ] Eliminar la publicación elimina sus comentarios.
-- [ ] El listado se pagina.
-- [ ] Con la cuenta sin activar devuelve `403`.
-- [ ] Se publica `PostCommented` y el autor de la publicación recibe el aviso.
+- [x] Comentar una publicación visible crea el comentario y devuelve `201`.
+- [x] **No se puede comentar una publicación cuya audiencia excluye al usuario.**
+- [x] Tampoco se pueden leer sus comentarios.
+- [x] El autor es el usuario autenticado, aunque la petición diga otra cosa.
+- [x] El texto se almacena saneado y conserva los emojis.
+- [x] Un comentario vacío se rechaza.
+- [x] Comentar no mueve créditos.
+- [x] Eliminar la publicación elimina sus comentarios.
+- [x] El autor edita y retira lo suyo; nadie toca lo ajeno, y recibe `404`.
+- [x] El contador de la publicación sigue toda la conversación.
+- [x] El listado se pagina, por fecha en los dos sentidos.
+- [x] Un criterio de orden no admitido devuelve `422` con los que sí valen.
+- [x] Con la cuenta sin activar devuelve `403`.
+- [x] Se publica `PostCommented` con a quién hay que avisar.
+- [ ] El autor de la publicación **recibe** el aviso. `Notification` no lo escucha todavía.
 
 ## «Más relevantes»: la fórmula
 
@@ -119,14 +133,32 @@ distinto: ordenar cincuenta comentarios, no repartir trabajo entre miles de obra
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| I-3 | ¿Se pueden editar o eliminar los comentarios propios? | El menú «···» no tiene diseño |
+| ~~I-3~~ | ¿Se pueden editar o eliminar los comentarios propios? | Resuelta: las dos, como en una publicación |
+| ~~I-8~~ | ¿El contador de la publicación cuenta también las respuestas? | Resuelta: sí, toda la conversación |
 | I-4 | ¿Cuántos comentarios se cargan de inicio? | La captura muestra uno |
 | I-7 | ¿Un comentario admite adjuntos? | El compositor solo ofrece emoji |
-| I-8 | ¿El contador de la publicación cuenta también las respuestas? | Define qué número se muestra |
+| I-13 | ¿Puede el autor de la publicación retirar comentarios ajenos de lo suyo? | Es moderación propia y no tiene diseño (`I-9`) |
 
 ## Estado
 
 **Especificación:** `APPROVED` (2026-09-24). `I-1` resuelta. Las preguntas que quedan
 son detalles de interfaz.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). Comentar, listar, editar y retirar, con el filtro
+de audiencia resuelto por `VisiblePost`, que es **la misma regla que usa el muro preguntada
+por el otro lado**. Se escribe una vez y la usan cuatro operaciones: leer los comentarios,
+escribir uno, responder y repostear.
+
+**Falta «más relevantes»**, que es justo el orden que el desplegable enseña por defecto. Su
+fórmula está decidida —`apoyos + 2 × respuestas`— y los apoyos son
+[`FEAT-COM-030`](../README.md), que no existe: servir media fórmula y llamarla «relevancia»
+sería ordenar por algo que no es lo que dice el nombre. Hoy responde `422` con los órdenes que
+sí valen, igual que «más valorados» en «Mis relatos».
+
+Hay además una razón técnica que conviene anotar para cuando llegue: un orden que cambia
+mientras alguien lo lee —porque otro responde— no tiene una posición estable que codificar en
+un cursor. Paginarlo bien exige meter el contador en el cursor, no solo sumar el término que
+falta.
+
+**Falta también el aviso**: `PostCommented` se publica con a quién avisar, y `Notification` no
+lo escucha todavía (`FEAT-NOT-001`).

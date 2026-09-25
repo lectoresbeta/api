@@ -168,6 +168,12 @@ paths:
   /posts/{postId}/image:
     $ref: './paths/community.yaml#/postImage'
 
+  /posts/{postId}/comments:
+    $ref: './paths/community.yaml#/postComments'
+
+  /comments/{commentId}:
+    $ref: './paths/community.yaml#/comment'
+
   /works:
     $ref: './paths/works.yaml#/collection'
 
