@@ -28,8 +28,26 @@ register:
     responses:
       '202':
         description: Solicitud aceptada. Si procede, se ha enviado el correo de activación.
+      '409':
+        description: |
+          `code: NO_LEGAL_DOCUMENTS_PUBLISHED`. No hay condiciones vigentes
+          que aceptar, así que no hay nada a lo que consentir. Es una avería
+          de operaciones, no del usuario.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
       '422':
-        $ref: '../openapi.yaml#/components/responses/ValidationError'
+        description: |
+          Validación, o bien `code: TERMS_NOT_ACCEPTED` si falta la
+          aceptación, o `code: LEGAL_VERSION_OUTDATED` si la versión aceptada
+          ya no es la vigente — ese error **lleva las vigentes**, para que el
+          formulario pueda recargar el texto y volver a pedirlo
+          (`FEAT-USR-024`).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
       '429':
         description: |
           `code: RESEND_TOO_SOON` o `code: RESEND_LIMIT_REACHED`. Los dos
@@ -444,3 +462,80 @@ passwordReset:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+legalDocuments:
+  get:
+    tags: [Auth]
+    operationId: getLegalDocuments
+    summary: Los documentos legales vigentes
+    description: |
+      **Sin sesión**, porque hace falta antes de tenerla: el formulario de
+      alta enseña la casilla con los enlaces y devuelve la **versión exacta**
+      que se acepta. Llevarla codificada en el cliente sería llevar una
+      versión que se queda vieja sin que nadie lo note.
+
+      Uno por tipo, el de mayor fecha de entrada en vigor **ya cumplida**:
+      publicar la política del mes que viene no cambia lo que se acepta hoy.
+    security: []
+    responses:
+      '200':
+        description: Los textos que rigen ahora mismo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [documents]
+              properties:
+                documents:
+                  type: array
+                  items:
+                    type: object
+                    required: [type, version, effectiveFrom, url]
+                    properties:
+                      type:
+                        type: string
+                        enum: [TERMS_OF_USE, PRIVACY_POLICY, COOKIE_POLICY, LEGAL_NOTICE]
+                      version:
+                        type: string
+                      effectiveFrom:
+                        type: string
+                        format: date-time
+                      url:
+                        type: string
+
+legalAcceptances:
+  get:
+    tags: [Account]
+    operationId: getMyLegalAcceptances
+    summary: Qué acepté y cuándo
+    description: |
+      **El derecho a ver la prueba.** Cada fila lleva qué documento, qué
+      versión y cuándo: un «aceptaste las condiciones» sin versión sería el
+      booleano que esta funcionalidad existe para evitar.
+
+      Solo las propias. No lleva la dirección desde la que se aceptó, aunque
+      se guarde: es un dato de la prueba y no del usuario.
+    responses:
+      '200':
+        description: Las aceptaciones del usuario autenticado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [acceptances]
+              properties:
+                acceptances:
+                  type: array
+                  items:
+                    type: object
+                    required: [type, version, acceptedAt]
+                    properties:
+                      type:
+                        type: string
+                      version:
+                        type: string
+                      acceptedAt:
+                        type: string
+                        format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

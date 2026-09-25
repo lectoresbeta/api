@@ -80,7 +80,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-021 | Reenviar el email de activación | Guest, User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
 | FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
 | FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
-| FEAT-USR-024 | Aceptar condiciones de uso y política de privacidad | Guest | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-024-accept-terms-and-privacy.md) |
+| FEAT-USR-024 | Aceptar condiciones de uso y política de privacidad | Guest | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-024-accept-terms-and-privacy.md) |
 | FEAT-USR-025 | Bloquear las operaciones de escritura hasta activar la cuenta | User | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-025-block-writes-until-activation.md) |
 | FEAT-USR-026 | Tour de bienvenida de la Home | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-026-welcome-tour.md) |
 | FEAT-USR-027 | Contexto de sesión para el layout | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-027-session-context.md) |

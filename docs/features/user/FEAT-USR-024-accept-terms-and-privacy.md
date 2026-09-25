@@ -5,7 +5,7 @@ context: User
 concept: Account
 actors: [Guest]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P0
 sources:
   - figma:1800-13778 (1470:9482, checkbox del formulario)
@@ -94,7 +94,7 @@ distintas.
 |---|---|---|
 | Registro sin aceptación | Se rechaza | `422` con `code: TERMS_NOT_ACCEPTED` |
 | Alta con Google sin aceptación | **No se crea la cuenta** (`RN-7`) | `422` con `code: TERMS_NOT_ACCEPTED` |
-| Se acepta una versión que ya no es la vigente | **Por definir.** Probablemente se rechaza y se pide releer | Pendiente |
+| Se acepta una versión que ya no es la vigente | **Se rechaza y se pide releer** | `422` con `code: LEGAL_VERSION_OUTDATED`, **y las versiones vigentes** |
 | Cambio de términos con usuarios ya registrados | **Fuera de alcance de esta ficha.** Requiere un flujo de reaceptación | Ver `T-2` |
 
 ## Contrato de API
@@ -123,15 +123,15 @@ Sí necesita, al menos:
 
 ## Criterios de aceptación
 
-- [ ] Un registro sin aceptación devuelve `422`, aunque el cliente permita enviarlo.
-- [ ] La aceptación guarda la versión de cada documento, no solo un booleano.
-- [ ] La aceptación guarda la fecha.
-- [ ] Condiciones de uso y política de privacidad se registran por separado.
-- [ ] Un registro de aceptación no se puede modificar ni borrar.
-- [ ] El usuario puede consultar qué versiones aceptó y cuándo.
-- [ ] Un alta con Google sin aceptación no crea la cuenta y devuelve `422`.
-- [ ] La aceptación registrada por la vía de Google guarda versión y fecha igual que la de email.
-- [ ] Iniciar sesión con Google en una cuenta existente no exige volver a aceptar.
+- [x] Un registro sin aceptación devuelve `422`, aunque el cliente permita enviarlo.
+- [x] La aceptación guarda la versión de cada documento, no solo un booleano.
+- [x] La aceptación guarda la fecha.
+- [x] Condiciones de uso y política de privacidad se registran por separado.
+- [x] Un registro de aceptación no se puede modificar ni borrar.
+- [x] El usuario puede consultar qué versiones aceptó y cuándo.
+- [x] Un alta con Google sin aceptación no crea la cuenta y devuelve `422`.
+- [x] La aceptación registrada por la vía de Google guarda versión y fecha igual que la de email.
+- [x] Iniciar sesión con Google en una cuenta existente no exige volver a aceptar.
 
 ## Preguntas abiertas
 
@@ -151,3 +151,35 @@ Sí necesita, al menos:
 inmutables. `T-2` (reaceptación al cambiar) y `T-6`/`T-7` quedan como flujos posteriores.
 
 **Implementación:** `TODO`.
+
+## Estado de la implementación
+
+`DONE` (2026-09-25).
+
+Lo que ya existía era la mitad: el alta guardaba la versión de cada documento con su fecha, y
+la rechazaba si faltaba. Lo que no existía era **con qué comparar**. La tabla de documentos
+estaba vacía, así que se guardaba la versión que mandara el cliente, fuese cual fuese: una
+constancia que parece una prueba y no lo es.
+
+Ahora las versiones vigentes se siembran por migración y el alta comprueba contra ellas. Se
+siembran ahí y no en un fixture porque **el alta no funciona sin ellas**: es un dato del que
+depende el arranque, no de ejemplo.
+
+Tres decisiones que la ficha dejaba abiertas:
+
+- **Aceptar una versión que ya no rige se rechaza** (`422`, `LEGAL_VERSION_OUTDATED`), y el
+  error **lleva las vigentes**, de forma que el formulario pueda recargar el texto y volver a
+  pedirlo en vez de dejar a alguien atascado sin saber qué ha pasado.
+- **Si no hay ningún documento publicado, no se da de alta a nadie** (`409`,
+  `NO_LEGAL_DOCUMENTS_PUBLISHED`). Falla cerrado a propósito: sin texto no hay nada a lo que
+  consentir, y guardar un consentimiento vacío es peor que no crear la cuenta.
+- **Lo vigente es lo de mayor fecha ya cumplida.** Publicar la política del mes que viene no
+  cambia lo que se acepta hoy, así que una versión nueva se puede insertar por adelantado.
+
+`GET /me/legal-acceptances` no devuelve la dirección IP desde la que se aceptó, aunque se
+guarde: es un dato de la prueba y no del usuario, y una respuesta que se puede pedir en
+cualquier momento no necesita repetirlo.
+
+`T-2` —la reaceptación de quienes ya están registrados cuando cambian los textos— sigue fuera
+de alcance. Lo que esta implementación aporta para el día que se aborde es que ya se puede
+saber quién aceptó qué: comparar cada aceptación con lo vigente es ahora una consulta.

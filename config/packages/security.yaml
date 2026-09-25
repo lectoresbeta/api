@@ -70,6 +70,10 @@ security:
         # donde esté abierto el buzón nuevo, que muchas veces es otro
         # dispositivo. Lo que autoriza es el token, de un solo uso.
         - { path: '^/api/v1/me/email-change/confirm$', methods: [POST], roles: PUBLIC_ACCESS }
+
+        # Los textos legales vigentes (FEAT-USR-024): el formulario de alta
+        # los necesita antes de que exista ninguna sesión.
+        - { path: '^/api/v1/legal/documents$', methods: [GET], roles: PUBLIC_ACCESS }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

@@ -18,6 +18,7 @@ use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\Service\PasswordPolicy;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
+use LectoresBeta\User\Legal\Application\Service\CheckLegalConsent;
 use LectoresBeta\User\Legal\Domain\Entity\LegalAcceptance;
 use LectoresBeta\User\Legal\Domain\Enum\LegalDocumentType;
 use LectoresBeta\User\Legal\Domain\Repository\LegalAcceptanceRepository;
@@ -51,6 +52,7 @@ final readonly class RegisterUserHandler
     public function __construct(
         private UserRepository $users,
         private LegalAcceptanceRepository $acceptances,
+        private CheckLegalConsent $consent,
         private StartPrivacySettings $privacySettings,
         private UsernameAllocator $usernames,
         private PasswordPolicy $passwordPolicy,
@@ -67,8 +69,16 @@ final readonly class RegisterUserHandler
 
         $this->passwordPolicy->ensureAcceptable($command->plainPassword);
 
-        $terms = self::requiredVersion($command->acceptedTermsVersion);
-        $privacy = self::requiredVersion($command->acceptedPrivacyVersion);
+        // No basta con que venga una versión: tiene que ser **la vigente**
+        // (`FEAT-USR-024` `RN-2`). Una aceptación de un texto que ya no rige
+        // parece una prueba y no lo es.
+        $accepted = $this->consent->accepting([
+            LegalDocumentType::TERMS_OF_USE->value => self::requiredVersion($command->acceptedTermsVersion),
+            LegalDocumentType::PRIVACY_POLICY->value => self::requiredVersion($command->acceptedPrivacyVersion),
+        ]);
+
+        $terms = $accepted[LegalDocumentType::TERMS_OF_USE->value];
+        $privacy = $accepted[LegalDocumentType::PRIVACY_POLICY->value];
 
         if ($this->users->emailIsTaken($email)) {
             return;

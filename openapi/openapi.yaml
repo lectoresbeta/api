@@ -70,6 +70,12 @@ paths:
   /auth/login:
     $ref: './paths/auth.yaml#/login'
 
+  /legal/documents:
+    $ref: './paths/auth.yaml#/legalDocuments'
+
+  /me/legal-acceptances:
+    $ref: './paths/auth.yaml#/legalAcceptances'
+
   /auth/password/forgotten:
     $ref: './paths/auth.yaml#/passwordForgotten'
 
