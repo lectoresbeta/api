@@ -169,6 +169,10 @@ posee.
 - `RN-5` La valoración positiva de un comentario se aplica **una sola vez**; retirarla no
   revierte los créditos (salvo decisión contraria en `C-9`).
 - `RN-6` Ocultar un comentario no lo oculta para quien lo escribió.
+- `RN-8` **Valorar una obra es de quien la ha corregido** (`FEAT-FBK-002`): hace falta una
+  corrección **entregada**, no un borrador. Es lo único que acredita haber leído mientras
+  `H-3` siga sin definir qué cuenta como lectura, y lo que impide que la nota sea barata. Una
+  por lector y obra: volver a valorar sustituye.
 - `RN-7` `Feedback` **no comprueba el saldo del autor**. Que exista un acceso vigente ya
   implica que sus créditos están retenidos (`decision:0004`). Consultar el saldo aquí sería
   la validación síncrona que esa decisión descartó.
@@ -177,9 +181,9 @@ posee.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| F-1 | ¿El feedback se ancla al fragmento, a la obra, o a una posición del texto? (`D-1`) | Define la raíz del agregado y el cálculo de créditos |
+| ~~F-1~~ | ~~¿El feedback se ancla al fragmento, a la obra, o a una posición del texto?~~ | **Resuelta** (`FEAT-FBK-003`, `decision:0006`): lo que el sistema paga es el cuestionario respondido, por capítulo. El comentario libre bajo el texto es de `Community` (`FEAT-COM-036`), y `FEAT-FBK-001` quedó derogada por ello |
 | F-2 | ¿Hay longitud mínima para que un comentario genere créditos? | Protección frente a comentarios vacíos que farmean créditos |
-| F-3 | ¿Qué escala usa la valoración de obra: 1–5, 1–10, positiva/negativa? | Rankings |
+| ~~F-3~~ | ~~¿Qué escala usa la valoración de obra?~~ | **Resuelta** (`FEAT-FBK-002`): 1 a 5, enteros. El cero no existe — una escala de estrellas empieza en una |
 | F-4 | ¿Un LB puede dejar varios comentarios en la misma obra? (`D-2`, `C-4`) | **Gana importancia con la reserva previa**: una retención cubre un comentario, así que el segundo se quedaría sin respaldo |
 | F-5 | ¿La valoración del comentario es binaria (útil / no útil) o graduada? | El documento habla de "valoración positiva" |
 | F-6 | ¿El comentario desde enlace público genera créditos si no hay cuenta? (`A-3`, `C-5`) | Bloquea `FEAT-FBK-008` |

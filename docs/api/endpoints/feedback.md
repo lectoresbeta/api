@@ -17,7 +17,7 @@
 | `POST /corrections/{correctionId}/rating` | `rateCorrection` | Valorarla como útil | FEAT-FBK-006 | PENDING |
 | `PUT /corrections/{correctionId}/visibility` | `setCorrectionVisibility` | Ocultarla | FEAT-FBK-007 | PENDING |
 | `GET /me/corrections` | `listMyCorrections` | Mis correcciones | FEAT-FBK-010 | PENDING |
-| `POST /works/{workId}/rating` | `rateWork` | Valorar la obra | FEAT-FBK-002 | PENDING |
+| `PUT /api/v1/works/{workId}/rating` | `rateWork` | Valorar la obra de 1 a 5, **solo quien la ha corregido** | FEAT-FBK-002 | **Implementado** |
 | `POST /api/v1/public/{token}/chapters/{chapterId}/corrections` | `submitPublicCorrection` | Corregir **sin cuenta**, por un enlace público | FEAT-FBK-008 | **Implementado** |
 
 Las rutas cuelgan del **capítulo**: la corrección es por capítulo (`R-2`). Las preguntas son

@@ -131,6 +131,15 @@ final class DoctrineCorrectionRepository extends DoctrineRepository implements C
         ]);
     }
 
+    public function hasDeliveredOn(ReaderId $readerId, WorkId $workId): bool
+    {
+        return $this->repository()->count([
+            'readerId' => $readerId->value(),
+            'workId' => $workId->value(),
+            'status' => CorrectionStatus::SUBMITTED,
+        ]) > 0;
+    }
+
     public function publicCountOfLink(string $publicLinkId): int
     {
         return $this->repository()->count(['publicLinkId' => $publicLinkId]);

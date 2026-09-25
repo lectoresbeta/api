@@ -242,7 +242,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-FBK-001 | ~~Dejar feedback sobre una obra o fragmento~~ → `FEAT-FBK-003` + `FEAT-COM-036` | — | PENDING | DEPRECATED | P0 | — |
-| FEAT-FBK-002 | Valorar una obra | BetaReader | PENDING | TODO | P1 | — |
+| FEAT-FBK-002 | Valorar una obra | BetaReader | APPROVED | DONE | P1 | [ficha](feedback/FEAT-FBK-002-rate-a-work.md) |
 | FEAT-FBK-003 | Responder y enviar el cuestionario de corrección | BetaReader | APPROVED | PARTIAL | P0 | [ficha](feedback/FEAT-FBK-003-answer-correction-questionnaire.md) |
 | FEAT-FBK-004 | Ver las correcciones recibidas | Writer | APPROVED | DONE | P0 | [ficha](feedback/FEAT-FBK-004-read-received-corrections.md) |
 | FEAT-FBK-005 | Contestar a una corrección recibida | Writer | APPROVED | DONE | P1 | [ficha](feedback/FEAT-FBK-005-reply-to-correction.md) |

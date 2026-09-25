@@ -387,6 +387,12 @@ paths:
   /chapters/{chapterId}/correction/draft:
     $ref: './paths/corrections.yaml#/draft'
 
+  # Valorar la obra entera (FEAT-FBK-002), que no es valorar una corrección
+  # (FEAT-FBK-006): aquella la pone el autor sobre lo que recibe, esta la
+  # pone quien corrigió sobre lo que leyó.
+  /works/{workId}/rating:
+    $ref: './paths/corrections.yaml#/workRating'
+
   /me/notifications:
     $ref: './paths/notifications.yaml#/inbox'
 

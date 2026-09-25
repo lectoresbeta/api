@@ -78,6 +78,15 @@ interface CorrectionRepository
     public function deliveredCountBy(ReaderId $readerId): int;
 
     /**
+     * Si esta persona ha **entregado** alguna corrección de esta obra.
+     *
+     * Es lo que autoriza a valorarla (`FEAT-FBK-002` `RN-1`). Un borrador no
+     * cuenta: lo que acredita haber leído es el trabajo entregado, no el
+     * empezado.
+     */
+    public function hasDeliveredOn(ReaderId $readerId, WorkId $workId): bool;
+
+    /**
      * Cuántas correcciones han llegado ya por un enlace público
      * (`FEAT-FBK-008` `RN-4`).
      *

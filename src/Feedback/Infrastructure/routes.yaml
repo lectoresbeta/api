@@ -96,3 +96,13 @@ submitPublicCorrection:
     path: /api/v1/public/{token}/chapters/{chapterId}/corrections
     controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\SubmitPublicCorrectionController::__invoke
     methods: [POST]
+
+# Valorar una obra de 1 a 5 (`FEAT-FBK-002`).
+#
+# `PUT` y no `POST`: hay una valoración por lector y obra, y volver a valorar
+# sustituye la anterior. Cambiar de opinión después de leer más capítulos es
+# exactamente lo que se espera.
+rateWork:
+    path: /api/v1/works/{workId}/rating
+    controller: LectoresBeta\Feedback\Rating\Infrastructure\Controller\RateWorkController::__invoke
+    methods: [PUT]

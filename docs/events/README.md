@@ -161,7 +161,7 @@ tiene acceso.
 | `CorrectionRead` | El autor abre una corrección recibida (`FEAT-FBK-004`) | `Notification` ✅, que retira el aviso pendiente | `correctionId`, `authorId`, `readAt`. **`authorId` se llamó `readerId` hasta `FEAT-NOT-006`** llevando dentro el identificador del autor; el consumidor acepta los dos nombres mientras pueda quedar algo del anterior en la cola |
 | `CorrectionClosed` | Lo que alguien estaba corrigiendo deja de estar disponible: la obra se bloquea, su autor la retira o le oculta el capítulo | `Notification` ✅ | `correctionId`, `chapterId`, `workId`, `readerId`, `reason`, `closedAt`. **El borrador no se borra**: es texto suyo | `correctionId`, `readerId`, `readAt`. **No se le dice a quien corrigió**: sería una confirmación de lectura entre dos personas que no han elegido conversar |
 | `FeedbackHidden` | El autor lo oculta | `Community`, `Credits`* | `feedbackId`, `workId` |
-| `WorkRated` | Un LB valora la obra (`FEAT-FBK-002`) | `Community` | `workId`, `authorId`, `readerId`, `rating` (1–5, fijado por el modelo) |
+| `WorkRated` | Un LB valora la obra, **o cambia su nota** (`FEAT-FBK-002`) | `Community` cuando existan los rankings. **Hoy nadie**: `CM-4` no define la fórmula, y el hecho se publica igual para que haya histórico que promediar | `workId`, `authorId`, `readerId`, `rating` (1–5), `firstTime`, `ratedAt`. Lleva cifra por lo mismo que `ChapterPriceChanged`: **el valor es el hecho** |
 
 \* Solo si se decide revertir créditos al ocultar (`C-9`).
 

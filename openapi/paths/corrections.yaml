@@ -963,3 +963,81 @@ components:
                 type: string
               wordCount:
                 type: integer
+
+# Valorar una obra (`FEAT-FBK-002`).
+
+workRating:
+  put:
+    tags: [Feedback]
+    operationId: rateWork
+    summary: Valorar una obra de 1 a 5
+    description: |
+      **Solo valora quien la ha corregido**, y es la regla que da sentido al
+      número. Una media abierta a cualquiera que pueda abrir la obra mide
+      cuánta gente pasó por allí; una de quienes entregaron una corrección
+      dice lo que opina quien de verdad la leyó y se molestó en escribir
+      sobre ella.
+
+      Un **borrador no cuenta**: lo que acredita haber leído es el trabajo
+      entregado, no el empezado.
+
+      `PUT` y no `POST` porque fija un estado: hay una valoración por lector y
+      obra, y volver a valorar **sustituye** la anterior. Cambiar de opinión
+      tras leer más capítulos es exactamente lo que se espera, y acumular
+      notas del mismo lector le daría más voz que a los demás.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [rating]
+            properties:
+              rating:
+                type: integer
+                minimum: 1
+                maximum: 5
+    responses:
+      '200':
+        description: Valorada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating]
+              properties:
+                rating:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: CORRECTION_REQUIRED_TO_RATE` si no has entregado ninguna
+          corrección de esta obra — se dice por qué, porque quien llega aquí
+          ya la ve y «corrige un capítulo y podrás valorarla» es una
+          instrucción, no un muro. `code: CANNOT_RATE_YOUR_OWN_WORK` si eres
+          su autor.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND`. No existe, o no se puede ver: una obra
+          inédita ajena no se distingue de una que no está.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'Fuera de 1 a 5. `code: VALIDATION_FAILED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
