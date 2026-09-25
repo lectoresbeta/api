@@ -158,6 +158,10 @@ services:
             $byDay: '@limiter.password_reset_daily'
             $byAddress: '@limiter.password_reset_by_ip'
 
+    LectoresBeta\User\Account\Infrastructure\Controller\ChangeMyPasswordController:
+        arguments:
+            $byAccount: '@limiter.password_change_attempts'
+
     LectoresBeta\User\Authentication\Infrastructure\Security\LexikAccessTokenIssuer:
         arguments:
             $lifetimeInSeconds: '%app.jwt_ttl%'

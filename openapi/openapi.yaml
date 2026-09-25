@@ -100,6 +100,9 @@ paths:
   /me/username:
     $ref: './paths/settings.yaml#/username'
 
+  /me/password:
+    $ref: './paths/settings.yaml#/password'
+
   /me/literary-preferences:
     $ref: './paths/settings.yaml#/literaryPreferences'
 

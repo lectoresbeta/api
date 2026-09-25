@@ -73,6 +73,15 @@ framework:
             limit: 20
             interval: '1 hour'
 
+        # Intentos fallidos de cambiar la contraseña desde dentro
+        # (FEAT-USR-041). Sin esto el formulario es un sitio donde probar
+        # contraseñas contra una sesión robada, sin las protecciones del
+        # login y con el premio de quedarse con la cuenta.
+        password_change_attempts:
+            policy: sliding_window
+            limit: 5
+            interval: '15 minutes'
+
 when@test:
     framework:
         test: true

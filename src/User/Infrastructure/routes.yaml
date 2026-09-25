@@ -34,6 +34,13 @@ resetPassword:
     controller: LectoresBeta\User\Account\Infrastructure\Controller\ResetPasswordController::__invoke
     methods: [POST]
 
+# `PUT` porque fija un estado: la cuenta acaba con esa contraseña
+# (`FEAT-USR-041`). El mismo endpoint la cambia y la establece por primera vez.
+changeMyPassword:
+    path: /api/v1/me/password
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\ChangeMyPasswordController::__invoke
+    methods: [PUT]
+
 login:
     path: /api/v1/auth/login
     controller: LectoresBeta\User\Authentication\Infrastructure\Controller\LogInController::__invoke

@@ -134,6 +134,9 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `PASSWORD_RESET_TOKEN_EXPIRED` | 410 | El enlace caducó. Es el único caso que se distingue: es el único que quien está delante puede resolver |
 | `PASSWORD_RESET_TOO_SOON` | 429 | Se pidió el enlace hace menos de un minuto |
 | `PASSWORD_RESET_LIMIT_REACHED` | 429 | Se ha agotado el máximo de enlaces del periodo |
+| `INCORRECT_PASSWORD` | 403 | La contraseña actual no coincide (`FEAT-USR-041`) |
+| `CURRENT_PASSWORD_REQUIRED` | 403 | Se dejó vacía en una cuenta que sí tiene contraseña. Solo puede faltar en una que no la tenga |
+| `PASSWORD_UNCHANGED` | 422 | La nueva es la que ya había. Se rechaza porque un cambio cierra sesiones y manda un aviso |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |

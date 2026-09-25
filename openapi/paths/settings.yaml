@@ -680,3 +680,70 @@ avatarOriginal:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+password:
+  put:
+    tags: [Account]
+    operationId: changeMyPassword
+    summary: Cambiar o establecer la contraseña
+    description: |
+      **Exige la contraseña actual** (`RN-1`). Una sesión abierta no basta:
+      cambiarla echa a todas las demás sesiones, así que sin ese campo quien
+      se siente ante un portátil desbloqueado se queda con la cuenta.
+
+      El único caso en que puede faltar es una cuenta **sin contraseña** —la
+      de quien entró con Google—, y entonces el mismo formulario la
+      **establece** por primera vez. En cuanto la tiene, vuelve a ser
+      obligatoria: este camino no sirve para saltarse la regla anterior, y lo
+      comprueba el servidor.
+
+      Establecerla **no desvincula Google**: quedan dos formas de entrar.
+
+      Al cambiarla se **cierran todas las sesiones** y se manda un **aviso por
+      correo** que no se puede desactivar. En una cuenta de Google esas dos
+      cosas son la única defensa que queda, porque ahí no hay contraseña
+      actual que demostrar.
+
+      Hay limitación de frecuencia sobre los intentos **fallidos**: sin ella
+      este formulario sería un sitio donde probar contraseñas contra una
+      sesión robada, sin las protecciones del login.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [newPassword]
+            properties:
+              currentPassword:
+                type: [string, 'null']
+                description: |
+                  Obligatoria salvo que la cuenta no tenga contraseña.
+              newPassword:
+                type: string
+                format: password
+                minLength: 8
+    responses:
+      '204':
+        description: Contraseña cambiada. Hay que volver a iniciar sesión.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: INCORRECT_PASSWORD` si la actual no coincide, o
+          `code: CURRENT_PASSWORD_REQUIRED` si se ha dejado vacía en una
+          cuenta que sí tiene contraseña.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: WEAK_PASSWORD`, con los requisitos incumplidos, o
+          `code: PASSWORD_UNCHANGED` si la nueva es la que ya había.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '429':
+        $ref: '../openapi.yaml#/components/responses/TooManyRequests'

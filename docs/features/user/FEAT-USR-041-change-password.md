@@ -5,7 +5,7 @@ context: User
 concept: Account
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-22 (pestaña «Cuenta» de Configuración)
@@ -120,16 +120,16 @@ contraseña solo añade superficie a una respuesta que puede acabar en un log.
 
 ## Criterios de aceptación
 
-- [ ] Sin la contraseña actual, el cambio se rechaza.
-- [ ] Tras el cambio, los tokens de refresco de las demás sesiones quedan invalidados.
-- [ ] Una escritura con un token de acceso anterior al cambio se rechaza de inmediato.
-- [ ] Se envía aviso por correo aunque el usuario tenga las notificaciones desactivadas.
-- [ ] Los requisitos incumplidos vienen en la respuesta de error.
-- [ ] Una cuenta creada con Google puede **establecer** contraseña dejando la actual en blanco.
-- [ ] Una cuenta que ya tiene contraseña **no** puede cambiarla dejando la actual en blanco.
-- [ ] Establecerla no impide seguir entrando con Google.
-- [ ] Ni la contraseña ni su hash aparecen en logs ni en eventos.
-- [ ] Hay limitación de frecuencia.
+- [x] Sin la contraseña actual, el cambio se rechaza.
+- [x] Tras el cambio, los tokens de refresco de las demás sesiones quedan invalidados.
+- [x] Una escritura con un token de acceso anterior al cambio se rechaza de inmediato.
+- [x] Se envía aviso por correo aunque el usuario tenga las notificaciones desactivadas.
+- [x] Los requisitos incumplidos vienen en la respuesta de error.
+- [x] Una cuenta creada con Google puede **establecer** contraseña dejando la actual en blanco.
+- [x] Una cuenta que ya tiene contraseña **no** puede cambiarla dejando la actual en blanco.
+- [x] Establecerla no impide seguir entrando con Google.
+- [x] Ni la contraseña ni su hash aparecen en logs ni en eventos.
+- [x] Hay limitación de frecuencia.
 
 ## Preguntas abiertas
 
@@ -147,4 +147,24 @@ Resuelta: `S-8` (**campo vacío** en cuentas sin contraseña).
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25).
+
+**Una desviación de `RN-3`, y conviene que se vea.** La regla dice «los tokens de refresco de
+las **demás** sesiones»; lo implementado los invalida **todos**, incluida la sesión desde la
+que se cambia. No es un descuido: la petición no trae nada que identifique esa sesión —el
+token de acceso es un JWT sin vínculo con su token de refresco (`decision:0007`)— así que la
+única lectura implementable hoy es la segura. La consecuencia práctica es que hay que volver
+a iniciar sesión también en ese dispositivo. Respetar la regla al pie de la letra exigiría
+ligar cada JWT a su sesión, que es un cambio en el modelo de `Authentication`.
+
+Dos códigos distintos para los dos `403` de la tabla: `INCORRECT_PASSWORD` cuando la actual no
+coincide y `CURRENT_PASSWORD_REQUIRED` cuando se ha dejado vacía en una cuenta que sí tiene
+contraseña. No filtra nada —quien llama ya tiene la sesión de esa cuenta— y le dice a la
+pantalla cosas distintas: una es una errata y la otra es un campo que falta.
+
+La limitación de frecuencia **solo cobra los intentos fallidos**. Quien acierta a la primera
+no debería quedarse sin margen por cambiar de contraseña dos veces en una tarde. El detalle
+de implementación que lo hace posible: `consume(0)` en Symfony es una consulta que siempre
+acepta, así que lo que decide es cuántos intentos quedan.
+
+`S-40`, `S-30` y `S-31` siguen abiertas: ninguna afecta al modelo ni al contrato.
