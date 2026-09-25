@@ -370,7 +370,7 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 | FEAT-MOD-008 | Cola de reclamaciones con filtros y prioridad | Moderator | PENDING | TODO | P2 | — |
 | FEAT-MOD-009 | Conversación entre el moderador y las partes | Moderator, User | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-009-moderator-conversation.md) |
 | FEAT-MOD-010 | Mis reclamaciones — sección del usuario | User | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-010-my-claims.md) |
-| FEAT-MOD-011 | Revisión automática de contenido | — (sistema) | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-011-automated-content-review.md) |
+| FEAT-MOD-011 | Revisión automática de contenido | — (sistema) | APPROVED | DONE | P1 | [ficha](moderation/FEAT-MOD-011-automated-content-review.md) |
 | FEAT-MOD-012 | Comando de creación del primer administrador | Admin | APPROVED | DONE | P1 | [ficha](moderation/FEAT-MOD-012-bootstrap-admin.md) |
 
 > **`Moderation` existe desde el 2026-09-23** y con él desaparece `V-1`, que bloqueaba las

@@ -139,6 +139,12 @@ abstract class EconomyScenario extends WebTestCase
         // que es un grifo y no una transferencia.
         'CreditAdjustmentOrdered',
 
+        // Y lo que el revisor automático marca (`FEAT-MOD-011`), que `Work`
+        // retira. `ContentReviewPassed` **no** está aquí y no es un olvido:
+        // nadie lo consume, porque el texto ya está donde tiene que estar.
+        // Se publica igual, como hecho auditable.
+        'ContentReviewFlagged',
+
         // Y lo que llega por un enlace público (`FEAT-FBK-008`). Solo lo
         // escucha `Notification`: que `Credits` **no** lo consuma es la forma
         // más clara de decir que está fuera de la economía.

@@ -31,6 +31,22 @@ class ContentReview
 
     private ContentReviewOutcome $outcome;
 
+    /**
+     * El cifrado del texto revisado (`FEAT-MOD-011` `RN-9`).
+     *
+     * Es lo que convierte «se revisa solo lo que cambia» en algo
+     * comprobable, y **es el texto lo que se mira, no su versión**: un
+     * capítulo puede editarse sin cambiar de versión —el versionado solo se
+     * abre cuando ya lo ha corregido alguien—, así que la versión diría que
+     * no ha cambiado nada cuando sí. El cifrado no se equivoca.
+     *
+     * De paso es lo que hace idempotente la revisión: una reentrega de la
+     * cola trae el mismo texto, así que no vuelve a revisar nada ni abre una
+     * segunda reclamación. Y es mejor clave que el identificador del hecho,
+     * porque cubre también dos hechos distintos sobre el mismo texto.
+     */
+    private string $contentHash;
+
     private string $mechanism;
 
     private string $mechanismVersion;
@@ -44,6 +60,7 @@ class ContentReview
         ClaimTargetType $targetType,
         string $targetId,
         ContentReviewOutcome $outcome,
+        string $contentHash,
         string $mechanism,
         string $mechanismVersion,
         \DateTimeImmutable $now,
@@ -53,6 +70,7 @@ class ContentReview
         $this->targetType = $targetType;
         $this->targetId = $targetId;
         $this->outcome = $outcome;
+        $this->contentHash = $contentHash;
         $this->mechanism = $mechanism;
         $this->mechanismVersion = $mechanismVersion;
         $this->reviewedAt = $now;
@@ -72,6 +90,11 @@ class ContentReview
     public function targetId(): string
     {
         return $this->targetId;
+    }
+
+    public function contentHash(): string
+    {
+        return $this->contentHash;
     }
 
     public function reviewedAt(): \DateTimeImmutable

@@ -5,14 +5,14 @@ context: Moderation
 concept: ContentReview
 actors: []
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-23 (servicio aislado de revisión automática)
 endpoints: []
 events: [ContentReviewPassed, ContentReviewFlagged]
 depends_on: []
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-MOD-011 — Revisión automática de contenido
@@ -105,15 +105,16 @@ milisegundos. Añadirlo después, con obras publicadas, es mucho más caro.
 
 ## Criterios de aceptación
 
-- [ ] Existe un puerto `ContentReviewer` en la capa de aplicación.
-- [ ] La implementación actual aprueba todo y no consulta nada externo.
-- [ ] Sustituirla no requiere tocar `Work` ni el flujo de publicación.
-- [ ] Todo veredicto queda registrado con la versión del revisor.
-- [ ] Un texto marcado no se publica y genera reclamación automática.
-- [ ] Ningún veredicto automático impone una sanción por sí solo.
-- [ ] Si el revisor falla, el texto se publica igualmente.
-- [ ] El servicio se desactiva por configuración.
-- [ ] El texto se revisa también **al editarlo**, no solo al publicarlo.
+- [x] Existe un puerto `ContentReviewer` en la capa de aplicación.
+- [x] La implementación actual aprueba todo y no consulta nada externo.
+- [x] Sustituirla no requiere tocar `Work` ni el flujo de publicación. **La prueba lo hace
+  literalmente**: sustituye el revisor por uno que marca y no toca nada más.
+- [x] Todo veredicto queda registrado con la versión del revisor.
+- [x] Un texto marcado no se publica y genera reclamación automática.
+- [x] Ningún veredicto automático impone una sanción por sí solo.
+- [x] Si el revisor falla, el texto se publica igualmente.
+- [x] El servicio se desactiva por configuración.
+- [x] El texto se revisa también **al editarlo**, no solo al publicarlo.
 
 ## Preguntas abiertas
 
@@ -139,5 +140,28 @@ decisión de producto y probablemente de contrato, del mismo orden que la de
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`. Es de las primeras cosas que conviene construir, precisamente
-porque no hace nada.
+**Implementación:** `DONE` (2026-09-25).
+
+Tres cosas que la ficha no preveía y que la implementación obligó a decidir:
+
+- **no se añade el estado `UNDER_REVIEW` a `Work`**, que la ficha recomendaba «desde ya, aunque
+  hoy dure milisegundos». Un texto marcado se retira por el **mismo bloqueo de moderación** que
+  una reclamación estimada: ya existe, ya está probado, y ya tiene la salida que hace falta
+  —solo un moderador lo levanta—, que es la garantía de que *lo que esconde una máquina lo
+  devuelve una persona*. Inventar una transición más en una máquina de estados que hoy funciona
+  y que varios contextos escuchan habría hecho lo mismo con más riesgo. Cuando `MOD-34` decida
+  si el autor espera al veredicto, ese será el momento, con datos y no por precaución;
+- **el disparador es `ChapterContentUpdated`**, el hecho que `Work` ya publica al crear un
+  capítulo y en cada edición de su texto, y nunca por otra cosa. Es exactamente lo que piden
+  `RN-8` y `RN-9` juntas, y no hizo falta ningún hecho nuevo;
+- **lo que hace idempotente la revisión es el cifrado del texto**, no el identificador del
+  hecho ni la versión del capítulo. La versión no vale: un capítulo puede editarse sin cambiar
+  de versión, porque el versionado solo se abre cuando ya lo ha corregido alguien. El cifrado
+  no se equivoca, y de paso cubre dos hechos distintos sobre el mismo texto y una edición que
+  no cambia nada. Sin esta clave, una reentrega de RabbitMQ abriría una segunda reclamación
+  automática sobre el mismo capítulo.
+
+**Falta** lo que las preguntas abiertas ya anotaban: revisar también las **correcciones**
+(`MOD-35`), agrupar los guardados de un editor para no disparar una revisión por minuto
+(`MOD-46`), y las dos que solo importan cuando el revisor lea de verdad — si el autor espera
+(`MOD-34`) y si obra inédita puede salir de la plataforma (`MOD-37`).

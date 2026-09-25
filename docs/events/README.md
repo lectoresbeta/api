@@ -312,8 +312,8 @@ autor convertiría una acción discreta en un desaire con acuse de recibo.
 | `ClaimRejected` | La desestima | `Notification` | `claimId`, `reporterId` |
 | `ModerationBlockLifted` | Un moderador levanta un bloqueo (`FEAT-MOD-003` `RN-7`) | **`Work`** ✅ (lo ejecuta, igual que el bloqueo) | `targetType`, `targetId`, `liftedAt`. **Sin la motivación**: va al registro de auditoría |
 | `ClaimMessageSent` | El moderador o una parte escribe | `Notification` | `claimId`, `thread`, `authorType`. **Sin el cuerpo del mensaje** |
-| `ContentReviewPassed` | El revisor automático aprueba | **`Work`** | `workId`, `chapterId?`, `reviewerVersion` |
-| `ContentReviewFlagged` | El revisor lo marca | **`Work`**, `Notification` | `workId`, `chapterId?`, `reason`, `reviewerVersion` |
+| `ContentReviewPassed` | El revisor automático aprueba | **Nadie, hoy**: el texto ya está donde tiene que estar. Se publica como hecho auditable | `chapterId`, `workId`, `reviewerVersion`, `reviewedAt` |
+| `ContentReviewFlagged` | El revisor lo marca | **`Work`** ✅ (lo retira por el bloqueo de moderación), `Notification` | `chapterId`, `workId`, `authorId`, `reason`, `reviewerVersion`, `reviewedAt`. **Sin una palabra del texto** |
 | `SanctionImposed` | Se sanciona a un usuario | **`User`**, `Notification` | `sanctionId`, `userId`, `type`, `scope`, `expiresAt?` |
 | `SanctionLifted` | Caduca o se levanta | `User`, `Notification` | `sanctionId`, `userId` |
 | `CreditAdjustmentOrdered` | Ajuste manual desde el backoffice | **`Credits`** ✅, `Notification` | `userId`, `amount`, `reason`, `orderedBy`, `claimId?`, `orderedAt`. **Lleva importe, y es la excepción que confirma la regla**: el importe viaja cuando es genuinamente parte del hecho de origen, y aquí decidirlo *era* el acto |

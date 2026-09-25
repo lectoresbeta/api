@@ -32,6 +32,14 @@ parameters:
     # la mitad de las cuentas a cero significa que el saldo se está
     # concentrando, y un descubierto que se salda menos de la mitad de las
     # veces es emisión pura disfrazada de gancho.
+    # Si el revisor automático de contenido está encendido (FEAT-MOD-011
+    # RN-7). Hoy aprueba todo, así que apagarlo no cambia nada observable;
+    # existe para el día que lea de verdad y haya que pararlo sin desplegar.
+    #
+    # Apagado **no aprueba**: no revisa, y no anota un veredicto que nadie
+    # emitió.
+    app.content_review.enabled: true
+
     app.economy.debt_alert_threshold: -40
     app.economy.zero_balance_alert_share: 0.5
     app.economy.overdraft_recovery_alert_rate: 0.5
@@ -208,6 +216,12 @@ services:
                 # (FEAT-MOD-005). `Credits` no recibe llamadas de nadie: lo
                 # que recibe es el hecho, y él decide qué significa.
                 - LectoresBeta\Credits\Account\Application\Event\CreditAdjustmentOrdered
+
+                # La revisión automática de contenido (FEAT-MOD-011).
+                # `Moderation` escucha cada texto nuevo o editado; `Work`
+                # escucha lo que el revisor marca y lo retira.
+                - LectoresBeta\Moderation\ContentReview\Application\Event\ChapterContentUpdated
+                - LectoresBeta\Work\Manuscript\Application\Event\ContentReviewFlagged
 
                 # Lo que `Moderation` decide y `User` aplica (FEAT-MOD-006).
                 - LectoresBeta\User\Account\Application\Event\SanctionImposed
@@ -574,6 +588,23 @@ services:
     # petición. Es una proyección y no un contrato porque `Credits` no publica
     # ninguno, ni siquiera de consulta (AGENTS.md, decision:0002).
     LectoresBeta\User\Profile\Application\Handler\TrackCreditBalance:
+        tags:
+            - { name: messenger.message_handler }
+
+    # La revisión automática de contenido (FEAT-MOD-011). Se revisa al crear
+    # un capítulo y en **cada** edición de su texto: revisar solo al publicar
+    # dejaría abierto el esquive obvio —publicar algo inocuo y editarlo
+    # después— que vaciaría de sentido cualquier revisión futura.
+    LectoresBeta\Moderation\ContentReview\Application\Handler\ReviewChapterContent:
+        arguments:
+            $enabled: '%app.content_review.enabled%'
+        tags:
+            - { name: messenger.message_handler }
+
+    # Y lo que `Work` hace con lo marcado: retirarlo por el mismo camino que
+    # una reclamación estimada, del que solo saca un moderador. Lo que esconde
+    # una máquina lo devuelve una persona.
+    LectoresBeta\Work\Manuscript\Application\Handler\WithdrawFlaggedChapter:
         tags:
             - { name: messenger.message_handler }
 

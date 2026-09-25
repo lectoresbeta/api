@@ -12,6 +12,15 @@
             <index name="idx_content_review_outcome" columns="outcome,reviewed_at"/>
         </indexes>
 
+        <unique-constraints>
+            <!-- Un texto se revisa **una vez** (`RN-9`), y lo que lo
+                 identifica es su cifrado y no su versión: un capítulo puede
+                 editarse sin cambiar de versión. No es una optimización — es
+                 lo que impide que una reentrega de RabbitMQ abra una segunda
+                 reclamación sobre el mismo capítulo. -->
+            <unique-constraint name="uniq_content_review_hash" columns="target_type,target_id,content_hash"/>
+        </unique-constraints>
+
         <id name="id" type="guid" column="id">
             <generator strategy="NONE"/>
         </id>
@@ -21,6 +30,7 @@
         <field name="targetId" column="target_id" type="guid"/>
         <field name="outcome" type="string" length="16"
                enum-type="LectoresBeta\Moderation\ContentReview\Domain\Enum\ContentReviewOutcome"/>
+        <field name="contentHash" column="content_hash" type="string" length="64"/>
         <field name="mechanism" type="string" length="48"/>
         <field name="mechanismVersion" column="mechanism_version" type="string" length="16"/>
         <field name="notes" type="text" nullable="true"/>
