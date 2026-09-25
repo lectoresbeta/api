@@ -66,4 +66,14 @@ class ClaimRestriction
         $this->blockedUntil = $from->modify(\sprintf('+%d weeks', $this->dismissedClaims));
         $this->updatedAt = $now;
     }
+
+    /**
+     * Hasta cuándo dura el bloqueo, si lo hay. La pantalla lo necesita:
+     * «no puedes reclamar» sin fecha no le dice nada a quien tenía algo
+     * legítimo que denunciar.
+     */
+    public function blockedUntil(): ?\DateTimeImmutable
+    {
+        return $this->blockedUntil;
+    }
 }

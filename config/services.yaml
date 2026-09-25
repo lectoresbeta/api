@@ -200,6 +200,11 @@ services:
     LectoresBeta\Moderation\ModeratorRole\Application\Contract\ModeratorRoles:
         alias: LectoresBeta\Moderation\ModeratorRole\Application\Service\CheckModeratorRole
 
+    # Si una corrección se puede reclamar, y por quién (FEAT-MOD-001 RN-4,
+    # RN-5). No lleva su texto: autorizar no necesita leerla.
+    LectoresBeta\Feedback\Correction\Application\Contract\ClaimableCorrections:
+        alias: LectoresBeta\Feedback\Correction\Application\Service\ShowClaimableCorrection
+
     # `RN-7` de FEAT-USR-027 vive aquí: si el contexto de al lado no responde,
     # el resto del menú se pinta igual.
     LectoresBeta\User\Profile\Application\Port\SessionSideloads:

@@ -154,3 +154,146 @@ moderatorAlerts:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+claims:
+  post:
+    tags: [Moderation]
+    operationId: submitClaim
+    summary: Presentar una reclamación
+    description: |
+      **No produce ningún efecto**: no oculta nada, no congela nada y no avisa
+      al reclamado. Registra que alguien pide que se mire algo, y la respuesta
+      no dice qué va a pasar — porque no va a pasar nada todavía.
+
+      Un reintento devuelve **la reclamación que ya existía**, con
+      `alreadyExisted: true` y el mismo `201`: reclamar dos veces suele ser un
+      doble clic, y responder con un error a eso sería castigar la torpeza.
+      Diez denuncias de la misma persona sobre el mismo texto tampoco son diez
+      señales.
+
+      Hay **cupo mensual** y **bloqueo acumulativo** por reclamaciones
+      desestimadas, y no son una formalidad: reclamar una corrección devuelve
+      créditos si se estima, así que sin defensas el botón es una forma barata
+      de no pagar ninguna. El bloqueo lleva `blockedUntil`, porque «no puedes»
+      sin fecha no le dice nada a quien tenía algo legítimo que denunciar.
+
+      Una **corrección** solo la reclama el autor de la obra corregida, y solo
+      cuando ya se ha podido leer: reclamar a ciegas una retenida por
+      descubierto sería otra forma de no pagarla.
+
+      El `reason` sale del catálogo; `description` es opcional y es **donde
+      está la información real**.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [targetType, targetId, reason]
+            properties:
+              targetType:
+                type: string
+                enum: [WORK, CHAPTER, CORRECTION, POST, POST_COMMENT, USER]
+              targetId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+              reason:
+                type: string
+                enum: [NO_VALUE, TOO_SHORT, OFF_TOPIC, OFFENSIVE, SEXUAL_CONTENT, GRAPHIC_VIOLENCE, HATE_SPEECH, PLAGIARISM, MISSING_CONTENT_WARNING, HARASSMENT, SPAM, OTHER]
+              description:
+                type: [string, 'null']
+                maxLength: 4000
+    responses:
+      '201':
+        description: Queda registrada. `alreadyExisted` distingue el reintento.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [claimId, status, alreadyExisted]
+              properties:
+                claimId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                status:
+                  type: string
+                alreadyExisted:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: CLAIM_BLOCKED`, con `blockedUntil`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: CLAIM_TARGET_NOT_CLAIMABLE`. No existe, o no es suyo para
+          reclamarlo: una corrección ajena responde lo mismo que una
+          inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CLAIM_CORRECTION_NOT_READ`. Todavía no se ha podido leer.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CLAIM_REASON_UNKNOWN`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '429':
+        description: '`code: CLAIM_LIMIT_REACHED`, con `monthlyLimit`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+myClaims:
+  get:
+    tags: [Moderation]
+    operationId: listMyClaims
+    summary: Mis reclamaciones
+    description: |
+      **Para que denunciar no sea gritar a un buzón.** Quien se molesta en
+      explicar por qué algo está mal necesita comprobar que su reclamación
+      sigue viva y en qué estado.
+
+      **Nunca lleva la identidad de quien la revisa**: el moderador no da la
+      cara ante las partes, porque eso lo expondría a quien acaba de ser
+      sancionado.
+    responses:
+      '200':
+        description: Las reclamaciones propias, de la más reciente a la más antigua.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [claims]
+              properties:
+                claims:
+                  type: array
+                  items:
+                    type: object
+                    required: [claimId, targetType, targetId, type, status, submittedAt]
+                    properties:
+                      claimId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      targetType:
+                        type: string
+                      targetId:
+                        type: string
+                      type:
+                        type: string
+                      status:
+                        type: string
+                        enum: [PENDING, UNDER_REVIEW, UPHELD, REJECTED, ARCHIVED]
+                      submittedAt:
+                        type: string
+                        format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

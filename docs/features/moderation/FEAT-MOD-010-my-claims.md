@@ -5,7 +5,7 @@ context: Moderation
 concept: Claim
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-23 (sección de reclamaciones en la interfaz del usuario)
@@ -112,3 +112,17 @@ afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven duran
 implementación.
 
 **Implementación:** `TODO`.
+
+## Estado de la implementación
+
+`PARTIAL` (2026-09-25). El listado existe: `GET /api/v1/me/claims` devuelve las propias, de la
+más reciente a la más antigua, con su estado.
+
+**Nunca lleva la identidad de quien la revisa** ([`FEAT-MOD-001`](FEAT-MOD-001-submit-claim.md)
+`RN-7`): el moderador no da la cara ante las partes, porque eso lo expondría a quien acaba de
+ser sancionado.
+
+Lo que falta es lo que depende de que las reclamaciones se resuelvan y se converse sobre
+ellas: el detalle de una reclamación, la resolución y su motivo, y el hilo con el moderador
+([`FEAT-MOD-009`](FEAT-MOD-009-moderator-conversation.md)). Llegan con
+[`FEAT-MOD-002`](FEAT-MOD-002-review-claim.md).

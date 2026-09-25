@@ -40,3 +40,16 @@ setModeratorAlerts:
     path: /api/v1/me/moderator-alerts
     controller: LectoresBeta\Moderation\ModeratorRole\Infrastructure\Controller\SetModeratorAlertsController::__invoke
     methods: [PUT]
+
+# Presentar una reclamación (`FEAT-MOD-001`). No produce ningún efecto: pide
+# que alguien mire algo.
+submitClaim:
+    path: /api/v1/claims
+    controller: LectoresBeta\Moderation\Claim\Infrastructure\Controller\SubmitClaimController::__invoke
+    methods: [POST]
+
+# Para que denunciar no sea gritar a un buzón (`FEAT-MOD-010`).
+listMyClaims:
+    path: /api/v1/me/claims
+    controller: LectoresBeta\Moderation\Claim\Infrastructure\Controller\ListMyClaimsController::__invoke
+    methods: [GET]

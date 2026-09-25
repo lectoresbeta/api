@@ -16,24 +16,21 @@ interface ClaimRepository
     public function ofId(ClaimId $id): ?Claim;
 
     /**
-     * The moderators' queue, oldest first: a complaint that waits is the
-     * failure mode this whole context exists to avoid.
+     * La reclamación que esa persona ya presentó sobre ese objeto, si la hay.
      *
-     * @return list<Claim>
+     * Es `RN-2`: nadie reclama dos veces lo mismo, y reintentar devuelve la
+     * que ya existe en vez de crear otra. Diez denuncias de una persona sobre
+     * un texto no son diez señales, son la misma repetida.
      */
-    public function pending(int $limit = 50): array;
+    public function of(PartyId $reporterId, ClaimTargetType $targetType, string $targetId): ?Claim;
 
     /**
-     * How many claims this person has filed inside the period. Three a month
-     * (`MOD-2`), and a claim entered by a moderator on their behalf counts
-     * too (`MOD-45`) — otherwise email is the way around the limit.
+     * Cuántas ha presentado desde ese instante, para el cupo de `RN-6`.
      */
-    public function countFiledSince(PartyId $reporterId, \DateTimeImmutable $since): int;
-
-    public function alreadyFiled(PartyId $reporterId, ClaimTargetType $targetType, string $targetId): bool;
+    public function countBy(PartyId $reporterId, \DateTimeImmutable $since): int;
 
     /**
      * @return list<Claim>
      */
-    public function about(ClaimTargetType $targetType, string $targetId): array;
+    public function by(PartyId $reporterId): array;
 }

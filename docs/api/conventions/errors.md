@@ -143,6 +143,11 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `LEGAL_VERSION_OUTDATED` | 422 | Se aceptó una versión de los textos legales que ya no rige. **Lleva las vigentes**, para poder recargar y volver a pedir (`FEAT-USR-024`) |
 | `NO_LEGAL_DOCUMENTS_PUBLISHED` | 409 | No hay condiciones vigentes que aceptar. Falla cerrado: un consentimiento vacío es peor que no crear la cuenta |
 | `MODERATOR_ROLE_REFUSED` | 422 | La cuenta no existe o no está activada, es la propia de quien lo pide, o el nivel no existe (`FEAT-MOD-004`) |
+| `CLAIM_TARGET_NOT_CLAIMABLE` | 404 | No existe, o no es suyo para reclamarlo. Una corrección ajena responde como una inexistente (`FEAT-MOD-001`) |
+| `CLAIM_CORRECTION_NOT_READ` | 409 | La corrección está retenida por descubierto: reclamarla a ciegas sería una forma de no pagarla |
+| `CLAIM_BLOCKED` | 403 | Hay reclamaciones desestimadas y el bloqueo es acumulativo. Lleva `blockedUntil` |
+| `CLAIM_LIMIT_REACHED` | 429 | Se ha agotado el cupo mensual. Lleva `monthlyLimit` |
+| `CLAIM_REASON_UNKNOWN` | 422 | El motivo no está en el catálogo |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |

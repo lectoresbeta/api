@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace LectoresBeta\Moderation\Claim\Infrastructure\Persistence\Doctrine;
 
 use LectoresBeta\Moderation\Claim\Domain\Entity\Claim;
-use LectoresBeta\Moderation\Claim\Domain\Enum\ClaimStatus;
 use LectoresBeta\Moderation\Claim\Domain\Enum\ClaimTargetType;
 use LectoresBeta\Moderation\Claim\Domain\Repository\ClaimRepository;
 use LectoresBeta\Moderation\Claim\Domain\ValueObject\ClaimId;
@@ -27,48 +26,34 @@ final class DoctrineClaimRepository extends DoctrineRepository implements ClaimR
         return $this->repository()->find($id->value());
     }
 
-    public function pending(int $limit = 50): array
+    public function of(PartyId $reporterId, ClaimTargetType $targetType, string $targetId): ?Claim
     {
-        /** @var list<Claim> $claims */
-        $claims = $this->entityManager->createQueryBuilder()
-            ->select('c')
-            ->from(Claim::class, 'c')
-            ->where('c.status IN (:open)')
-            ->setParameter('open', [ClaimStatus::PENDING, ClaimStatus::UNDER_REVIEW])
-            ->orderBy('c.submittedAt', 'ASC')
-            ->setMaxResults($limit)
-            ->getQuery()
-            ->getResult();
-
-        return $claims;
+        return $this->repository()->findOneBy([
+            'reporterId' => $reporterId->value(),
+            'targetType' => $targetType,
+            'targetId' => $targetId,
+        ]);
     }
 
-    public function countFiledSince(PartyId $reporterId, \DateTimeImmutable $since): int
+    public function countBy(PartyId $reporterId, \DateTimeImmutable $since): int
     {
-        return (int) $this->entityManager->createQueryBuilder()
+        /** @var int $count */
+        $count = $this->repository()->createQueryBuilder('c')
             ->select('COUNT(c.id)')
-            ->from(Claim::class, 'c')
             ->where('c.reporterId = :reporter')
             ->andWhere('c.submittedAt >= :since')
             ->setParameter('reporter', $reporterId->value())
             ->setParameter('since', $since)
             ->getQuery()
             ->getSingleScalarResult();
+
+        return $count;
     }
 
-    public function alreadyFiled(PartyId $reporterId, ClaimTargetType $targetType, string $targetId): bool
-    {
-        return $this->repository()->count([
-            'reporterId' => $reporterId->value(),
-            'targetType' => $targetType,
-            'targetId' => $targetId,
-        ]) > 0;
-    }
-
-    public function about(ClaimTargetType $targetType, string $targetId): array
+    public function by(PartyId $reporterId): array
     {
         return array_values($this->repository()->findBy(
-            ['targetType' => $targetType, 'targetId' => $targetId],
+            ['reporterId' => $reporterId->value()],
             ['submittedAt' => 'DESC'],
         ));
     }
