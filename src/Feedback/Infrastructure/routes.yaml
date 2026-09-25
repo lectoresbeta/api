@@ -77,3 +77,11 @@ rateCorrection:
     path: /api/v1/corrections/{correctionId}/rating
     controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\RateCorrectionController::__invoke
     methods: [PUT]
+
+# Lo que yo he corregido (`FEAT-FBK-010`). La simétrica de «Mis
+# reclamaciones», y existe por lo mismo: corregir no puede ser escribir en un
+# buzón.
+listMyCorrections:
+    path: /api/v1/me/corrections
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\ListMyCorrectionsController::__invoke
+    methods: [GET]

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Feedback\Correction\Domain\Repository;
 
 use LectoresBeta\Feedback\Correction\Domain\Entity\Correction;
+use LectoresBeta\Feedback\Correction\Domain\Enum\CorrectionStatus;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\AuthorId;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\ChapterId;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\CorrectionId;
@@ -51,7 +52,24 @@ interface CorrectionRepository
     ): array;
 
     /**
-     * «Mis correcciones» (`FEAT-FBK-010`).
+     * «Mis correcciones» (`FEAT-FBK-010`): lo que esa persona ha escrito,
+     * **incluidos sus borradores**.
+     *
+     * Un borrador es trabajo empezado y quien lo dejó a medias necesita
+     * encontrarlo. Es privado suyo: no aparece en ninguna lista de nadie más.
+     *
+     * @return list<Correction>
+     */
+    public function writtenBy(
+        ReaderId $readerId,
+        ?WorkId $workId,
+        ?CorrectionStatus $status,
+        int $limit,
+        int $offset,
+    ): array;
+
+    /**
+     * Solo las entregadas, para el contador público del perfil.
      *
      * @return list<Correction>
      */

@@ -25,6 +25,8 @@ final readonly class CreditsSpent implements IntegrationEvent
         private string $reason,
         private int $balance,
         private \DateTimeImmutable $spentAt,
+        /** La corrección a la que se refiere el movimiento, cuando la hay. */
+        private ?string $correctionId = null,
     ) {
     }
 
@@ -50,6 +52,7 @@ final readonly class CreditsSpent implements IntegrationEvent
             'amount' => $this->amount,
             'reason' => $this->reason,
             'balance' => $this->balance,
+            'correctionId' => $this->correctionId,
             'spentAt' => $this->spentAt->format(\DATE_ATOM),
         ];
     }

@@ -97,6 +97,10 @@ abstract class EconomyScenario extends WebTestCase
         // quien corrigió.
         'FeedbackReplied',
         'FeedbackRatedPositively',
+
+        // Y el eco de lo que se pagó por cada corrección (`FEAT-FBK-010`).
+        'CreditsAdded',
+        'CreditsSpent',
     ];
 
     /**

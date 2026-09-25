@@ -107,6 +107,11 @@ services:
                 - LectoresBeta\Feedback\Correction\Application\Event\ChapterCorrectabilityChanged
                 - LectoresBeta\Feedback\Correction\Application\Event\CreditBalanceWentNegative
                 - LectoresBeta\Feedback\Correction\Application\Event\CreditDebtCleared
+
+                # El eco de lo que se pagó por cada corrección (FEAT-FBK-010).
+                # Proyección y no contrato: `Credits` no publica ninguno.
+                - LectoresBeta\Feedback\Correction\Application\Event\CreditsAdded
+                - LectoresBeta\Feedback\Correction\Application\Event\CreditsSpent
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionStarted
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionResumed
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionDraftDiscarded
@@ -385,6 +390,13 @@ services:
 
     # Lo que el descubierto significa aquí (FEAT-CRD-018): el corrector cobra
     # siempre, y lo que se retiene es la lectura de lo entregado, no el pago.
+    # Dos hechos, un trabajo: lo que se cobró por una corrección y lo que una
+    # reclamación estimada retira después.
+    LectoresBeta\Feedback\Correction\Application\Handler\TrackCorrectionEarnings:
+        tags:
+            - { name: messenger.message_handler, method: earned }
+            - { name: messenger.message_handler, method: reversed }
+
     LectoresBeta\Feedback\Correction\Application\Handler\TrackCorrectionLocking:
         tags:
             - { name: messenger.message_handler, method: wentNegative }

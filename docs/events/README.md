@@ -190,8 +190,8 @@ es de la obra entera.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance`, `addedAt` |
-| `CreditsSpent` | Se carga una corrección recibida | `Notification` | `userId`, `amount`, `reason`, `balance`, `spentAt` |
+| `CreditsAdded` | Se abonan créditos | `Notification`, **`Feedback`** ✅ (proyecta lo ganado por cada corrección, `FEAT-FBK-010`) | `userId`, `amount`, `reason`, `balance`, `correctionId?`, `addedAt` |
+| `CreditsSpent` | Se carga una corrección recibida | `Notification`, **`Feedback`** ✅ (retira lo ganado cuando una reclamación estimada lo revierte) | `userId`, `amount`, `reason`, `balance`, `correctionId?`, `spentAt` |
 | `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, **`Work`** | `chapterId`, `workId`, `correctable`, `affordableCorrections`, `changedAt`. **Sin importes** |
 | `ChapterPriceChanged` | Cambia lo que vale corregir un capítulo | **`Work`** (insignia del catálogo), `Community` | `chapterId`, `workId`, `credits`, `changedAt`. **Lleva importe, y es el único** |
 | `CreditBalanceChanged` | Cambia el saldo | `User` ✅ (copia el número para el menú lateral), `Notification` | `userId`, `balance`, `changedAt` |
@@ -234,6 +234,11 @@ más veces de las que su corregibilidad se mueve.
 hunde la cuenta y no otra vez mientras siga hundida: quien recibiera uno por cada cargo no
 podría distinguir el instante del estado, y es el instante el que merece un aviso y el que
 bloquea la corrección recién llegada.
+
+Los dos llevan `correctionId` cuando el movimiento cita una corrección. Es una **referencia**,
+no un dato de nadie, y permite a `Feedback` decirle a quien corrigió cuánto ganó sin
+preguntarle nada a `Credits`, que no responde preguntas de nadie. Es el mismo dato que
+`CreditBalanceWentNegative` usa desde `FEAT-CRD-018`, leído de los metadatos del movimiento.
 
 `CreditsAdded` y `CreditsSpent` narran **un movimiento y su motivo**, que es de donde se
 escribe un aviso a la persona; `CreditBalanceChanged` dice **cuál es la cifra ahora**, que es

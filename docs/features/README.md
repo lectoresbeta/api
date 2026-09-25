@@ -20,12 +20,12 @@ verdad sobre el alcance.**
 | `User` (USR) | 44 | 30 | 30 | 0 | 12 | 10 |
 | `Work` (WRK) | 17 | 12 | 12 | 0 | 1 | 9 |
 | `Reading` (RDG) | 10 | 7 | 7 | 0 | 7 | 0 |
-| `Feedback` (FBK) | 12 | 8 | 7 | 0 | 4 | 1 |
+| `Feedback` (FBK) | 12 | 8 | 7 | 0 | 5 | 1 |
 | `Community` (COM) | 38 | 11 | 10 | 0 | 2 | 1 |
 | `Moderation` (MOD) | 12 | 11 | 11 | 0 | 1 | 6 |
 | `Credits` (CRD) | 19 | 13 | 13 | 0 | 3 | 5 |
 | `Notification` (NOT) | 9 | 3 | 3 | 0 | 2 | 1 |
-| **Total** | **161** | **95** | **93** | **0** | **32** | **33** |
+| **Total** | **161** | **95** | **93** | **0** | **33** | **33** |
 
 `APPROVED` y `REVIEW` son estados de la **especificación**; `DONE` y `PARTIAL`, del **código**.
 Las columnas no suman entre sí a propósito: una funcionalidad aprobada y a medio implementar
@@ -250,7 +250,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-007 | Ocultar un comentario recibido | Writer | PENDING | TODO | P2 | — |
 | FEAT-FBK-008 | Corregir por enlace público sin cuenta | Guest | APPROVED | TODO | P1 | [ficha](feedback/FEAT-FBK-008-public-link-correction.md) |
 | FEAT-FBK-009 | Denunciar una corrección abusiva → `FEAT-MOD-001` | User | PENDING | TODO | P2 | — |
-| FEAT-FBK-010 | Mis correcciones — lo que he corregido | BetaReader | APPROVED | TODO | P2 | [ficha](feedback/FEAT-FBK-010-my-corrections.md) |
+| FEAT-FBK-010 | Mis correcciones — lo que he corregido | BetaReader | APPROVED | DONE | P2 | [ficha](feedback/FEAT-FBK-010-my-corrections.md) |
 | FEAT-FBK-011 | Guardar un borrador de corrección | BetaReader | APPROVED | DONE | P1 | [ficha](feedback/FEAT-FBK-011-save-correction-draft.md) |
 | FEAT-FBK-012 | Control antifraude de las correcciones | — (sistema) | PENDING | BLOCKED | P0 | [ficha](feedback/FEAT-FBK-012-correction-fraud-control.md) |
 

@@ -225,6 +225,9 @@ paths:
   /chapters/{chapterId}/corrections:
     $ref: './paths/corrections.yaml#/collection'
 
+  /me/corrections:
+    $ref: './paths/corrections.yaml#/mine'
+
   /me/corrections/received:
     $ref: './paths/corrections.yaml#/received'
 

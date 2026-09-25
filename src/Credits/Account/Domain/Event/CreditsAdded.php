@@ -27,6 +27,14 @@ final readonly class CreditsAdded implements IntegrationEvent
         private string $reason,
         private int $balance,
         private \DateTimeImmutable $addedAt,
+        /**
+         * La corrección a la que se refiere el movimiento, cuando la hay.
+         *
+         * Es una **referencia**, no un dato de nadie: permite a quien lo
+         * escucha decir por qué se movió el saldo sin preguntarle nada a
+         * `Credits`, que no responde preguntas de nadie.
+         */
+        private ?string $correctionId = null,
     ) {
     }
 
@@ -52,6 +60,7 @@ final readonly class CreditsAdded implements IntegrationEvent
             'amount' => $this->amount,
             'reason' => $this->reason,
             'balance' => $this->balance,
+            'correctionId' => $this->correctionId,
             'addedAt' => $this->addedAt->format(\DATE_ATOM),
         ];
     }

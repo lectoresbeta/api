@@ -719,6 +719,105 @@ rating:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
 
+mine:
+  get:
+    tags: [Feedback]
+    operationId: listMyCorrections
+    summary: Lo que he corregido
+    description: |
+      **Para que corregir no sea escribir en un buzón.** Quien se molesta en
+      responder a un cuestionario necesita ver qué escribió, qué ganó y qué
+      hizo el autor con ello.
+
+      Incluye **los borradores propios**, distinguidos por `status`: un
+      borrador es trabajo empezado, y quien lo dejó a medias necesita
+      encontrarlo. Es privado suyo y no aparece en ninguna lista de nadie más.
+
+      `earnedCredits` viene de una proyección alimentada por los hechos de
+      `Credits` —ese contexto no publica contratos, ni siquiera de consulta—,
+      así que **puede ir un instante por detrás**. Mientras no ha llegado es
+      `null`, nunca `0`: un cero es una afirmación falsa sobre el trabajo de
+      alguien. Una reclamación estimada lo deja en `0`, que entonces sí es
+      cierto.
+
+      **No dice si el autor la ha leído.** Es información sobre otra persona,
+      y convertiría una entrega en una conversación que nadie ha aceptado
+      tener.
+
+      No hay forma de listar las correcciones de otra persona: el **contador**
+      del perfil es público, la **lista** no.
+    parameters:
+      - name: workId
+        in: query
+        required: false
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [DRAFT, SUBMITTED]
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Las correcciones propias, de la más reciente a la más antigua.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [corrections]
+              properties:
+                corrections:
+                  type: array
+                  items:
+                    type: object
+                    required: [correctionId, workId, workTitle, chapterId, chapterPosition, status, replied, tipped]
+                    properties:
+                      correctionId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      workId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      workTitle:
+                        type: string
+                      chapterId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      chapterTitle:
+                        type: [string, 'null']
+                      chapterPosition:
+                        type: integer
+                      status:
+                        type: string
+                        enum: [DRAFT, SUBMITTED]
+                      submittedAt:
+                        type: [string, 'null']
+                        format: date-time
+                      earnedCredits:
+                        type: [integer, 'null']
+                        description: '`null` mientras el importe no ha llegado. Nunca es un cero que signifique «pendiente».'
+                      helpful:
+                        type: [boolean, 'null']
+                      replied:
+                        type: boolean
+                      tipped:
+                        type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
 components:
   schemas:
     SavedDraft:

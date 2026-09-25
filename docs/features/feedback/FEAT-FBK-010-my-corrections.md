@@ -5,7 +5,7 @@ context: Feedback
 concept: Correction
 actors: [BetaReader]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P2
 sources:
   - conversation:2026-09-25 (bloque «que el autor pueda leer lo que compró»)
@@ -112,15 +112,15 @@ sabe de dinero.
 
 ## Criterios de aceptación
 
-- [ ] Cada uno ve sus correcciones, la más reciente primero.
-- [ ] Sus borradores aparecen distinguidos de lo entregado.
-- [ ] Filtra por obra y por estado.
-- [ ] Ve lo que ganó por cada corrección entregada.
-- [ ] Mientras el importe no ha llegado, se muestra pendiente y no cero.
-- [ ] Ve si el autor la valoró, la contestó o la propinó.
-- [ ] No ve si el autor la ha leído.
-- [ ] Una corrección de una obra archivada o bloqueada sigue apareciendo, marcada.
-- [ ] No hay forma de listar las correcciones de otra persona.
+- [x] Cada uno ve sus correcciones, la más reciente primero.
+- [x] Sus borradores aparecen distinguidos de lo entregado.
+- [x] Filtra por obra y por estado.
+- [x] Ve lo que ganó por cada corrección entregada.
+- [x] Mientras el importe no ha llegado, se muestra pendiente y no cero.
+- [x] Ve si el autor la valoró, la contestó o la propinó.
+- [x] No ve si el autor la ha leído.
+- [x] Una corrección de una obra archivada o bloqueada sigue apareciendo, marcada.
+- [x] No hay forma de listar las correcciones de otra persona.
 
 ## Preguntas abiertas
 
@@ -133,4 +133,17 @@ sabe de dinero.
 
 **Especificación:** `APPROVED` (2026-09-25). Resuelve `F-9`.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25). Resuelve `F-9`.
+
+La proyección de lo ganado necesitó que `CreditsAdded` y `CreditsSpent` llevaran **a qué
+corrección se refiere el movimiento**. No es una grieta en el aislamiento: es `Credits`
+contando lo que decidió, que es la única dirección que la regla permite — nadie le manda un
+importe a `Credits`. El dato ya estaba en los metadatos del movimiento, y es el mismo que
+`CreditBalanceWentNegative` usa desde `FEAT-CRD-018`.
+
+**La proyección fija la cifra, no la acumula**, y eso es lo que la hace sobrevivir a una
+reentrega: el transporte promete entregar al menos una vez, así que sumar rompería el número
+en silencio el día que RabbitMQ repita un mensaje. Una reversión la deja en cero, que es lo
+correcto: se revierte lo que se cobró, entero y nunca en parte.
+
+`F-22` y `F-23` siguen abiertas.

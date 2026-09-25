@@ -81,6 +81,38 @@ final class DoctrineCorrectionRepository extends DoctrineRepository implements C
         return array_values($query->getQuery()->getResult());
     }
 
+    public function writtenBy(
+        ReaderId $readerId,
+        ?WorkId $workId,
+        ?CorrectionStatus $status,
+        int $limit,
+        int $offset,
+    ): array {
+        $query = $this->repository()->createQueryBuilder('c')
+            ->where('c.readerId = :reader')
+            ->setParameter('reader', $readerId->value())
+            // Lo entregado por fecha de entrega y lo empezado por fecha de
+            // inicio: un borrador no tiene la primera, y ordenar por ella lo
+            // mandaría al final de la lista de su propio autor. `HIDDEN`
+            // porque es un criterio de orden, no una columna del resultado:
+            // sin él, la consulta devolvería tuplas en vez de correcciones.
+            ->addSelect('COALESCE(c.submittedAt, c.startedAt) AS HIDDEN activity')
+            ->orderBy('activity', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
+
+        if (null !== $workId) {
+            $query->andWhere('c.workId = :work')->setParameter('work', $workId->value());
+        }
+
+        if (null !== $status) {
+            $query->andWhere('c.status = :status')->setParameter('status', $status);
+        }
+
+        return array_values($query->getQuery()->getResult());
+    }
+
     public function deliveredBy(ReaderId $readerId, int $limit = 50, int $offset = 0): array
     {
         return array_values($this->repository()->findBy(
