@@ -46,6 +46,12 @@ use LectoresBeta\Work\Manuscript\Application\Contract\WorkCards;
  * El perfil ajeno es un **techo**, igual que en las listas de seguidores:
  * quien no es visible para quien mira no aparece, y su publicación tampoco.
  * Un muro no es una lista de textos, es una lista de personas diciendo cosas.
+ *
+ * **El muro de un perfil es este mismo muro con un filtro** (`FEAT-COM-026`),
+ * y de ahí sale gratis lo que importa: mirar el perfil de alguien no enseña
+ * nada que su muro no enseñara ya. Con una consulta aparte, cada una de las
+ * tres reglas de visibilidad habría tenido dos copias, y a la larga una de
+ * las dos se queda atrás.
  */
 final readonly class ListPostsHandler
 {
@@ -72,13 +78,18 @@ final readonly class ListPostsHandler
         $followed = $this->subscriptions->followedBy($reader);
         $hidden = $this->blocks->involving($reader);
 
+        // El muro de una persona, cuando se pide (`FEAT-COM-026`). Va como
+        // filtro de las dos consultas y no como una tercera: lo que cambia es
+        // de quién se mira, no quién mira ni qué le alcanza.
+        $only = null === $query->authorId ? null : MemberId::fromString($query->authorId);
+
         $entries = [];
 
-        foreach ($this->posts->wallFor($reader, $followed, $hidden, $after, $limit) as $post) {
+        foreach ($this->posts->wallFor($reader, $followed, $hidden, $after, $limit, $only) as $post) {
             $entries[] = ['post' => $post, 'repost' => null, 'at' => $post->createdAt(), 'id' => $post->id()->value()];
         }
 
-        $reposts = $this->reposts->wallFor($reader, $followed, $hidden, $after, $limit);
+        $reposts = $this->reposts->wallFor($reader, $followed, $hidden, $after, $limit, $only);
         $reposted = $this->posts->ofIds(array_map(
             static fn (PostRepost $repost): string => $repost->postId()->value(),
             $reposts,

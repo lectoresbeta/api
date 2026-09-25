@@ -666,6 +666,88 @@ PostIdParam:
   schema:
     $ref: '../openapi.yaml#/components/schemas/Uuid'
 
+myPosts:
+  get:
+    tags: [Community]
+    operationId: listMyPosts
+    summary: Mi muro
+    description: |
+      Lo que he publicado y reposteado, de lo más reciente a lo más antiguo
+      (`FEAT-COM-026`).
+
+      **Es el muro general con un filtro**, no una consulta aparte, y la
+      respuesta es idéntica campo por campo. Eso es lo que permite que la
+      pestaña del perfil reutilice el componente del muro.
+
+      En el muro propio se ve **todo lo propio**, incluidas las publicaciones
+      `FOLLOWERS`, aunque uno no se siga a sí mismo. Y no lo afecta a quién
+      haya bloqueado uno: bloquear a alguien no borra lo que escribí.
+
+      **Los reposts cuentan**: lo que alguien saca a su muro es suyo aunque el
+      texto sea de otro, y llega con `repostedBy`.
+    parameters:
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Una página de mi muro.
+        content:
+          application/json:
+            schema:
+              $ref: '#/WallPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+userPosts:
+  get:
+    tags: [Community]
+    operationId: listUserPosts
+    summary: El muro de una persona
+    description: |
+      La misma pantalla mirando el perfil de otro (`FEAT-COM-026`).
+
+      **Enseña lo que esa persona te dejaría ver en el muro general**: lo
+      `EVERYONE` siempre, y lo `FOLLOWERS` solo si la sigues. No es una
+      comprobación aparte: es la misma consulta, así que no puede divergir.
+
+      Con un bloqueo por medio, **sale vacío en los dos sentidos**
+      (`FEAT-COM-034`), y lo mismo si la privacidad de perfil de esa persona
+      no te alcanza (`FEAT-USR-014`).
+
+      El muro de quien no existe **está vacío, no da `404`**: decir «no
+      existe» convertiría esto en un comprobador de quién tiene cuenta.
+
+      Exige sesión, por lo mismo que el muro general.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Una página de su muro, o una lista vacía.
+        content:
+          application/json:
+            schema:
+              $ref: '#/WallPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
 posts:
   get:
     tags: [Community]

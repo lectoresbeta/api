@@ -197,6 +197,14 @@ paths:
   /me/published-books/{publishedBookId}/cover:
     $ref: './paths/published-books.yaml#/cover'
 
+  # El muro de una persona (FEAT-COM-026): el muro general con un filtro, y
+  # con la misma respuesta campo por campo.
+  /me/posts:
+    $ref: './paths/community.yaml#/myPosts'
+
+  /users/{userId}/posts:
+    $ref: './paths/community.yaml#/userPosts'
+
   /users/{userId}/subscription:
     $ref: './paths/community.yaml#/subscription'
 

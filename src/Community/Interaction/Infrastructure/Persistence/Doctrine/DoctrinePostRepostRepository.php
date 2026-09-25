@@ -42,6 +42,7 @@ final class DoctrinePostRepostRepository extends DoctrineRepository implements P
         array $hiddenAuthorIds,
         ?Cursor $after,
         int $limit,
+        ?MemberId $onlyMemberId = null,
     ): array {
         // El original se une aquí y no se pide después, por dos razones: la
         // audiencia hay que comprobarla sobre él —un repost no la amplía— y
@@ -56,6 +57,15 @@ final class DoctrinePostRepostRepository extends DoctrineRepository implements P
             ->from(PostRepost::class, 'r')
             ->join(Post::class, 'p', 'WITH', 'p.id = r.postId')
             ->where('p.deletedAt IS NULL');
+
+        // En el muro de una persona, **los que sacó ella** (`FEAT-COM-026`).
+        // Se filtra por quien repostea y no por quien escribió: lo que
+        // alguien saca a su muro es suyo aunque el texto sea de otro.
+        if (null !== $onlyMemberId) {
+            $query
+                ->andWhere('r.memberId = :onlyMember')
+                ->setParameter('onlyMember', $onlyMemberId->value());
+        }
 
         $visible = 'p.audience = :everyone OR p.authorId = :reader';
 

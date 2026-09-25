@@ -20,6 +20,8 @@ sitio donde leer lo escrito.
 | `DELETE /api/v1/users/{userId}/block` | `unblockUser` | Levantar el bloqueo | FEAT-COM-034 | **Implementado** |
 | `GET /api/v1/me/blocked-users` | `listBlockedUsers` | A quién tengo bloqueado | FEAT-COM-034 | **Implementado** |
 | `GET /api/v1/posts` | `listPosts` | El muro principal | FEAT-COM-001 | **Implementado** |
+| `GET /api/v1/me/posts` | `listMyPosts` | Mi muro | FEAT-COM-026 | **Implementado** |
+| `GET /api/v1/users/{userId}/posts` | `listUserPosts` | El muro de una persona | FEAT-COM-026 | **Implementado** |
 | `POST /api/v1/posts` | `createPost` | Publicar | FEAT-COM-002 | **Implementado** |
 | `PATCH /api/v1/posts/{postId}` | `editPost` | Cambiar el texto de lo propio | FEAT-COM-002 | **Implementado** |
 | `DELETE /api/v1/posts/{postId}` | `deletePost` | Retirar lo propio | FEAT-COM-002 | **Implementado** |
@@ -564,3 +566,38 @@ sigue a alguien (`ALREADY_FOLLOWING_SOMEBODY`).
 
 Dos rutas y un motor a propósito: el contexto de uso es distinto y es previsible que el tamaño
 diverja, pero duplicar el criterio sería tener dos sitios donde cambiarlo.
+
+---
+
+## `GET /api/v1/me/posts` y `GET /api/v1/users/{userId}/posts`
+
+**`operationId`:** `listMyPosts`, `listUserPosts` · **Funcionalidad:** [`FEAT-COM-026`](../../features/community/FEAT-COM-026-a-persons-wall.md)
+
+### Propósito
+
+La pestaña «Mi muro» del perfil, y la misma pantalla mirando el perfil de otro.
+
+### Autorización
+
+Sesión, las dos. Sin saber quién mira no se puede resolver qué publicaciones `FOLLOWERS` le
+alcanzan.
+
+### Semántica
+
+**Es el muro general con un filtro**, no una consulta aparte, y la respuesta es idéntica campo
+por campo a la de `listPosts`. De ahí sale gratis lo único que de verdad importa de estas dos
+operaciones: *mirar el perfil de alguien no enseña nada que su muro no enseñara ya*.
+
+Con un endpoint escrito aparte, las tres reglas de visibilidad —audiencia, bloqueo y
+privacidad de perfil— habrían tenido dos copias, y a la larga una de las dos se queda atrás.
+La que se queda atrás es la que filtra un texto.
+
+En el propio se ve todo lo propio, `FOLLOWERS` incluidas. En el ajeno, lo que esa persona te
+dejaría ver en el muro general. Con bloqueo por medio, vacío en los dos sentidos.
+
+El muro de quien no existe está **vacío, no da `404`**: decir «no existe» convertiría esto en
+un comprobador de quién tiene cuenta.
+
+**Los reposts cuentan como propios.** Lo que alguien saca a su muro es suyo aunque el texto sea
+de otro, que es justo lo que dice la cabecera del repost; el filtro de esa consulta va por
+quien repostea, no por quien escribió.

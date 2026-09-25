@@ -29,6 +29,12 @@ interface PostRepostRepository
      * @param list<string> $hiddenAuthorIds   con quién hay bloqueo, que aquí
      *                                        vale para **los dos**: quien
      *                                        repostea y el autor original
+     * @param ?MemberId    $onlyMemberId      el muro **de una persona**
+     *                                        (`FEAT-COM-026`): aquí filtra por quien
+     *                                        repostea, no por quien escribió. Lo que
+     *                                        alguien saca a su muro es suyo aunque el
+     *                                        texto sea de otro, que es lo que la
+     *                                        cabecera del repost dice
      *
      * @return list<PostRepost> con una fila de más para saber si hay página
      *                          siguiente
@@ -39,5 +45,6 @@ interface PostRepostRepository
         array $hiddenAuthorIds,
         ?Cursor $after,
         int $limit,
+        ?MemberId $onlyMemberId = null,
     ): array;
 }

@@ -41,9 +41,20 @@ final class DoctrinePostRepository extends DoctrineRepository implements PostRep
         array $hiddenAuthorIds,
         ?Cursor $after,
         int $limit,
+        ?MemberId $onlyAuthorId = null,
     ): array {
         $query = $this->repository()->createQueryBuilder('p')
             ->where('p.deletedAt IS NULL');
+
+        // El muro de una persona (`FEAT-COM-026`) es este mismo muro con un
+        // filtro más. Todo lo de abajo —audiencia, bloqueo, cursor— sigue
+        // aplicándose igual, que es justo lo que se quiere: mirar el perfil
+        // de alguien no enseña nada que su muro no enseñara.
+        if (null !== $onlyAuthorId) {
+            $query
+                ->andWhere('p.authorId = :onlyAuthor')
+                ->setParameter('onlyAuthor', $onlyAuthorId->value());
+        }
 
         // Lo que cada quien puede ver, dicho una sola vez: lo público, lo de
         // quienes sigue, y lo suyo. El autor entra por la última rama y no

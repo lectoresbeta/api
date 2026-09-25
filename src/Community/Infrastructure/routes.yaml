@@ -90,6 +90,23 @@ createPost:
     controller: LectoresBeta\Community\Post\Infrastructure\Controller\CreatePostController::__invoke
     methods: [POST]
 
+# El muro de una persona (FEAT-COM-026). Mismo controlador y misma consulta
+# que el muro general: lo que cambia es de quién se mira, no quién mira ni qué
+# le alcanza, así que las reglas de audiencia, bloqueo y privacidad de perfil
+# se aplican solas.
+#
+# Exigen sesión por lo mismo que el muro: sin saber quién mira no se puede
+# resolver qué publicaciones `FOLLOWERS` le alcanzan.
+listMyPosts:
+    path: /api/v1/me/posts
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\ListMemberPostsController::__invoke
+    methods: [GET]
+
+listUserPosts:
+    path: /api/v1/users/{userId}/posts
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\ListMemberPostsController::__invoke
+    methods: [GET]
+
 editPost:
     path: /api/v1/posts/{postId}
     controller: LectoresBeta\Community\Post\Infrastructure\Controller\EditPostController::__invoke

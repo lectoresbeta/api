@@ -37,6 +37,13 @@ interface PostRepository
      * @param list<string> $hiddenAuthorIds   con quién hay un bloqueo, en
      *                                        cualquiera de las dos
      *                                        direcciones
+     * @param ?MemberId    $onlyAuthorId      el muro **de una persona**
+     *                                        (`FEAT-COM-026`), o `null` para el muro
+     *                                        general. Es un filtro y no una consulta
+     *                                        aparte: las reglas de audiencia y de
+     *                                        bloqueo son exactamente las mismas, y
+     *                                        escribirlas dos veces sería dejar que
+     *                                        una de las dos se quedase atrás
      *
      * @return list<Post> con una fila de más para saber si hay página
      *                    siguiente
@@ -47,6 +54,7 @@ interface PostRepository
         array $hiddenAuthorIds,
         ?Cursor $after,
         int $limit,
+        ?MemberId $onlyAuthorId = null,
     ): array;
 
     /**
