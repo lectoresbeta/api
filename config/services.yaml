@@ -21,6 +21,16 @@ parameters:
     app.pricing.min_price: 2
     app.pricing.max_price: 20
 
+    # Cuántas sugerencias de autor hacen falta para que el paso 3 del
+    # onboarding merezca enseñarse, y cuántas se enseñan como mucho
+    # (FEAT-COM-016). Por debajo del mínimo la pantalla no se percibe como una
+    # recomendación sino como un catálogo vacío, así que el paso se omite.
+    #
+    # Es configuración y no una constante repartida por el código porque es
+    # exactamente la palanca que habrá que mover según crezca la plataforma.
+    app.suggestions.minimum: 3
+    app.suggestions.maximum: 10
+
 services:
     _defaults:
         autowire: true
@@ -95,6 +105,26 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    LectoresBeta\Community\Recommendation\Application\Handler\ListAuthorSuggestionsHandler:
+        arguments:
+            $minimum: '%app.suggestions.minimum%'
+            $maximum: '%app.suggestions.maximum%'
+
+    # La copia local de qué le interesa a cada persona: `Community` no
+    # consulta la tabla de géneros de `User`, recibe el hecho (FEAT-COM-016).
+    LectoresBeta\Community\Recommendation\Application\Handler\ProjectMemberGenres:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Tres hechos que mueven la misma fila, y un solo consumidor: tenerlos
+    # juntos deja ver de un vistazo qué cambia los contadores por los que se
+    # ordena una sugerencia.
+    LectoresBeta\Community\Recommendation\Application\Handler\ProjectAuthorStats:
+        tags:
+            - { name: messenger.message_handler, method: followed }
+            - { name: messenger.message_handler, method: unfollowed }
+            - { name: messenger.message_handler, method: published }
+
     LectoresBeta\Shared\Infrastructure\Messenger\IncomingEventRegistry:
         arguments:
             $eventClasses:
@@ -145,6 +175,14 @@ services:
                 # Y el bloqueo que un moderador levanta, que ejecuta `Work`
                 # igual que el que impone (FEAT-MOD-003 RN-7).
                 - LectoresBeta\Work\Manuscript\Application\Event\ModerationBlockLifted
+                # Lo que alimenta las sugerencias de autor (FEAT-COM-016).
+                # `Community` no consulta las tablas de `User` ni las de
+                # `Work`: recibe los hechos y mantiene su propia proyección.
+                - LectoresBeta\Community\Recommendation\Application\Event\LiteraryPreferencesUpdated
+                - LectoresBeta\Community\Recommendation\Application\Event\AuthorSubscribed
+                - LectoresBeta\Community\Recommendation\Application\Event\AuthorUnsubscribed
+                - LectoresBeta\Community\Recommendation\Application\Event\WorkPublished
+
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
                 - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordResetRequested

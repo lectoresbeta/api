@@ -52,6 +52,18 @@ class AuthorStats
         return $this->followers;
     }
 
+    /**
+     * Cuántas obras lleva publicadas.
+     *
+     * Es lo que la tarjeta de sugerencia llama «publicaciones» (`S-1`): obras
+     * de la plataforma, no mensajes del muro. Quien elige a quién seguir por
+     * los textos que escribe no está midiendo cuánto habla.
+     */
+    public function publishedWorks(): int
+    {
+        return $this->publishedWorks;
+    }
+
     public function describe(?string $displayName, ?string $avatarUrl, \DateTimeImmutable $now): void
     {
         $this->displayName = $displayName;

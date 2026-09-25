@@ -32,6 +32,7 @@ sitio donde leer lo escrito.
 | `POST /api/v1/comments/{commentId}/replies` | `replyToComment` | Responder | FEAT-COM-031 | **Implementado** |
 | `POST /api/v1/posts/{postId}/repost` | `repostPost` | Repostear, o deshacerlo | FEAT-COM-019 | **Implementado** |
 | `DELETE /api/v1/posts/{postId}/repost` | `undoRepost` | Retirar el repost propio | FEAT-COM-019 | **Implementado** |
+| `GET /api/v1/onboarding/author-suggestions` | `listAuthorSuggestions` | A quién proponer seguir | FEAT-COM-016 | **Implementado** |
 
 ---
 
@@ -497,3 +498,58 @@ esa lista dentro.
 ### Efectos
 
 Publica `PostReposted`, que avisará al autor original. Todavía no lo escucha nadie.
+
+
+---
+
+## `GET /api/v1/onboarding/author-suggestions`
+
+**`operationId`:** `listAuthorSuggestions` · **Funcionalidad:**
+[`FEAT-COM-016`](../../features/community/FEAT-COM-016-onboarding-author-suggestions.md)
+
+### Propósito
+
+El paso 3 del onboarding: a quién proponer seguir, a partir de los géneros elegidos en el paso
+anterior.
+
+### El caso normal no es la lista llena
+
+En una plataforma recién lanzada no hay autores que sugerir, y **ese es justamente el momento
+en que todo el mundo pasa por aquí**. De ahí que la respuesta sea siempre `200`, incluso con la
+lista vacía: la ausencia de autores es un estado normal, no un fallo.
+
+Cuando no hay bastantes por género, la lista se completa con los más seguidos de la plataforma,
+marcados con `matchedGenres` vacío: es preferible proponer autores populares aunque no encajen
+que enseñar una pantalla casi vacía, y decirlo permite a la interfaz no prometer una afinidad
+que no hay.
+
+Si aun así no llegan al mínimo, el paso se omite. **Quien lo decide es el servidor**
+(`shouldDisplay`): si lo decidiera el cliente habría dos sitios donde cambiar el umbral y uno
+se quedaría atrás.
+
+`reason` distingue dos silencios que no significan lo mismo: `NOT_ENOUGH_AUTHORS` —no hay
+gente— y `ALREADY_FOLLOWING_ALL` —ya la sigues toda—.
+
+### De dónde salen los datos
+
+De **proyecciones que `Community` mantiene con hechos**, no de contar al leer: en qué géneros
+escribe cada autor, cuántos seguidores tiene y cuántas obras lleva. Un `COUNT` por tarjeta en
+cada carga del onboarding se degrada justo cuando la plataforma empieza a funcionar.
+
+Ninguna consulta cruza a `User` ni a `Work`. El precio de esa frontera son estas tablas, y el
+registro de hechos ya aplicados que las protege de una reentrega: a diferencia del grafo de
+seguidores, que afirma un estado, estos contadores **suman**.
+
+`publicationCount` son **obras publicadas**, no mensajes del muro: quien elige a quién seguir
+por los textos que escribe no está midiendo cuánto habla.
+
+### Seguir desde aquí
+
+Con la operación de siempre, `PUT /api/v1/users/{userId}/subscription`. **No hay una
+suscripción «de onboarding» distinta**, así que tampoco una ruta distinta.
+
+### Qué no está todavía
+
+El filtro de **cuentas activadas**. La proyección de autores no distingue todavía una cuenta
+activada de una que no lo está; mientras tanto solo se sugiere a quien ha publicado una obra,
+lo que ya exige tenerla activada.

@@ -16,6 +16,12 @@ use LectoresBeta\Work\Manuscript\Domain\ValueObject\WorkId;
  * `Community` and `Notification` all wait for it. **It does not mean the work
  * accepts corrections** — that is a second, deliberate decision by the author,
  * and its own event.
+ *
+ * It carries the work's **genres** because they are part of what was
+ * published, not a decoration: `Community` projects which genres each author
+ * writes in to answer «authors you might like» without reading this context's
+ * tables (`FEAT-COM-016` `RN-1`). Making it ask instead would be a query
+ * across a boundary on every onboarding.
  */
 final readonly class WorkPublished implements IntegrationEvent
 {
@@ -26,6 +32,8 @@ final readonly class WorkPublished implements IntegrationEvent
         private string $title,
         private int $wordCount,
         private int $chapterCount,
+        /** @var list<string> */
+        private array $genres,
         private \DateTimeImmutable $publishedAt,
     ) {
     }
@@ -53,6 +61,7 @@ final readonly class WorkPublished implements IntegrationEvent
             'title' => $this->title,
             'wordCount' => $this->wordCount,
             'chapterCount' => $this->chapterCount,
+            'genres' => $this->genres,
             'publishedAt' => $this->publishedAt->format(\DATE_ATOM),
         ];
     }

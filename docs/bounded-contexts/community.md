@@ -34,7 +34,8 @@ seguimiento de autores, los mensajes directos y los rankings.
 | `Mention` | A quién se nombra, en una publicación o en un comentario. Concepto propio desde que se puede mencionar en los dos sitios: dentro de uno, el otro dependería de él |
 | `Subscription` | Seguimiento de autores, sus sugerencias y los listados de seguidos y seguidores |
 | `Relationship` | Silenciados y bloqueados |
-| `Recommendation` | Read models que alimentan la Home: obras recomendadas y autores sugeridos |
+| `Recommendation` | Read models que alimentan la Home y el onboarding: obras recomendadas y autores sugeridos |
+| `EventProcessing` | El registro de hechos ya aplicados. Hace falta porque las proyecciones **acumulan**, y RabbitMQ no garantiza entrega única |
 | `Messaging` | Mensajes directos y conversaciones |
 | `Ranking` | Read models de escritores, obras y lectores |
 

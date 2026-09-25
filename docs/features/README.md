@@ -304,7 +304,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-013 | Ver y filtrar el ranking de escritores | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-014 | Ver y filtrar el ranking de obras | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-015 | Ver y filtrar el ranking de lectores | User | PENDING | BLOCKED | P2 | — |
-| FEAT-COM-016 | Onboarding paso 3 — sugerencias de autores a seguir | User | APPROVED | TODO | P1 | [ficha](community/FEAT-COM-016-onboarding-author-suggestions.md) |
+| FEAT-COM-016 | Onboarding paso 3 — sugerencias de autores a seguir | User | APPROVED | PARTIAL | P1 | [ficha](community/FEAT-COM-016-onboarding-author-suggestions.md) |
 | FEAT-COM-017 | Home — carrusel de obras recomendadas | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-017-home-work-recommendations.md) |
 | FEAT-COM-018 | Home — sugerencias de autores en el muro | User | APPROVED | TODO | P1 | [ficha](community/FEAT-COM-018-home-author-suggestions.md) |
 | FEAT-COM-019 | Repostear una publicación | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-019-repost.md) |

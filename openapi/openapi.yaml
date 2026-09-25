@@ -99,6 +99,12 @@ paths:
   /me/onboarding/genres:
     $ref: './paths/onboarding.yaml#/genres'
 
+  /me/onboarding/complete:
+    $ref: './paths/onboarding.yaml#/complete'
+
+  /onboarding/author-suggestions:
+    $ref: './paths/onboarding.yaml#/authorSuggestions'
+
   /genres:
     $ref: './paths/onboarding.yaml#/catalogue'
 

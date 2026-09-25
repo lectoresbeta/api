@@ -43,6 +43,7 @@
 | `GET /me/settings` | `getAccountSettings` | Ajustes de cuenta | FEAT-USR-010/011 | PENDING |
 | `GET /api/v1/me/privacy-settings` | `getMyPrivacySettings` | Ajustes de privacidad | FEAT-USR-038 | **Implementado** |
 | `PUT /api/v1/me/privacy-settings` | `updateMyPrivacySettings` | Modificarlos | FEAT-USR-038 | **Implementado** |
+| `POST /api/v1/me/onboarding/complete` | `completeOnboarding` | Terminar el onboarding | FEAT-COM-016 | **Implementado** |
 | `GET /api/v1/me/content-preferences` | `getMyContentPreferences` | Qué he decidido no ver | FEAT-USR-043 | **Implementado** |
 | `PUT /api/v1/me/content-preferences` | `updateMyContentPreferences` | Cambiarlo | FEAT-USR-043 | **Implementado** |
 | `GET /me/notification-preferences` | `getMyNotificationPreferences` | Preferencias de aviso por canal | FEAT-USR-039 | DRAFT |

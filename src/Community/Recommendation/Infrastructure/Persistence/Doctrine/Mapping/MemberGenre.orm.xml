@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Proyección. Se reconstruye desde los hechos; nada depende de ella. -->
+    <entity name="LectoresBeta\Community\Recommendation\Domain\Entity\MemberGenre"
+            table="member_genre" schema="community_ctx">
+
+        <indexes>
+            <!-- «Quién tiene este género entre sus intereses», que es como se
+                 leerá el día que las sugerencias vayan también al revés. -->
+            <index name="idx_member_genre_code" columns="genre_code"/>
+        </indexes>
+
+        <id name="memberId" column="member_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="genreCode" column="genre_code" type="string" length="32">
+            <generator strategy="NONE"/>
+        </id>
+
+    </entity>
+
+</doctrine-mapping>

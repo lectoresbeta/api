@@ -65,6 +65,7 @@ final readonly class RequireActivatedAccountListener
         // The onboarding, which is why somebody is let in before activating.
         'submitOnboardingProfile',
         'submitOnboardingGenres',
+        'completeOnboarding',
 
         // Managing the session you are already in.
         'login',

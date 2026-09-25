@@ -109,6 +109,14 @@ submitOnboardingGenres:
     controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\SubmitOnboardingGenresController::__invoke
     methods: [PUT]
 
+# Cerrar el onboarding (`FEAT-COM-016`). Lo llaman «Siguiente», «Saltar» y el
+# cliente cuando el paso 3 no se muestra por no haber autores que sugerir:
+# para el servidor son lo mismo.
+completeOnboarding:
+    path: /api/v1/me/onboarding/complete
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\CompleteOnboardingController::__invoke
+    methods: [POST]
+
 listGenres:
     path: /api/v1/genres
     controller: LectoresBeta\User\Profile\Infrastructure\Controller\ListGenresController::__invoke

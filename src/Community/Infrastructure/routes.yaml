@@ -158,3 +158,11 @@ undoRepost:
     path: /api/v1/posts/{postId}/repost
     controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\UndoRepostController::__invoke
     methods: [DELETE]
+
+# Paso 3 del onboarding (`FEAT-COM-016`). Responde siempre `200`: que no haya
+# autores que sugerir es un estado normal de una plataforma recién lanzada, y
+# quien decide si el paso se enseña es el servidor.
+listAuthorSuggestions:
+    path: /api/v1/onboarding/author-suggestions
+    controller: LectoresBeta\Community\Recommendation\Infrastructure\Controller\ListAuthorSuggestionsController::__invoke
+    methods: [GET]

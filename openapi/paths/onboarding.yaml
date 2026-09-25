@@ -156,3 +156,117 @@ catalogue:
           application/json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/GenreList'
+
+complete:
+  post:
+    tags: [Onboarding]
+    operationId: completeOnboarding
+    summary: Terminar el onboarding
+    description: |
+      Cierra el paso 3 y deja la cuenta dentro. Lo llaman **«Siguiente»,
+      «Saltar» y el cliente cuando el paso ni siquiera se muestra** porque no
+      hay autores que sugerir: para el servidor son lo mismo, y la diferencia
+      entre haber seguido a alguien o no ya está en las suscripciones creadas
+      por el camino.
+
+      El paso 3 es el único opcional, así que esto **no comprueba
+      suscripciones**. Lo que sí comprueba es el orden: sin nombre y sin
+      géneros no se está en el paso 3, se están saltando los anteriores.
+
+      **Es idempotente**: volver a llamarla sobre algo ya terminado deja el
+      mundo igual y no publica un segundo hecho.
+
+      No exige cuenta activada, como el resto del onboarding: es justo lo que
+      se hace antes de seguir el enlace del correo.
+    responses:
+      '204':
+        description: Terminado, o ya lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '409':
+        description: '`code: ONBOARDING_STEP_OUT_OF_ORDER`. Faltan los pasos anteriores.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+authorSuggestions:
+  get:
+    tags: [Onboarding]
+    operationId: listAuthorSuggestions
+    summary: Autores que se proponen seguir
+    description: |
+      Paso 3 del onboarting. Los autores se calculan a partir de los géneros
+      elegidos en el paso 2.
+
+      **Responde `200` siempre**, incluso con la lista vacía: que no haya
+      autores que sugerir es un estado normal de una plataforma recién
+      lanzada, no un fallo. Y es el caso normal de los primeros meses, que es
+      justo cuando todo el mundo pasa por aquí.
+
+      **Quien decide si el paso se enseña es el servidor**, y lo dice en
+      `shouldDisplay`. Si lo decidiera el cliente —«si vienen menos de tres,
+      no lo enseño»— habría dos sitios donde cambiar el umbral y uno se
+      quedaría atrás.
+
+      Cuando no hay bastantes por género, la lista se completa con los
+      **más seguidos de la plataforma**, marcados con `matchedGenres` vacío:
+      es preferible proponer autores populares aunque no encajen que enseñar
+      una pantalla casi vacía. Si aun así no llegan, el paso se omite.
+
+      Ni uno mismo ni quien ya se sigue aparecen entre las sugerencias.
+
+      Para seguir a alguien desde aquí se usa la operación de siempre,
+      `PUT /users/{userId}/subscription`: **no hay una suscripción «de
+      onboarding» distinta**.
+    responses:
+      '200':
+        description: Las sugerencias, o la instrucción de omitir el paso.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shouldDisplay, reason, suggestions]
+              properties:
+                shouldDisplay:
+                  type: boolean
+                reason:
+                  type: [string, 'null']
+                  enum: [NOT_ENOUGH_AUTHORS, ALREADY_FOLLOWING_ALL, null]
+                  description: |
+                    Por qué se omite el paso. Son dos silencios distintos: no
+                    hay gente suficiente en toda la plataforma, o ya se sigue
+                    a todos los candidatos posibles. La interfaz no dice lo
+                    mismo en cada caso.
+                suggestions:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, followerCount, publicationCount, matchedGenres, following]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      displayName:
+                        type: [string, 'null']
+                      avatarUrl:
+                        type: [string, 'null']
+                      followerCount:
+                        type: integer
+                      publicationCount:
+                        type: integer
+                        description: |
+                          **Obras publicadas**, no mensajes del muro. Quien
+                          elige a quién seguir por los textos que escribe no
+                          está midiendo cuánto habla.
+                      matchedGenres:
+                        type: array
+                        description: |
+                          Por qué se le sugiere. **Vacío** cuando la
+                          sugerencia sale del relleno por popularidad, para
+                          que la interfaz no prometa una afinidad que no hay.
+                        items:
+                          type: string
+                      following:
+                        type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

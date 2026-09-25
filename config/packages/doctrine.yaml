@@ -42,6 +42,12 @@ doctrine:
         # prefijo por concepto el fichero se llama `User.orm.xml` y vive donde
         # debe. La lista es larga; ese es el precio de tenerlo todo explícito.
         mappings:
+            CommunityEventProcessing:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/EventProcessing/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\EventProcessing\Domain\Entity'
+                alias: CommunityEventProcessing
             CommunityInteraction:
                 type: xml
                 is_bundle: false
@@ -72,6 +78,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Community/Ranking/Infrastructure/Persistence/Doctrine/Mapping'
                 prefix: 'LectoresBeta\Community\Ranking\Domain\Entity'
                 alias: CommunityRanking
+            CommunityRecommendation:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Recommendation/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Recommendation\Domain\Entity'
+                alias: CommunityRecommendation
             CommunityRelationship:
                 type: xml
                 is_bundle: false

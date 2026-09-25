@@ -115,6 +115,13 @@ abstract class EconomyScenario extends WebTestCase
         // moderador levanta (`FEAT-MOD-003` `RN-4`, `RN-7`).
         'CorrectionClosed',
         'ModerationBlockLifted',
+
+        // Y lo que alimenta las sugerencias de autor (`FEAT-COM-016`):
+        // `Community` no consulta las tablas de `User` ni las de `Work`,
+        // mantiene su propia proyección a partir de estos hechos.
+        'LiteraryPreferencesUpdated',
+        'WorkPublished',
+        'OnboardingCompleted',
     ];
 
     /**
