@@ -46,6 +46,17 @@ enum NotificationTopic: string
     case BETA_READER_ACCESS_REVOKED = 'BETA_READER_ACCESS_REVOKED';
     case WRITING_BUDDY_PROPOSED = 'WRITING_BUDDY_PROPOSED';
 
+    /**
+     * La resolución de una reclamación que presentó esta persona
+     * (`FEAT-MOD-002`).
+     *
+     * **Faltaba**, y lo destapó la comprobación de catálogos de
+     * `FEAT-NOT-002`: el aviso salía por correo y no había forma de apagarlo.
+     * No es operativo —nadie se queda sin cuenta por no leerlo— así que le
+     * toca casilla como a cualquier otro.
+     */
+    case CLAIM_RESOLVED = 'CLAIM_RESOLVED';
+
     // Créditos.
     case CREDITS_ADDED = 'CREDITS_ADDED';
     case CREDITS_SPENT = 'CREDITS_SPENT';

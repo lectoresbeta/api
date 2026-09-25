@@ -71,6 +71,37 @@ el resto es el catálogo previsto.
 | `CREDITS_ADDED` / `CREDITS_SPENT` | `Credits` | Titular de la cuenta | |
 | `BALANCE_WENT_NEGATIVE` | `Credits` | Autor de la obra | |
 | `REACTIVATION_OFFER` | `OverdraftCorrectionGranted` (`Credits`) | Autor dormido al que alguien acaba de corregir | Silenciable, y apagarlo renuncia al mecanismo entero (`FEAT-CRD-019`) |
+
+## Los dos canales
+
+Desde `FEAT-NOT-002` un aviso puede salir **por la campana, por correo, por los dos o por
+ninguno**, y cada canal se apaga por separado.
+
+Qué tipos existen por correo lo declara `NotificationKind::reachesInbox()`. Dicen que no los
+de **ritmo social** —una respuesta, un me gusta, un mensaje directo— y los **movimientos de
+créditos**: pasan muchas veces al día, y un correo por cada uno enseña a ignorar el
+remitente, que es la forma más rápida de que el correo que sí importa tampoco se lea.
+
+Los **operativos** tampoco salen por ahí: cada uno tiene su propio consumidor y su propio
+texto, con un enlace de un solo uso o una dirección a la que recurrir que un correo genérico
+perdería.
+
+Ese catálogo tiene que coincidir con el de `User`, que es el que enseña la casilla, y los dos
+enums están separados a propósito —son dos contextos—. Lo comprueba
+`tests/Unit/Architecture/NotificationCatalogueTest.php` en cada ejecución; la primera vez que
+se ejecutó destapó que `CLAIM_RESOLVED` salía por correo sin casilla que lo apagara.
+
+### La fila existe aunque no se enseñe
+
+Hasta `FEAT-NOT-002`, un aviso silenciado **no se creaba**. Con dos canales independientes eso
+deja de valer: alguien puede querer el correo y no la campana, y sin fila no hay dónde anotar
+que el correo salió.
+
+Así que la fila es **el registro de lo que se hizo con ese hecho**. `inbox = false` significa
+que no se enseña ni se cuenta; `emailed_at` dice si salió por correo, y es lo que hace
+correcto el reintento cuando el proveedor falla: sin esa columna, el primer fallo dejaría a
+alguien sin su correo para siempre, porque el reintento encontraría la fila y se daría por
+hecho.
 | `SUBSCRIBED_AUTHOR_PUBLISHED` | `Work` / `Community` | Suscriptores | |
 | `DIRECT_MESSAGE_RECEIVED` | `Community` | Destinatario | |
 | `PLATFORM_INVITATION` | `User` | Persona invitada (solo email; aún no es usuaria) | |

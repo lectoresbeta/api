@@ -84,3 +84,53 @@ permitiría, probando identificadores, ir descubriendo lo que le ocurre a otra p
 razón es la misma que exime al reenvío del correo de activación: **el aviso que pide activar
 la cuenta está en esa bandeja**. Lo que escriben es una fecha de lectura sobre una fila de
 quien llama, así que nada sale de la cuenta.
+
+---
+
+## Los avisos por correo
+
+**Funcionalidad:** [`FEAT-NOT-002`](../../features/notification/FEAT-NOT-002-notification-emails.md),
+[`FEAT-NOT-003`](../../features/notification/FEAT-NOT-003-apply-notification-preferences.md)
+
+No hay endpoint: el correo sale solo, cuando un hecho se convierte en aviso. Lo que sí hay es
+contrato sobre **cuándo sale y cuándo no**, y conviene tenerlo escrito porque no se puede
+observar desde fuera.
+
+### Cadencia
+
+**Inmediato, uno por aviso.** No hay resumen diario, y no hace falta: el filtro contra el
+ruido está en el catálogo, no en la cadencia. Los tipos que pasan muchas veces al día —una
+respuesta, un me gusta, un mensaje directo, un movimiento de créditos— **no existen por
+correo**, así que no hay nada que agrupar.
+
+### Los dos canales se apagan por separado
+
+`PUT /api/v1/me/notification-preferences` acepta una casilla por tipo **y canal**. Apagar el
+correo de algo no toca su campana, y al revés.
+
+| Lo que se apaga | Qué deja de pasar |
+|---|---|
+| `EMAIL` de un tipo | Deja de salir ese correo. El aviso sigue en la campana |
+| `PLATFORM` de un tipo | Deja de enseñarse y de contarse. El correo sigue saliendo |
+| `allMuted` | Los dos, en todos los tipos silenciables |
+
+**Los operativos no preguntan nada**: activación, restablecimiento de contraseña, avisos de
+seguridad, bloqueo de obra e invitación a la plataforma salen siempre, también con el
+interruptor general puesto. Un catálogo que los incluyera invitaría a apagarlos, y el primero
+que faltase dejaría a alguien sin poder recuperar su cuenta.
+
+### Qué lleva el correo
+
+Un asunto, una línea y nada más. **Ni una línea de una obra, de una corrección o de un
+mensaje**: quien lo recibe tiene que saber qué ha pasado y entrar a verlo, no leerlo en el
+buzón. Lo inédito no sale de la plataforma por correo.
+
+El texto se compone en el servidor, al revés que en la campana —que manda `kind` y `payload`
+y deja la frase al cliente—: un correo no tiene cliente que la componga.
+
+### Si el proveedor falla
+
+La excepción sube hasta la cola, que reentrega y, si insiste, aparca el mensaje. El aviso
+guarda si el correo **llegó a salir**, no solo si existe, así que el reintento lo manda en
+vez de darlo por hecho. El peor caso es un correo repetido; el orden contrario produce un
+correo perdido.

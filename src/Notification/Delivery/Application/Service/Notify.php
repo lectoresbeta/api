@@ -54,20 +54,16 @@ use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
  */
 final readonly class Notify
 {
-    /**
-     * Esta clase entrega **dentro de la plataforma** y solo por ahí pregunta.
-     * El canal de correo es
-     * `FEAT-NOT-002`, que todavía no existe: sus preferencias se guardan y se sirven desde ya
-     * —la pantalla las ofrece— y no las aplica nadie hasta que haya quien
-     * mande correos de aviso.
-     */
     private const PLATFORM = 'PLATFORM';
+
+    private const EMAIL = 'EMAIL';
 
     public function __construct(
         private NotificationRepository $notifications,
         private ProfileCards $profiles,
         private WorkAccessBriefs $works,
         private NotificationChoices $choices,
+        private EmailTheNotification $email,
         private TransactionalSession $session,
         private Clock $clock,
     ) {
@@ -95,26 +91,33 @@ final readonly class Notify
             return;
         }
 
-        if ($this->notifications->existsFor($recipient, $kind, $sourceEventId)) {
-            return;
+        // La fila de ese hecho, si ya existe. **No basta con saber que
+        // existe**: un reintento necesita saber qué se hizo con ella, y en
+        // particular si el correo llegó a salir (`FEAT-NOT-002` `RN-3`).
+        $notification = $this->notifications->ofSource($recipient, $kind, $sourceEventId);
+
+        if (null === $notification) {
+            $notification = new Notification(
+                NotificationId::generate(),
+                $recipient,
+                $kind,
+                $this->clock->now(),
+                $payload,
+                $sourceEventId,
+                // Silenciada no significa inexistente: la fila es el registro
+                // de qué se hizo con este hecho, y hace falta aunque no se
+                // enseñe, para poder anotar el correo si sí lo quiere.
+                $this->wants($recipientId, $kind, self::PLATFORM),
+            );
+
+            $this->session->execute(function () use ($notification): void {
+                $this->notifications->save($notification);
+            });
         }
 
-        if (!$kind->isOperational() && !$this->choices->allows($recipientId, $kind->value, self::PLATFORM)) {
-            return;
+        if ($kind->reachesInbox() && $this->wants($recipientId, $kind, self::EMAIL)) {
+            $this->email->of($notification);
         }
-
-        $notification = new Notification(
-            NotificationId::generate(),
-            $recipient,
-            $kind,
-            $this->clock->now(),
-            $payload,
-            $sourceEventId,
-        );
-
-        $this->session->execute(function () use ($notification): void {
-            $this->notifications->save($notification);
-        });
     }
 
     /**
@@ -144,5 +147,18 @@ final readonly class Notify
     public function work(string $workId): array
     {
         return ['workId' => $workId, 'workTitle' => $this->works->ofWork($workId)?->title];
+    }
+
+    /**
+     * Si esa persona quiere ese aviso por ese canal.
+     *
+     * Los **operativos no preguntan** (`FEAT-NOT-003` `RN-3`): la activación,
+     * el restablecimiento de contraseña y los avisos de seguridad no son
+     * notificaciones, y si el interruptor general los alcanzara dejaría a
+     * alguien sin poder recuperar su cuenta.
+     */
+    private function wants(string $recipientId, NotificationKind $kind, string $channel): bool
+    {
+        return $kind->isOperational() || $this->choices->allows($recipientId, $kind->value, $channel);
     }
 }

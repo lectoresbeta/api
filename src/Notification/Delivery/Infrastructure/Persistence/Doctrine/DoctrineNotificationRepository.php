@@ -24,7 +24,12 @@ final class DoctrineNotificationRepository extends DoctrineRepository implements
 
     public function existsFor(RecipientId $recipientId, NotificationKind $kind, string $sourceEventId): bool
     {
-        return null !== $this->repository()->findOneBy([
+        return null !== $this->ofSource($recipientId, $kind, $sourceEventId);
+    }
+
+    public function ofSource(RecipientId $recipientId, NotificationKind $kind, string $sourceEventId): ?Notification
+    {
+        return $this->repository()->findOneBy([
             'recipientId' => $recipientId->value(),
             'kind' => $kind,
             'sourceEventId' => $sourceEventId,
@@ -40,6 +45,10 @@ final class DoctrineNotificationRepository extends DoctrineRepository implements
     {
         $query = $this->repository()->createQueryBuilder('n')
             ->where('n.recipientId = :recipient')
+            // Lo silenciado no se enseña (`FEAT-NOT-003` `RN-1`). La fila
+            // existe para poder anotar si salió por correo, no para acabar
+            // en la campana que su dueño apagó.
+            ->andWhere('n.inbox = true')
             ->setParameter('recipient', $recipientId->value());
 
         if ($unreadOnly) {
@@ -68,6 +77,7 @@ final class DoctrineNotificationRepository extends DoctrineRepository implements
     {
         return $this->repository()->count([
             'recipientId' => $recipientId->value(),
+            'inbox' => true,
             'readAt' => null,
         ]);
     }
@@ -80,6 +90,7 @@ final class DoctrineNotificationRepository extends DoctrineRepository implements
             "UPDATE notification_ctx.notification
                 SET read_at = :now
               WHERE recipient_id = :recipient
+                AND inbox = TRUE
                 AND read_at IS NULL
                 AND payload->>'correctionId' = :correction",
             ['now' => $now->format('Y-m-d H:i:s'), 'recipient' => $recipientId->value(), 'correction' => $correctionId],
@@ -99,6 +110,7 @@ final class DoctrineNotificationRepository extends DoctrineRepository implements
             ->update(Notification::class, 'n')
             ->set('n.readAt', ':now')
             ->where('n.recipientId = :recipient')
+            ->andWhere('n.inbox = true')
             ->andWhere('n.readAt IS NULL')
             ->setParameter('now', $now)
             ->setParameter('recipient', $recipientId->value())

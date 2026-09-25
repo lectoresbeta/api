@@ -77,6 +77,66 @@ enum NotificationKind: string
      * una cuenta. Sin él, el análisis estático se queja en cuanto alguien
      * añade un caso, y la clasificación deja de poder olvidarse.
      */
+    /**
+     * Si este aviso **también sale por correo** (`FEAT-NOT-002` `RN-1`).
+     *
+     * Sin `default`, por lo mismo que `isOperational()`: un tipo nuevo tiene
+     * que decidirlo o el análisis estático se queja.
+     *
+     * Los que dicen que no son los de **ritmo social** —una respuesta, un me
+     * gusta, un mensaje— y los **movimientos de créditos**: pasan muchas
+     * veces al día y un correo por cada uno enseña a ignorar el remitente,
+     * que es la forma más rápida de que el correo que sí importa tampoco se
+     * lea.
+     *
+     * Los **operativos** tampoco: tienen su propio consumidor y su propio
+     * texto (`RN-6`), con un enlace de un solo uso o una dirección a la que
+     * recurrir que un correo genérico perdería.
+     *
+     * Esta respuesta tiene que coincidir con la del catálogo de `User`, que
+     * es el que enseña la casilla. Lo comprueba
+     * `tests/Unit/Architecture/NotificationCatalogueTest.php` en cada
+     * ejecución, porque son dos contextos y ninguno importa el enum del otro.
+     */
+    public function reachesInbox(): bool
+    {
+        return match ($this) {
+            self::CORRECTION_RECEIVED,
+            self::CORRECTION_REPLIED,
+            self::CORRECTION_UNLOCKED,
+            self::CORRECTION_CLOSED,
+            self::CHAPTER_COMMENT,
+            self::MENTION,
+            self::ACCESS_REQUESTED,
+            self::ACCESS_REQUEST_RESOLVED,
+            self::BETA_READER_INVITATION,
+            self::BETA_READER_ACCESS_REVOKED,
+            self::WRITING_BUDDY_PROPOSED,
+            self::SUBSCRIBED_AUTHOR_PUBLISHED,
+            self::BALANCE_WENT_NEGATIVE,
+            self::CLAIM_RESOLVED,
+            self::REACTIVATION_OFFER => true,
+
+            // De ritmo social, o demasiado frecuentes para un buzón.
+            self::CORRECTION_RATED,
+            self::POST_REPLY,
+            self::DIRECT_MESSAGE_RECEIVED,
+            self::CREDITS_ADDED,
+            self::CREDITS_SPENT => false,
+
+            // Operativos: salen por su propio consumidor, con su texto.
+            self::ACCOUNT_ACTIVATION,
+            self::PASSWORD_RESET_REQUESTED,
+            self::PASSWORD_CHANGED,
+            self::EMAIL_CHANGE_REQUESTED,
+            self::EMAIL_CHANGED,
+            self::ACCOUNT_BLOCKED,
+            self::MODERATION_ALERT,
+            self::WORK_BLOCKED,
+            self::PLATFORM_INVITATION => false,
+        };
+    }
+
     public function isOperational(): bool
     {
         return match ($this) {

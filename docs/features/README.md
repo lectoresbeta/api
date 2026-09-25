@@ -493,8 +493,8 @@ Ficha del contexto: [`../bounded-contexts/notification.md`](../bounded-contexts/
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-NOT-001 | Entregar notificaciones in-app | — (sistema) | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-001-in-app-notifications.md) |
-| FEAT-NOT-002 | Entregar notificaciones por email | — (sistema) | PENDING | TODO | P1 | — |
-| FEAT-NOT-003 | Aplicar las preferencias de notificación del usuario | — (sistema) | PENDING | TODO | P1 | — |
+| FEAT-NOT-002 | Entregar notificaciones por email | — (sistema) | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-002-notification-emails.md) |
+| FEAT-NOT-003 | Aplicar las preferencias de notificación del usuario | — (sistema) | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-003-apply-notification-preferences.md) |
 | FEAT-NOT-004 | Avisar de nueva obra o publicación de un autor suscrito | — (sistema) | PENDING | TODO | P2 | — |
 | FEAT-NOT-005 | Avisar de solicitudes, invitaciones y propuestas | — (sistema) | PENDING | TODO | P1 | — |
 | FEAT-NOT-006 | Avisar de feedback recibido, contestado o valorado | — (sistema) | PENDING | TODO | P1 | — |

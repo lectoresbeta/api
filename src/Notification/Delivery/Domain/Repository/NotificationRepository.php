@@ -24,6 +24,16 @@ interface NotificationRepository
      */
     public function existsFor(RecipientId $recipientId, NotificationKind $kind, string $sourceEventId): bool;
 
+    /**
+     * La fila de ese hecho para esa persona, si ya existe.
+     *
+     * Hermana de `existsFor()` y no sustituta suya: aquella responde a «¿hay
+     * que crearla?» y esta a «¿qué se hizo ya con ella?». La diferencia
+     * importa desde `FEAT-NOT-002`, donde un reintento necesita saber si el
+     * correo llegó a salir y no solo si el aviso existe.
+     */
+    public function ofSource(RecipientId $recipientId, NotificationKind $kind, string $sourceEventId): ?Notification;
+
     public function ofId(NotificationId $id): ?Notification;
 
     /**

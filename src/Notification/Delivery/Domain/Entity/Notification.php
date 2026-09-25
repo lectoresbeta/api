@@ -39,6 +39,27 @@ class Notification
     private ?\DateTimeImmutable $readAt = null;
 
     /**
+     * Si este aviso se enseña en la campana (`FEAT-NOT-003` `RN-1`).
+     *
+     * Existe porque los dos canales se apagan por separado: alguien puede
+     * querer el correo y no la campana. Con un solo canal bastaba con **no
+     * crear la fila**; con dos, la fila deja de ser «lo que se le enseña» y
+     * pasa a ser el registro de qué se hizo con ese hecho, que es lo único
+     * que permite anotar que el correo salió.
+     */
+    private bool $inbox = true;
+
+    /**
+     * Cuándo salió por correo, si salió (`FEAT-NOT-002` `RN-2`, `RN-3`).
+     *
+     * **Distingue «ya se mandó» de «existe el aviso»**, y esa distinción es
+     * lo que hace correcto el reintento: si el proveedor falla, la fila ya
+     * está, y sin esta fecha el reintento la encontraría, se daría por hecho
+     * y dejaría a alguien sin su correo para siempre.
+     */
+    private ?\DateTimeImmutable $emailedAt = null;
+
+    /**
      * @param array<string, scalar|null> $payload
      */
     public function __construct(
@@ -48,6 +69,7 @@ class Notification
         \DateTimeImmutable $now,
         array $payload = [],
         ?string $sourceEventId = null,
+        bool $inbox = true,
     ) {
         $this->id = $id->value();
         $this->recipientId = $recipientId->value();
@@ -55,6 +77,7 @@ class Notification
         $this->createdAt = $now;
         $this->payload = $payload;
         $this->sourceEventId = $sourceEventId;
+        $this->inbox = $inbox;
     }
 
     public function id(): NotificationId
@@ -98,6 +121,26 @@ class Notification
     public function isRead(): bool
     {
         return null !== $this->readAt;
+    }
+
+    public function isInInbox(): bool
+    {
+        return $this->inbox;
+    }
+
+    public function wasEmailed(): bool
+    {
+        return null !== $this->emailedAt;
+    }
+
+    /**
+     * Salió por correo. Idempotente por lo mismo que `markRead()`: la segunda
+     * vez llega sola, y mover la fecha convertiría un registro en una
+     * suposición.
+     */
+    public function markEmailed(\DateTimeImmutable $now): void
+    {
+        $this->emailedAt ??= $now;
     }
 
     /**

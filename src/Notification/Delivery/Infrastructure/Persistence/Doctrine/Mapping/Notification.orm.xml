@@ -8,8 +8,9 @@
             table="notification" schema="notification_ctx">
 
         <indexes>
-            <!-- The in-app inbox: unread first, newest first. -->
-            <index name="idx_notification_recipient" columns="recipient_id,read_at,created_at"/>
+            <!-- The in-app inbox: unread first, newest first. Silenced rows
+                 are filtered out by `inbox`, so it goes in the index. -->
+            <index name="idx_notification_recipient" columns="recipient_id,inbox,read_at,created_at"/>
         </indexes>
 
         <unique-constraints>
@@ -34,6 +35,8 @@
         <field name="sourceEventId" column="source_event_id" type="guid" nullable="true"/>
         <field name="createdAt" column="created_at" type="datetime_immutable"/>
         <field name="readAt" column="read_at" type="datetime_immutable" nullable="true"/>
+        <field name="inbox" type="boolean"/>
+        <field name="emailedAt" column="emailed_at" type="datetime_immutable" nullable="true"/>
 
     </entity>
 
