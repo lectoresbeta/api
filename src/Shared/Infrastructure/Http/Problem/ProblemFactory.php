@@ -87,6 +87,7 @@ final readonly class ProblemFactory
             FailureKind::GONE => Response::HTTP_GONE,
             FailureKind::RATE_LIMITED => Response::HTTP_TOO_MANY_REQUESTS,
             FailureKind::TOO_LARGE => Response::HTTP_REQUEST_ENTITY_TOO_LARGE,
+            FailureKind::UPSTREAM_FAILED => Response::HTTP_BAD_GATEWAY,
         };
     }
 

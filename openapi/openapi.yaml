@@ -74,6 +74,15 @@ paths:
   /auth/login:
     $ref: './paths/auth.yaml#/login'
 
+  # Entrar con Google (FEAT-USR-002). El proveedor va en la ruta para que
+  # Facebook y LinkedIn encajen sin cambiar el contrato cuando se retomen.
+
+  /auth/oauth/{provider}:
+    $ref: './paths/auth.yaml#/oauthStart'
+
+  /auth/oauth/{provider}/callback:
+    $ref: './paths/auth.yaml#/oauthCallback'
+
   /legal/documents:
     $ref: './paths/auth.yaml#/legalDocuments'
 

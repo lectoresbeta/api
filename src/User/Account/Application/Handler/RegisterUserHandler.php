@@ -4,26 +4,19 @@ declare(strict_types=1);
 
 namespace LectoresBeta\User\Account\Application\Handler;
 
-use LectoresBeta\Shared\Application\Event\EventPublisher;
 use LectoresBeta\Shared\Domain\Clock\Clock;
-use LectoresBeta\Shared\Domain\Event\EventId;
-use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 use LectoresBeta\User\Account\Application\Command\RegisterUser;
 use LectoresBeta\User\Account\Application\Port\PasswordHasher;
+use LectoresBeta\User\Account\Application\Service\OpenAccount;
 use LectoresBeta\User\Account\Application\Service\UsernameAllocator;
 use LectoresBeta\User\Account\Domain\Entity\User;
-use LectoresBeta\User\Account\Domain\Event\UserRegistered;
 use LectoresBeta\User\Account\Domain\Exception\TermsNotAccepted;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\Service\PasswordPolicy;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Legal\Application\Service\CheckLegalConsent;
-use LectoresBeta\User\Legal\Domain\Entity\LegalAcceptance;
 use LectoresBeta\User\Legal\Domain\Enum\LegalDocumentType;
-use LectoresBeta\User\Legal\Domain\Repository\LegalAcceptanceRepository;
-use LectoresBeta\User\Legal\Domain\ValueObject\LegalAcceptanceId;
-use LectoresBeta\User\Privacy\Application\Service\StartPrivacySettings;
 
 /**
  * Signing up (`FEAT-USR-001`).
@@ -51,14 +44,11 @@ final readonly class RegisterUserHandler
 {
     public function __construct(
         private UserRepository $users,
-        private LegalAcceptanceRepository $acceptances,
         private CheckLegalConsent $consent,
-        private StartPrivacySettings $privacySettings,
+        private OpenAccount $accounts,
         private UsernameAllocator $usernames,
         private PasswordPolicy $passwordPolicy,
         private PasswordHasher $passwordHasher,
-        private TransactionalSession $session,
-        private EventPublisher $events,
         private Clock $clock,
     ) {
     }
@@ -77,56 +67,25 @@ final readonly class RegisterUserHandler
             LegalDocumentType::PRIVACY_POLICY->value => self::requiredVersion($command->acceptedPrivacyVersion),
         ]);
 
-        $terms = $accepted[LegalDocumentType::TERMS_OF_USE->value];
-        $privacy = $accepted[LegalDocumentType::PRIVACY_POLICY->value];
-
         if ($this->users->emailIsTaken($email)) {
             return;
         }
 
         $now = $this->clock->now();
-        $userId = UserId::generate();
         $username = $this->usernames->allocateFrom($email);
 
-        $user = User::register(
-            $userId,
-            $email,
-            $username,
-            $this->passwordHasher->hash($command->plainPassword),
+        $this->accounts->open(
+            User::register(
+                UserId::generate(),
+                $email,
+                $username,
+                $this->passwordHasher->hash($command->plainPassword),
+                $now,
+            ),
+            $accepted,
+            $command->ipAddress,
             $now,
         );
-
-        $this->session->execute(function () use ($user, $userId, $now, $terms, $privacy, $command): void {
-            $this->users->save($user);
-
-            // En la misma transacción y no en respuesta a un evento: una
-            // cuenta sin ajustes de privacidad, aunque fuese un segundo, es
-            // una cuenta cuya privacidad alguien tiene que suponer
-            // (`FEAT-USR-038` `RN-4`).
-            $this->privacySettings->forAccount($userId, $now);
-
-            foreach ([[LegalDocumentType::TERMS_OF_USE, $terms], [LegalDocumentType::PRIVACY_POLICY, $privacy]] as [$type, $version]) {
-                $this->acceptances->save(new LegalAcceptance(
-                    LegalAcceptanceId::generate(),
-                    $userId,
-                    $type,
-                    $version,
-                    $now,
-                    $command->ipAddress,
-                ));
-            }
-        });
-
-        // Published after the transaction commits, never inside it: a fact
-        // announced by a transaction that then rolls back is a fact that
-        // never happened, and consumers cannot take it back.
-        $this->events->publish(new UserRegistered(
-            EventId::generate(),
-            $userId,
-            $email,
-            $username,
-            $now,
-        ));
     }
 
     private static function requiredVersion(?string $version): string

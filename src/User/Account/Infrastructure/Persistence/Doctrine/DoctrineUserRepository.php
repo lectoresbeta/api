@@ -7,6 +7,7 @@ namespace LectoresBeta\User\Account\Infrastructure\Persistence\Doctrine;
 use LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\DoctrineRepository;
 use LectoresBeta\User\Account\Domain\Entity\User;
 use LectoresBeta\User\Account\Domain\Enum\AccountStatus;
+use LectoresBeta\User\Account\Domain\Enum\AuthProvider;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
@@ -35,6 +36,14 @@ final class DoctrineUserRepository extends DoctrineRepository implements UserRep
     public function ofUsername(Username $username): ?User
     {
         return $this->repository()->findOneBy(['username' => $username->value()]);
+    }
+
+    public function ofExternalIdentity(AuthProvider $provider, string $externalId): ?User
+    {
+        return $this->repository()->findOneBy([
+            'authProvider' => $provider,
+            'externalId' => $externalId,
+        ]);
     }
 
     public function ofIds(array $userIds): array

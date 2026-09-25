@@ -71,6 +71,19 @@ framework:
             limit: 120
             interval: '1 hour'
 
+        # La vuelta de un proveedor externo (FEAT-USR-002). Aquí no hay
+        # contraseña que probar, pero cada llamada dispara una petición
+        # saliente a Google con nuestras credenciales, y eso no debería poder
+        # hacerlo nadie sin freno.
+        #
+        # Generoso: un código solo sirve una vez y quien se equivoca repite
+        # el viaje entero, así que unos cuantos intentos por hora son
+        # normales.
+        oauth_callback_by_ip:
+            policy: sliding_window
+            limit: 30
+            interval: '1 hour'
+
         password_reset_interval:
             policy: fixed_window
             limit: 1

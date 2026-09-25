@@ -280,3 +280,21 @@ deletePublishedBookCover:
     path: /api/v1/me/published-books/{publishedBookId}/cover
     controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\DeletePublishedBookCoverController::__invoke
     methods: [DELETE]
+
+# Entrar con Google (`FEAT-USR-002`). Sin sesión: no puede haberla todavía.
+#
+# El proveedor va en la ruta para que Facebook y LinkedIn encajen sin cambiar
+# el contrato cuando se retomen (`FEAT-USR-003`, `FEAT-USR-019`). Hoy solo
+# responde `google`; cualquier otro nombre es un `404`.
+
+startOAuth:
+    path: /api/v1/auth/oauth/{provider}
+    controller: LectoresBeta\User\Authentication\Infrastructure\Controller\StartOAuthController::__invoke
+    methods: [GET]
+
+# `POST` porque canjea un código de un solo uso y puede crear una cuenta:
+# repetirlo no deja el mundo igual.
+completeOAuth:
+    path: /api/v1/auth/oauth/{provider}/callback
+    controller: LectoresBeta\User\Authentication\Infrastructure\Controller\CompleteOAuthController::__invoke
+    methods: [POST]

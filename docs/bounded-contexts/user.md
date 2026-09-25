@@ -37,7 +37,7 @@ preferencias y presencia pública como autor.
 | Concepto | Responsabilidad |
 |---|---|
 | `Account` | Ciclo de vida de la cuenta: alta, activación, modificación, baja |
-| `Authentication` | Credenciales, sesión, proveedores externos, recuperación |
+| `Authentication` | Credenciales, sesión, proveedores externos, recuperación. Google ya entra (`FEAT-USR-002`), tras el puerto `OAuthProvider`: añadir Facebook o LinkedIn es su adaptador y una línea de configuración |
 | `Onboarding` | Los tres pasos posteriores al registro y su estado |
 | `Profile` | Datos públicos, nombre de usuario y sus alias, preferencias literarias. Resuelve el perfil ajeno por identificador, por nombre y por alias vigente |
 | `AuthorPage` | Perfil público: portada, descripción, obras publicadas y premios |

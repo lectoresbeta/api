@@ -6,6 +6,7 @@ namespace LectoresBeta\Tests\Unit\User;
 
 use LectoresBeta\Tests\Unit\Shared\FrozenClock;
 use LectoresBeta\User\Account\Domain\Entity\User;
+use LectoresBeta\User\Account\Domain\Enum\AuthProvider;
 use LectoresBeta\User\Account\Domain\Exception\AccountNotActivated;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
@@ -172,6 +173,11 @@ final class InMemoryUsers implements UserRepository
     }
 
     public function ofUsername(Username $username): ?User
+    {
+        return $this->user;
+    }
+
+    public function ofExternalIdentity(AuthProvider $provider, string $externalId): ?User
     {
         return $this->user;
     }

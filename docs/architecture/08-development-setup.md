@@ -125,6 +125,9 @@ Las que el código exige. `.env` trae un valor de desarrollo para cada una.
 | `MESSENGER_TRANSPORT_DSN` | RabbitMQ. En tests, `in-memory://` |
 | `MAILER_DSN` | Proveedor de correo. Sin decidir (`FEAT-NOT-008` `N-3`) |
 | `MAILER_SENDER` | Remitente de los correos transaccionales |
+| `GOOGLE_OAUTH_CLIENT_ID` | Entrar con Google (`FEAT-USR-002`). **Vacía en `.env`**: en desarrollo va en `.env.local`, que no se versiona; en producción, en el entorno |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | Lo mismo, y es un secreto: **no se commitea nunca** |
+| `GOOGLE_OAUTH_REDIRECT_URI` | La página **del frontend** que recoge el código. Tiene que estar declarada igual en la consola de Google: el proveedor exige que sea la misma en los dos pasos |
 | `ACTIVATION_URL_TEMPLATE` | Página **del frontend** que recoge el token de activación. `{token}` se sustituye al generar el correo |
 | `PASSWORD_RESET_URL_TEMPLATE` | Lo mismo para el enlace de «he olvidado mi contraseña» (`FEAT-USR-007`) |
 | `EMAIL_CHANGE_URL_TEMPLATE` | Lo mismo para confirmar un cambio de correo (`FEAT-USR-040`) |
@@ -247,6 +250,9 @@ los créditos de bienvenida, inicio de sesión y consulta de saldo. Lo que falta
   activar podría escribir en cuanto exista algo donde escribir, así que esto va **antes** que
   el primer endpoint de escritura y no después.
 - No hay proveedor de correo elegido para producción (`N-3` de `FEAT-NOT-008`).
+- Entrar con Google funciona, pero **sin credenciales configuradas no hace nada**: hay que
+  crear el cliente OAuth en la consola de Google Cloud y poner las tres variables. Vacías, el
+  botón falla y el resto de la aplicación sigue igual.
 - Cambiar contraseña o correo todavía no invalida los tokens de refresco
   (`decision:0007` `RN-3`): es trabajo de `FEAT-USR-041` y `FEAT-USR-040`.
 - Nadie purga los alias caducados en un horario: el comando existe

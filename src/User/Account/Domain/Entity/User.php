@@ -174,6 +174,27 @@ class User
         return $user;
     }
 
+    /**
+     * Enlazar una cuenta de Google a una cuenta que ya existía
+     * (`FEAT-USR-002` `RN-6`, `U-2`).
+     *
+     * **La contraseña se queda.** Quitársela a quien ya entraba con ella
+     * sería cerrarle la puerta que usa por haber probado otra, y no protege
+     * nada: quien acaba de demostrar que controla ese correo podría
+     * restablecerla en un minuto.
+     *
+     * Solo se enlaza si el proveedor afirma que **ese correo está
+     * verificado**. Sin esa afirmación, «tengo una cuenta con tu dirección»
+     * no demuestra nada, y enlazar sería entregar una cuenta ajena a quien
+     * supiera el correo de su dueño.
+     */
+    public function linkExternalIdentity(AuthProvider $provider, string $externalId, \DateTimeImmutable $now): void
+    {
+        $this->authProvider = $provider;
+        $this->externalId = $externalId;
+        $this->updatedAt = $now;
+    }
+
     public function id(): UserId
     {
         return UserId::fromString($this->id);

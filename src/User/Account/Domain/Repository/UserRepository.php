@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\User\Account\Domain\Repository;
 
 use LectoresBeta\User\Account\Domain\Entity\User;
+use LectoresBeta\User\Account\Domain\Enum\AuthProvider;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Account\Domain\ValueObject\Username;
@@ -25,6 +26,17 @@ interface UserRepository
     public function ofEmail(Email $email): ?User;
 
     public function ofUsername(Username $username): ?User;
+
+    /**
+     * La cuenta enlazada a una identidad de un proveedor externo
+     * (`FEAT-USR-002`).
+     *
+     * Se busca por **proveedor e identificador**, nunca por el correo: el
+     * correo de una cuenta de Google puede cambiar, y el `sub` que Google
+     * entrega no. Buscar por correo sería perder la cuenta de alguien el día
+     * que se cambia de dirección.
+     */
+    public function ofExternalIdentity(AuthProvider $provider, string $externalId): ?User;
 
     /**
      * Varios de golpe, para pintar una página entera de una lista

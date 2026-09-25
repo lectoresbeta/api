@@ -539,3 +539,203 @@ legalAcceptances:
                         format: date-time
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+# —— Entrar con Google (`FEAT-USR-002`) ————————————————————————————————
+#
+# Google acredita **quién es** alguien, no **qué acepta**. Es la distinción
+# que hay que tener presente para leer estas dos operaciones: «entrar con
+# Google» no sustituye al registro, porque Google dice que esa persona
+# controla ese correo y no dice que haya leído nada.
+
+oauthStart:
+  get:
+    tags: [Auth]
+    operationId: startOAuth
+    summary: Empezar el acceso con un proveedor externo
+    security: []
+    description: |
+      Devuelve la dirección del proveedor **en JSON**, en vez de redirigir:
+      quien saca a la persona de la aplicación es el cliente, que además es
+      quien sabe adónde volver, y una aplicación móvil no puede seguir una
+      redirección de la API.
+
+      El `state` es un valor impredecible que **el cliente guarda y compara**
+      con el que le devuelva el proveedor antes de mandar el código. Lo
+      compara el cliente y no el servidor porque esta API no tiene sesión de
+      navegador donde atarlo (`U-3`).
+
+      Hoy el único `provider` es `google`. Cualquier otro nombre responde
+      `404`: el cliente ha pedido una puerta que no existe.
+    parameters:
+      - $ref: '#/OAuthProvider'
+      - name: redirectUri
+        in: query
+        required: false
+        description: |
+          Adónde vuelve el proveedor. Tiene que estar declarada en la consola
+          del proveedor y ser **la misma** que se mande al completar. Si se
+          omite, la configurada en el servidor.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Adónde mandar a la persona.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [authorizationUrl, state]
+              properties:
+                authorizationUrl:
+                  type: string
+                state:
+                  type: string
+      '404':
+        description: 'Ese proveedor no existe. `code: UNKNOWN_AUTH_PROVIDER`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+oauthCallback:
+  post:
+    tags: [Auth]
+    operationId: completeOAuth
+    summary: Completar el acceso con un proveedor externo
+    security: []
+    description: |
+      El cliente manda el código que le devolvió el proveedor. Tres caminos, y
+      el cliente no elige cuál:
+
+      1. **ya hay cuenta con esa identidad** → sesión. Es lo que hace que
+         registrarse dos veces con la misma cuenta de Google no cree dos
+         cuentas;
+      2. **ese correo ya tiene cuenta aquí** → se enlaza, **solo si el
+         proveedor afirma que el correo está verificado**. Sin esa
+         afirmación responde `409`: enlazar sería entregar una cuenta ajena
+         a quien supiera el correo de su dueño. La contraseña de esa cuenta
+         **se conserva**;
+      3. **nadie** → se crea, y entonces **hacen falta las versiones
+         legales**. Sin ellas responde `422` y **no persiste nada**.
+
+      `acceptedLegalVersions` es por tanto opcional, y su ausencia solo es un
+      error en el tercer caso: a quien solo inicia sesión no se le vuelve a
+      pedir nada.
+
+      La cuenta creada así nace **activada** y con sus créditos de bienvenida:
+      el proveedor ya ha comprobado que esa dirección es de quien la usa, y
+      mandar un correo de activación sería pedir que se demuestre algo ya
+      demostrado.
+
+      No se almacena **ninguna credencial del proveedor**.
+    parameters:
+      - $ref: '#/OAuthProvider'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [code]
+            properties:
+              code:
+                type: string
+                description: El código de un solo uso que devolvió el proveedor.
+              redirectUri:
+                type: string
+                description: La misma que se usó al empezar.
+              acceptedLegalVersions:
+                type: object
+                description: |
+                  Obligatorio **solo si la operación va a crear una cuenta**.
+                properties:
+                  termsOfUse:
+                    type: string
+                  privacyPolicy:
+                    type: string
+    responses:
+      '200':
+        description: Sesión abierta sobre una cuenta que ya existía.
+        content:
+          application/json:
+            schema:
+              $ref: '#/OAuthSession'
+      '201':
+        description: Cuenta creada y sesión abierta.
+        content:
+          application/json:
+            schema:
+              $ref: '#/OAuthSession'
+      '403':
+        description: |
+          `code: ACCOUNT_BLOCKED`. Entrar por otra puerta no es una forma de
+          saltarse una sanción.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'Ese proveedor no existe. `code: UNKNOWN_AUTH_PROVIDER`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: EMAIL_ALREADY_REGISTERED`. Ese correo ya tiene cuenta y el
+          proveedor no afirma que esté verificado. La salida es entrar con la
+          contraseña.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: TERMS_NOT_ACCEPTED` si la operación crearía una cuenta y
+          faltan las versiones legales —**no se persiste nada**—,
+          `LEGAL_VERSION_OUTDATED` si la versión aceptada ya no rige, o
+          `EMAIL_NOT_SHARED` si el proveedor no da dirección de correo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '429':
+        $ref: '../openapi.yaml#/components/responses/TooManyRequests'
+      '502':
+        description: |
+          `code: AUTH_PROVIDER_UNAVAILABLE`. No se ha podido hablar con el
+          proveedor. **El detalle no se cuenta**: es técnico de una
+          integración, y lo único que hay que hacer es reintentar.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+OAuthProvider:
+  name: provider
+  in: path
+  required: true
+  description: Hoy solo `google`.
+  schema:
+    type: string
+    enum: [google]
+
+OAuthSession:
+  type: object
+  required: [accessToken, refreshToken, expiresIn, isNewAccount, linkedToExistingAccount]
+  properties:
+    accessToken:
+      type: string
+    refreshToken:
+      type: string
+    expiresIn:
+      type: integer
+    isNewAccount:
+      type: boolean
+      description: |
+        Para que el cliente sepa si mandar a la persona al onboarding sin
+        deducirlo del estado del onboarding, que es un detalle que puede
+        cambiar.
+    linkedToExistingAccount:
+      type: boolean
+      description: Si esta identidad se acaba de enlazar a una cuenta que ya existía.

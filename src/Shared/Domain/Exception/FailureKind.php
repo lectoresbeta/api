@@ -58,6 +58,17 @@ enum FailureKind
     case RATE_LIMITED;
 
     /**
+     * Pedido bien, y **algo de lo que dependemos no ha contestado**.
+     *
+     * Aparte de todo lo anterior porque no es culpa de quien llama ni de lo
+     * que pidió: no hay nada que corregir y sí hay algo que reintentar. Un
+     * proveedor de identidad caído, un almacén que no responde. Lo que falle
+     * al otro lado **no se cuenta**: es detalle técnico de una integración, y
+     * lo único que se le debe a quien llama es que vuelva a intentarlo.
+     */
+    case UPSTREAM_FAILED;
+
+    /**
      * Pedido bien, y **demasiado grande**.
      *
      * Aparte de `INVALID` porque el cliente no puede arreglarlo editando

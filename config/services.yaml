@@ -288,6 +288,10 @@ services:
             $byAddress: '@limiter.login_by_ip'
             $byAccount: '@limiter.login_by_account'
 
+    LectoresBeta\User\Authentication\Infrastructure\Controller\CompleteOAuthController:
+        arguments:
+            $byAddress: '@limiter.oauth_callback_by_ip'
+
     LectoresBeta\User\Account\Infrastructure\Security\ActivationResendThrottle:
         arguments:
             $byInterval: '@limiter.resend_activation_interval'
@@ -501,6 +505,22 @@ services:
     LectoresBeta\Shared\Infrastructure\Storage\LocalFileStorage:
         arguments:
             $directory: '%app.storage_dir%'
+
+    # Entrar con Google (FEAT-USR-002). El adaptador se enumera a mano, y es
+    # a propósito: la lista de proveedores externos que existen es una
+    # decisión visible aquí, no un descubrimiento del contenedor. Añadir
+    # Facebook o LinkedIn cuando se retomen es su adaptador y una línea en
+    # esta lista, sin tocar `Application` ni `Domain`.
+    LectoresBeta\User\Authentication\Infrastructure\OAuth\GoogleOAuthProvider:
+        arguments:
+            $clientId: '%env(GOOGLE_OAUTH_CLIENT_ID)%'
+            $clientSecret: '%env(GOOGLE_OAUTH_CLIENT_SECRET)%'
+            $defaultRedirectUri: '%env(GOOGLE_OAUTH_REDIRECT_URI)%'
+
+    LectoresBeta\User\Authentication\Application\Service\OAuthProviders:
+        arguments:
+            $providers:
+                - '@LectoresBeta\User\Authentication\Infrastructure\OAuth\GoogleOAuthProvider'
 
     LectoresBeta\Notification\Delivery\Infrastructure\Mail\SymfonyMailer:
         arguments:

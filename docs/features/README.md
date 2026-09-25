@@ -70,7 +70,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-USR-001 | Registro con email y contraseña | Guest | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-001-register-with-email.md) |
-| FEAT-USR-002 | Registro con cuenta de Google | Guest | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-002-register-with-google.md) |
+| FEAT-USR-002 | Registro con cuenta de Google | Guest | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-002-register-with-google.md) |
 | FEAT-USR-003 | Registro con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-004 | Login con email y contraseña, y ciclo de vida de la sesión | Guest | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-004-login-with-email.md) |
 | FEAT-USR-005 | Login con cuenta de Google | Guest | PENDING | TODO | P0 | — |

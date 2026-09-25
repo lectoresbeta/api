@@ -8,8 +8,8 @@
 | Método y ruta | `operationId` | Propósito | Funcionalidad | Estado |
 |---|---|---|---|---|
 | `POST /api/v1/auth/register` | `registerUser` | Registro con email y contraseña | FEAT-USR-001 | **Implementado** |
-| `GET /auth/oauth/{provider}` | `startOAuth` | Iniciar autenticación externa. **Solo `google` en esta fase** | FEAT-USR-002/005 | PENDING |
-| `POST /auth/oauth/{provider}/callback` | `completeOAuth` | Completar autenticación externa | FEAT-USR-002/005 | PENDING |
+| `GET /api/v1/auth/oauth/{provider}` | `startOAuth` | Iniciar autenticación externa. **Solo `google` en esta fase** | FEAT-USR-002/005 | **Implementado** |
+| `POST /api/v1/auth/oauth/{provider}/callback` | `completeOAuth` | Completar autenticación externa | FEAT-USR-002/005 | **Implementado** |
 | `POST /api/v1/auth/activate` | `activateAccount` | Activar la cuenta con el token del correo | FEAT-USR-020 | **Implementado** |
 | `POST /api/v1/auth/activation/resend` | `resendActivationEmail` | Reenviar el correo de activación | FEAT-USR-021 | **Implementado** |
 | `POST /api/v1/auth/password/forgotten` | `requestPasswordReset` | Pedir el enlace de recuperación | FEAT-USR-007 | **Implementado** |
@@ -348,14 +348,90 @@ la URL. Ver [`FEAT-USR-035`](../../features/user/FEAT-USR-035-resolve-profile-by
 
 ---
 
-## Nota sobre el alta con proveedores externos
+## Entrar con un proveedor externo
 
-`POST /auth/oauth/{provider}/callback` **no crea una cuenta** si la petición no incluye la
-aceptación de la versión vigente de las condiciones de uso y la política de privacidad:
-responde `422` con `code: TERMS_NOT_ACCEPTED` y no persiste nada.
+**Funcionalidad:** [`FEAT-USR-002`](../../features/user/FEAT-USR-002-register-with-google.md)
 
-Iniciar sesión en una cuenta ya existente no lo exige. Ver
-[`FEAT-USR-002`](../../features/user/FEAT-USR-002-register-with-google.md).
+Dos operaciones, y una frase que hay que tener presente para leerlas: **Google acredita quién
+es alguien, no qué acepta.** Es lo que es fácil dar por hecho —que «entrar con Google»
+sustituye al registro— y no lo es: Google dice que esa persona controla ese correo, no dice
+que haya leído nada.
+
+El proveedor va en la ruta para que Facebook y LinkedIn (`FEAT-USR-003`, `FEAT-USR-019`)
+encajen sin cambiar el contrato cuando se retomen. Hoy solo responde `google`; cualquier otro
+nombre es un `404`, porque el cliente ha pedido una puerta que no existe.
+
+### `GET /api/v1/auth/oauth/{provider}`
+
+Devuelve la dirección del proveedor **en JSON**, no una redirección: quien saca a la persona
+de la aplicación es el cliente —que además sabe adónde volver— y una aplicación móvil no
+puede seguir una redirección de la API.
+
+El `state` que acompaña a la dirección es un valor impredecible que **el cliente guarda y
+compara** con el que devuelva el proveedor antes de mandar el código. Lo compara el cliente y
+no el servidor: esta API no tiene sesión de navegador donde atarlo, y un `state` que el
+servidor firmara sin atarlo a un navegador concreto parecería una comprobación sin serlo
+(`U-3`).
+
+### `POST /api/v1/auth/oauth/{provider}/callback`
+
+Tres caminos, y el cliente no elige cuál:
+
+| Situación | Qué pasa | Respuesta |
+|---|---|---|
+| Ya hay cuenta con esa identidad del proveedor | Sesión | `200` |
+| Ese correo ya tiene cuenta aquí y el proveedor **afirma** que está verificado | Se enlaza y se abre sesión | `200`, con `linkedToExistingAccount` |
+| Ese correo ya tiene cuenta aquí y el proveedor **no** lo afirma | Nada | `409 EMAIL_ALREADY_REGISTERED` |
+| No hay nadie, y vienen las versiones legales | Se crea la cuenta y se abre sesión | `201` |
+| No hay nadie, y **no** vienen | **No se crea nada** | `422 TERMS_NOT_ACCEPTED` |
+
+`acceptedLegalVersions` es por tanto opcional, y su ausencia **solo** es un error cuando la
+operación implicaría crear una cuenta: a quien inicia sesión no se le vuelve a pedir nada.
+
+El primer caso es lo que hace que registrarse dos veces con la misma cuenta de Google no cree
+dos cuentas.
+
+El enlace **solo ocurre si el proveedor afirma que el correo está verificado**. Sin esa
+afirmación, «tengo una cuenta con tu dirección» no demuestra nada, y enlazar sería entregarle
+una cuenta ajena a quien supiera el correo de su dueño. La salida es la de siempre: entrar con
+la contraseña.
+
+Enlazar **no quita la contraseña** de la cuenta que ya existía. Quitársela a quien ya entraba
+con ella sería cerrarle la puerta que usa por haber probado otra, y no protege nada: quien
+acaba de demostrar que controla ese correo podría restablecerla en un minuto.
+
+### La cuenta creada nace activada
+
+Y con sus créditos de bienvenida. El proveedor ya ha comprobado que esa dirección es de quien
+la usa, así que mandar un correo de activación sería pedirle a alguien que demuestre algo ya
+demostrado, perdiendo gente en un paso que no añade seguridad (`RN-8`, `OB-11`).
+
+Lo que no cambia: hace el **mismo onboarding** que el resto (`RN-7`). El proveedor no aporta
+el nombre público, ni la fecha de nacimiento, ni los géneros, y por eso solo se le piden los
+permisos `openid email`.
+
+### Ninguna credencial se almacena
+
+El `access_token` del proveedor se usa para preguntar quién es la persona y se tira (`RN-5`).
+Lo que se guarda en la fila es el identificador externo y el correo.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `UNKNOWN_AUTH_PROVIDER` | 404 | Ese proveedor no existe |
+| `TERMS_NOT_ACCEPTED` | 422 | Crearía una cuenta y faltan las versiones legales |
+| `LEGAL_VERSION_OUTDATED` | 422 | La versión aceptada ya no rige |
+| `EMAIL_NOT_SHARED` | 422 | El proveedor no da dirección de correo |
+| `EMAIL_ALREADY_REGISTERED` | 409 | El correo tiene cuenta y el proveedor no lo da por verificado |
+| `ACCOUNT_BLOCKED` | 403 | Entrar por otra puerta no salta una sanción |
+| `AUTH_PROVIDER_UNAVAILABLE` | 502 | No se ha podido hablar con el proveedor. **El detalle no se cuenta** |
+
+### Efectos
+
+`UserRegistered` y, por nacer activada, `AccountActivated`, que es lo que abona los diez
+créditos de bienvenida. Los mismos que el alta con correo: para el resto de la plataforma una
+cuenta es una cuenta, venga por donde venga.
 
 
 ---
