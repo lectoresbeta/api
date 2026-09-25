@@ -105,6 +105,14 @@ dinero — `affordableCorrections` es una conclusión acotada a diez, no un sald
 | `CorrectionBriefs` | Qué pregunta el autor en **un capítulo concreto**, de quién es la obra, si admite correcciones y bajo qué modalidad | `Feedback` |
 | `WorkAccessBriefs` | De quién es una obra, cómo está abierta, qué declara contener y si existe para alguien que no sea su autor | `Reading` |
 | `AuthoredWorkCount` | **Una cifra**: cuántas obras tiene ese autor. Nunca la lista | `User` |
+| `ReadableChapters` | **Un booleano**: ¿puede esta persona leer este capítulo? Y en qué obra está, para poder preguntar por el acceso de lector beta | `Community` |
+
+`ReadableChapters` es el único que **devuelve el veredicto ya dado** en vez de los hechos para
+darlo, y la razón es el peso de la regla: la de lectura tiene cinco puertas, custodia obra
+inédita y es la más peligrosa del backend. Escrita dos veces, una de las dos se queda atrás.
+Los dos booleanos que necesita —edad y acceso de lector beta— los trae quien pregunta, que es
+lo que impide que este contrato llame a los de `User` y `Reading` mientras responde
+([`decision:0015`](../decisions/0015-work-and-reading-ask-each-other.md), regla 4).
 
 Es síncrono a conciencia: los enunciados del cuestionario son **texto del autor**, y por eso
 `QuestionnaireUpdated` no los transporta. Quien abre el panel de corrección los necesita en

@@ -265,6 +265,7 @@ hecho económico; qué se ve lo decide `Feedback`, que es quien posee la correcc
 | `UserBlocked` | Alguien bloquea a alguien | **`User`** (deja de aceptar comentarios entre ambos), **`Reading`** (retira el acceso de lector beta), y `Feedback`, `Credits` y `Notification` cuando existan | `blockerId`, `blockedId`, `blockedAt` |
 | `UserUnblocked` | Se levanta un bloqueo | **`User`**. `Reading` **no** lo consume: devolver un acceso revocado es una decisión del autor, no un efecto secundario | `blockerId`, `blockedId`, `unblockedAt` |
 | `DirectMessageSent` | Alguien le escribe a alguien (`FEAT-COM-011`) | **`Notification`** ✅ (`DIRECT_MESSAGE_RECEIVED`) | `conversationId`, `senderId`, `recipientId`, `sentAt`. **Sin el cuerpo, ni una línea** |
+| `ChapterCommented` | Alguien comenta bajo el texto de un capítulo (`FEAT-COM-036`) | **`Notification`** ✅ (`CHAPTER_COMMENT` al autor, `POST_REPLY` a quien se responde). **`Credits` NO lo consume** | `chapterId`, `workId`, `commentId`, `workAuthorId`, `commentAuthorId`, `parentAuthorId?`. **Sin el texto** |
 
 Los dos llevan **los dos identificadores y nada más**. Ni nombres ni perfiles: quien los
 consume tiene su propia copia de las personas, y copiar un nombre aquí solo añadiría un sitio
@@ -283,6 +284,12 @@ aprenderlo para que bloquear funcione.
 Al deshacer los seguimientos, el bloqueo publica además un `AuthorUnsubscribed` por cada uno.
 Quien proyecta el grafo se entera de lo que le importa —esa relación ya no está— sin aprender
 que detrás había un bloqueo.
+
+Que `Credits` **no** consuma `ChapterCommented` es lo que dice que comentar un capítulo no es
+corregirlo. Lo que el sistema paga es el cuestionario respondido (`FEAT-FBK-003`); un
+comentario es una reacción libre y no mueve un crédito en ninguna dirección. Las dos cosas
+conviven en la misma pantalla, y confundirlas ya pasó una vez en la documentación de este
+producto.
 
 `DirectMessageSent` **no lleva el mensaje**, y no es una precaución genérica. Quien lo
 consume es el contexto que escribe correos: un hecho que trajera el cuerpo sacaría una

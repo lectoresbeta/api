@@ -167,6 +167,11 @@ abstract class EconomyScenario extends WebTestCase
         // por eso importa que aquí se entregue de verdad y el test pueda
         // comprobar qué llega y qué no.
         'DirectMessageSent',
+
+        // La barra social bajo el texto de un capítulo (`FEAT-COM-036`).
+        // `Credits` **no** está entre los consumidores, y esa ausencia es
+        // parte de lo que se comprueba: comentar no mueve un crédito.
+        'ChapterCommented',
     ];
 
     /**

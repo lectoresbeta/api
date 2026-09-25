@@ -175,12 +175,19 @@ mismo motor que las recomendaciones de la Home (`FEAT-COM-017`).
 | R-6 | ¿Se puede leer el capítulo sin acceso de lector beta? | La pantalla no distingue |
 | R-8 | ¿Caduca un borrador de corrección? | Con un borrador por capítulo, el saldo inmovilizado se multiplica |
 | H-3 | ¿Qué cuenta como «lectura»? | Tercera vez que aparece sin definir |
-| R-9 | ¿Los comentarios de un capítulo son `PostComment` o un tipo aparte? | Decide qué contexto los posee |
 | R-11 | ¿Las métricas por capítulo se agregan también a nivel de obra? | La tarjeta del catálogo muestra cifras de obra |
 
 Resueltas: **`R-2`** (la corrección es **por capítulo**), **`R-5`** (el contador es en
-**palabras**), `R-3` (los factores son longitud y cuestionario; la fórmula se define después)
-y `R-7` (un borrador por capítulo).
+**palabras**), `R-3` (los factores son longitud y cuestionario; la fórmula se define después),
+`R-7` (un borrador por capítulo) y **`R-9`**: los comentarios de un capítulo son un tipo
+aparte, `ChapterComment`, y viven en `Community`
+([`FEAT-COM-036`](../features/community/FEAT-COM-036-chapter-interactions.md)). No son
+`PostComment` porque heredan audiencias distintas —una publicación frente a la regla de
+lectura de una obra— y dos caminos de autorización en una entidad acaban aplicando el que no
+toca.
+
+**`R-1` queda parcialmente resuelta**: los contadores de apoyos y comentarios son por capítulo
+y están implementados; el de lecturas sigue esperando a `H-3`.
 
 **`R-1` es la que hereda el peso de `R-2`.** El acceso de lector beta se concede por obra,
 pero ahora el gasto ocurre capítulo a capítulo: las dos granularidades han dejado de

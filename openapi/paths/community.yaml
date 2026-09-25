@@ -1853,3 +1853,355 @@ ConversationIdParam:
   required: true
   schema:
     $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+# Las interacciones sociales bajo el texto de un capítulo (`FEAT-COM-036`).
+
+ChapterIdParam:
+  name: chapterId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+ChapterCommentIdParam:
+  name: commentId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+ChapterCommentCard:
+  type: object
+  required: [commentId, author, body, parentCommentId, replyCount, mine, createdAt]
+  properties:
+    commentId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    author:
+      type: object
+      required: [userId, username]
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    body:
+      type: string
+      description: Texto plano, hasta 1000 caracteres.
+    parentCommentId:
+      type: [string, 'null']
+      description: |
+        El comentario raíz del hilo, si es una respuesta. **Los hilos son
+        planos**: responder a una respuesta cuelga del raíz, nunca de la
+        respuesta.
+    replyCount:
+      type: integer
+    mine:
+      type: boolean
+    createdAt:
+      type: string
+      format: date-time
+
+ChapterCommentPage:
+  type: object
+  required: [comments, pageInfo]
+  description: |
+    Una página puede venir más corta que el `limit` pedido: quien ha dejado de
+    ser visible para quien mira deja un hueco. Lo que dice si hay más es
+    `pageInfo.nextCursor`.
+  properties:
+    comments:
+      type: array
+      items:
+        $ref: '#/ChapterCommentCard'
+    pageInfo:
+      $ref: '../openapi.yaml#/components/schemas/PageInfo'
+
+chapterLike:
+  put:
+    tags: [Community]
+    operationId: likeChapter
+    summary: Apoyar un capítulo
+    description: |
+      `PUT` y no `POST` porque fija un estado: el capítulo acaba apoyado por
+      quien llama, haya pulsado una vez o cinco.
+
+      **No se apoya lo que no se puede leer.** Un capítulo que quien pregunta
+      no puede ver responde `404`, igual que uno que no existe.
+    parameters:
+      - $ref: '#/ChapterIdParam'
+    responses:
+      '200':
+        description: Apoyado, con el contador del capítulo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: COMMENTS_NOT_ACCEPTED`. El autor no admite interacciones de
+          esta persona (`FEAT-USR-038`).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe o no puedes leerlo. `code: CHAPTER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: unlikeChapter
+    summary: Retirar el apoyo a un capítulo
+    description: |
+      Idempotente. **No exige que el autor siga admitiendo comentarios**:
+      quien apoyó algo y después se encontró con el buzón cerrado tiene que
+      poder deshacer lo suyo — un gesto que no se puede retirar no era un
+      gesto.
+    parameters:
+      - $ref: '#/ChapterIdParam'
+    responses:
+      '200':
+        description: Ya no está apoyado. Igual si no lo estaba.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe o no puedes leerlo. `code: CHAPTER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterComments:
+  post:
+    tags: [Community]
+    operationId: commentOnChapter
+    summary: Comentar un capítulo
+    description: |
+      **Comentar un capítulo no es corregirlo.** Esto es una reacción libre
+      bajo el texto, caben las que sean y **no mueve un solo crédito**. La
+      corrección es `POST /chapters/{chapterId}/corrections`: es el
+      cuestionario del autor, hay una por lector y capítulo, y sí los mueve.
+      Conviven en la misma pantalla y son dos cosas distintas.
+
+      `parentCommentId` convierte el comentario en una respuesta. Los hilos
+      son planos: responder a una respuesta cuelga del comentario raíz, y el
+      cliente no necesita saber cuál es.
+
+      Sin menciones, a diferencia de los comentarios del muro: nombrar a
+      alguien bajo un capítulo lo arrastraría a una obra que quizá no puede
+      leer.
+    parameters:
+      - $ref: '#/ChapterIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                maxLength: 1000
+              parentCommentId:
+                type: [string, 'null']
+                format: uuid
+    responses:
+      '201':
+        description: Comentado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [commentId]
+              properties:
+                commentId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'El autor no admite comentarios de esta persona. `code: COMMENTS_NOT_ACCEPTED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          El capítulo no existe o no puedes leerlo
+          (`code: CHAPTER_NOT_FOUND`), o el comentario al que respondes no
+          está en este capítulo (`code: COMMENT_NOT_FOUND`).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'Vacío o de más de 1000 caracteres. `code: VALIDATION_FAILED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  get:
+    tags: [Community]
+    operationId: listChapterComments
+    summary: Los comentarios de un capítulo
+    description: |
+      Del más reciente al más antiguo, y **solo los de primer nivel**: las
+      respuestas cuelgan de su comentario y se piden aparte.
+
+      **No hay «Más relevantes»** todavía, aunque la maqueta lo muestre: esa
+      ordenación necesita la fórmula de relevancia que `CM-4` deja sin
+      definir, la misma que tiene bloqueados los rankings y el orden del muro.
+    parameters:
+      - $ref: '#/ChapterIdParam'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Los comentarios del capítulo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ChapterCommentPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe o no puedes leerlo. `code: CHAPTER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterEngagement:
+  get:
+    tags: [Community]
+    operationId: getChapterEngagement
+    summary: Las cifras sociales de un capítulo
+    description: |
+      Lo que pinta la cabecera de la pantalla de lectura.
+
+      **Endpoint aparte del capítulo** y no dos campos más en
+      `GET /chapters/{chapterId}`: el capítulo lo sirve `Work` y estas cifras
+      son de `Community`. Meterlas en la misma respuesta obligaría a uno de
+      los dos contextos a conocer al otro.
+
+      Trae apoyos y comentarios, **no lecturas**: qué cuenta como «lectura»
+      sigue sin definirse (`H-3`), y un contador que nadie sabe qué mide es
+      peor que no tenerlo.
+    parameters:
+      - $ref: '#/ChapterIdParam'
+    responses:
+      '200':
+        description: Las cifras, y si quien mira lo ha apoyado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chapterId, likeCount, commentCount, likedByViewer]
+              properties:
+                chapterId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                likeCount:
+                  type: integer
+                commentCount:
+                  type: integer
+                  description: La conversación entera, respuestas incluidas.
+                likedByViewer:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe o no puedes leerlo. `code: CHAPTER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterCommentReplies:
+  get:
+    tags: [Community]
+    operationId: listChapterCommentReplies
+    summary: Las respuestas de un comentario de capítulo
+    description: |
+      **De la más antigua a la más reciente**, al revés que la lista de
+      comentarios: un hilo se lee en el orden en que se dijo.
+    parameters:
+      - $ref: '#/ChapterCommentIdParam'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Las respuestas del hilo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ChapterCommentPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          El comentario no existe (`code: COMMENT_NOT_FOUND`) o su capítulo no
+          se puede leer (`code: CHAPTER_NOT_FOUND`).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterComment:
+  delete:
+    tags: [Community]
+    operationId: deleteChapterComment
+    summary: Retirar un comentario propio de un capítulo
+    description: |
+      El propio, y solo el propio. El de otra persona responde `404`, igual
+      que uno que no existe.
+
+      **Retirar un comentario raíz se lleva sus respuestas**: lo contrario
+      dejaría respuestas colgando de algo que ya no está, contestando a una
+      pregunta que nadie puede leer.
+
+      Que el autor de la obra pueda **ocultar** lo que le dicen es otra cosa
+      (`FEAT-FBK-007`), con otra semántica: ahí el comentario sigue
+      existiendo para quien lo escribió.
+    parameters:
+      - $ref: '#/ChapterCommentIdParam'
+    responses:
+      '204':
+        description: Retirado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe o no es tuyo. `code: COMMENT_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

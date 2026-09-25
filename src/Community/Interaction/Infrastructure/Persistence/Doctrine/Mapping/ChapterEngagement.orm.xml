@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!--
+        Los contadores sociales de un capítulo (`R-1`). Guardados y no
+        contados al leer: la cabecera de la pantalla de lectura enseña la
+        cifra en cada visita, y contar cientos de miles de filas cada vez es
+        lo mismo que no poder enseñarla.
+    -->
+    <entity name="LectoresBeta\Community\Interaction\Domain\Entity\ChapterEngagement"
+            table="chapter_engagement" schema="community_ctx">
+
+        <id name="chapterId" column="chapter_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="likeCount" column="like_count" type="integer"/>
+        <field name="commentCount" column="comment_count" type="integer"/>
+
+    </entity>
+
+</doctrine-mapping>

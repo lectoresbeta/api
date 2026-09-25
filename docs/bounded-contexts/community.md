@@ -30,7 +30,7 @@ seguimiento de autores, los mensajes directos y los rankings.
 | Concepto | Responsabilidad |
 |---|---|
 | `Post` | Publicaciones del muro, su intención y su formato |
-| `Interaction` | Comentarios y respuestas, apoyos, reacciones, reposts y compartidos |
+| `Interaction` | Comentarios y respuestas, apoyos y reposts — **sobre una publicación y sobre un capítulo** (`FEAT-COM-036`), que son entidades distintas porque heredan audiencias distintas |
 | `Mention` | A quién se nombra, en una publicación o en un comentario. Concepto propio desde que se puede mencionar en los dos sitios: dentro de uno, el otro dependería de él |
 | `Subscription` | Seguimiento de autores, sus sugerencias y los listados de seguidos y seguidores |
 | `Relationship` | Silenciados y bloqueados |
@@ -45,6 +45,8 @@ seguimiento de autores, los mensajes directos y los rankings.
 |---|---|---|
 | `Post` | `PostId` | Tiene autor, tipo, formato y audiencia. Contiene sus comentarios, reacciones y apoyos. |
 | `PostComment` | `PostCommentId` | De primer nivel o respuesta (`parentCommentId`). **Una respuesta nunca cuelga de otra respuesta**: se aplana al comentario raíz. |
+| `ChapterComment` | `ChapterCommentId` | Lo mismo bajo el texto de un capítulo. **No es un `PostComment`** (`R-9`): aquel hereda la audiencia de su publicación y este la regla de lectura de la obra, que vive en `Work`. |
+| `ChapterEngagement` | `ChapterId` | Los contadores sociales de un capítulo. No es una copia del capítulo: es lo de `Community` sobre él. |
 | `Conversation` | `ConversationId` | Entre dos usuarios, **una por par**: el par se guarda ordenado, así que (A,B) y (B,A) son la misma fila. Abrirla requiere que el destinatario acepte mensajes directos; continuarla, no. |
 | `AuthorSubscription` | `AuthorSubscriptionId` | Una por par (suscriptor, autor). Un usuario no se suscribe a sí mismo. |
 
@@ -84,6 +86,7 @@ periodo.
 | `UserBlocked` | Un usuario bloquea a otro | **`User`**, **`Reading`**, y `Feedback`, `Credits` y `Notification` cuando existan |
 | `UserUnblocked` | Se levanta el bloqueo | **`User`**. `Reading` no lo consume: un acceso revocado no vuelve solo |
 | `DirectMessageSent` | Se envía un mensaje directo | `Notification` |
+| `ChapterCommented` | Se comenta bajo el texto de un capítulo | `Notification`. **`Credits` no**: comentar no mueve créditos |
 
 ## Contratos publicados
 
@@ -147,6 +150,13 @@ la lista.
   el nombre y, con el reciclado de nombres de usuario, podría señalar a otra persona.
 - `RN-6` Este contexto **no consulta** las tablas de `Work`, `User` ni `Credits` para pintar
   la Home: mantiene proyecciones alimentadas por eventos de integración.
+- `RN-12` **Comentar un capítulo no es corregirlo** (`FEAT-COM-036`). Un comentario es una
+  reacción libre bajo el texto, caben las que sean y no mueve un crédito; la corrección es el
+  cuestionario del autor, hay una por lector y capítulo, y sí los mueve (`FEAT-FBK-003`).
+  Conviven en la misma pantalla y pertenecen a contextos distintos.
+- `RN-13` **No se comenta ni se apoya lo que no se puede leer.** Quién puede leer un capítulo
+  lo responde `Work` por contrato (`ReadableChapters`): la regla de lectura es la más
+  peligrosa del backend y no se reconstruye aquí.
 
 ## Preguntas abiertas
 

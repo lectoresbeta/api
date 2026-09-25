@@ -309,6 +309,12 @@ services:
                 - LectoresBeta\Notification\Delivery\Application\Event\AuthorUnsubscribed
                 - LectoresBeta\Notification\Delivery\Application\Event\WorkPublished
 
+                # La barra social bajo el texto de un capítulo
+                # (FEAT-COM-036). `Credits` **no** lo consume, y esa ausencia
+                # es lo que dice que comentar no mueve un crédito: lo que se
+                # paga es el cuestionario respondido.
+                - LectoresBeta\Notification\Delivery\Application\Event\ChapterCommented
+
     # Los consumidores de eventos se etiquetan aquí y no con
     # #[AsMessageHandler]: viven en Application, y Application no conoce a
     # Symfony. Es la misma razón por la que los chequeos de salud se etiquetan
@@ -469,6 +475,13 @@ services:
 
     LectoresBeta\Work\Chapter\Application\Contract\CorrectionBriefs:
         alias: LectoresBeta\Work\Chapter\Application\Service\ResolveCorrectionBriefs
+
+    # Quién puede **leer** un capítulo, para `Community` (FEAT-COM-036).
+    # Hermano del anterior y distinto a propósito: aquel arrastra el
+    # cuestionario, que es texto del autor, y para decidir sobre un «me gusta»
+    # no hace falta nada de eso.
+    LectoresBeta\Work\Chapter\Application\Contract\ReadableChapters:
+        alias: LectoresBeta\Work\Chapter\Application\Service\ResolveReadableChapters
 
     # Lo que hace falta para **leer** una corrección entregada, y no para
     # escribirla (FEAT-FBK-004): cómo se llama el capítulo, qué se preguntaba
@@ -801,6 +814,10 @@ services:
             - { name: messenger.message_handler, method: unsubscribed }
 
     LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheFollowersOfANewWork:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyAboutAChapterComment:
         tags:
             - { name: messenger.message_handler }
 

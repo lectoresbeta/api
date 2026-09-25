@@ -247,6 +247,24 @@ paths:
   /conversations/{conversationId}/read:
     $ref: './paths/community.yaml#/conversationRead'
 
+  # La barra social bajo el texto de un capítulo (FEAT-COM-036). Comentar un
+  # capítulo no es corregirlo: esto no mueve créditos, el cuestionario sí.
+
+  /chapters/{chapterId}/like:
+    $ref: './paths/community.yaml#/chapterLike'
+
+  /chapters/{chapterId}/comments:
+    $ref: './paths/community.yaml#/chapterComments'
+
+  /chapters/{chapterId}/engagement:
+    $ref: './paths/community.yaml#/chapterEngagement'
+
+  /chapter-comments/{commentId}/replies:
+    $ref: './paths/community.yaml#/chapterCommentReplies'
+
+  /chapter-comments/{commentId}:
+    $ref: './paths/community.yaml#/chapterComment'
+
   /works:
     $ref: './paths/works.yaml#/collection'
 

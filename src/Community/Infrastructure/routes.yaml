@@ -234,3 +234,50 @@ markConversationRead:
     path: /api/v1/conversations/{conversationId}/read
     controller: LectoresBeta\Community\Messaging\Infrastructure\Controller\MarkConversationReadController::__invoke
     methods: [PUT]
+
+# Las interacciones sociales bajo el texto de un capítulo (`FEAT-COM-036`).
+#
+# **Comentar un capítulo no es corregirlo.** Esto cuelga de `/chapters/` igual
+# que la corrección, y son dos cosas: un comentario es libre y no mueve un
+# crédito; la corrección es el cuestionario del autor, hay una por lector y
+# capítulo, y sí los mueve. Conviven en la misma pantalla.
+
+likeChapter:
+    path: /api/v1/chapters/{chapterId}/like
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\LikeChapterController::__invoke
+    methods: [PUT]
+
+unlikeChapter:
+    path: /api/v1/chapters/{chapterId}/like
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\UnlikeChapterController::__invoke
+    methods: [DELETE]
+
+commentOnChapter:
+    path: /api/v1/chapters/{chapterId}/comments
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\CommentOnChapterController::__invoke
+    methods: [POST]
+
+listChapterComments:
+    path: /api/v1/chapters/{chapterId}/comments
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\ListChapterCommentsController::__invoke
+    methods: [GET]
+
+# Las cifras de la cabecera, aparte del capítulo: el capítulo lo sirve `Work`
+# y esto es de `Community`. Juntarlas obligaría a uno a conocer al otro.
+getChapterEngagement:
+    path: /api/v1/chapters/{chapterId}/engagement
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\GetChapterEngagementController::__invoke
+    methods: [GET]
+
+# Bajo `/chapter-comments/` y no `/comments/`, que ya es de los del muro. Son
+# entidades distintas con audiencias distintas, y compartir prefijo invitaría
+# a creer que son la misma.
+listChapterCommentReplies:
+    path: /api/v1/chapter-comments/{commentId}/replies
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\ListChapterCommentRepliesController::__invoke
+    methods: [GET]
+
+deleteChapterComment:
+    path: /api/v1/chapter-comments/{commentId}
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\DeleteChapterCommentController::__invoke
+    methods: [DELETE]
