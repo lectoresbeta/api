@@ -20,17 +20,51 @@ final class DoctrineCreditTransactionRepository extends DoctrineRepository imple
         $this->register($transaction);
     }
 
-    public function historyOf(UserId $userId, int $limit = 50, int $offset = 0): array
-    {
-        /** @var list<CreditTransaction> $transactions */
-        $transactions = $this->repository()->findBy(
-            ['userId' => $userId->value()],
-            ['occurredAt' => 'DESC', 'id' => 'DESC'],
-            $limit,
-            $offset,
-        );
+    public function historyOf(
+        UserId $userId,
+        int $limit = 50,
+        int $offset = 0,
+        ?CreditTransactionReason $reason = null,
+        ?\DateTimeImmutable $from = null,
+        ?\DateTimeImmutable $to = null,
+    ): array {
+        $query = $this->repository()->createQueryBuilder('t')
+            ->where('t.userId = :user')
+            ->setParameter('user', $userId->value())
+            ->orderBy('t.occurredAt', 'DESC')
+            ->addOrderBy('t.id', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
 
-        return $transactions;
+        if (null !== $reason) {
+            $query->andWhere('t.reason = :reason')->setParameter('reason', $reason);
+        }
+
+        if (null !== $from) {
+            $query->andWhere('t.occurredAt >= :from')->setParameter('from', $from);
+        }
+
+        if (null !== $to) {
+            $query->andWhere('t.occurredAt <= :to')->setParameter('to', $to);
+        }
+
+        return array_values($query->getQuery()->getResult());
+    }
+
+    public function sumAfter(UserId $userId, CreditTransaction $movement): int
+    {
+        // «Después» es por instante y, a igualdad de instante, por
+        // identificador: dos movimientos de la misma transferencia comparten
+        // segundo, y sin el desempate uno de los dos se contaría de más.
+        return (int) $this->repository()->createQueryBuilder('t')
+            ->select('COALESCE(SUM(t.amount), 0)')
+            ->where('t.userId = :user')
+            ->andWhere('t.occurredAt > :moment OR (t.occurredAt = :moment AND t.id > :id)')
+            ->setParameter('user', $userId->value())
+            ->setParameter('moment', $movement->occurredAt())
+            ->setParameter('id', $movement->id()->value())
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     public function balanceOf(UserId $userId): int

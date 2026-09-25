@@ -17,9 +17,27 @@ interface CreditTransactionRepository
     public function add(CreditTransaction $transaction): void;
 
     /**
+     * El historial, de lo más reciente a lo más antiguo (`FEAT-CRD-008`).
+     *
      * @return list<CreditTransaction>
      */
-    public function historyOf(UserId $userId, int $limit = 50, int $offset = 0): array;
+    public function historyOf(
+        UserId $userId,
+        int $limit = 50,
+        int $offset = 0,
+        ?CreditTransactionReason $reason = null,
+        ?\DateTimeImmutable $from = null,
+        ?\DateTimeImmutable $to = null,
+    ): array;
+
+    /**
+     * La suma de lo que se movió **después** de ese apunte.
+     *
+     * Es lo que permite reconstruir el saldo con el que quedó cada fila sin
+     * guardarlo: un dato derivado almacenado puede acabar contradiciendo a la
+     * suma, que es justo el fallo que `RN-11` existe para detectar.
+     */
+    public function sumAfter(UserId $userId, CreditTransaction $movement): int;
 
     /**
      * Recomputes a balance from its movements. It exists so that the running

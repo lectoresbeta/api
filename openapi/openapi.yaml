@@ -294,6 +294,9 @@ paths:
   /me/moderator-alerts:
     $ref: './paths/moderation.yaml#/moderatorAlerts'
 
+  /credits/movements:
+    $ref: './paths/credits.yaml#/movements'
+
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'
 

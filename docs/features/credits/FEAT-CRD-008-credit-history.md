@@ -5,7 +5,7 @@ context: Credits
 concept: Account
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-25 (bloque de deudas y transparencia)
@@ -110,15 +110,15 @@ contradecir a la suma, que es justo lo que `RN-11` de
 
 ## Criterios de aceptación
 
-- [ ] Cada uno ve su historial, el movimiento más reciente primero.
-- [ ] Cada apunte lleva importe con signo, motivo, fecha, objeto y saldo resultante.
-- [ ] La suma de los movimientos coincide con el saldo que devuelve `getCreditBalance`.
-- [ ] Una reversión aparece como dos apuntes nuevos y cita su reclamación.
-- [ ] Un movimiento con precio reconstruido se distingue.
-- [ ] Se filtra por motivo y por fechas.
-- [ ] No hay forma de consultar el historial de otra persona.
-- [ ] Una cuenta sin movimientos responde lista vacía, y la consulta no la crea.
-- [ ] Un apunte cuyo objeto ya no existe se sigue mostrando.
+- [x] Cada uno ve su historial, el movimiento más reciente primero.
+- [x] Cada apunte lleva importe con signo, motivo, fecha, objeto y saldo resultante.
+- [x] La suma de los movimientos coincide con el saldo que devuelve `getCreditBalance`.
+- [x] Una reversión aparece como dos apuntes nuevos y cita su reclamación.
+- [x] Un movimiento con precio reconstruido se distingue.
+- [x] Se filtra por motivo y por fechas.
+- [x] No hay forma de consultar el historial de otra persona.
+- [x] Una cuenta sin movimientos responde lista vacía, y la consulta no la crea.
+- [x] Un apunte cuyo objeto ya no existe se sigue mostrando.
 
 ## Preguntas abiertas
 
@@ -132,5 +132,22 @@ contradecir a la suma, que es justo lo que `RN-11` de
 
 **Especificación:** `APPROVED` (2026-09-25).
 
-**Implementación:** `TODO`. El repositorio ya expone `historyOf()` y `balanceOf()`; falta el
-caso de uso, la resolución del objeto citado y el endpoint.
+**Implementación:** `DONE` (2026-09-25).
+
+**El objeto se cita por referencia, no por nombre.** La ficha lo describía como «capítulo 3 de
+*101 días en Japón*» y lo que se devuelve son identificadores: `correctionId`, `chapterId`,
+`workId`, `claimId`. `Credits` no conoce el título de ninguna obra y no va a conocerlo —
+pedírselo a `Work` sería la dependencia que [`decision:0002`](../../decisions/0002-credits-as-isolated-bounded-context.md)
+prohíbe, y proyectar títulos aquí metería contenido ajeno en el contexto que menos lo
+necesita. Quien pinta la pantalla resuelve los títulos donde viven.
+
+`balanceAfter` se calcula **acumulando hacia atrás desde el saldo actual**, con una sola
+consulta para la suma de lo que se movió después de la página. No se guarda en cada fila a
+propósito: un dato derivado almacenado puede acabar contradiciendo a la suma, que es justo el
+fallo que `RN-11` existe para detectar.
+
+Un detalle del cálculo que importa: «después» es por instante **y, a igualdad de instante, por
+identificador**. Los dos apuntes de una transferencia comparten segundo, y sin ese desempate
+uno de los dos se contaría de más.
+
+`C-47`, `C-48` y `C-49` siguen abiertas.

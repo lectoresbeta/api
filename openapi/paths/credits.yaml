@@ -42,3 +42,108 @@ balance:
                   examples: [10]
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
+movements:
+  get:
+    tags: [Credits]
+    operationId: listCreditMovements
+    summary: Mis movimientos de créditos
+    description: |
+      Todo lo que ha movido el saldo, de lo más reciente a lo más antiguo.
+
+      **Es la invariante del contexto, enseñada**: el saldo es la suma de sus
+      movimientos, y esta lista permite comprobarlo en vez de creérselo. Cada
+      apunte lleva el `balanceAfter` con el que quedó la cuenta, así que se
+      puede seguir hacia atrás sin sumar a mano.
+
+      Hace falta desde que una reclamación estimada puede **retirar créditos
+      ya cobrados**, días después y sin que su dueño haya hecho nada
+      ([`FEAT-MOD-002`](../../docs/features/moderation/FEAT-MOD-002-review-claim.md)).
+      Una reversión aparece como **dos apuntes nuevos**, nunca como una
+      corrección del original: los movimientos son inmutables.
+
+      **El objeto va por referencia, no por nombre.** `Credits` no conoce el
+      título de ninguna obra y no va a conocerlo: pedírselo a `Work` sería la
+      dependencia que su aislamiento prohíbe. Quien pinte la pantalla resuelve
+      los títulos donde viven.
+
+      Cada uno ve **solo el suyo**. No hay forma de consultar el historial de
+      otra persona, ni siquiera en parte.
+    parameters:
+      - name: reason
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Los movimientos propios. Lista vacía y saldo cero si no hay cuenta todavía.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [movements]
+              properties:
+                movements:
+                  type: array
+                  items:
+                    type: object
+                    required: [movementId, amount, reason, balanceAfter, occurredAt, reconstructedPrice]
+                    properties:
+                      movementId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      amount:
+                        type: integer
+                        description: Con signo. Negativo es un cargo.
+                      reason:
+                        type: string
+                      balanceAfter:
+                        type: integer
+                        description: El saldo con el que quedó la cuenta tras este apunte.
+                      occurredAt:
+                        type: string
+                        format: date-time
+                      correctionId:
+                        type: [string, 'null']
+                      chapterId:
+                        type: [string, 'null']
+                      workId:
+                        type: [string, 'null']
+                      claimId:
+                        type: [string, 'null']
+                      reconstructedPrice:
+                        type: boolean
+                        description: |
+                          El precio se reconstruyó porque su cotización no
+                          estaba. Una reparación que no deja rastro es
+                          indistinguible de lo real cuando alguien audita
+                          meses después.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+

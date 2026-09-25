@@ -23,9 +23,9 @@ verdad sobre el alcance.**
 | `Feedback` (FBK) | 12 | 8 | 7 | 0 | 5 | 1 |
 | `Community` (COM) | 38 | 11 | 10 | 0 | 2 | 1 |
 | `Moderation` (MOD) | 12 | 11 | 11 | 0 | 1 | 6 |
-| `Credits` (CRD) | 19 | 13 | 13 | 0 | 3 | 5 |
+| `Credits` (CRD) | 19 | 13 | 13 | 0 | 4 | 5 |
 | `Notification` (NOT) | 9 | 3 | 3 | 0 | 2 | 1 |
-| **Total** | **161** | **95** | **93** | **0** | **34** | **34** |
+| **Total** | **161** | **95** | **93** | **0** | **35** | **34** |
 
 `APPROVED` y `REVIEW` son estados de la **especificación**; `DONE` y `PARTIAL`, del **código**.
 Las columnas no suman entre sí a propósito: una funcionalidad aprobada y a medio implementar
@@ -429,7 +429,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-005 | Abonar +5 al invitador cuando el invitado entrega su primera corrección | — (sistema) | PENDING | TODO | P2 | — |
 | FEAT-CRD-006 | Cargar al autor y abonar al lector al entregarse la corrección | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-006-charge-author-for-received-feedback.md) |
 | FEAT-CRD-007 | ~~Coste adicional por preguntas extra del cuestionario~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
-| FEAT-CRD-008 | Consultar el historial de movimientos de créditos | User | APPROVED | TODO | P1 | [ficha](credits/FEAT-CRD-008-credit-history.md) |
+| FEAT-CRD-008 | Consultar el historial de movimientos de créditos | User | APPROVED | DONE | P1 | [ficha](credits/FEAT-CRD-008-credit-history.md) |
 | FEAT-CRD-009 | Comprobar el saldo al empezar una corrección | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-009-balance-check-on-correction-start.md) |
 | FEAT-CRD-010 | ~~Fórmula continua en vez de tramos~~ → adoptada en `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-011-deduplicate-integration-events.md) |

@@ -9,3 +9,11 @@ getCreditBalance:
     path: /api/v1/credits/balance
     controller: LectoresBeta\Credits\Account\Infrastructure\Controller\GetCreditBalanceController::__invoke
     methods: [GET]
+
+# El historial de movimientos (`FEAT-CRD-008`). Es la invariante del contexto
+# —el saldo es la suma de sus movimientos— enseñada, y hace falta desde que
+# una reclamación estimada puede retirar créditos ya cobrados.
+listCreditMovements:
+    path: /api/v1/credits/movements
+    controller: LectoresBeta\Credits\Account\Infrastructure\Controller\ListCreditMovementsController::__invoke
+    methods: [GET]
