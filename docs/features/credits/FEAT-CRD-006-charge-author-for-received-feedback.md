@@ -14,7 +14,7 @@ sources:
   - decision:0004
 endpoints: []
 events: [FeedbackSubmitted, CreditsSpent, CreditsAdded, CreditBalanceChanged, CreditBalanceWentNegative]
-depends_on: [FEAT-CRD-009, FEAT-FBK-001, FEAT-WRK-013, FEAT-CRD-011]
+depends_on: [FEAT-CRD-009, FEAT-FBK-003, FEAT-WRK-013, FEAT-CRD-011]
 updated: 2026-09-23
 ---
 

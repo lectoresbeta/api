@@ -241,7 +241,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-FBK-001 | Dejar feedback sobre una obra o fragmento | BetaReader | PENDING | TODO | P0 | — |
+| FEAT-FBK-001 | ~~Dejar feedback sobre una obra o fragmento~~ → `FEAT-FBK-003` + `FEAT-COM-036` | — | PENDING | DEPRECATED | P0 | — |
 | FEAT-FBK-002 | Valorar una obra | BetaReader | PENDING | TODO | P1 | — |
 | FEAT-FBK-003 | Responder y enviar el cuestionario de corrección | BetaReader | APPROVED | PARTIAL | P0 | [ficha](feedback/FEAT-FBK-003-answer-correction-questionnaire.md) |
 | FEAT-FBK-004 | Ver las correcciones recibidas | Writer | APPROVED | DONE | P0 | [ficha](feedback/FEAT-FBK-004-read-received-corrections.md) |
@@ -253,6 +253,25 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-010 | Mis correcciones — lo que he corregido | BetaReader | APPROVED | DONE | P2 | [ficha](feedback/FEAT-FBK-010-my-corrections.md) |
 | FEAT-FBK-011 | Guardar un borrador de corrección | BetaReader | APPROVED | DONE | P1 | [ficha](feedback/FEAT-FBK-011-save-correction-draft.md) |
 | FEAT-FBK-012 | Control antifraude de las correcciones | — (sistema) | PENDING | BLOCKED | P0 | [ficha](feedback/FEAT-FBK-012-correction-fraud-control.md) |
+
+> **`FEAT-FBK-001` queda derogada** (2026-09-25). Su enunciado —«dejar feedback sobre una obra
+> o **fragmento**»— se leyó durante mucho tiempo como feedback anclado a un pasaje del texto.
+> No lo era, y hay tres pruebas:
+>
+> 1. **«fragmento» significa «capítulo»** en el vocabulario de este producto. El propio índice
+>    titula la sección de `Work` «obras, **fragmentos** y contenido», y cada endpoint de
+>    capítulo está etiquetado así en `docs/api/endpoints/work.md`;
+> 2. [`FEAT-WRK-001`](work/FEAT-WRK-001-create-work-with-editor.md) lo dice expresamente al
+>    justificar el formato del editor: *«tenía sentido cuando el feedback se anclaba a
+>    fragmentos del texto. Desde que la corrección es un cuestionario
+>    ([`decision:0006`](../decisions/0006-credit-system.md)) **esa necesidad desapareció**»*;
+> 3. [`FEAT-FBK-003`](feedback/FEAT-FBK-003-answer-correction-questionnaire.md) cierra `D-1` y
+>    `F-1` con la misma frase: *«el feedback que el sistema paga es el cuestionario
+>    respondido, **no un comentario suelto sobre un fragmento**»*.
+>
+> Leída como lo que dice —dejar feedback sobre una obra o sobre uno de sus capítulos— está
+> **entera y ya construida**: la corrección es por capítulo (`R-2`) y es `FEAT-FBK-003`; el
+> comentario libre bajo el texto es `FEAT-COM-036`. No quedaba nada que implementar.
 
 > **Una corrección no es un comentario.** La pantalla de lectura tiene las dos cosas a la
 > vez: comentarios libres bajo el texto, que no mueven créditos y pertenecen a `Community`
