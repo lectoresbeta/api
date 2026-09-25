@@ -113,6 +113,7 @@ services:
                 - LectoresBeta\Work\Catalogue\Application\Event\ChapterPriceChanged
                 - LectoresBeta\Work\Catalogue\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
+                - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
                 - LectoresBeta\User\Privacy\Application\Event\AuthorSubscribed
                 - LectoresBeta\User\Privacy\Application\Event\AuthorUnsubscribed
                 - LectoresBeta\User\Privacy\Application\Event\UserBlocked
@@ -142,6 +143,12 @@ services:
         arguments:
             $byAddress: '@limiter.login_by_ip'
             $byAccount: '@limiter.login_by_account'
+
+    LectoresBeta\User\Account\Infrastructure\Security\ActivationResendThrottle:
+        arguments:
+            $byInterval: '@limiter.resend_activation_interval'
+            $byDay: '@limiter.resend_activation_daily'
+            $byAddress: '@limiter.resend_activation_by_ip'
 
     LectoresBeta\User\Authentication\Infrastructure\Security\LexikAccessTokenIssuer:
         arguments:
@@ -208,7 +215,10 @@ services:
             # no quede en los logs del servidor ni en el historial.
             $activationUrlTemplate: '%env(ACTIVATION_URL_TEMPLATE)%'
         tags:
-            - { name: messenger.message_handler }
+            # Dos hechos, un trabajo: darse de alta y pedir el enlace otra vez
+            # (FEAT-USR-021) significan lo mismo para este contexto.
+            - { name: messenger.message_handler, method: registered }
+            - { name: messenger.message_handler, method: requested }
 
     LectoresBeta\Shared\Infrastructure\Storage\LocalFileStorage:
         arguments:

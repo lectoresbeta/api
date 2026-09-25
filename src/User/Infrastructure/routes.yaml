@@ -13,6 +13,13 @@ activateAccount:
     controller: LectoresBeta\User\Account\Infrastructure\Controller\ActivateAccountController::__invoke
     methods: [POST]
 
+# Sin sesión, y a propósito (`FEAT-USR-021` `R-1`): quien cierra el navegador
+# antes de activar no puede entrar, así que exigirla lo dejaría sin salida.
+resendActivationEmail:
+    path: /api/v1/auth/activation/resend
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\ResendActivationEmailController::__invoke
+    methods: [POST]
+
 login:
     path: /api/v1/auth/login
     controller: LectoresBeta\User\Authentication\Infrastructure\Controller\LogInController::__invoke

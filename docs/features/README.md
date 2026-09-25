@@ -77,7 +77,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-018 | Invitar a personas a la plataforma por email | User | PENDING | TODO | P2 | — |
 | FEAT-USR-019 | Registro y login con LinkedIn | Guest | APPROVED | DEFERRED | P3 | [ficha](user/FEAT-USR-019-linkedin-oauth.md) |
 | FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
-| FEAT-USR-021 | Reenviar el email de activación | Guest, User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
+| FEAT-USR-021 | Reenviar el email de activación | Guest, User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
 | FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
 | FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
 | FEAT-USR-024 | Aceptar condiciones de uso y política de privacidad | Guest | APPROVED | TODO | P0 | [ficha](user/FEAT-USR-024-accept-terms-and-privacy.md) |

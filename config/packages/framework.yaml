@@ -31,6 +31,29 @@ framework:
             limit: 20
             interval: '15 minutes'
 
+        # El reenvío del enlace de activación (FEAT-USR-021). Tres contadores
+        # porque son tres abusos distintos: el botón pulsado cinco veces, quien
+        # espacia las peticiones para saltarse el intervalo, y quien las reparte
+        # entre muchas direcciones.
+        #
+        # Las cifras son las que propone la ficha (RN-2, RN-3) y OB-9 sigue
+        # abierta: están aquí, y no como literales en el código, justo para
+        # poder moverlas sin desplegar.
+        resend_activation_interval:
+            policy: fixed_window
+            limit: 1
+            interval: '60 seconds'
+
+        resend_activation_daily:
+            policy: sliding_window
+            limit: 5
+            interval: '24 hours'
+
+        resend_activation_by_ip:
+            policy: sliding_window
+            limit: 20
+            interval: '1 hour'
+
 when@test:
     framework:
         test: true

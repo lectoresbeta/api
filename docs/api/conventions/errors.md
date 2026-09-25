@@ -37,6 +37,16 @@ Dos reglas: **nunca pisan los campos del formato** —`type`, `title`, `status`,
 `detail`, `errors`— y **nunca llevan nada que el error no pueda contar ya**. Un miembro de
 extensión es tan público como el `detail` que lo acompaña.
 
+### `Retry-After`
+
+Un `429` lleva además la cabecera **`Retry-After`**, en segundos. No sustituye al miembro de
+extensión, lo acompaña: la cabecera la entienden los clientes HTTP, los proxies y las
+bibliotecas de reintento sin que nadie las programe, y el cuerpo la repite para quien no mire
+las cabeceras.
+
+Lo declara la excepción, implementando `RetryAfter`, y no cada controlador: una cabecera que
+hay que acordarse de poner es una cabecera que falta en el siguiente `429` que alguien añada.
+
 ## Códigos HTTP
 
 | Código | Cuándo |
@@ -118,6 +128,8 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `USERNAME_TAKEN` | 409 | Nombre de usuario ocupado: en uso **o** retenido por un alias vigente, que responden igual a propósito (`FEAT-USR-034`) |
 | `USERNAME_RESERVED` | 422 | Nombre de usuario de la lista de reservados. Se distingue del ocupado porque ahí no hay nadie a quien proteger |
 | `USERNAME_CHANGE_TOO_SOON` | 429 | El nombre de usuario se cambió hace menos de 30 días. Lleva `availableOn` |
+| `RESEND_TOO_SOON` | 429 | Se ha pedido el correo de activación hace menos de un minuto (`FEAT-USR-021`). Lleva `retryAfterSeconds` y `Retry-After` |
+| `RESEND_LIMIT_REACHED` | 429 | Se ha agotado el máximo de reenvíos del periodo. Se distingue del anterior porque significa «vuelve mañana» y no «espera un minuto» |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |

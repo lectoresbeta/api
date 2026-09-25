@@ -7,6 +7,7 @@ namespace LectoresBeta\Shared\Infrastructure\Http\Problem;
 use LectoresBeta\Shared\Domain\Exception\BusinessFailure;
 use LectoresBeta\Shared\Domain\Exception\FailureDetails;
 use LectoresBeta\Shared\Domain\Exception\FailureKind;
+use LectoresBeta\Shared\Domain\Exception\RetryAfter;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,12 +28,21 @@ final readonly class ProblemFactory
 
     public function fromBusinessFailure(BusinessFailure $failure): JsonResponse
     {
-        return $this->build(
+        $response = $this->build(
             self::statusFor($failure->kind()),
             $failure->errorCode(),
             $failure->getMessage(),
             extensions: $failure instanceof FailureDetails ? $failure->failureDetails() : [],
         );
+
+        // `Retry-After` va en la cabecera y no solo en el cuerpo: es lo que
+        // entienden los clientes HTTP y las bibliotecas de reintento sin que
+        // nadie las programe.
+        if ($failure instanceof RetryAfter) {
+            $response->headers->set('Retry-After', (string) max(0, $failure->retryAfterSeconds()));
+        }
+
+        return $response;
     }
 
     /**

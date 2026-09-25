@@ -5,7 +5,7 @@ context: User
 concept: Account
 actors: [Guest, User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - figma:1800-13778 (aviso lateral «¿No te ha llegado? Reenviar enlace»)
@@ -103,12 +103,12 @@ registrar los envíos para aplicar `RN-3`.
 
 ## Criterios de aceptación
 
-- [ ] Un reenvío invalida el token anterior: el enlace del primer correo deja de funcionar.
-- [ ] Dos reenvíos seguidos dentro del intervalo mínimo: el segundo devuelve `429`.
-- [ ] Pedir el reenvío para un email no registrado devuelve lo mismo que para uno registrado.
-- [ ] Pedir el reenvío para una cuenta ya activa no envía correo.
-- [ ] Superar el máximo diario devuelve `429`.
-- [ ] La respuesta no espera al envío del correo.
+- [x] Un reenvío invalida el token anterior: el enlace del primer correo deja de funcionar.
+- [x] Dos reenvíos seguidos dentro del intervalo mínimo: el segundo devuelve `429`.
+- [x] Pedir el reenvío para un email no registrado devuelve lo mismo que para uno registrado.
+- [x] Pedir el reenvío para una cuenta ya activa no envía correo.
+- [x] Superar el máximo diario devuelve `429`.
+- [x] La respuesta no espera al envío del correo.
 
 ## Preguntas abiertas
 
@@ -122,4 +122,23 @@ registrar los envíos para aplicar `RN-3`.
 **Especificación:** `APPROVED` (2026-09-24). `R-1` resuelta: el reenvío se pide sin sesión, con respuesta
 indistinguible y limitación de frecuencia.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25).
+
+Dos decisiones que la ficha dejaba abiertas y que el código ha tenido que cerrar:
+
+**Los dos `429` son códigos distintos** —`RESEND_TOO_SOON` y `RESEND_LIMIT_REACHED`— porque
+significan cosas opuestas para quien está delante: «espera un minuto» deja la puerta abierta y
+«vuelve mañana» no. Con un solo código la pantalla tendría que enseñar siempre el mensaje
+pesimista. Los dos llevan `Retry-After` de verdad, en la cabecera, además de repetir la cifra
+en el cuerpo: es lo que entienden los clientes HTTP y las bibliotecas de reintento sin que
+nadie las programe.
+
+**Los tres contadores se consumen en cada petición**, exista o no la cuenta, y de eso depende
+`RN-4`. Si solo contaran los envíos de verdad, la diferencia entre agotar el límite y no
+agotarlo diría qué direcciones están registradas — justo lo que el `202` indistinguible
+evita. Por lo mismo, un correo mal formado también responde `202`: un `422` ahí sería otra
+diferencia observable.
+
+Las cifras de `OB-9` viven en `config/packages/framework.yaml` y no como literales en el
+código, que es lo que permite moverlas sin desplegar. Siguen siendo las propuestas: 60
+segundos, 5 al día por dirección y 20 a la hora por origen.

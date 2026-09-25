@@ -31,7 +31,23 @@ register:
       '422':
         $ref: '../openapi.yaml#/components/responses/ValidationError'
       '429':
-        $ref: '../openapi.yaml#/components/responses/TooManyRequests'
+        description: |
+          `code: RESEND_TOO_SOON` o `code: RESEND_LIMIT_REACHED`. Los dos
+          llevan `Retry-After` y repiten la cifra en `retryAfterSeconds`.
+        headers:
+          Retry-After:
+            schema:
+              type: integer
+        content:
+          application/problem+json:
+            schema:
+              allOf:
+                - $ref: '../openapi.yaml#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    retryAfterSeconds:
+                      type: integer
+                      minimum: 0
 
 activate:
   post:
@@ -97,7 +113,16 @@ resend:
 
       La respuesta es **idéntica** en los tres casos posibles —el correo no
       existe, existe sin activar, ya está activada—. Cualquier diferencia
-      observable filtraría quién tiene cuenta.
+      observable filtraría quién tiene cuenta. Por lo mismo, un correo mal
+      formado también responde `202`.
+
+      Cada reenvío **invalida el enlace anterior** (`RN-1`): solo vale el del
+      último correo.
+
+      El `429` sí distingue dos casos, con `Retry-After` en los dos:
+      `RESEND_TOO_SOON` es «espera un minuto» y `RESEND_LIMIT_REACHED` es
+      «vuelve mañana». No filtra nada, porque los contadores se consumen en
+      cada petición exista o no la cuenta.
     security: []
     requestBody:
       required: true

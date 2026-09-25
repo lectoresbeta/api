@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Notification\Delivery\Application\Handler;
 
 use LectoresBeta\Notification\Delivery\Application\DTO\EmailMessage;
+use LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested;
 use LectoresBeta\Notification\Delivery\Application\Event\UserRegistered;
 use LectoresBeta\Notification\Delivery\Application\Port\Mailer;
 use LectoresBeta\Notification\Delivery\Domain\Entity\Notification;
@@ -32,6 +33,13 @@ use LectoresBeta\User\Account\Application\Contract\ActivationLinkProvider;
  *
  * What is deliberately *not* recorded is the token. Not in the notice's
  * payload, not in a log, not in a metric (`RN-5`).
+ *
+ * **Two facts, one job.** Registering and asking for the link again
+ * (`FEAT-USR-021`) both mean «this account needs its activation link», and
+ * the work is identical: ask `User` for a fresh one and send it. Keeping them
+ * in one class is what guarantees the second email is not subtly different
+ * from the first — a resend that lost the expiry, or gained an unsubscribe
+ * footer, would be a bug nobody notices until somebody cannot get in.
  */
 final readonly class SendActivationEmail
 {
@@ -45,15 +53,34 @@ final readonly class SendActivationEmail
     ) {
     }
 
-    public function __invoke(UserRegistered $event): void
+    public function registered(UserRegistered $event): void
     {
-        $recipient = RecipientId::fromString($event->userId);
+        $this->sendTo($event->userId, $event->eventId());
+    }
 
-        if ($this->notifications->existsFor($recipient, NotificationKind::ACCOUNT_ACTIVATION, $event->eventId())) {
+    /**
+     * El reenvío (`FEAT-USR-021`). Deduplica por el identificador del hecho,
+     * igual que el alta, y eso es justo lo que lo hace funcionar: **cada
+     * petición es un hecho distinto**, así que pedirlo otra vez manda otro
+     * correo, mientras que una reentrega del mismo no manda dos.
+     *
+     * El enlace anterior deja de valer al emitir el nuevo (`RN-1`), y de eso
+     * se encarga el contrato de `User`: aquí no hay nada que recordar.
+     */
+    public function requested(ActivationEmailRequested $event): void
+    {
+        $this->sendTo($event->userId, $event->eventId());
+    }
+
+    private function sendTo(string $userId, string $eventId): void
+    {
+        $recipient = RecipientId::fromString($userId);
+
+        if ($this->notifications->existsFor($recipient, NotificationKind::ACCOUNT_ACTIVATION, $eventId)) {
             return;
         }
 
-        $link = $this->activationLinks->issueFor($event->userId);
+        $link = $this->activationLinks->issueFor($userId);
 
         if (null === $link) {
             // No such account, or already active. The normal outcome of a
@@ -66,14 +93,14 @@ final readonly class SendActivationEmail
         // Recorded before sending. The other order would let a crash between
         // the two send a second email, and a duplicate activation email is
         // worse than a missing record: the first link stops working.
-        $this->session->execute(function () use ($recipient, $event, $link): void {
+        $this->session->execute(function () use ($recipient, $eventId, $link): void {
             $this->notifications->save(new Notification(
                 NotificationId::generate(),
                 $recipient,
                 NotificationKind::ACCOUNT_ACTIVATION,
                 $this->clock->now(),
                 ['expiresAt' => $link->expiresAt->format(\DATE_ATOM)],
-                $event->eventId(),
+                $eventId,
             ));
         });
 
