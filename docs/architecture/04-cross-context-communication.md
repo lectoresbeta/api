@@ -57,7 +57,7 @@ Correcto:
 FeedbackSubmitted
 ReadingCompleted
 WorkPublished
-InvitedUserParticipated
+PlatformInvitationConsumed
 ```
 
 Incorrecto:

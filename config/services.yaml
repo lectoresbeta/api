@@ -7,6 +7,16 @@ parameters:
     app.storage_dir: '%env(resolve:APP_STORAGE_DIR)%'
     app.welcome_credits: 10   # decision:0006
 
+    # La recompensa por invitación (decision:0006 regla 6). El importe se
+    # puede mover; lo que no se toca sin rehacer el diseño es **el momento**,
+    # que es cuando el invitado entrega su primera corrección.
+    app.invitation_reward: 5
+
+    # Y cuántas se pagan por persona. El tope no está por el gasto —cada alta
+    # genera la bonificación una sola vez, así que el total está acotado— sino
+    # para que nadie construya su saldo reclutando en lugar de corrigiendo.
+    app.rewarded_invitation_limit: 10
+
     # Las palancas del precio de una corrección (decision:0006 regla 1,
     # FEAT-CRD-016 RN-7). Están aquí y no como literales en el código porque
     # son lo único que permite reequilibrar leer contra escribir, y una
@@ -171,6 +181,11 @@ services:
                 - LectoresBeta\Credits\Pricing\Application\Event\CorrectionStarted
                 - LectoresBeta\Credits\Pricing\Application\Event\CorrectionDraftDiscarded
                 - LectoresBeta\Credits\Account\Application\Event\FeedbackSubmitted
+
+                # El par invitador/invitado, que `Credits` guarda y no paga:
+                # los cinco créditos llegan con la primera corrección del
+                # invitado, que es todo el diseño antifraude (FEAT-CRD-005).
+                - LectoresBeta\Credits\Referral\Application\Event\PlatformInvitationConsumed
                 - LectoresBeta\Feedback\Correction\Application\Event\ChapterCorrectabilityChanged
                 - LectoresBeta\Feedback\Correction\Application\Event\CreditBalanceWentNegative
                 - LectoresBeta\Feedback\Correction\Application\Event\CreditDebtCleared
@@ -318,6 +333,11 @@ services:
                 # «Te proponen ser writing buddy» (FEAT-RDG-008). El aviso que
                 # le faltaba a FEAT-NOT-005 para estar completa.
                 - LectoresBeta\Notification\Delivery\Application\Event\WritingBuddyProposed
+
+                # La invitación a la plataforma (FEAT-USR-018). El hecho va
+                # **sin el token**: el correo lo pide al enviar, por el
+                # contrato de `User`.
+                - LectoresBeta\Notification\Delivery\Application\Event\PlatformInvitationSent
 
     # Los consumidores de eventos se etiquetan aquí y no con
     # #[AsMessageHandler]: viven en Application, y Application no conoce a
@@ -471,6 +491,12 @@ services:
     LectoresBeta\User\Preferences\Application\Contract\ProposalRecipients:
         alias: LectoresBeta\User\Preferences\Application\Service\CheckProposalRecipients
 
+    # El enlace de una invitación, pedido al enviar el correo (FEAT-NOT-007).
+    # Mismo motivo que el de activación: el token es una credencial viva y no
+    # puede viajar por la cola.
+    LectoresBeta\User\Invitation\Application\Contract\InvitationLinkProvider:
+        alias: LectoresBeta\User\Invitation\Application\Service\IssueInvitationLink
+
     # Los tres contadores de la cabecera del perfil (FEAT-USR-028). Ninguno es
     # de `User`, y por eso los tres entran por aquí.
     LectoresBeta\Community\Subscription\Application\Contract\SubscriptionCounts:
@@ -527,6 +553,16 @@ services:
 
     LectoresBeta\User\Profile\Application\Contract\GenreCatalogue:
         alias: LectoresBeta\User\Profile\Application\Service\CheckGenreCatalogue
+
+    # El correo de invitación (FEAT-NOT-007). `PLATFORM_INVITATION` llevaba en
+    # el catálogo desde FEAT-NOT-001 sin nadie que lo disparara.
+    LectoresBeta\Notification\Delivery\Application\Handler\SendPlatformInvitationEmail:
+        arguments:
+            # La página de alta del frontend, que recoge el token y lo manda
+            # en el cuerpo: así no queda en los logs ni en el historial.
+            $invitationUrlTemplate: '%env(INVITATION_URL_TEMPLATE)%'
+        tags:
+            - { name: messenger.message_handler }
 
     LectoresBeta\Notification\Delivery\Application\Handler\SendActivationEmail:
         arguments:
@@ -593,6 +629,21 @@ services:
             # decision:0006 §5. Cambiarlo afecta solo a las activaciones
             # posteriores: un movimiento es inmutable (FEAT-CRD-002 RN-8).
             $welcomeCredits: '%app.welcome_credits%'
+        tags:
+            - { name: messenger.message_handler }
+
+    # El bucle de invitación, por el lado de `Credits` (FEAT-CRD-005). Dos
+    # reglas y dos hechos distintos: una apunta el par, la otra paga. Y la que
+    # paga escucha el mismo hecho que el cobro de la corrección, con su propio
+    # nombre de consumidor para no cerrárselo (FEAT-CRD-011 RN-4).
+    LectoresBeta\Credits\Referral\Application\Handler\RecordReferral:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Credits\Referral\Application\Handler\RewardTheInviterOnTheFirstCorrection:
+        arguments:
+            $invitationReward: '%app.invitation_reward%'
+            $rewardedInvitationLimit: '%app.rewarded_invitation_limit%'
         tags:
             - { name: messenger.message_handler }
 

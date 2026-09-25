@@ -120,6 +120,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Credits/Pricing/Infrastructure/Persistence/Doctrine/Mapping'
                 prefix: 'LectoresBeta\Credits\Pricing\Domain\Entity'
                 alias: CreditsPricing
+            CreditsReferral:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Credits/Referral/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Credits\Referral\Domain\Entity'
+                alias: CreditsReferral
             FeedbackCorrection:
                 type: xml
                 is_bundle: false

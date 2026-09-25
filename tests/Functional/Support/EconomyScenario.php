@@ -178,6 +178,14 @@ abstract class EconomyScenario extends WebTestCase
         // nadie, y el hecho se publica igual para que haya de qué tirar
         // cuando `Community` cuente vínculos.
         'WritingBuddyProposed',
+
+        // El bucle de invitación (`FEAT-USR-018`, `FEAT-NOT-007`,
+        // `FEAT-CRD-005`). `PlatformInvitationSent` lo escucha quien manda el
+        // correo; `PlatformInvitationConsumed`, `Credits`, que apunta el par
+        // y **no paga**: los cinco créditos llegan con `FeedbackSubmitted`,
+        // que ya está arriba.
+        'PlatformInvitationSent',
+        'PlatformInvitationConsumed',
     ];
 
     /**
@@ -450,9 +458,13 @@ abstract class EconomyScenario extends WebTestCase
      * Alguien con la cuenta activada, que es lo que hace falta para escribir
      * y lo que le abona los diez créditos de bienvenida.
      *
+     * Con `invitationToken` llega por el enlace de otro (`FEAT-USR-018`), que
+     * es lo que hace que `Credits` apunte el par y pueda pagar por su primera
+     * corrección.
+     *
      * @return array{token: string, userId: string}
      */
-    protected function activatedPerson(string $local): array
+    protected function activatedPerson(string $local, ?string $invitationToken = null): array
     {
         $email = $this->address($local);
 
@@ -460,7 +472,9 @@ abstract class EconomyScenario extends WebTestCase
             'email' => $email,
             'password' => self::PASSWORD,
             'acceptedLegalVersions' => ['termsOfUse' => '2026-01-15', 'privacyPolicy' => '2026-01-15'],
+            'invitationToken' => $invitationToken,
         ], \JSON_THROW_ON_ERROR));
+        $this->capture();
 
         $this->client->request('POST', '/api/v1/auth/login', server: [
             'CONTENT_TYPE' => 'application/json',

@@ -15,6 +15,7 @@ use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\Service\PasswordPolicy;
 use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
+use LectoresBeta\User\Invitation\Application\Service\ConsumeInvitation;
 use LectoresBeta\User\Legal\Application\Service\CheckLegalConsent;
 use LectoresBeta\User\Legal\Domain\Enum\LegalDocumentType;
 
@@ -49,6 +50,7 @@ final readonly class RegisterUserHandler
         private UsernameAllocator $usernames,
         private PasswordPolicy $passwordPolicy,
         private PasswordHasher $passwordHasher,
+        private ConsumeInvitation $invitations,
         private Clock $clock,
     ) {
     }
@@ -73,19 +75,21 @@ final readonly class RegisterUserHandler
 
         $now = $this->clock->now();
         $username = $this->usernames->allocateFrom($email);
-
-        $this->accounts->open(
-            User::register(
-                UserId::generate(),
-                $email,
-                $username,
-                $this->passwordHasher->hash($command->plainPassword),
-                $now,
-            ),
-            $accepted,
-            $command->ipAddress,
+        $user = User::register(
+            UserId::generate(),
+            $email,
+            $username,
+            $this->passwordHasher->hash($command->plainPassword),
             $now,
         );
+
+        $this->accounts->open($user, $accepted, $command->ipAddress, $now);
+
+        // Quién le invitó, si venía con un enlace (`FEAT-USR-018`). Un token
+        // inválido o gastado **no impide el alta** (`RN-13`): se ignora en
+        // silencio, porque quien llega con un enlace viejo viene a
+        // registrarse y no a canjear nada.
+        $this->invitations->by($user->id(), $command->invitationToken, $now);
     }
 
     private static function requiredVersion(?string $version): string

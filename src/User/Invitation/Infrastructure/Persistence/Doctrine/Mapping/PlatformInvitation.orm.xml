@@ -8,9 +8,12 @@
             table="platform_invitation" schema="user_ctx">
 
         <indexes>
-            <!-- «How many of my invitations have been rewarded» reads by
-                 inviter and by whether they were consumed. -->
+            <!-- «Si ya invité a esta dirección y sigue en pie» lee por
+                 invitador y por si se consumió (`FEAT-USR-018` `RN-5`). -->
             <index name="idx_platform_invitation_inviter" columns="inviter_id,consumed_at"/>
+
+            <!-- Y el tope diario, que se cuenta por fecha de envío (`RN-4`). -->
+            <index name="idx_platform_invitation_sent" columns="inviter_id,created_at"/>
         </indexes>
 
         <unique-constraints>

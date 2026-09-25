@@ -59,6 +59,7 @@ Work      ──▶ Credits\Application\...             PROHIBIDO
 | `Account` | Saldo y movimientos de un usuario. **Un solo saldo**, que puede ser negativo |
 | `Pricing` | El precio de cada capítulo y el precio anotado de cada corrección en curso |
 | `Overdraft` | Cupo periódico de correcciones en descubierto y selección de candidatos. La elegibilidad concedida y su uso son **dos estados distintos**: el cupo limita a cuánta gente se le abre la puerta, no cuánta deuda aparece |
+| `Referral` | Quién trajo a quién, y si ya se pagó por ello. **Es una proyección, no una copia de la invitación**: `User` sabe de correos, tokens y reenvíos; aquí solo hace falta el par (`FEAT-CRD-005`) |
 | `EventProcessing` | Deduplicación e idempotencia de los eventos recibidos |
 
 ## Agregados
@@ -68,6 +69,7 @@ Work      ──▶ Credits\Application\...             PROHIBIDO
 | `CreditAccount` | `UserId` | El saldo es siempre la suma de sus movimientos. Un movimiento nunca se modifica ni se borra. **Admite valores negativos.** |
 | `ProcessedEvent` | `eventId` | Un `eventId` se aplica como máximo una vez. |
 | `OverdraftGrant` | `OverdraftGrantId` | Uno por autor. Caduca con su periodo y no se acumula. **Concedido y usado son estados distintos**, y solo lo usado cuenta en la tasa de recuperación |
+| `Referral` | `inviteeId` | A cada persona la trae alguien **una sola vez y para siempre**, y se paga como mucho una vez por par. La identidad es el invitado, no la invitación: si fuese la invitación, dos invitaciones a la misma persona darían dos recompensas por un alta |
 
 ### Un solo saldo
 
@@ -188,10 +190,10 @@ solo provoca a propósito lo que ya ocurre por carrera.
 | `AccountActivated` | `User` | Abona los **+10** créditos de bienvenida |
 | `CorrectionStarted` | `Feedback` | **Anota** el precio de esa corrección. No mueve saldo |
 | `CorrectionDraftDiscarded` | `Feedback` | Descarta la anotación. Nada que liberar |
-| `FeedbackSubmitted` | `Feedback` | **Carga al autor y abona al lector** el importe anotado. El saldo puede quedar negativo |
+| `FeedbackSubmitted` | `Feedback` | **Carga al autor y abona al lector** el importe anotado. El saldo puede quedar negativo. **Y, si quien corrige fue invitado por alguien, abona +5 a quien le invitó**, la primera vez y hasta diez por invitador (`FEAT-CRD-005`) |
 | `ChapterContentUpdated` | `Work` | Actualiza las palabras de ese capítulo en su read model de precios |
 | `QuestionnaireUpdated` | `Work` | Actualiza las palabras exigidas. **No altera precios ya anotados** |
-| `InvitedUserParticipated` | `User` | Abona +5 al invitador, hasta el tope de 10 |
+| `PlatformInvitationConsumed` | `User` | **Apunta el par invitador/invitado y no abona nada.** Pagar aquí valdría lo que cuesta un correo desechable (`FEAT-CRD-005`) |
 | `UserDeleted` | `User` | Anonimiza la cuenta de créditos. Los movimientos permanecen (`C-21`) |
 | `CreditAdjustmentOrdered` | `Moderation` | Aplica un ajuste manual como `MANUAL_ADJUSTMENT`, que es un **grifo** y no una transferencia (`FEAT-MOD-005` `RN-4`) |
 
@@ -256,6 +258,7 @@ existe, el evento se descarta sin efecto.
 | `chapter_price` | Read model del precio de cada capítulo, y de si admite correcciones ahora mismo (`FEAT-CRD-016`, `FEAT-CRD-009`). La corregibilidad se guarda para poder publicar **solo los cambios** |
 | `work_questionnaire_demand` | Read model de lo que exige el cuestionario vigente de cada obra. Los dos hechos que forman un precio llegan por separado y hay que conservar el primero (`FEAT-CRD-016`) |
 | `overdraft_grant` | Descubiertos concedidos y su cupo semanal (`FEAT-CRD-019`) |
+| `referral` | El par invitador/invitado y si ya se cobró (`FEAT-CRD-005`). **Sin clave ajena** a `user_ctx.platform_invitation`: una clave ajena entre esquemas de contextos distintos convertiría en obligatorio el acoplamiento que la arquitectura prohíbe |
 | `credit_rule` | Reglas vigentes, si se decide hacerlas configurables (`C-3`). **Todavía no existe** |
 
 ## Reglas de negocio

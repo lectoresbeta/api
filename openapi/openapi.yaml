@@ -163,6 +163,15 @@ paths:
   /me/privacy-settings:
     $ref: './paths/settings.yaml#/privacySettings'
 
+  # Invitar a gente a la plataforma (FEAT-USR-018), y qué fue de lo invitado.
+  # El premio no está aquí: se cobra cuando el invitado entrega su primera
+  # corrección, y eso lo lleva `Credits` por su cuenta (FEAT-CRD-005).
+  /invitations:
+    $ref: './paths/invitations.yaml#/collection'
+
+  /me/invitations:
+    $ref: './paths/invitations.yaml#/mine'
+
   /users/{userId}:
     $ref: './paths/profiles.yaml#/byUserId'
 
@@ -667,6 +676,22 @@ components:
             evento.
         acceptedLegalVersions:
           $ref: '#/components/schemas/LegalAcceptance'
+        invitationToken:
+          type: [string, 'null']
+          maxLength: 128
+          description: |
+            El token del enlace de invitación, si se llega por uno
+            (`FEAT-USR-018`). Lo extrae la página de alta del frontend de la
+            URL y lo manda **en el cuerpo**, para que no quede en los logs del
+            servidor ni en el historial del navegador.
+
+            **Un token inválido o ya usado no impide el alta**: se ignora en
+            silencio (`FEAT-USR-001` `RN-13`). Quien llega con un enlace viejo
+            viene a registrarse, no a canjear nada.
+
+            No abona nada por sí solo: deja apuntado quién invitó a quién, y
+            la recompensa llega cuando esta persona entrega su primera
+            corrección (`FEAT-CRD-005`).
 
     PageInfo:
       type: object

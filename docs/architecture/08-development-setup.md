@@ -132,6 +132,7 @@ Las que el código exige. `.env` trae un valor de desarrollo para cada una.
 | `ACTIVATION_URL_TEMPLATE` | Página **del frontend** que recoge el token de activación. `{token}` se sustituye al generar el correo |
 | `PASSWORD_RESET_URL_TEMPLATE` | Lo mismo para el enlace de «he olvidado mi contraseña» (`FEAT-USR-007`) |
 | `EMAIL_CHANGE_URL_TEMPLATE` | Lo mismo para confirmar un cambio de correo (`FEAT-USR-040`) |
+| `INVITATION_URL_TEMPLATE` | Lo mismo para el enlace de invitación a la plataforma (`FEAT-USR-018`, `FEAT-NOT-007`). La página de alta extrae el token y lo manda **en el cuerpo**, para que no quede en los logs ni en el historial |
 | `APP_STORAGE_DIR` | Dónde se guardan los ficheros subidos (`FEAT-USR-037`) |
 | `MODERATION_APPEALS_EMAIL` | Dirección a la que el autor recurre un bloqueo por reclamación (`FEAT-MOD-003` `RN-8b`). Va en el correo de bloqueo, que es la única vía por la que se entera |
 

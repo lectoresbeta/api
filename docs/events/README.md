@@ -66,14 +66,20 @@ decisión sobre agrupación (`N-2`).
 | `NotificationPreferencesChanged` | Cambian las preferencias de aviso | **Nadie, hoy**: `Notification` las **pregunta al entregar** y no las proyecta, que es lo que hace que un cambio surta efecto en el acto. Se publica como traza de qué cambió y cuándo | `userId`, `changedTopics`, `allMuted?`, `changedAt`. **Nunca la configuración entera**: los ajustes de una persona no viajan por una cola para decir que cambiaron |
 | `ReactivationOfferChoiceChanged` | Alguien decide si acepta el gancho de reactivación (`FEAT-CRD-019` `RN-2d`, `RN-8`) | **`Credits`** ✅ (deja de seleccionarlo) | `userId`, `accepted`, `changedAt`. La respuesta **efectiva**, con el interruptor general ya aplicado |
 | `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt`. En `User` convierte su nombre de usuario en alias bloqueado 30 días |
-| `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` | `inviterId`, `invitedUserId` |
+| `PlatformInvitationSent` | Alguien invita a una dirección de fuera (`FEAT-USR-018`) | `Notification` ✅ (manda el correo) | `invitationId`, `inviterId`, `email`, `sentAt`. **Sin el token**: es una credencial viva y se pide por contrato al enviar |
+| `PlatformInvitationConsumed` | Alguien se registra con una invitación (`FEAT-USR-018`) | **`Credits`** ✅ (apunta el par y **no paga**) | `invitationId`, `inviterId`, `inviteeId`, `consumedAt` |
 
 `AccountActivated` es el hecho que abona los créditos de bienvenida, no `UserRegistered`.
 `Feedback` también lo consume, para saber qué autores pueden recibir comentarios
 ([`decision:0003`](../decisions/0003-write-operations-require-activated-account.md)).
 
-> `InvitedUserParticipated` exige correlacionar una invitación de `User` con un hecho de
-> `Feedback`. Quién lo publica está sin decidir (`U-4`).
+> `U-4` —quién detecta que un invitado «ha participado»— **está resuelto, y la respuesta fue
+> que nadie**. No hace falta un `InvitedUserParticipated` publicado por `User` ni por
+> `Feedback`: `Credits` ya recibe los dos hechos que hacen falta —el par por
+> `PlatformInvitationConsumed` y el trabajo entregado por `FeedbackSubmitted`— y correlaciona
+> por su cuenta ([`FEAT-CRD-005`](../features/credits/FEAT-CRD-005-invitation-reward.md)). Un
+> evento intermedio habría obligado a un contexto a saber qué significa «participar» para el
+> sistema de créditos, que es justo lo que `decision:0002` prohíbe.
 >
 > Ningún evento de `User` transporta la contraseña, su hash, el token de activación ni la
 > fecha de nacimiento.

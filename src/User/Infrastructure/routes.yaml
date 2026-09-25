@@ -325,3 +325,21 @@ searchAuthors:
     path: /api/v1/authors
     controller: LectoresBeta\User\Profile\Infrastructure\Controller\SearchAuthorsController::__invoke
     methods: [GET]
+
+# Invitar a alguien a la plataforma (FEAT-USR-018).
+#
+# Responde `202` siempre que la petición sea válida, **se mande el correo o
+# no**: decir «esa dirección ya tiene cuenta» convertiría esto en un
+# comprobador de quién está dentro, que es justo lo que el alta y la
+# recuperación de contraseña se cuidan de no decir.
+sendPlatformInvitation:
+    path: /api/v1/invitations
+    controller: LectoresBeta\User\Invitation\Infrastructure\Controller\InvitePersonController::__invoke
+    methods: [POST]
+
+# Las que ya mandé y en qué han quedado. Solo las propias: a quién invita
+# alguien es de las cosas más privadas que guarda la plataforma.
+listMyInvitations:
+    path: /api/v1/me/invitations
+    controller: LectoresBeta\User\Invitation\Infrastructure\Controller\ListMyInvitationsController::__invoke
+    methods: [GET]

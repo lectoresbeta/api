@@ -90,7 +90,8 @@ preferencias y presencia pública como autor.
 | `ActivationEmailRequested` | Se pide reenviar el correo de activación | `Notification` |
 | `LiteraryPreferencesUpdated` | El usuario fija o cambia sus géneros de interés | `Community` (sugerencias y recomendaciones) |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models |
-| `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` (+5 al invitador) |
+| `PlatformInvitationSent` | Alguien invita a una dirección de fuera | `Notification` (manda el correo). **Sin el token**: se pide por contrato al enviar |
+| `PlatformInvitationConsumed` | Alguien se registra con una invitación | `Credits` (apunta el par; **no abona nada**) |
 | `UserDeleted` | Se elimina la cuenta | Todos. **Cada contexto anonimiza lo suyo**: `User` no borra filas ajenas. En `User` convierte su nombre de usuario en alias bloqueado durante 30 días |
 | `UserProfileUpdated` | Cambian datos públicos | `Community` (read models) |
 | `UsernameChanged` | El usuario cambia su nombre de usuario, o recupera uno suyo | `Community` (read models que muestran el `@`) |
@@ -104,14 +105,18 @@ preferencias y presencia pública como autor.
 > entrega **aunque el usuario tenga todas las notificaciones desactivadas**. Son
 > transaccionales, no notificaciones (`FEAT-USR-039` `RN-3`).
 
-> `InvitedUserParticipated` requiere correlacionar la invitación con el primer comentario del
-> invitado, que ocurre en `Feedback`. Diseño pendiente: ver `U-4`.
+> **`User` no publica ningún hecho que diga que un invitado «ha participado»**, y esa ausencia
+> es deliberada: `Credits` correlaciona por su cuenta el par que recibe aquí con el
+> `FeedbackSubmitted` de `Feedback` ([`FEAT-CRD-005`](../features/credits/FEAT-CRD-005-invitation-reward.md)).
+> Un hecho intermedio obligaría a este contexto a saber qué cuenta como participar para el
+> sistema de créditos.
 
 ## Contratos publicados
 
 | Contrato | Responde | Quién pregunta |
 |---|---|---|
 | `ActivationLinkProvider` | El enlace de activación, en el momento de enviar el correo | `Notification` |
+| `InvitationLinkProvider` | El enlace de invitación, en el momento de enviar el correo, con la dirección invitada y quién invita. **Emite un token nuevo cada vez**, que invalida el anterior | `Notification` |
 | `ReaderMaturity` | **Un booleano**: ¿tiene edad? Ni la fecha de nacimiento ni la edad | `Work`, `Feedback` |
 | `GenreCatalogue` | Cuáles de estos códigos de temática **no** existen | `Work` |
 | `RegisteredUsers` | **Un booleano**: ¿existe este usuario? Nada más de él | `Reading`, `Community` |
@@ -230,7 +235,7 @@ una cifra que no se pueda leer viaja como `null`, que no es lo mismo que cero.
 | U-1 | ¿Se verifica el email al registrarse? (`S-3`) | Fraude con invitaciones |
 | U-2 | ¿Se puede vincular varios proveedores externos a la misma cuenta? | Modelo de credenciales |
 | U-3 | ¿Qué ocurre con obras, feedback y créditos al eliminar la cuenta? (`V-4`, `J-7`) | Bloquea `FEAT-USR-012` |
-| U-4 | ¿Quién detecta que un invitado "ha participado": `User` escuchando a `Feedback`, o `Feedback` publicándolo? | Define el productor de `InvitedUserParticipated` |
+| U-4 | ¿Quién detecta que un invitado "ha participado": `User` escuchando a `Feedback`, o `Feedback` publicándolo? | **Resuelto:** ninguno de los dos. `Credits` recibe el par (`PlatformInvitationConsumed`) y el trabajo entregado (`FeedbackSubmitted`) y correlaciona solo (`FEAT-CRD-005`) |
 | U-5 | ¿La personalización de la página de autor tiene límites (temas cerrados o CSS libre)? | Riesgo de seguridad si es libre |
 | U-8 | ¿Qué nombre se muestra públicamente? (`OB-2`) | **Resuelto:** el `Name` del onboarding. El aviso de privacidad solo afecta a la fecha de nacimiento |
 | U-6 | ¿Existe `Username`? | **Resuelto:** no. No se usa el concepto |

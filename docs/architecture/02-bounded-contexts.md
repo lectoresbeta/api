@@ -60,7 +60,7 @@ separarlos prematuramente multiplicaría la infraestructura sin beneficio. Ver `
                               ▼                       │
                         ┌───────────┐                 │
                         │  Credits  │◀────────────────┘
-                        └─────┬─────┘  InvitedUserParticipated
+                        └─────┬─────┘  PlatformInvitationConsumed
                               │
                               │ CreditsSpent / CreditsAdded
                               ▼

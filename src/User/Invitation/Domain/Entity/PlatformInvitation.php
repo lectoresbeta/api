@@ -61,6 +61,33 @@ class PlatformInvitation
         return $this->tokenHash;
     }
 
+    public function email(): ?string
+    {
+        return $this->email;
+    }
+
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function consumedAt(): ?\DateTimeImmutable
+    {
+        return $this->consumedAt;
+    }
+
+    /**
+     * Un token nuevo, que invalida el anterior (`FEAT-NOT-007`).
+     *
+     * El token en claro no se puede recuperar —en la tabla solo está su
+     * hash—, así que reenviar una invitación es emitir otro. **Solo el último
+     * correo funciona**, que es lo que hace seguro el reenvío.
+     */
+    public function replaceToken(string $tokenHash): void
+    {
+        $this->tokenHash = $tokenHash;
+    }
+
     public function isAvailable(): bool
     {
         return null === $this->consumedAt;

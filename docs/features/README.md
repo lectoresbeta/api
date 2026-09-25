@@ -86,7 +86,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-015 | Configurar información de la página de autor (bio, foto, referencias) | Writer | PENDING | TODO | P2 | — |
 | FEAT-USR-016 | Personalizar página de autor (fuentes, colores, fondos) | Writer | PENDING | TODO | P3 | — |
 | FEAT-USR-017 | Buscar autores por nombre o temática | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-017-search-authors.md) |
-| FEAT-USR-018 | Invitar a personas a la plataforma por email | User | PENDING | TODO | P2 | — |
+| FEAT-USR-018 | Invitar a personas a la plataforma por email | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-018-invite-people-to-the-platform.md) |
 | FEAT-USR-019 | Registro y login con LinkedIn | Guest | APPROVED | DEFERRED | P3 | [ficha](user/FEAT-USR-019-linkedin-oauth.md) |
 | FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
 | FEAT-USR-021 | Reenviar el email de activación | Guest, User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
@@ -451,7 +451,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-002 | Abonar los créditos de bienvenida al **activar** la cuenta (+10) | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-002-welcome-credit-grant.md) |
 | FEAT-CRD-003 | ~~Abonar créditos por dar feedback según nivel del texto~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-004 | ~~Abonar +5 por feedback valorado positivamente~~ → `FEAT-CRD-017` | — | PENDING | DEPRECATED | P3 | — |
-| FEAT-CRD-005 | Abonar +5 al invitador cuando el invitado entrega su primera corrección | — (sistema) | PENDING | TODO | P2 | — |
+| FEAT-CRD-005 | Abonar +5 al invitador cuando el invitado entrega su primera corrección | — (sistema) | APPROVED | DONE | P2 | [ficha](credits/FEAT-CRD-005-invitation-reward.md) |
 | FEAT-CRD-006 | Cargar al autor y abonar al lector al entregarse la corrección | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-006-charge-author-for-received-feedback.md) |
 | FEAT-CRD-007 | ~~Coste adicional por preguntas extra del cuestionario~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-008 | Consultar el historial de movimientos de créditos | User | APPROVED | DONE | P1 | [ficha](credits/FEAT-CRD-008-credit-history.md) |
@@ -523,7 +523,7 @@ Ficha del contexto: [`../bounded-contexts/notification.md`](../bounded-contexts/
 | FEAT-NOT-004 | Avisar de nueva obra de un autor al que se sigue | — (sistema) | APPROVED | DONE | P2 | [ficha](notification/FEAT-NOT-004-new-work-notices.md) |
 | FEAT-NOT-005 | Avisar de solicitudes, invitaciones y propuestas | — (sistema) | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-005-request-and-proposal-notices.md) |
 | FEAT-NOT-006 | Avisar de feedback recibido, contestado o valorado | — (sistema) | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-006-feedback-notices.md) |
-| FEAT-NOT-007 | Enviar el email de invitación a la plataforma | — (sistema) | PENDING | TODO | P2 | — |
+| FEAT-NOT-007 | Enviar el email de invitación a la plataforma | — (sistema) | APPROVED | DONE | P2 | [ficha](notification/FEAT-NOT-007-platform-invitation-email.md) |
 | FEAT-NOT-008 | Enviar el email de activación de cuenta | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](notification/FEAT-NOT-008-account-activation-email.md) |
 | FEAT-NOT-009 | Centro de notificaciones in-app y contador de no leídas | User | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-009-notification-centre.md) |
 

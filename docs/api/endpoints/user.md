@@ -69,8 +69,8 @@
 | `GET /authors/{userId}/page` | `getAuthorPage` | Página pública de autor | FEAT-USR-015 | PENDING |
 | `PUT /me/author-page` | `updateAuthorPage` | Información de la página de autor | FEAT-USR-015 | PENDING |
 | `PUT /me/author-page/theme` | `updateAuthorPageTheme` | Personalización visual | FEAT-USR-016 | PENDING |
-| `POST /invitations` | `sendPlatformInvitation` | Invitar por email | FEAT-USR-018 | PENDING |
-| `GET /me/invitations` | `listMyInvitations` | Invitaciones enviadas y su estado | FEAT-USR-018 | PENDING |
+| `POST /api/v1/invitations` | `sendPlatformInvitation` | Invitar por email | FEAT-USR-018 | **Implementado** |
+| `GET /api/v1/me/invitations` | `listMyInvitations` | Invitaciones enviadas y su estado | FEAT-USR-018 | **Implementado** |
 
 ---
 
@@ -991,3 +991,59 @@ hay portada» de «esta es la portada».
 
 **Ninguno fuera de `User`.** No mueve créditos, no cuenta como relato y no publica ningún
 evento: un evento «por si acaso» es un contrato que luego hay que mantener.
+
+---
+
+## `POST /api/v1/invitations`
+
+**`operationId`:** `sendPlatformInvitation` · **Funcionalidad:** [`FEAT-USR-018`](../../features/user/FEAT-USR-018-invite-people-to-the-platform.md)
+
+### Propósito
+
+Mandar a alguien de fuera un enlace para crear su cuenta.
+
+### Autorización
+
+Sesión con cuenta activada.
+
+### Semántica
+
+**`202`, y la misma respuesta se mande el correo o no.** No se envía nada si la dirección ya
+tiene cuenta, o si quien invita ya le había mandado una invitación que sigue en pie. Los tres
+desenlaces son indistinguibles desde fuera, y tienen que serlo: un formulario que los
+distinguiera sería un comprobador de quién está en la plataforma, que es justo lo que el alta
+y la recuperación de contraseña se cuidan de no decir.
+
+`202` y no `201` porque es exacto: lo que ha ocurrido al responder es que se ha aceptado el
+encargo. El correo sale por la cola.
+
+La única excepción es invitarse a uno mismo, que responde `422` con
+`code: CANNOT_INVITE_YOURSELF`. No filtra nada: quien invita ya sabe cuál es su correo.
+
+Con tope diario: pasado, `429` con `code: INVITATION_LIMIT_REACHED`.
+
+**Invitar no abona nada.** La recompensa llega cuando la persona invitada entrega su primera
+corrección ([`FEAT-CRD-005`](../../features/credits/FEAT-CRD-005-invitation-reward.md)).
+
+---
+
+## `GET /api/v1/me/invitations`
+
+**`operationId`:** `listMyInvitations` · **Funcionalidad:** [`FEAT-USR-018`](../../features/user/FEAT-USR-018-invite-people-to-the-platform.md)
+
+### Propósito
+
+Qué invitaciones mandé y en qué quedaron.
+
+### Autorización
+
+Sesión. **Solo las propias**: no existe la variante para ver las de otro, porque a quién
+invita alguien es de las cosas más privadas que guarda la plataforma.
+
+### Semántica
+
+De la más reciente a la más antigua, con la dirección, la fecha y si fue aceptada.
+
+**No dice si se cobró por ella** —eso es del saldo— ni **quién se registró**: el invitador
+tiene derecho a saber que su invitación fue aceptada, no a que le entreguen la cuenta de esa
+persona.

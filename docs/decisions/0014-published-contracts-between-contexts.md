@@ -41,6 +41,7 @@ Los publicados hasta ahora:
 | Contrato | Contexto | Responde |
 |---|---|---|
 | `ActivationLinkProvider` | `User` | El enlace de activación, en el momento de enviar el correo |
+| `InvitationLinkProvider` | `User` | El enlace de invitación, en el momento de enviar el correo |
 | `ReaderMaturity` | `User` | Un booleano: ¿tiene edad? |
 | `GenreCatalogue` | `User` | Cuáles de estos códigos de temática **no** existen |
 | `CorrectionBriefs` | `Work` | Qué se pregunta en un capítulo, de quién es la obra y si admite correcciones |
