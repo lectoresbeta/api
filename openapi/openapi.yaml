@@ -36,6 +36,8 @@ tags:
     description: Saldo e historial de créditos
   - name: Notifications
     description: Notificaciones y preferencias
+  - name: Moderation
+    description: Reclamaciones, moderadores y backoffice
   - name: Health
     description: Salud del sistema. Fuera de la versión de la API
 
@@ -240,6 +242,15 @@ paths:
 
   /me/notifications/{notificationId}/read:
     $ref: './paths/notifications.yaml#/read'
+
+  /admin/moderators:
+    $ref: './paths/moderation.yaml#/moderators'
+
+  /admin/users/{userId}/moderator-role:
+    $ref: './paths/moderation.yaml#/moderatorRole'
+
+  /me/moderator-alerts:
+    $ref: './paths/moderation.yaml#/moderatorAlerts'
 
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'

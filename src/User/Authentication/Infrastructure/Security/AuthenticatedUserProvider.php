@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LectoresBeta\User\Authentication\Infrastructure\Security;
 
+use LectoresBeta\Moderation\ModeratorRole\Application\Contract\ModeratorRoles;
+use LectoresBeta\Moderation\ModeratorRole\Application\Contract\ModeratorStanding;
 use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
@@ -25,8 +27,10 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
  */
 final readonly class AuthenticatedUserProvider implements UserProviderInterface
 {
-    public function __construct(private UserRepository $users)
-    {
+    public function __construct(
+        private UserRepository $users,
+        private ModeratorRoles $moderators,
+    ) {
     }
 
     public function loadUserByIdentifier(string $identifier): UserInterface
@@ -43,7 +47,7 @@ final readonly class AuthenticatedUserProvider implements UserProviderInterface
 
         // The stored identifier and not the one that arrived: normalised,
         // and the only one the rest of the system will recognise.
-        return new AuthenticatedUser($user->id()->value());
+        return new AuthenticatedUser($user->id()->value(), self::rolesOf($user->id()->value(), $this->moderators));
     }
 
     public function refreshUser(UserInterface $user): UserInterface
@@ -58,5 +62,29 @@ final readonly class AuthenticatedUserProvider implements UserProviderInterface
     public function supportsClass(string $class): bool
     {
         return AuthenticatedUser::class === $class;
+    }
+
+    /**
+     * Los roles se resuelven **en cada petición** y no viajan en el token
+     * (`decision:0007`). Meterlos ahí haría que un permiso retirado siguiera
+     * vigente hasta que caducara, y en el backoffice eso son quince minutos
+     * leyendo obra inédita y datos personales de cualquiera
+     * (`FEAT-MOD-004` `RN-4`, `RN-9`).
+     *
+     * @return list<string>
+     */
+    private static function rolesOf(string $userId, ModeratorRoles $moderators): array
+    {
+        $standing = $moderators->of($userId);
+
+        if (null === $standing) {
+            return ['ROLE_USER'];
+        }
+
+        // Un administrador modera además de administrar: es un nivel por
+        // encima y no un rol distinto, así que lleva los dos.
+        return ModeratorStanding::ADMIN === $standing->level
+            ? ['ROLE_USER', 'ROLE_MODERATOR', 'ROLE_ADMIN']
+            : ['ROLE_USER', 'ROLE_MODERATOR'];
     }
 }

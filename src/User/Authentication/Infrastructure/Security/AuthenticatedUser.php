@@ -24,9 +24,15 @@ final readonly class AuthenticatedUser implements UserInterface
 {
     /**
      * @param non-empty-string $userId
+     * @param list<string>     $roles  lo que esta persona puede hacer **ahora
+     *                                 mismo**, resuelto contra la base de
+     *                                 datos en cada petición y nunca leído
+     *                                 del token
      */
-    public function __construct(private string $userId)
-    {
+    public function __construct(
+        private string $userId,
+        private array $roles = ['ROLE_USER'],
+    ) {
     }
 
     /**
@@ -46,7 +52,7 @@ final readonly class AuthenticatedUser implements UserInterface
      */
     public function getRoles(): array
     {
-        return ['ROLE_USER'];
+        return $this->roles;
     }
 
     public function eraseCredentials(): void

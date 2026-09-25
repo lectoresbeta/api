@@ -194,6 +194,12 @@ services:
     LectoresBeta\Notification\Delivery\Application\Contract\UnreadNotificationCount:
         alias: LectoresBeta\Notification\Delivery\Application\Service\CountUnreadFor
 
+    # Si alguien modera, y con qué nivel. Lo consulta `User` al autenticar,
+    # porque el token no lleva roles (decision:0007) y un permiso retirado
+    # tiene que dejar de valer en el acto (FEAT-MOD-004 RN-4).
+    LectoresBeta\Moderation\ModeratorRole\Application\Contract\ModeratorRoles:
+        alias: LectoresBeta\Moderation\ModeratorRole\Application\Service\CheckModeratorRole
+
     # `RN-7` de FEAT-USR-027 vive aquí: si el contexto de al lado no responde,
     # el resto del menú se pinta igual.
     LectoresBeta\User\Profile\Application\Port\SessionSideloads:

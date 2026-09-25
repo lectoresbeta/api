@@ -6,7 +6,9 @@ namespace LectoresBeta\User\Account\Application\Service;
 
 use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\User\Account\Application\Contract\RegisteredUsers;
+use LectoresBeta\User\Account\Domain\Enum\AccountStatus;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
+use LectoresBeta\User\Account\Domain\ValueObject\Email;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 
 /**
@@ -29,5 +31,27 @@ final readonly class CheckRegisteredUsers implements RegisteredUsers
         } catch (InvalidValue) {
             return false;
         }
+    }
+
+    public function isActivated(string $userId): bool
+    {
+        try {
+            $user = $this->users->ofId(UserId::fromString($userId));
+        } catch (InvalidValue) {
+            return false;
+        }
+
+        return null !== $user && AccountStatus::ACTIVE === $user->status();
+    }
+
+    public function idOfEmail(string $email): ?string
+    {
+        try {
+            $user = $this->users->ofEmail(Email::fromString($email));
+        } catch (InvalidValue) {
+            return null;
+        }
+
+        return $user?->id()->value();
     }
 }

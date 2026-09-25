@@ -75,4 +75,21 @@ class ModeratorRole
     {
         $this->revokedAt ??= $now;
     }
+
+    /**
+     * Devolver el rol a quien lo tuvo **reactiva su fila**, no crea otra
+     * (`FEAT-MOD-004`). La clave es la cuenta, y su historia —cuándo lo tuvo,
+     * quién se lo dio— importa más que empezar de cero.
+     *
+     * Vuelve a encender el aviso por correo: quien recupera el rol vuelve al
+     * trabajo, y el silencio hay que elegirlo otra vez a conciencia (`RN-3`).
+     */
+    public function grantAgain(ModeratorLevel $level, PartyId $grantedBy, \DateTimeImmutable $now): void
+    {
+        $this->level = $level;
+        $this->grantedBy = $grantedBy->value();
+        $this->grantedAt = $now;
+        $this->revokedAt = null;
+        $this->emailAlerts = true;
+    }
 }

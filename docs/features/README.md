@@ -351,7 +351,7 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 | FEAT-MOD-001 | Presentar una reclamación | User, Writer | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-001-submit-claim.md) |
 | FEAT-MOD-002 | Revisar y resolver una reclamación | Moderator | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-002-review-claim.md) |
 | FEAT-MOD-003 | Bloquear una obra por reclamación estimada | — (sistema) | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-003-block-work.md) |
-| FEAT-MOD-004 | Rol de moderador y aviso de reclamaciones | Admin, Moderator | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-004-moderator-role.md) |
+| FEAT-MOD-004 | Rol de moderador y aviso de reclamaciones | Admin, Moderator | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-004-moderator-role.md) |
 | FEAT-MOD-005 | Gestión de usuarios desde el backoffice | Admin, Moderator | APPROVED | TODO | P2 | [ficha](moderation/FEAT-MOD-005-user-management.md) |
 | FEAT-MOD-006 | Catálogo de sanciones | Moderator | APPROVED | TODO | P2 | [ficha](moderation/FEAT-MOD-006-sanctions.md) |
 | FEAT-MOD-007 | Registro de auditoría de acciones administrativas | — (sistema) | PENDING | TODO | P1 | — |
@@ -359,7 +359,7 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 | FEAT-MOD-009 | Conversación entre el moderador y las partes | Moderator, User | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-009-moderator-conversation.md) |
 | FEAT-MOD-010 | Mis reclamaciones — sección del usuario | User | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-010-my-claims.md) |
 | FEAT-MOD-011 | Revisión automática de contenido | — (sistema) | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-011-automated-content-review.md) |
-| FEAT-MOD-012 | Comando de creación del primer administrador | Admin | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-012-bootstrap-admin.md) |
+| FEAT-MOD-012 | Comando de creación del primer administrador | Admin | APPROVED | DONE | P1 | [ficha](moderation/FEAT-MOD-012-bootstrap-admin.md) |
 
 > **`Moderation` existe desde el 2026-09-23** y con él desaparece `V-1`, que bloqueaba las
 > denuncias desde el principio: no había moderación que las atendiera. Ahora la hay.

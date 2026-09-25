@@ -5,7 +5,7 @@ context: Moderation
 concept: ModeratorRole
 actors: [Admin]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-23 (el primer admin se activa por comando)
@@ -53,13 +53,13 @@ El comando exige una acción deliberada, sobre una cuenta real, en el entorno co
 
 ## Criterios de aceptación
 
-- [ ] El comando concede el rol a una cuenta existente y activada.
-- [ ] Falla con un mensaje claro si la cuenta no existe o no está activada.
-- [ ] Es idempotente.
-- [ ] Permite revocar.
-- [ ] Queda registrado en auditoría con actor `CONSOLE`.
-- [ ] No existe ningún endpoint que conceda el rol de administrador.
-- [ ] No hay ninguna semilla que cree administradores automáticamente.
+- [x] El comando concede el rol a una cuenta existente y activada.
+- [x] Falla con un mensaje claro si la cuenta no existe o no está activada.
+- [x] Es idempotente.
+- [x] Permite revocar.
+- [x] Queda registrado en auditoría con actor `CONSOLE`.
+- [x] No existe ningún endpoint que conceda el rol de administrador.
+- [x] No hay ninguna semilla que cree administradores automáticamente.
 
 ## Preguntas abiertas
 
@@ -75,3 +75,25 @@ afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven duran
 implementación.
 
 **Implementación:** `TODO`.
+
+## Estado de la implementación
+
+`DONE` (2026-09-25). `bin/console lectoresbeta:admin:grant <email>`, con `--revoke` para la
+salida de `RN-5`.
+
+Dos detalles que la ficha no fijaba:
+
+**El actor que queda en la auditoría es un identificador reservado para la consola**, no la
+cuenta afectada. La consola no tiene identidad propia —la tiene quien la ejecuta, y eso no se
+puede saber desde aquí—, pero sí importa dejar constancia de que **fue por consola**: es el
+único camino por el que este cambio llega sin un administrador detrás.
+
+**Ese camino salta la regla de «nadie se toca su propio rol»**, que existe para impedir que
+alguien se ascienda desde la API. Aquí no hay API: hay alguien con acceso al servidor, que ya
+tiene todo el poder que esa regla protege.
+
+El comando resuelve el correo contra `RegisteredUsers`, que gana para esto una pregunta que va
+**del correo hacia la cuenta**. Es la única del contrato que lo hace, y su docblock dice por
+qué no debe usarse desde ningún endpoint: responder si una dirección tiene cuenta es
+exactamente lo que el alta, el reenvío de activación y la recuperación de contraseña se cuidan
+de no decir.

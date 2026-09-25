@@ -1,0 +1,156 @@
+# El contexto `Moderation`: por ahora, el rol y su preferencia de aviso.
+#
+# Todo lo que cuelga de `/api/v1/admin` exige `ROLE_MODERATOR`, y conceder
+# roles exige además `ROLE_ADMIN`. Los dos se resuelven contra la base de
+# datos en cada petición: el token no lleva roles a propósito
+# ([`decision:0007`](../../docs/decisions/0007-jwt-sessions.md)), porque si
+# los llevara un permiso retirado seguiría valiendo hasta que caducara — y en
+# el backoffice eso son quince minutos leyendo obra inédita y datos
+# personales de cualquiera.
+
+moderators:
+  get:
+    tags: [Moderation]
+    operationId: listModerators
+    summary: Quién modera ahora mismo
+    description: |
+      Solo los activos. Quien tuvo el rol y lo perdió está en el registro de
+      auditoría, que es donde se mira la historia; esta lista responde a «a
+      quién puedo asignarle algo hoy».
+
+      Se sirve **sin filtrar por privacidad**: un moderador que cierre su
+      perfil no puede desaparecer de la lista de quien administra, porque
+      entonces no habría forma de quitarle el rol.
+    responses:
+      '200':
+        description: Los moderadores activos.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [moderators]
+              properties:
+                moderators:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, level, emailAlerts]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      username:
+                        type: [string, 'null']
+                      name:
+                        type: [string, 'null']
+                      level:
+                        type: string
+                        enum: [MODERATOR, ADMIN]
+                      emailAlerts:
+                        type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: No modera.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+moderatorRole:
+  put:
+    tags: [Moderation]
+    operationId: setModeratorRole
+    summary: Conceder o revocar el rol de moderación
+    description: |
+      **Solo un `Admin`.** `PUT` porque fija un estado: qué es esa cuenta en
+      moderación, y `level: null` la deja en nada.
+
+      La cuenta tiene que **existir y estar activada**: una sin activar no ha
+      demostrado todavía que haya alguien detrás, y el backoffice lee obra
+      inédita y datos personales de cualquiera.
+
+      **Nadie se toca su propio rol.** Concedérselo convertiría el registro de
+      auditoría en un trámite, y quitárselo dejaría la plataforma sin
+      administrador por un descuido. El primer administrador se nombra por
+      consola (`FEAT-MOD-012`), que es el único camino sin administrador
+      detrás.
+
+      Conceder el rol a quien lo tuvo **reactiva su ficha**, con su historia,
+      y vuelve a encender el aviso por correo.
+
+      Perder el rol **cierra el backoffice en el acto**, sin esperar a que
+      caduque ningún token.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [level]
+            properties:
+              level:
+                type: [string, 'null']
+                enum: [MODERATOR, ADMIN, null]
+    responses:
+      '204':
+        description: El rol queda como se pidió.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: No es administrador.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: MODERATOR_ROLE_REFUSED`. La cuenta no existe o no está
+          activada, es la propia de quien lo pide, o el nivel no existe.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+moderatorAlerts:
+  put:
+    tags: [Moderation]
+    operationId: setModeratorAlerts
+    summary: Recibir o no un correo por cada reclamación
+    description: |
+      Lo cambia **el propio moderador**, y por eso cuelga de `/me`: no es una
+      decisión de administración sino cómo prefiere trabajar. Hay quien entra
+      a la cola cuando puede en vez de recibir un correo por cada
+      reclamación, y obligarle a renunciar al rol por eso sería convertir una
+      preferencia en una dimisión.
+
+      **No depende de las preferencias generales de notificación**: son
+      correos de trabajo, no avisos de producto. Someterlos a ellas
+      significaría dejar de avisar de una denuncia porque alguien desactivó
+      las notificaciones hace meses.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [enabled]
+            properties:
+              enabled:
+                type: boolean
+    responses:
+      '204':
+        description: La preferencia queda guardada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: MODERATOR_ROLE_REFUSED`. Quien llama no modera.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

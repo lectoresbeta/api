@@ -17,3 +17,26 @@
 #         methods: [POST]
 #
 # Convención completa: docs/api/conventions/routing.md
+
+# El backoffice (`FEAT-MOD-004`). Todo lo que cuelga de `/api/v1/admin` exige
+# `ROLE_MODERATOR` por `security.yaml`, y conceder roles exige además
+# `ROLE_ADMIN`: los dos se resuelven contra la base de datos en cada petición,
+# porque el token no lleva roles (`decision:0007`).
+listModerators:
+    path: /api/v1/admin/moderators
+    controller: LectoresBeta\Moderation\ModeratorRole\Infrastructure\Controller\ListModeratorsController::__invoke
+    methods: [GET]
+
+# `PUT` porque fija un estado: qué es esa cuenta en moderación. `level: null`
+# la deja en nada.
+setModeratorRole:
+    path: /api/v1/admin/users/{userId}/moderator-role
+    controller: LectoresBeta\Moderation\ModeratorRole\Infrastructure\Controller\SetModeratorRoleController::__invoke
+    methods: [PUT]
+
+# Cuelga de `/me` y no de `/admin` a propósito: es cómo prefiere trabajar el
+# moderador, no una decisión de administración (`RN-3`).
+setModeratorAlerts:
+    path: /api/v1/me/moderator-alerts
+    controller: LectoresBeta\Moderation\ModeratorRole\Infrastructure\Controller\SetModeratorAlertsController::__invoke
+    methods: [PUT]

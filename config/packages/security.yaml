@@ -45,6 +45,10 @@ security:
             jwt: ~
 
     access_control:
+        # Conceder o revocar roles es cosa de un administrador, no de
+        # cualquier moderador (FEAT-MOD-004 RN-1). Va antes de la regla
+        # general porque `access_control` se queda con la primera que encaja.
+        - { path: '^/api/v1/admin/users/[^/]+/moderator-role$', roles: ROLE_ADMIN }
         - { path: '^/api/v1/admin(/|$)', roles: ROLE_MODERATOR }
 
         # El perfil ajeno se abre sin sesión (FEAT-USR-014, FEAT-USR-035): es

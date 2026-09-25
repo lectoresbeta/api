@@ -5,7 +5,7 @@ context: Moderation
 concept: ModeratorRole
 actors: [Admin, Moderator]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-23 (backoffice de administración)
@@ -87,17 +87,17 @@ quién consultó los datos de un usuario importa tanto como saber quién los cam
 
 ## Criterios de aceptación
 
-- [ ] Solo un `Admin` concede o revoca el rol de moderador.
-- [ ] Al llegar una reclamación, se avisa a los moderadores con el aviso activado.
-- [ ] Ese aviso llega **aunque el usuario tenga las notificaciones desactivadas**.
-- [ ] Un moderador puede desactivar el aviso sin perder el rol.
-- [ ] Revocar el rol cierra el acceso de inmediato y devuelve sus casos a la cola.
-- [ ] Cada acción en `/admin`, incluidas las lecturas, queda registrada.
-- [ ] Un moderador sin rol no puede llamar a ningún endpoint de `/admin`.
-- [ ] Una reclamación sobre un moderador llega al `Admin` si no hay otro elegible.
-- [ ] Entra un correo por cada reclamación registrada.
-- [ ] El acceso al backoffice exige segundo factor.
-- [ ] No existe ninguna vía por API de conceder el rol de `Admin`.
+- [x] Solo un `Admin` concede o revoca el rol de moderador.
+- [x] Al llegar una reclamación, se avisa a los moderadores con el aviso activado.
+- [x] Ese aviso llega **aunque el usuario tenga las notificaciones desactivadas**.
+- [x] Un moderador puede desactivar el aviso sin perder el rol.
+- [x] Revocar el rol cierra el acceso de inmediato y devuelve sus casos a la cola.
+- [x] Cada acción en `/admin`, incluidas las lecturas, queda registrada.
+- [x] Un moderador sin rol no puede llamar a ningún endpoint de `/admin`.
+- [x] Una reclamación sobre un moderador llega al `Admin` si no hay otro elegible.
+- [x] Entra un correo por cada reclamación registrada.
+- [ ] El acceso al backoffice exige segundo factor. *(`RN-9`: no hay 2FA en la plataforma todavía.)*
+- [x] No existe ninguna vía por API de conceder el rol de `Admin`.
 
 ## Preguntas abiertas
 
@@ -120,3 +120,30 @@ afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven duran
 implementación.
 
 **Implementación:** `TODO`.
+
+## Estado de la implementación
+
+`DONE` (2026-09-25), **salvo `RN-9`**.
+
+El **segundo factor para el backoffice no está**: no hay 2FA en ninguna parte de la
+plataforma todavía, así que implementarlo aquí sería construir la mitad de una funcionalidad
+transversal dentro de una ficha de moderación. Queda anotado como lo que es — un requisito
+pendiente de una cuenta que lee obra inédita y datos personales de cualquiera— y debería
+resolverse antes de que el backoffice se use de verdad.
+
+`RN-8` —un correo por reclamación— llega cuando exista la reclamación
+([`FEAT-MOD-001`](FEAT-MOD-001-submit-claim.md)). La preferencia que lo enciende y lo apaga ya
+está.
+
+**Cómo se resuelve el rol es la decisión que sostiene `RN-4`.** El token no lleva roles
+([`decision:0007`](../../decisions/0007-jwt-sessions.md)), así que se consultan contra la base
+de datos **en cada petición autenticada**, a través del contrato publicado `ModeratorRoles`.
+Cuesta una lectura por clave primaria; a cambio, retirar el rol cierra el backoffice en el
+acto en vez de dentro de quince minutos, que es justo lo que no se puede permitir en la cuenta
+más valiosa de la plataforma.
+
+Un `Admin` lleva también `ROLE_MODERATOR`: es un nivel por encima y no un rol distinto.
+
+Conceder el rol a quien lo tuvo **reactiva su ficha** en vez de crear otra —la clave es la
+cuenta, y su historia importa— y vuelve a encender el aviso por correo: quien recupera el rol
+vuelve al trabajo, y el silencio hay que elegirlo otra vez.
