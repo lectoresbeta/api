@@ -9,26 +9,40 @@ verdad sobre el alcance.**
   Mientras tanto la fila es toda la información que existe.
 - Ninguna funcionalidad se implementa sin ficha en `APPROVED`.
 
-**Última actualización: 2026-09-22**
+**Última actualización: 2026-09-25**
 
 ---
 
 ## Resumen
 
-| Contexto | Funcionalidades | Con ficha | `APPROVED` | `DONE` |
-|---|---|---|---|---|
-| `User` (USR) | 44 | 26 | 26 | 0 |
-| `Work` (WRK) | 17 | 6 | 6 | 0 |
-| `Reading` (RDG) | 10 | 0 | 0 | 0 |
-| `Feedback` (FBK) | 12 | 4 | 3 | 0 |
-| `Community` (COM) | 38 | 9 | 8 | 0 |
-| `Moderation` (MOD) | 12 | 10 | 10 | 0 |
-| `Credits` (CRD) | 19 | 9 | 9 | 0 |
-| `Notification` (NOT) | 9 | 1 | 1 | 0 |
-| **Total** | **161** | **65** | **63** | **0** |
+| Contexto | Funcionalidades | Con ficha | `APPROVED` | En alcance | `DONE` | `PARTIAL` | `BLOCKED` | `TODO` | Avance |
+|---|---|---|---|---|---|---|---|---|---|
+| `User` (USR) | 44 | 29 | 29 | 39 | 12 | 9 | 1 | 17 | 42 % |
+| `Work` (WRK) | 17 | 8 | 8 | 17 | 0 | 7 | 1 | 9 | 21 % |
+| `Reading` (RDG) | 10 | 7 | 7 | 10 | 7 | 0 | 0 | 3 | 70 % |
+| `Feedback` (FBK) | 12 | 4 | 3 | 12 | 1 | 1 | 1 | 9 | 13 % |
+| `Community` (COM) | 38 | 11 | 10 | 35 | 2 | 1 | 5 | 27 | 7 % |
+| `Moderation` (MOD) | 12 | 10 | 10 | 12 | 1 | 5 | 0 | 6 | 29 % |
+| `Credits` (CRD) | 19 | 12 | 12 | 15 | 3 | 5 | 0 | 7 | 37 % |
+| `Notification` (NOT) | 9 | 3 | 3 | 9 | 2 | 1 | 0 | 6 | 28 % |
+| **Total** | **161** | **84** | **82** | **149** | **28** | **29** | **8** | **84** | **29 %** |
 
-Estado global: **especificación cerrada en su mayor parte**. 63 de 65 fichas están
-`APPROVED` y son implementables. No hay código en `src/`.
+| Prioridad | En alcance | `DONE` | `PARTIAL` | `BLOCKED` | `TODO` | Avance |
+|---|---|---|---|---|---|---|
+| P0 | 35 | 10 | 16 | 1 | 8 | 51 % |
+| P1 | 51 | 11 | 12 | 2 | 26 | 33 % |
+| P2 | 55 | 6 | 1 | 5 | 43 | 12 % |
+| P3 | 8 | 1 | 0 | 0 | 7 | 13 % |
+
+- **En alcance** excluye `DEPRECATED` (6) y `DEFERRED` (6).
+- **Avance** = (`DONE` + ½ `PARTIAL`) ÷ en alcance. Es una medida de recuento, no de
+  esfuerzo: cada funcionalidad pesa lo mismo sea cual sea su tamaño.
+- Las cifras se derivan de las filas de este registro; si no coinciden, mandan las filas.
+
+Estado global: **82 de 84 fichas están `APPROVED`**, pero 77 funcionalidades aún no tienen
+ficha. **El ciclo central está en marcha**: una obra se publica, se corrige y los créditos se
+mueven. `Reading` está casi completo; `Community` y `Feedback`, más allá de la corrección,
+son lo más atrasado.
 
 Áreas cubiertas con diseño:
 
@@ -561,7 +575,7 @@ pendiente que impida implementarlo.
 
 ### Lo que queda sin aprobar
 
-**63 de las 65 fichas están `APPROVED`.** Solo dos siguen sin aprobar, y ambas por el mismo
+**82 de las 84 fichas están `APPROVED`.** Solo dos siguen sin aprobar, y ambas por el mismo
 motivo: falta una decisión de producto que no se puede suplir con un valor por defecto.
 
 | Ficha | Bloqueada por | Qué falta |
