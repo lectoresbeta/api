@@ -2,7 +2,7 @@
 
 > Convenciones transversales en [`../conventions/`](../conventions/). Esquemas en `openapi/`.
 >
-> Estado: **una sola operación especificada**. El resto del contexto trabaja por eventos, no
+> Estado: **dos operaciones especificadas**. El resto del contexto trabaja por eventos, no
 > por HTTP.
 
 ## Resumen
@@ -11,7 +11,7 @@
 |---|---|---|---|---|
 | `GET /api/v1/credits/balance` | `getCreditBalance` | Saldo del usuario autenticado | FEAT-CRD-001 | **Implementado** |
 | `GET /credits/transactions` | `listCreditTransactions` | Historial de movimientos | FEAT-CRD-008 | PENDING |
-| `POST /corrections/{correctionId}/tip` | `tipCorrection` | Propina a una corrección | FEAT-CRD-017 | PENDING |
+| `POST /api/v1/corrections/{correctionId}/tip` | `tipCorrection` | Propina a una corrección | FEAT-CRD-017 | **Implementado** |
 | `GET /admin/credits/health` | `getEconomyHealth` | Estado agregado de la economía | FEAT-CRD-012 | PENDING |
 
 **La mayor parte de este contexto no tiene API.** Los créditos se mueven al recibir eventos de
@@ -78,3 +78,104 @@ Ninguno propio. `401` sin autenticar, según [`../conventions/errors.md`](../con
 ### Efectos
 
 Ninguno. Es una lectura: no publica eventos ni mueve créditos.
+
+---
+
+## `POST /api/v1/corrections/{correctionId}/tip`
+
+**`operationId`:** `tipCorrection` · **Funcionalidad:** [`FEAT-CRD-017`](../../features/credits/FEAT-CRD-017-author-tip.md)
+
+### Propósito
+
+Que el autor dé créditos **de su propio saldo** a una corrección que le ha servido.
+
+Sustituye a la bonificación automática por «feedback valorado positivamente» y la mejora en
+dos frentes: **no crea créditos** —lo que sale del autor entra en el corrector, masa
+constante— y **cuesta algo a quien lo da**, que es lo que la convierte en una señal de
+calidad. Dos cuentas que se valoran mutuamente no ganan nada, así que el fraude no tiene
+premio que repartir.
+
+### Por qué esta operación vive aquí
+
+Es **la única llamada HTTP que mueve créditos**, y conviene decir por qué no contradice
+[`decision:0002`](../../decisions/0002-credits-as-isolated-bounded-context.md): lo que esa
+decisión prohíbe es que **otro contexto** pida a `Credits` que sume o reste. Aquí quien atiende
+la petición es `Credits`, y decide con lo que ya tiene apuntado. Nadie le dice cuánto mover.
+
+La alternativa —el endpoint en `Feedback`, que es donde vive la corrección— obligaría a
+preguntar el saldo disponible a `Credits` antes de aceptar, y este contexto no publica
+contratos. Aceptar la intención y aplicarla después por un evento obligaría a compensar cuando
+el saldo no llegara, que es mucha maquinaria para un gesto voluntario.
+
+No hace falta preguntar nada porque **`Credits` ya sabe de quién es cada corrección**: tiene
+apuntado quién pagó (`CORRECTION_CHARGED`) y quién cobró (`CORRECTION_EARNED`). El autor es el
+del cargo; el corrector, el del abono.
+
+### Autorización
+
+El **autor de la obra**, y solo sobre correcciones que ha recibido y pagado (`RN-2`).
+
+La pertenencia no se comprueba preguntando a `Feedback`: se deduce del cargo. Si quien llama no
+es quien pagó, la respuesta es la misma que si la corrección no existiera.
+
+### Petición
+
+```json
+{ "amount": 3 }
+```
+
+`amount` es un entero **entre 1 y 5** (`RN-3`). Por encima de cinco la propina se parece al
+precio de una corrección y deja de leerse como un extra.
+
+Admite `Idempotency-Key`. Es un movimiento de créditos, y un reintento de red no debe leerse
+como un segundo gesto: repetir la petición con la misma llave devuelve `200` sin mover nada.
+Repetirla sin llave, o con otra, es una segunda propina y se rechaza.
+
+La llave se guarda **en el propio movimiento**, no en una tabla de respuestas: basta porque una
+corrección admite una sola propina, así que el movimiento duplicado no puede existir y lo único
+que la llave decide es cómo se lee la repetición.
+
+### Respuesta
+
+`200 OK`.
+
+```json
+{ "balance": 5 }
+```
+
+El saldo que le queda al autor. Quien acaba de dar créditos quiere verlo, y pedirlo aparte
+sería una segunda llamada para un dato que esta ya conoce.
+
+### Reglas aplicadas
+
+`RN-1` a `RN-7` de [`FEAT-CRD-017`](../../features/credits/FEAT-CRD-017-author-tip.md).
+
+La que más manda es `RN-1`: **la propina sale del disponible y no genera descubierto**. El
+descubierto de [`FEAT-CRD-018`](../../features/credits/FEAT-CRD-018-negative-balance.md) existe
+para que un lector nunca trabaje sin cobrar; endeudarse por ser generoso sería una trampa.
+
+### Errores específicos
+
+| Código HTTP | `code` | Cuándo |
+|---|---|---|
+| `404` | `CORRECTION_NOT_FOUND` | No existe, no es suya, o no se ha cobrado |
+| `409` | `INSUFFICIENT_CREDITS` | No llega el disponible. Lleva `balance` |
+| `409` | `ALREADY_TIPPED` | Una por corrección (`RN-4`), y es irrevocable (`RN-5`) |
+| `422` | `TIP_OUT_OF_RANGE` | Fuera de 1–5. Lleva `minimumTip` y `maximumTip` |
+
+**El `404` responde a tres situaciones distintas a propósito.** Distinguir «no existe» de «no es
+tuya» diría algo sobre las correcciones de otra persona. La ficha preveía `403` para el tercer
+caso; se unificó por eso.
+
+Ahí cae también la corrección **por enlace público** (`RN-6`): no costó nada y no pagó a nadie,
+así que `Credits` no tiene ningún cargo apuntado sobre ella y responde como ante una ajena. La
+regla se cumple sin necesidad de un código propio que la nombre.
+
+### Efectos
+
+Dos movimientos del mismo importe, `TIP_SENT` al autor y `TIP_RECEIVED` al corrector, ambos con
+el `correctionId` en sus metadatos. Masa constante.
+
+Publica `CorrectionTipped`, que consumen `Feedback` —para que la corrección muestre que fue
+propinada— y `Community`, para la reputación del corrector. Es lo que permite que la propina
+alimente un ranking **sin que `Credits` sepa nada de rankings**.

@@ -154,7 +154,6 @@ tiene acceso.
 | `CorrectionResumed` | Un LB vuelve a abrir el panel de una corrección **que ya tenía empezada** | **`Reading`** ✅ (concede el acceso si no lo tiene). **`Credits` NO lo consume**: no toma hueco ni fija precio, porque las dos cosas ocurrieron al empezar | `correctionId`, `chapterId`, `workId`, `authorId`, `readerId`, `resumedAt` |
 | `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification` ✅, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `questionnaireVersion`, `submittedAt` |
 | `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación), **`Reading`** (revoca el acceso) | `chapterId`, `workId`, `readerId`, `discardedAt` |
-| `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` | `correctionId`, `authorId`, `readerId`, `amount` |
 | `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` NO lo consume** | `correctionId`, `workId`, `chapterId`, `authorId`, `authorLabel?` |
 | `FeedbackRatedPositively` | El autor valora una corrección como útil, **la primera vez** (`FEAT-FBK-006`) | `Notification` ✅, `Community`. **`Credits` ya no lo consume**: la bonificación automática se sustituyó por la propina | `correctionId`, `chapterId`, `workId`, `readerId`, `ratedAt`. Cambiar la valoración después **no publica nada**: avisar a alguien de que su corrección ha dejado de ser útil es una crueldad sin función |
 | `FeedbackReplied` | El autor contesta a una corrección, **la primera vez** (`FEAT-FBK-005`) | `Notification` ✅ | `correctionId`, `chapterId`, `workId`, `readerId`, `repliedAt`. **Sin el texto** |
@@ -199,6 +198,7 @@ es de la obra entera.
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback` ✅, `Notification` ✅ | `userId`, `balance`, `clearedAt`. Desbloquea **todas** las correcciones retenidas a la vez |
 | `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback`, `Notification` | `holdId`, `userId`, `chapterId`, `amount` |
 | `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` | `userId`, `correctionId` |
+| `CorrectionTipped` | El autor propina una corrección recibida | **`Feedback`** ✅ (la corrección muestra que fue propinada), `Community` ✅ (reputación del corrector), `Notification` | `correctionId`, `authorId`, `readerId`, `amount`, `tippedAt` |
 
 **Ningún evento de `Credits` bloquea a otro contexto.** Como no se retiene nada, `Feedback`
 abre el panel de corrección contra su propia proyección de `ChapterCorrectabilityChanged`, sin

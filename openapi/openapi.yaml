@@ -348,6 +348,9 @@ paths:
   /credits/movements:
     $ref: './paths/credits.yaml#/movements'
 
+  /corrections/{correctionId}/tip:
+    $ref: './paths/credits.yaml#/tip'
+
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'
 

@@ -124,6 +124,7 @@ services:
             - { name: messenger.message_handler, method: followed }
             - { name: messenger.message_handler, method: unfollowed }
             - { name: messenger.message_handler, method: published }
+            - { name: messenger.message_handler, method: tipped }
 
     LectoresBeta\Shared\Infrastructure\Messenger\IncomingEventRegistry:
         arguments:
@@ -182,6 +183,11 @@ services:
                 - LectoresBeta\Community\Recommendation\Application\Event\AuthorSubscribed
                 - LectoresBeta\Community\Recommendation\Application\Event\AuthorUnsubscribed
                 - LectoresBeta\Community\Recommendation\Application\Event\WorkPublished
+
+                # La propina, que alimenta la reputación del corrector sin
+                # que `Credits` sepa nada de rankings (FEAT-CRD-017).
+                - LectoresBeta\Community\Recommendation\Application\Event\CorrectionTipped
+                - LectoresBeta\Feedback\Correction\Application\Event\CorrectionTipped
 
                 # Lo que `Moderation` decide y `User` aplica (FEAT-MOD-006).
                 - LectoresBeta\User\Account\Application\Event\SanctionImposed
@@ -507,6 +513,14 @@ services:
     # petición. Es una proyección y no un contrato porque `Credits` no publica
     # ninguno, ni siquiera de consulta (AGENTS.md, decision:0002).
     LectoresBeta\User\Profile\Application\Handler\TrackCreditBalance:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Que una corrección fue propinada (FEAT-CRD-017). El importe no se
+    # enseña corrección a corrección —exponer quién recibe reconocimiento y
+    # quién no desanima al corrector novato—, así que lo que se apunta aquí
+    # es el hecho.
+    LectoresBeta\Feedback\Correction\Application\Handler\RecordTipOnCorrection:
         tags:
             - { name: messenger.message_handler }
 

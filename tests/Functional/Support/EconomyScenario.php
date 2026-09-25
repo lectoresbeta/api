@@ -126,6 +126,10 @@ abstract class EconomyScenario extends WebTestCase
         // Lo que `Moderation` decide y `User` aplica (`FEAT-MOD-006`).
         'SanctionImposed',
         'SanctionLifted',
+
+        // Y la propina (`FEAT-CRD-017`), que `Feedback` apunta en la
+        // corrección y `Community` cuenta como reputación del corrector.
+        'CorrectionTipped',
     ];
 
     /**
@@ -507,7 +511,7 @@ abstract class EconomyScenario extends WebTestCase
      * créditos se mueven de verdad, y por tanto el único desde el que se
      * puede comprobar que una reversión los devuelve.
      *
-     * @return array{0: array{token: string, userId: string}, 1: array{token: string, userId: string}, 2: string, 3: string}
+     * @return array{0: array{token: string, userId: string}, 1: array{token: string, userId: string}, 2: string, 3: string, 4: string}
      */
     protected function aDeliveredCorrection(): array
     {
@@ -555,7 +559,7 @@ abstract class EconomyScenario extends WebTestCase
         $this->capture();
         $this->consumeEverything();
 
-        return [$autora, $lectora, $correctionId, $workId];
+        return [$autora, $lectora, $correctionId, $workId, $chapterId];
     }
 
     /**

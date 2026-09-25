@@ -188,7 +188,6 @@ solo provoca a propósito lo que ya ocurre por carrera.
 | `CorrectionStarted` | `Feedback` | **Anota** el precio de esa corrección. No mueve saldo |
 | `CorrectionDraftDiscarded` | `Feedback` | Descarta la anotación. Nada que liberar |
 | `FeedbackSubmitted` | `Feedback` | **Carga al autor y abona al lector** el importe anotado. El saldo puede quedar negativo |
-| `CorrectionTipped` | `Feedback` | Transfiere la propina del autor al lector |
 | `ChapterContentUpdated` | `Work` | Actualiza las palabras de ese capítulo en su read model de precios |
 | `QuestionnaireUpdated` | `Work` | Actualiza las palabras exigidas. **No altera precios ya anotados** |
 | `InvitedUserParticipated` | `User` | Abona +5 al invitador, hasta el tope de 10 |
@@ -212,6 +211,7 @@ público está fuera de la economía.
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` |
 | `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback` (bloquea el contenido), `Notification` |
 | `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` |
+| `CorrectionTipped` | El autor propina una corrección recibida | `Feedback` (la marca como propinada), `Community` (reputación del corrector), `Notification` |
 
 **Ningún contexto espera a `Credits` para dejar trabajar.** Como no hay nada que reservar,
 `Feedback` abre el panel de corrección contra su propia proyección de

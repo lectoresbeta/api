@@ -147,3 +147,108 @@ movements:
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
 
+
+tip:
+  post:
+    tags: [Credits]
+    operationId: tipCorrection
+    summary: Propinar una corrección
+    description: |
+      El autor da créditos **de su propio saldo** a una corrección que le ha
+      servido.
+
+      Sustituye a la bonificación automática por «feedback valorado
+      positivamente», y la mejora en dos frentes: **no crea créditos** —lo que
+      sale del autor entra en el corrector, masa constante— y **cuesta algo a
+      quien lo da**, que es lo que la convierte en una señal de calidad. Dos
+      cuentas que se valoran mutuamente no ganan nada: lo que A da, A lo
+      pierde, así que el fraude no tiene premio que repartir.
+
+      **No genera descubierto**, al revés que el pago de una corrección. El
+      descubierto existe para que un lector nunca trabaje sin cobrar, y
+      endeudarse por ser generoso sería una trampa.
+
+      Es **irrevocable** y **única** por corrección. Como cualquier
+      movimiento, no se deshace: se compensa con otro, y aquí no hay
+      compensación posible.
+
+      Una corrección recibida **por enlace público** no admite propina: quien
+      la escribió no tiene cuenta a la que abonar.
+
+      Devuelve el saldo resultante, porque quien acaba de dar créditos quiere
+      ver lo que le queda.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          type: string
+        description: |
+          Es un movimiento de créditos, y un reintento de red no debe leerse
+          como un segundo gesto. Repetir la petición con la misma llave
+          devuelve `200` con el saldo; repetirla sin llave, o con otra, es una
+          segunda propina y se rechaza con `ALREADY_TIPPED`.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [amount]
+            properties:
+              amount:
+                type: integer
+                minimum: 1
+                maximum: 5
+                description: |
+                  De uno a cinco. Por encima de cinco la propina se parece al
+                  precio de una corrección y deja de leerse como un extra.
+    responses:
+      '200':
+        description: |
+          Propinada, con el saldo que queda. También es la respuesta a un
+          reintento con la misma `Idempotency-Key`, que no mueve nada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [balance]
+              properties:
+                balance:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: CORRECTION_NOT_FOUND`. No existe, no es suya, o no se ha
+          cobrado todavía: **las tres responden igual**, porque distinguirlas
+          diría algo sobre las correcciones de otra persona.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: INSUFFICIENT_CREDITS` —lleva `balance`—, `ALREADY_TIPPED` o
+          `NOBODY_TO_TIP`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: TIP_OUT_OF_RANGE`. Lleva `minimumTip` y `maximumTip`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

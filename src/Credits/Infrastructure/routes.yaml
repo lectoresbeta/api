@@ -17,3 +17,15 @@ listCreditMovements:
     path: /api/v1/credits/movements
     controller: LectoresBeta\Credits\Account\Infrastructure\Controller\ListCreditMovementsController::__invoke
     methods: [GET]
+
+# La propina (`FEAT-CRD-017`), y la única operación de este contexto que mueve
+# créditos por una llamada HTTP.
+#
+# No contradice `decision:0002`: lo que esa decisión prohíbe es que **otro
+# contexto** pida a `Credits` que sume o reste. Aquí quien atiende es
+# `Credits`, y decide con lo que ya tiene apuntado — sabe quién pagó cada
+# corrección y quién la cobró, así que no necesita preguntarle nada a nadie.
+tipCorrection:
+    path: /api/v1/corrections/{correctionId}/tip
+    controller: LectoresBeta\Credits\Account\Infrastructure\Controller\TipCorrectionController::__invoke
+    methods: [POST]

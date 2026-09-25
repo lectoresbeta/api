@@ -9,6 +9,7 @@ use LectoresBeta\Community\EventProcessing\Domain\Repository\ProcessedEventRepos
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
 use LectoresBeta\Community\Recommendation\Application\Event\AuthorSubscribed;
 use LectoresBeta\Community\Recommendation\Application\Event\AuthorUnsubscribed;
+use LectoresBeta\Community\Recommendation\Application\Event\CorrectionTipped;
 use LectoresBeta\Community\Recommendation\Application\Event\WorkPublished;
 use LectoresBeta\Community\Recommendation\Domain\Repository\AuthorStatsRepository;
 use LectoresBeta\Shared\Domain\Clock\Clock;
@@ -87,6 +88,23 @@ final readonly class ProjectAuthorStats
                 $genre->workCounted();
                 $this->stats->saveGenre($genre);
             }
+        });
+    }
+
+    /**
+     * La propina recibida, que es la señal de calidad más fiable de la
+     * plataforma: la única que alguien ha **pagado de su bolsillo**, y por
+     * eso mucho más difícil de falsear que un «me gusta».
+     *
+     * Aquí se **acumula**, así que pasa por el registro de lo ya aplicado
+     * como los demás: una reentrega sumaría una propina que nadie dio.
+     */
+    public function tipped(CorrectionTipped $event): void
+    {
+        $this->on($event, $event->readerId, function (MemberId $reader, \DateTimeImmutable $now) use ($event): void {
+            $stats = $this->stats->of($reader, $now);
+            $stats->tipReceived($event->amount, $now);
+            $this->stats->save($stats);
         });
     }
 

@@ -80,7 +80,8 @@ síncrona entre contextos en el diseño actual.
 | `Work` | `Reading` | Evento `WorkPublished`, `WorkDeleted` | Saber qué obras existen y cerrar lo pendiente de las que dejan de existir |
 | `Reading` | `Feedback` | Evento `BetaReaderAccessGranted` / `Revoked` | Saber quién puede comentar |
 | `Work` | `Credits` | Eventos `ChapterContentUpdated`, `QuestionnaireUpdated` | Las palabras del capítulo y las exigidas, que fijan el precio |
-| `Feedback` | `Credits` | Eventos `CorrectionStarted`, `FeedbackSubmitted`, `CorrectionTipped` | Hechos que mueven créditos |
+| `Feedback` | `Credits` | Eventos `CorrectionStarted`, `FeedbackSubmitted` | Hechos que mueven créditos |
+| `Credits` | `Feedback`, `Community` | Evento `CorrectionTipped` | Que una corrección fue propinada, y cuánto pesa en la reputación de quien la escribió |
 | `Credits` | `Feedback` / `Work` | Evento `ChapterCorrectabilityChanged` | Saber si un capítulo admite correcciones ahora |
 | `Credits` | `Work` | Evento `ChapterPriceChanged` | Pintar la insignia del catálogo con lo que gana quien corrija |
 | `Moderation` | `Credits`, `Work`, `User` | Evento `ClaimUpheld` | Aplicar, cada uno en su modelo, lo que la decisión significa |

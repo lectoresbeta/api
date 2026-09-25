@@ -74,8 +74,12 @@ class Correction
     private ?\DateTimeImmutable $ratedAt = null;
 
     /**
-     * The tip the author chose to give (`FEAT-CRD-017`). The intent is
-     * recorded here; the credits are moved by `Credits` on `CorrectionTipped`.
+     * Lo que el autor dio de propina (`FEAT-CRD-017`).
+     *
+     * **Se apunta aquí después, no se decide aquí.** La propina la mueve
+     * `Credits`, que es quien sabe si el autor tenía saldo, y este contexto
+     * la anota al recibir `CorrectionTipped` porque es donde autor y
+     * corrector la van a ver.
      */
     private ?int $tipAmount = null;
 
@@ -260,6 +264,17 @@ class Correction
     public function tipAmount(): ?int
     {
         return $this->tipAmount;
+    }
+
+    /**
+     * Se **fija**, no se acumula: el hecho dice cuánto fue la propina, así
+     * que una reentrega escribe la misma cifra. Sumar convertiría un
+     * reintento de la cola en una propina más grande de la que nadie dio.
+     */
+    public function recordTip(int $amount, \DateTimeImmutable $now): void
+    {
+        $this->tipAmount = $amount;
+        $this->tippedAt ??= $now;
     }
 
     public function readAt(): ?\DateTimeImmutable
