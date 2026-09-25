@@ -426,6 +426,52 @@ PostFormat:
     - LINK
     - WORK
 
+EmbeddedWork:
+  type: object
+  required: [workId, authorId, title, status, chapterCount, readingMinutes, adultsOnly, contentWarnings, genres]
+  description: |
+    Una obra de la plataforma, como se pinta dentro de la publicación que la
+    cita (`FEAT-COM-028`).
+
+    **Metadatos y ninguna palabra del texto.** Quién puede leer la obra es
+    otra decisión, y se toma en `GET /works/{workId}`.
+
+    Tampoco lleva la modalidad de acceso: cómo tiene el autor cerrada su obra
+    no es algo que deba leer todo el que pase por el muro.
+  properties:
+    workId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    authorId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    title:
+      type: string
+    synopsis:
+      type: [string, 'null']
+    status:
+      type: string
+      description: El estado de la obra. Siempre uno visible para cualquiera.
+    chapterCount:
+      type: integer
+    readingMinutes:
+      type: integer
+      description: |
+        Calculado, no en palabras. La fórmula es de `Work` (`FEAT-WRK-013`) y
+        mandar el dato crudo obligaría al cliente a aprendérsela.
+    adultsOnly:
+      type: boolean
+    contentWarnings:
+      type: array
+      items:
+        type: string
+      description: |
+        Lo que la obra declara contener. Va en la tarjeta y no solo dentro:
+        una advertencia que solo aparece cuando ya estás leyendo no advierte
+        de nada (`FEAT-WRK-017` `RN-8`).
+    genres:
+      type: array
+      items:
+        type: string
+
 PostCard:
   type: object
   required: [postId, author, body, type, format, audience, commentCount, likeCount, likedByViewer, repostCount, edited, createdAt]
@@ -476,8 +522,26 @@ PostCard:
     workId:
       type: [string, 'null']
       description: |
-        El relato que promociona. Se cita **por identificador**: la tarjeta se
-        pinta con los datos vivos de la obra, no con una copia envejecida.
+        El relato que promociona, **por identificador**. Se queda aunque
+        `work` venga a `null`: dice qué obra citó quien publicó, aunque hoy ya
+        no se pueda enseñar.
+    work:
+      oneOf:
+        - $ref: '#/EmbeddedWork'
+        - type: 'null'
+      description: |
+        La obra citada, **con sus datos de ahora mismo** (`FEAT-COM-028`).
+
+        Es la diferencia con `linkUrl`: un enlace externo guardaría una
+        previsualización que envejece; esto se resuelve en cada lectura, así
+        que si el autor cambia el título, la publicación de hace un mes enseña
+        el nuevo.
+
+        **`null` en dos casos distintos**, y el cliente los trata igual: la
+        publicación no cita ninguna obra (`workId` también es `null`), o la
+        que citaba ha dejado de ser visible —borrada, archivada o bloqueada
+        por moderación— y entonces `workId` sigue ahí. La publicación **no
+        desaparece** por eso: el texto es de quien lo escribió.
     commentCount:
       type: integer
     likedByViewer:

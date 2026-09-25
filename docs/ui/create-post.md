@@ -60,9 +60,11 @@ Es distinto de un artículo externo:
 | Qué se guarda | La URL y su previsualización | El `WorkId` |
 | Qué se muestra | Título y descripción cacheados | La tarjeta viva, con sus datos actuales |
 | Si el destino cambia | La previsualización se queda obsoleta | La tarjeta se actualiza sola |
-| Si el destino desaparece | Enlace roto | Hay que decidir qué mostrar |
+| Si el destino desaparece | Enlace roto | La tarjeta desaparece y el texto se queda |
 
-Ver `FEAT-COM-028`.
+Ver [`FEAT-COM-028`](../features/community/FEAT-COM-028-embed-a-work-in-a-post.md), que
+resuelve la última fila: borrar la publicación porque el autor de la obra la archivó sería
+dejar que uno borrase el texto del otro sin saberlo.
 
 ## Cómo se renderiza un repost
 

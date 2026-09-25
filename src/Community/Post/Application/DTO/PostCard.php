@@ -6,6 +6,7 @@ namespace LectoresBeta\Community\Post\Application\DTO;
 
 use LectoresBeta\Community\Mention\Application\DTO\MentionView;
 use LectoresBeta\User\Account\Application\Contract\DirectoryEntry;
+use LectoresBeta\Work\Manuscript\Application\Contract\WorkCard;
 
 /**
  * Una tarjeta del muro (`FEAT-COM-001` `RN-5`, `RN-6`).
@@ -64,6 +65,16 @@ final readonly class PostCard
          * @var list<MentionView>
          */
         public array $mentions = [],
+        /**
+         * La obra citada, **viva** (`FEAT-COM-028`).
+         *
+         * Nula cuando la publicación no cita ninguna, y también cuando la que
+         * citaba ha dejado de ser visible —borrada, archivada o bloqueada por
+         * un moderador—. La publicación se queda entera y la tarjeta
+         * desaparece: el texto es de quien lo escribió, la obra es de quien la
+         * escribió, y ninguno de los dos decide sobre lo del otro (`RN-4`).
+         */
+        public ?WorkCard $work = null,
     ) {
     }
 }

@@ -545,6 +545,13 @@ services:
     LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs:
         alias: LectoresBeta\Work\Manuscript\Application\Service\ResolveWorkAccessBriefs
 
+    # Enseñar una obra dentro de una publicación del muro (FEAT-COM-028). No
+    # reutiliza `WorkAccessBriefs` a propósito: aquel lleva la modalidad de
+    # acceso, que es la respuesta a «¿puede entrar este?» y no algo que deba
+    # leer todo el que pase por el muro.
+    LectoresBeta\Work\Manuscript\Application\Contract\WorkCards:
+        alias: LectoresBeta\Work\Manuscript\Application\Service\ResolveWorkCards
+
     # La otra mitad del contenido sensible (FEAT-WRK-017, FEAT-USR-043): el
     # autor declara qué hay y el lector decide qué quiere, así que quien
     # construye una lista de obras necesita saber qué ha excluido.

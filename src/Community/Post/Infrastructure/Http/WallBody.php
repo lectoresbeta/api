@@ -7,6 +7,7 @@ namespace LectoresBeta\Community\Post\Infrastructure\Http;
 use LectoresBeta\Community\Mention\Application\DTO\MentionView;
 use LectoresBeta\Community\Post\Application\DTO\PostCard;
 use LectoresBeta\Community\Post\Application\DTO\PostPage;
+use LectoresBeta\Work\Manuscript\Application\Contract\WorkCard;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -49,6 +50,29 @@ final readonly class WallBody
     }
 
     /**
+     * @return array<string, mixed>|null
+     */
+    private static function work(?WorkCard $work): ?array
+    {
+        if (null === $work) {
+            return null;
+        }
+
+        return [
+            'workId' => $work->workId,
+            'authorId' => $work->authorId,
+            'title' => $work->title,
+            'synopsis' => $work->synopsis,
+            'status' => $work->status,
+            'chapterCount' => $work->chapterCount,
+            'readingMinutes' => $work->readingMinutes,
+            'adultsOnly' => $work->adultsOnly,
+            'contentWarnings' => $work->contentWarnings,
+            'genres' => $work->genres,
+        ];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private static function card(PostCard $post): array
@@ -68,6 +92,10 @@ final readonly class WallBody
             'imageUrl' => $post->imageUrl,
             'linkUrl' => $post->linkUrl,
             'workId' => $post->workId,
+            // La tarjeta viva de la obra citada (`FEAT-COM-028`). `workId`
+            // se queda, y no sobra: dice **qué obra citó quien publicó**,
+            // aunque hoy ya no se pueda enseñar.
+            'work' => self::work($post->work),
             'commentCount' => $post->commentCount,
             'likeCount' => $post->likeCount,
             'likedByViewer' => $post->likedByViewer,

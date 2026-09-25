@@ -22,6 +22,7 @@ use LectoresBeta\Shared\Domain\Pagination\Cursor;
 use LectoresBeta\Shared\Domain\Pagination\PageSize;
 use LectoresBeta\User\Account\Application\Contract\DirectoryEntry;
 use LectoresBeta\User\Account\Application\Contract\VisibleProfiles;
+use LectoresBeta\Work\Manuscript\Application\Contract\WorkCards;
 
 /**
  * El muro (`FEAT-COM-001`), con lo publicado y lo reposteado.
@@ -56,6 +57,7 @@ final readonly class ListPostsHandler
         private VisibleProfiles $profiles,
         private ResolveMentions $mentions,
         private PostLikeRepository $likes,
+        private WorkCards $works,
     ) {
     }
 
@@ -182,6 +184,14 @@ final readonly class ListPostsHandler
         $attachments = $this->posts->attachmentsOf($postIds);
         $mentions = $this->mentions->of(MentionSubject::POST, $postIds);
 
+        // Las obras citadas, de golpe y vivas (`FEAT-COM-028`). Lo que ya no
+        // es visible para cualquiera no vuelve, así que la tarjeta se cae
+        // sola sin que este contexto tenga que saber por qué.
+        $works = $this->works->ofWorks(array_values(array_unique(array_filter(array_map(
+            static fn (array $row): ?string => $row['post']->workId()?->value(),
+            $rows,
+        )))));
+
         $cards = [];
 
         foreach ($rows as $row) {
@@ -226,6 +236,7 @@ final readonly class ListPostsHandler
                 $repost?->comment(),
                 $repost?->createdAt(),
                 $mentions[$post->id()->value()] ?? [],
+                null === $post->workId() ? null : ($works[$post->workId()->value()] ?? null),
             );
         }
 

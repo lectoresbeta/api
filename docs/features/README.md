@@ -335,7 +335,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-025 | Búsqueda global desde la cabecera | User | PENDING | DEFERRED | P3 | — |
 | FEAT-COM-026 | Mi muro — publicaciones propias | User | PENDING | TODO | P2 | — |
 | FEAT-COM-027 | Mis Amigos — seguidos y seguidores | User, Guest | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-027-following-and-followers.md) |
-| FEAT-COM-028 | Incluir un relato de la plataforma en una publicación | User | PENDING | TODO | P2 | — |
+| FEAT-COM-028 | Incluir un relato de la plataforma en una publicación | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-028-embed-a-work-in-a-post.md) |
 | FEAT-COM-029 | Audiencia de una publicación | User | PENDING | BLOCKED | P1 | — |
 | FEAT-COM-030 | «Me gusta» en un comentario o respuesta | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-030-like-a-comment.md) |
 | FEAT-COM-031 | Responder a un comentario | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-031-reply-to-comment.md) |

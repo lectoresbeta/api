@@ -104,6 +104,15 @@ para cada visitante, con lo que un contador dejaría de ser un dato de esa perso
 de quien mira. La consecuencia es que el contador puede ser mayor que las filas que devuelve
 la lista.
 
+## Contratos consumidos
+
+| Contrato | De quién | Para qué |
+|---|---|---|
+| `VisibleProfiles`, `ProfileCards` | `User` | Pintar quién dice cada cosa, y filtrar por privacidad de perfil |
+| `ReadableChapters` | `Work` | Saber si alguien puede comentar un capítulo (`FEAT-COM-036`) |
+| `WorkCards` | `Work` | Pintar la obra que cita una publicación, **viva** (`FEAT-COM-028`). Lo que no es visible para cualquiera no vuelve, así que la tarjeta se cae sola y este contexto no tiene que saber por qué |
+| `MessageAudience` | `User` | Saber si alguien admite que le abran una conversación |
+
 ## Eventos consumidos
 
 | Evento | Origen | Efecto |

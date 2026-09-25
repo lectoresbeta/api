@@ -47,6 +47,7 @@ Los publicados hasta ahora:
 | `CorrectionBriefs` | `Work` | Qué se pregunta en un capítulo, de quién es la obra y si admite correcciones |
 | `BetaReaderAccessCheck` | `Reading` | Un booleano: ¿es lector beta de esta obra? |
 | `WorkAccessBriefs` | `Work` | De quién es una obra, cómo está abierta, qué declara contener y si existe para quien pregunta |
+| `WorkCards` | `Work` | Los metadatos con los que se pinta una obra fuera de `Work`, y **solo de las visibles para cualquiera** |
 | `RegisteredUsers` | `User` | Un booleano: ¿existe este usuario? |
 | `ReaderDirectory` | `User` | Las personas cuyo nombre o `@usuario` encajan con un texto |
 | `AuthorAudience` | `User` | Un booleano: ¿acepta este autor comentarios de esta persona? |

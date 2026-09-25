@@ -22,4 +22,14 @@ interface WorkContentWarningRepository
      * @return list<ContentWarning>
      */
     public function of(WorkId $workId): array;
+
+    /**
+     * Las de varias obras de una vez, para pintar una página sin una consulta
+     * por tarjeta (`FEAT-COM-028`).
+     *
+     * @param list<WorkId> $workIds
+     *
+     * @return array<string, list<ContentWarning>> indexado por identificador de obra
+     */
+    public function ofWorks(array $workIds): array;
 }

@@ -34,6 +34,24 @@ final class DoctrineWorkContentWarningRepository extends DoctrineRepository impl
         );
     }
 
+    public function ofWorks(array $workIds): array
+    {
+        if ([] === $workIds) {
+            return [];
+        }
+
+        $declared = [];
+
+        foreach ($this->repository()->findBy(
+            ['workId' => array_map(static fn (WorkId $id): string => $id->value(), $workIds)],
+            ['warning' => 'ASC'],
+        ) as $row) {
+            $declared[$row->workId()->value()][] = $row->warning();
+        }
+
+        return $declared;
+    }
+
     protected function entityClass(): string
     {
         return WorkContentWarning::class;
