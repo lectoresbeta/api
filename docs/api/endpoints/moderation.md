@@ -17,6 +17,10 @@ irán trayendo aquí.
 | `POST /api/v1/admin/claims/{claimId}/messages` | `writeToClaimParty` | Escribir a una parte | FEAT-MOD-009 | **Implementado** |
 | `GET /api/v1/me/claims/{claimId}/messages` | `listMyClaimThread` | Mi hilo con moderación | FEAT-MOD-009 | **Implementado** |
 | `POST /api/v1/me/claims/{claimId}/messages` | `replyToModeration` | Responder | FEAT-MOD-009 | **Implementado** |
+| `GET /api/v1/admin/users` | `searchUsers` | Buscar usuarios, **también por correo** | FEAT-MOD-005 | **Implementado** |
+| `GET /api/v1/admin/users/{userId}` | `getUserSheet` | Ficha compuesta de un usuario | FEAT-MOD-005 | **Implementado** |
+| `POST /api/v1/admin/users/{userId}/credit-adjustment` | `orderCreditAdjustment` | **Ordenar** un ajuste manual. Solo `Admin` | FEAT-MOD-005 | **Implementado** |
+| `POST /api/v1/admin/claims/on-behalf` | `submitClaimOnBehalf` | Registrar una reclamación por alguien | FEAT-MOD-005 | **Implementado** |
 
 ---
 
@@ -167,3 +171,96 @@ el expediente en un segundo sitio, con su propio control de acceso que mantener.
 El **aviso** al destinatario de cada mensaje, que es de `Notification`. Sin él, la parte tiene
 que entrar a mirar para enterarse de que moderación le ha escrito, que es lo que un expediente
 no debería exigir.
+
+---
+
+## El backoffice de usuarios
+
+**`operationId`:** `searchUsers`, `getUserSheet`, `orderCreditAdjustment`, `submitClaimOnBehalf` ·
+**Funcionalidad:** [`FEAT-MOD-005`](../../features/moderation/FEAT-MOD-005-user-management.md)
+
+### El backoffice mira, no posee
+
+`Moderation` **no es dueño de los usuarios**: lo es `User`. Lo que estas operaciones ofrecen es
+una **vista compuesta** sobre varios contextos y la capacidad de **ordenar** acciones que
+ejecutan ellos.
+
+La distinción no es teórica. Una sanción la registra `Moderation` y la aplica `User`; un ajuste
+de créditos lo ordena `Moderation` y lo aplica `Credits`. Si el backoffice marcase las cuentas
+directamente, habría dos dueños del estado de un usuario, y el segundo siempre acaba
+desincronizado.
+
+### Todo queda auditado, **también mirar**
+
+`RN-1` no distingue entre consultar y cambiar, y eso sorprende hasta que se piensa: saber quién
+miró la ficha de un usuario importa tanto como saber quién la cambió. Un backoffice donde
+consultar es invisible es un backoffice donde se puede curiosear.
+
+La búsqueda registra **el término buscado** y no la lista de resultados: lo que hay que poder
+revisar después es qué se fue a buscar.
+
+### El correo, y por qué se abre esa puerta
+
+`GET /admin/users` busca por **correo**, nombre de usuario o nombre, y devuelve cuentas en
+cualquier estado, incluidas las eliminadas. Las dos cosas son lo contrario de lo que hace el
+buscador de la aplicación.
+
+Es la puerta más ancha que `User` abre —ninguna otra respuesta de la API reparte direcciones—, y
+se abre porque el caso es el inverso del que las demás protegen: **quien pregunta ya conoce la
+dirección**, se la ha escrito la persona a la que va a atender. Lo que la contrapesa es la
+auditoría.
+
+### El saldo de créditos no está aquí
+
+La ficha de usuario lista relatos, correcciones, reclamaciones y sanciones. **No el saldo**, y
+su ausencia es una decisión: `Credits` no publica contratos
+([`decision:0002`](../../decisions/0002-credits-as-isolated-bounded-context.md)), así que nadie
+puede preguntárselo.
+
+Lo sirve él en su propia superficie de administración y el cliente hace dos llamadas. Abrir esa
+puerta para ahorrarse una habría costado el aislamiento entero del contexto, que es lo que
+permite que el modelo de créditos evolucione sin tocar nada más.
+
+### Ordenar un ajuste no es ajustar
+
+`POST /admin/users/{userId}/credit-adjustment` es **solo de `Admin`** (`RN-6`): mover créditos es
+la única acción del backoffice que crea o destruye valor de la nada.
+
+Responde **`202` y no `200`**. Cuando contesta, el ajuste está ordenado y no aplicado: lo aplica
+`Credits` al recibir `CreditAdjustmentOrdered`. Decir `200` sería mentir sobre algo que quien lo
+ordena va a comprobar mirando el saldo.
+
+Lo que `Credits` decide, y no quien ordena:
+
+- que sea **un movimiento nuevo**, nunca una edición (`RN-3`). Los movimientos son inmutables, y
+  el saldo tiene que poder recalcularse desde cero y coincidir con la historia;
+- que se contabilice como **grifo** y no como transferencia (`RN-4`). Es la que más fácil se pasa
+  por alto: un ajuste crea o destruye créditos de la nada, y contarlo mal haría fallar la
+  invariante contable de [`FEAT-CRD-012`](../../features/credits/FEAT-CRD-012-economy-health.md)
+  sin que nadie supiera por qué.
+
+El motivo es obligatorio (`RN-2`), cero no es un ajuste, y hay un tope de 1.000 créditos por
+operación: un cero de más tecleado a las tres de la mañana no debería poder desequilibrar la
+economía.
+
+### Reclamar en nombre de otro
+
+Cuando alguien tiene el botón bloqueado escribe por correo, y un moderador registra la
+reclamación por él. Pasa por el mismo caso de uso que una ordinaria, así que hereda sus
+comprobaciones, con tres diferencias:
+
+- **el bloqueo acumulativo no cuenta y el cupo mensual sí** (`RN-15`). Si el bloqueo se aplicara
+  aquí, quien lo tiene no podría reclamar por ningún camino y esta puerta no abriría nada. El
+  cupo se mantiene porque la vía es **más lenta, no más barata**;
+- **queda marcada** con quién la registró (`RN-12`). Si fueran indistinguibles de las ordinarias,
+  nadie podría medir después cuánta moderación entra por la puerta de atrás;
+- **quien la registra no puede resolverla** (`RN-14`), y se refunde con la regla que ya impedía
+  a una parte revisar su propio asunto: la respuesta es la misma, `403 CLAIM_MODERATOR_IS_PARTY`.
+  Registrarla no es decidir, pero quien la ha redactado a partir de un correo ya se ha formado
+  una opinión.
+
+### Efectos
+
+Las dos lecturas escriben en el registro de auditoría y nada más. El ajuste publica
+`CreditAdjustmentOrdered`. La reclamación en nombre de otro crea la reclamación y **no produce
+ningún efecto** sobre lo reclamado, igual que una ordinaria.

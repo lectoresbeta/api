@@ -186,6 +186,11 @@ final class InMemoryUsers implements UserRepository
         return null === $this->user ? [] : [$this->user];
     }
 
+    public function forAdministration(?string $term, int $limit, int $offset): array
+    {
+        return null === $this->user ? [] : [$this->user];
+    }
+
     public function emailIsTaken(Email $email): bool
     {
         return null !== $this->user;

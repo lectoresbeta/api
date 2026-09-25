@@ -19,6 +19,14 @@ final readonly class SubmitClaim
         public string $targetId,
         public string $reason,
         public ?string $description,
+        /**
+         * Quién la registra, cuando no la presenta el propio reclamante
+         * (`FEAT-MOD-005` `RN-12`).
+         *
+         * Nulo es el caso normal. Con valor, la reclamación **queda marcada
+         * como registrada en nombre de otro** y no se disfraza de ordinaria.
+         */
+        public ?string $registeredById = null,
     ) {
     }
 }

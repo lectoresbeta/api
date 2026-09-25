@@ -124,3 +124,36 @@ replyToModeration:
     path: /api/v1/me/claims/{claimId}/messages
     controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\MyClaimThreadController::__invoke
     methods: [POST]
+
+# El backoffice de usuarios (`FEAT-MOD-005`). **Mira, no posee**: `Moderation`
+# no es dueño de las cuentas —lo es `User`— y lo que ofrece aquí es una vista
+# compuesta y la capacidad de ordenar acciones que ejecutan otros.
+#
+# Las dos lecturas quedan auditadas (`RN-1`): saber quién miró la ficha de un
+# usuario importa tanto como saber quién la cambió.
+searchUsers:
+    path: /api/v1/admin/users
+    controller: LectoresBeta\Moderation\Administration\Infrastructure\Controller\SearchUsersController::__invoke
+    methods: [GET]
+
+getUserSheet:
+    path: /api/v1/admin/users/{userId}
+    controller: LectoresBeta\Moderation\Administration\Infrastructure\Controller\GetUserSheetController::__invoke
+    methods: [GET]
+
+# Mover créditos es la única acción del backoffice que crea o destruye valor
+# de la nada, así que es **solo de `Admin`** y no de cualquier moderador. Y
+# **ordena**, no ajusta: lo aplica `Credits` al recibir el hecho, porque ese
+# contexto no recibe llamadas de nadie (`decision:0002`).
+orderCreditAdjustment:
+    path: /api/v1/admin/users/{userId}/credit-adjustment
+    controller: LectoresBeta\Moderation\Administration\Infrastructure\Controller\OrderCreditAdjustmentController::__invoke
+    methods: [POST]
+
+# Registrar una reclamación por alguien que tiene el botón bloqueado y escribe
+# por correo (`FEAT-MOD-001` `RN-6d`). Queda marcada con quién la registró, y
+# esa marca impide que sea él quien la resuelva.
+submitClaimOnBehalf:
+    path: /api/v1/admin/claims/on-behalf
+    controller: LectoresBeta\Moderation\Administration\Infrastructure\Controller\SubmitClaimOnBehalfController::__invoke
+    methods: [POST]

@@ -56,6 +56,25 @@ interface UserRepository
     public function matching(string $query, int $limit): array;
 
     /**
+     * La búsqueda del backoffice (`FEAT-MOD-005`).
+     *
+     * Es la hermana ancha de `matching()`, y las dos diferencias son las que
+     * hay que mirar: **busca también por correo** y **devuelve cuentas en
+     * cualquier estado**, incluidas las eliminadas. Son justo las dos cosas
+     * que aquella se cuida de no hacer, y aquí hacen falta: quien atiende a
+     * una persona conoce su dirección, y las cuentas que hay que explicar son
+     * casi siempre las que ya no están.
+     *
+     * Por eso vive detrás de un contrato aparte, que se abre solo al
+     * backoffice y deja traza de cada consulta.
+     *
+     * @param int<1, 100> $limit
+     *
+     * @return list<User>
+     */
+    public function forAdministration(?string $term, int $limit, int $offset): array;
+
+    /**
      * Whether the address is taken. The caller must not leak the answer: the
      * registration response may not reveal whether a given email has an
      * account (`FEAT-USR-001` `RN-14`).

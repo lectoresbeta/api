@@ -364,7 +364,7 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 | FEAT-MOD-002 | Revisar y resolver una reclamación | Moderator | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-002-review-claim.md) |
 | FEAT-MOD-003 | Bloquear una obra por reclamación estimada | — (sistema) | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-003-block-work.md) |
 | FEAT-MOD-004 | Rol de moderador y aviso de reclamaciones | Admin, Moderator | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-004-moderator-role.md) |
-| FEAT-MOD-005 | Gestión de usuarios desde el backoffice | Admin, Moderator | APPROVED | TODO | P2 | [ficha](moderation/FEAT-MOD-005-user-management.md) |
+| FEAT-MOD-005 | Gestión de usuarios desde el backoffice | Admin, Moderator | APPROVED | PARTIAL | P2 | [ficha](moderation/FEAT-MOD-005-user-management.md) |
 | FEAT-MOD-006 | Catálogo de sanciones | Moderator | APPROVED | PARTIAL | P2 | [ficha](moderation/FEAT-MOD-006-sanctions.md) |
 | FEAT-MOD-007 | Registro de auditoría de acciones administrativas | Admin | APPROVED | DONE | P1 | [ficha](moderation/FEAT-MOD-007-audit-log.md) |
 | FEAT-MOD-008 | Cola de reclamaciones con filtros y prioridad | Moderator | PENDING | TODO | P2 | — |

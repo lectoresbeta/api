@@ -41,6 +41,7 @@
         <field name="status" type="string" length="16"
                enum-type="LectoresBeta\Moderation\Claim\Domain\Enum\ClaimStatus"/>
         <field name="filedOnBehalf" column="filed_on_behalf" type="boolean"/>
+        <field name="registeredById" column="registered_by_id" type="guid" nullable="true"/>
         <field name="submittedAt" column="submitted_at" type="datetime_immutable"/>
         <field name="resolvedAt" column="resolved_at" type="datetime_immutable" nullable="true"/>
 

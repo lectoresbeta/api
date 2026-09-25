@@ -316,7 +316,7 @@ autor convertiría una acción discreta en un desaire con acuse de recibo.
 | `ContentReviewFlagged` | El revisor lo marca | **`Work`**, `Notification` | `workId`, `chapterId?`, `reason`, `reviewerVersion` |
 | `SanctionImposed` | Se sanciona a un usuario | **`User`**, `Notification` | `sanctionId`, `userId`, `type`, `scope`, `expiresAt?` |
 | `SanctionLifted` | Caduca o se levanta | `User`, `Notification` | `sanctionId`, `userId` |
-| `CreditAdjustmentOrdered` | Ajuste manual desde el backoffice | **`Credits`**, `Notification` | `userId`, `amount`, `reason`, `orderedBy` |
+| `CreditAdjustmentOrdered` | Ajuste manual desde el backoffice | **`Credits`** ✅, `Notification` | `userId`, `amount`, `reason`, `orderedBy`, `claimId?`, `orderedAt`. **Lleva importe, y es la excepción que confirma la regla**: el importe viaja cuando es genuinamente parte del hecho de origen, y aquí decidirlo *era* el acto |
 
 **`ClaimUpheld` es el evento que más contextos moviliza**, y justo por eso no lleva
 instrucciones: dice **qué se ha estimado y sobre qué**, nunca «devuelve 6 créditos» ni

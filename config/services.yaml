@@ -204,6 +204,11 @@ services:
                 - LectoresBeta\Community\Recommendation\Application\Event\CorrectionTipped
                 - LectoresBeta\Feedback\Correction\Application\Event\CorrectionTipped
 
+                # El ajuste manual que ordena un administrador
+                # (FEAT-MOD-005). `Credits` no recibe llamadas de nadie: lo
+                # que recibe es el hecho, y él decide qué significa.
+                - LectoresBeta\Credits\Account\Application\Event\CreditAdjustmentOrdered
+
                 # Lo que `Moderation` decide y `User` aplica (FEAT-MOD-006).
                 - LectoresBeta\User\Account\Application\Event\SanctionImposed
                 - LectoresBeta\User\Account\Application\Event\SanctionLifted
@@ -338,6 +343,13 @@ services:
     # revoca nada, porque un contrato pregunta y no manda.
     LectoresBeta\Work\PublicLink\Application\Contract\PublicLinkAccess:
         alias: LectoresBeta\Work\PublicLink\Application\Service\ResolvePublicLinkAccess
+
+    # Las cuentas, para quien las administra (FEAT-MOD-005). Es la puerta más
+    # ancha que publica `User` —la única que reparte direcciones de correo
+    # hacia una pantalla— y lo que la contrapesa es que toda consulta queda
+    # auditada.
+    LectoresBeta\User\Account\Application\Contract\AdministrableAccounts:
+        alias: LectoresBeta\User\Account\Application\Service\ShowAdministrableAccounts
 
     # Las propinas recibidas, para el contador del perfil (FEAT-CRD-017
     # RN-3c). Lo contesta `Community` y no `Credits`, que no publica
@@ -562,6 +574,14 @@ services:
     # petición. Es una proyección y no un contrato porque `Credits` no publica
     # ninguno, ni siquiera de consulta (AGENTS.md, decision:0002).
     LectoresBeta\User\Profile\Application\Handler\TrackCreditBalance:
+        tags:
+            - { name: messenger.message_handler }
+
+    # El ajuste manual que ordena un administrador (FEAT-MOD-005 RN-3). Se
+    # aplica como `MANUAL_ADJUSTMENT`, que es un **grifo**: crea o destruye
+    # créditos de la nada, y contarlo como transferencia haría fallar la
+    # invariante contable sin que nadie supiera por qué.
+    LectoresBeta\Credits\Account\Application\Handler\ApplyCreditAdjustment:
         tags:
             - { name: messenger.message_handler }
 

@@ -87,6 +87,21 @@ class Sanction
         return $this->reason;
     }
 
+    public function imposedAt(): \DateTimeImmutable
+    {
+        return $this->imposedAt;
+    }
+
+    public function expiresAt(): ?\DateTimeImmutable
+    {
+        return $this->expiresAt;
+    }
+
+    public function liftedAt(): ?\DateTimeImmutable
+    {
+        return $this->liftedAt;
+    }
+
     public function isInForceAt(\DateTimeImmutable $moment): bool
     {
         if (null !== $this->liftedAt) {

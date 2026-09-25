@@ -57,6 +57,10 @@ security:
         # no audita a sus compañeros, y saberse observado por los iguales
         # cambia cómo se decide.
         - { path: '^/api/v1/admin/audit-log$', roles: ROLE_ADMIN }
+        # Y mover créditos a mano (FEAT-MOD-005 RN-6): es la única acción del
+        # backoffice que crea o destruye valor de la nada, y la invariante
+        # contable de FEAT-CRD-012 la cuenta aparte por eso mismo.
+        - { path: '^/api/v1/admin/users/[^/]+/credit-adjustment$', roles: ROLE_ADMIN }
         - { path: '^/api/v1/admin(/|$)', roles: ROLE_MODERATOR }
 
         # El perfil ajeno se abre sin sesión (FEAT-USR-014, FEAT-USR-035): es

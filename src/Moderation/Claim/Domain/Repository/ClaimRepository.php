@@ -58,4 +58,15 @@ interface ClaimRepository
      * contradictorios** sobre el mismo objeto.
      */
     public function lockedById(ClaimId $id): ?Claim;
+
+    /**
+     * Las reclamaciones que **apuntan a** esa persona (`FEAT-MOD-005`).
+     *
+     * La hermana de `by()`, que devuelve las que presentó. La ficha del
+     * backoffice enseña las dos porque son dos cosas distintas: quién se
+     * queja mucho y de quién se quejan mucho.
+     *
+     * @return list<Claim>
+     */
+    public function about(PartyId $subjectId): array;
 }

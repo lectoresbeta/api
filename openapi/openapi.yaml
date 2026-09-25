@@ -337,6 +337,18 @@ paths:
   /admin/claims/{claimId}/review:
     $ref: './paths/moderation.yaml#/claimReview'
 
+  /admin/users:
+    $ref: './paths/moderation.yaml#/adminUsers'
+
+  /admin/users/{userId}:
+    $ref: './paths/moderation.yaml#/adminUser'
+
+  /admin/users/{userId}/credit-adjustment:
+    $ref: './paths/moderation.yaml#/creditAdjustment'
+
+  /admin/claims/on-behalf:
+    $ref: './paths/moderation.yaml#/claimOnBehalf'
+
   /admin/audit-log:
     $ref: './paths/moderation.yaml#/auditLog'
 

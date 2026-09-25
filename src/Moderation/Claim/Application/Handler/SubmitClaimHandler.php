@@ -79,8 +79,9 @@ final readonly class SubmitClaimHandler
             return new SubmittedClaim($existing->id()->value(), $existing->status()->value, true);
         }
 
+        $registeredBy = null === $command->registeredById ? null : $this->partyOrRefuse($command->registeredById);
         $now = $this->clock->now();
-        $this->ensureAllowedToClaim($reporterId, $now);
+        $this->ensureAllowedToClaim($reporterId, $now, null !== $registeredBy);
 
         $subjectId = $this->subjectOf($targetType, $command->targetId, $reporterId);
 
@@ -94,6 +95,8 @@ final readonly class SubmitClaimHandler
             $now,
             $subjectId,
             self::trimmed($command->description),
+            null !== $registeredBy,
+            $registeredBy,
         );
 
         $this->session->execute(function () use ($claim): void {
@@ -107,12 +110,18 @@ final readonly class SubmitClaimHandler
      * El cupo y el bloqueo, en ese orden: quien está bloqueado tiene que
      * saberlo aunque además le quede cupo, porque el bloqueo lleva fecha y el
      * cupo no.
+     *
+     * **Registrada en nombre de otro, el bloqueo no cuenta y el cupo sí**
+     * (`FEAT-MOD-005` `RN-15`). Es lo que da sentido a la vía de correo: si
+     * el bloqueo se aplicara también aquí, quien lo tiene no podría reclamar
+     * por ningún camino y la puerta de atrás no abriría nada. El cupo se
+     * mantiene porque la vía es **más lenta, no más barata**.
      */
-    private function ensureAllowedToClaim(PartyId $reporterId, \DateTimeImmutable $now): void
+    private function ensureAllowedToClaim(PartyId $reporterId, \DateTimeImmutable $now, bool $onBehalf = false): void
     {
         $restriction = $this->restrictions->ofUser($reporterId);
 
-        if (null !== $restriction && $restriction->isBlockedAt($now)) {
+        if (!$onBehalf && null !== $restriction && $restriction->isBlockedAt($now)) {
             throw ClaimRefused::untilTheBlockExpires($restriction->blockedUntil() ?? $now);
         }
 

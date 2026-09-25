@@ -192,6 +192,7 @@ solo provoca a propósito lo que ya ocurre por carrera.
 | `QuestionnaireUpdated` | `Work` | Actualiza las palabras exigidas. **No altera precios ya anotados** |
 | `InvitedUserParticipated` | `User` | Abona +5 al invitador, hasta el tope de 10 |
 | `UserDeleted` | `User` | Anonimiza la cuenta de créditos. Los movimientos permanecen (`C-21`) |
+| `CreditAdjustmentOrdered` | `Moderation` | Aplica un ajuste manual como `MANUAL_ADJUSTMENT`, que es un **grifo** y no una transferencia (`FEAT-MOD-005` `RN-4`) |
 
 **`PublicCorrectionSubmitted` no se consume.** Es la forma más clara de expresar que el enlace
 público está fuera de la economía.

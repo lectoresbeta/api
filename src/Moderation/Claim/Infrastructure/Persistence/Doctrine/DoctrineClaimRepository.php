@@ -60,6 +60,14 @@ final class DoctrineClaimRepository extends DoctrineRepository implements ClaimR
         ));
     }
 
+    public function about(PartyId $subjectId): array
+    {
+        return array_values($this->repository()->findBy(
+            ['subjectId' => $subjectId->value()],
+            ['submittedAt' => 'DESC'],
+        ));
+    }
+
     public function openExcludingParty(PartyId $moderator, int $limit, int $offset = 0): array
     {
         $query = $this->repository()->createQueryBuilder('c')

@@ -1000,3 +1000,398 @@ myClaimThread:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+adminUsers:
+  get:
+    tags: [Moderation]
+    operationId: searchUsers
+    summary: Buscar usuarios desde el backoffice
+    description: |
+      Busca por **correo**, nombre de usuario o nombre, y devuelve cuentas en
+      cualquier estado, incluidas las eliminadas (`FEAT-MOD-005`).
+
+      Las dos cosas son lo contrario de lo que hace el buscador de la
+      aplicación, que ni mira el correo ni enseña cuentas inactivas. Aquí
+      hacen falta: quien atiende a una persona conoce su dirección porque se
+      la ha escrito ella, y las cuentas que hay que explicar son casi siempre
+      las que ya no están.
+
+      **La consulta queda auditada** (`RN-1`): saber quién miró la ficha de un
+      usuario importa tanto como saber quién la cambió. Es lo que contrapesa
+      que esta sea la puerta más ancha que `User` abre.
+
+      `Cache-Control: no-store`: lleva direcciones de correo.
+    parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Correo, nombre de usuario o nombre. Sin él, lista las últimas altas.
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 25
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+    responses:
+      '200':
+        description: Las cuentas que encajan, de la más reciente a la más antigua.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [users]
+              properties:
+                users:
+                  type: array
+                  items:
+                    $ref: '#/AdminAccount'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo moderación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+adminUser:
+  get:
+    tags: [Moderation]
+    operationId: getUserSheet
+    summary: La ficha de un usuario
+    description: |
+      Vista compuesta: la identidad y el estado los contesta `User`, los
+      relatos `Work` y las correcciones `Feedback`; las reclamaciones y las
+      sanciones son lo único que `Moderation` tiene en casa.
+
+      **El saldo de créditos no está**, y su ausencia es una decisión:
+      `Credits` no publica contratos, así que nadie puede preguntárselo. Lo
+      sirve él en su propia superficie de administración y el cliente hace dos
+      llamadas — más barato que abrir la puerta que ese contexto tiene cerrada
+      a propósito.
+
+      **Ni una línea de obra inédita** (`RN-5`). El backoffice enseña la obra
+      reclamada, no la biblioteca de nadie, y tampoco el texto de las
+      reclamaciones: para eso está la reclamación, con sus reglas.
+
+      Un contador que no se puede leer viaja nulo y no tumba la ficha: quien
+      atiende a una persona necesita la pantalla abierta más de lo que
+      necesita esa cifra.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '200':
+        description: La ficha.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [account, counters, claimsFiled, claimsReceived, sanctions]
+              properties:
+                account:
+                  $ref: '#/AdminAccount'
+                counters:
+                  type: object
+                  required: [works, corrections]
+                  properties:
+                    works:
+                      type: [integer, 'null']
+                    corrections:
+                      type: [integer, 'null']
+                claimsFiled:
+                  type: array
+                  description: Las que presentó.
+                  items:
+                    $ref: '#/AdminClaimRow'
+                claimsReceived:
+                  type: array
+                  description: |
+                    Las que apuntan a esa persona. Se separan de las anteriores
+                    porque son dos cosas distintas: quién se queja mucho y de
+                    quién se quejan mucho.
+                  items:
+                    $ref: '#/AdminClaimRow'
+                sanctions:
+                  type: array
+                  items:
+                    $ref: '#/AdminSanctionRow'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo moderación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: USER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+creditAdjustment:
+  post:
+    tags: [Moderation]
+    operationId: orderCreditAdjustment
+    summary: Ordenar un ajuste manual de créditos
+    description: |
+      **Solo `Admin`**, y no cualquier moderador (`RN-6`): mover créditos es
+      la única acción del backoffice que crea o destruye valor de la nada.
+
+      **Ordena, no ajusta.** `Credits` no recibe llamadas de nadie
+      ([`decision:0002`](../../docs/decisions/0002-credits-as-isolated-bounded-context.md)):
+      lo que recibe es el hecho de que un administrador decidió mover esa
+      cantidad, y él decide qué significa — un movimiento **nuevo** y nunca
+      una edición (`RN-3`), contabilizado como **grifo** y no como
+      transferencia (`RN-4`).
+
+      Esa última es la que más fácil se pasa por alto: si un ajuste se contara
+      como transferencia, la invariante contable de
+      [`FEAT-CRD-012`](../../docs/features/credits/FEAT-CRD-012-economy-health.md)
+      empezaría a fallar y nadie sabría por qué.
+
+      El motivo es **obligatorio** (`RN-2`): sin él, el movimiento es
+      inexplicable seis meses después, que es cuando alguien pregunta.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [amount, reason]
+            properties:
+              amount:
+                type: integer
+                description: |
+                  Positivo abona, negativo absorbe. **Cero no es un ajuste**:
+                  sería un apunte que no movió nada ensuciando el histórico.
+              reason:
+                type: string
+              claimId:
+                type: [string, 'null']
+                description: La reclamación que lo originó, si la hay.
+    responses:
+      '202':
+        description: |
+          **Ordenado, no aplicado.** `202` y no `200` porque lo aplica
+          `Credits` al recibir el hecho, y decir otra cosa sería mentir sobre
+          algo que quien lo ordena va a comprobar mirando el saldo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ordered]
+              properties:
+                ordered:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo `Admin`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: USER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: REASON_REQUIRED`, `AMOUNT_REQUIRED` o `ADJUSTMENT_TOO_LARGE`
+          —este lleva `maximum`—.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+claimOnBehalf:
+  post:
+    tags: [Moderation]
+    operationId: submitClaimOnBehalf
+    summary: Registrar una reclamación en nombre de un usuario
+    description: |
+      Cuando alguien tiene el botón de reclamar bloqueado escribe por correo,
+      y un moderador registra esa reclamación en su nombre
+      ([`FEAT-MOD-001`](../../docs/features/moderation/FEAT-MOD-001-submit-claim.md)
+      `RN-6d`).
+
+      Pasa por el mismo caso de uso que una reclamación ordinaria, así que
+      hereda sus comprobaciones. Lo que cambia:
+
+      - **el bloqueo acumulativo no cuenta y el cupo mensual sí** (`RN-15`).
+        Si el bloqueo se aplicara aquí, quien lo tiene no podría reclamar por
+        ningún camino y esta puerta no abriría nada. El cupo se mantiene
+        porque la vía es **más lenta, no más barata**;
+      - **queda marcada con quién la registró** (`RN-12`) y no se disfraza de
+        ordinaria. Eso mantiene honesta la trazabilidad: si fueran
+        indistinguibles, nadie podría medir después cuánta moderación entra
+        por la puerta de atrás;
+      - **quien la registra no puede resolverla** (`RN-14`). Registrarla no es
+        decidir, pero quien la ha redactado a partir de un correo ya se ha
+        formado una opinión.
+
+      El usuario la ve en su sección de reclamaciones aunque siga bloqueado
+      para presentar nuevas (`RN-13`).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [onBehalfOf, targetType, targetId, reason]
+            properties:
+              onBehalfOf:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+              targetType:
+                type: string
+              targetId:
+                type: string
+              reason:
+                type: string
+              description:
+                type: [string, 'null']
+    responses:
+      '201':
+        description: Registrada.
+        content:
+          application/json:
+            schema:
+              $ref: '#/OnBehalfClaim'
+      '200':
+        description: Ya existía una igual de esa persona sobre ese objeto.
+        content:
+          application/json:
+            schema:
+              $ref: '#/OnBehalfClaim'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo moderación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CLAIM_LIMIT_SPENT`. El cupo mensual del usuario, que esta vía no salta.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: Objetivo o motivo no admitidos.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+OnBehalfClaim:
+  type: object
+  required: [claimId, status, alreadyExisted]
+  properties:
+    claimId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    status:
+      type: string
+    alreadyExisted:
+      type: boolean
+
+AdminAccount:
+  type: object
+  required: [userId, username, name, email, status, registeredAt, activatedAt, restrictedUntil]
+  description: |
+    **Lleva el correo**, y es lo único de esta forma que hay que justificar:
+    ninguna otra respuesta de la API lo reparte. Se abre aquí porque quien
+    pregunta ya conoce la dirección —se la ha escrito la persona a la que va a
+    atender— y sin ella no puede saber a qué cuenta se refiere.
+
+    Lo que no lleva: ni fecha de nacimiento, ni contraseña, ni una línea de
+    nada que esa persona haya escrito.
+  properties:
+    userId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    username:
+      type: string
+    name:
+      type: [string, 'null']
+    email:
+      type: string
+      format: email
+    status:
+      type: string
+    registeredAt:
+      type: string
+      format: date-time
+    activatedAt:
+      type: [string, 'null']
+      format: date-time
+    restrictedUntil:
+      type: [string, 'null']
+      format: date-time
+      description: Hasta cuándo no puede escribir, si está restringida.
+
+AdminClaimRow:
+  type: object
+  required: [claimId, type, status, reason, submittedAt, filedOnBehalf]
+  description: |
+    **Sin la descripción.** Es lo que esa persona contó sobre otra, y la ficha
+    de usuario no es el sitio donde se lee.
+  properties:
+    claimId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    type:
+      type: string
+    status:
+      type: string
+    reason:
+      type: string
+    submittedAt:
+      type: string
+      format: date-time
+    filedOnBehalf:
+      type: boolean
+
+AdminSanctionRow:
+  type: object
+  required: [sanctionId, type, reason, imposedAt, expiresAt, liftedAt, inForce]
+  properties:
+    sanctionId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    type:
+      type: string
+    reason:
+      type: string
+    imposedAt:
+      type: string
+      format: date-time
+    expiresAt:
+      type: [string, 'null']
+      format: date-time
+    liftedAt:
+      type: [string, 'null']
+      format: date-time
+    inForce:
+      type: boolean

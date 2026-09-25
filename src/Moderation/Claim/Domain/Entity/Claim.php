@@ -53,6 +53,18 @@ class Claim
      */
     private bool $filedOnBehalf = false;
 
+    /**
+     * Quién la registró, cuando no fue quien reclama (`FEAT-MOD-005`
+     * `RN-12`).
+     *
+     * **No se disfraza de reclamación ordinaria**, y eso hace dos cosas: deja
+     * la trazabilidad honesta —se puede medir cuánta moderación entra por la
+     * puerta de atrás— y sostiene `RN-14`, que impide que quien la redactó a
+     * partir de un correo sea quien la resuelva. Registrarla no es decidir,
+     * pero quien la ha escrito **ya se ha formado una opinión**.
+     */
+    private ?string $registeredById = null;
+
     private \DateTimeImmutable $submittedAt;
 
     private ?\DateTimeImmutable $resolvedAt = null;
@@ -68,6 +80,7 @@ class Claim
         ?PartyId $subjectId = null,
         ?string $description = null,
         bool $filedOnBehalf = false,
+        ?PartyId $registeredById = null,
     ) {
         $this->id = $id->value();
         $this->type = $type;
@@ -80,6 +93,7 @@ class Claim
         $this->status = ClaimStatus::PENDING;
         $this->submittedAt = $now;
         $this->filedOnBehalf = $filedOnBehalf;
+        $this->registeredById = $registeredById?->value();
     }
 
     public function id(): ClaimId
@@ -144,7 +158,20 @@ class Claim
     public function canBeReviewedBy(PartyId $moderator): bool
     {
         return $moderator->value() !== $this->reporterId
-            && $moderator->value() !== $this->subjectId;
+            && $moderator->value() !== $this->subjectId
+            // `FEAT-MOD-005` `RN-14`: tampoco quien la registró en nombre de
+            // otro. No es parte, pero ha redactado el relato de los hechos.
+            && $moderator->value() !== $this->registeredById;
+    }
+
+    public function isFiledOnBehalf(): bool
+    {
+        return $this->filedOnBehalf;
+    }
+
+    public function registeredById(): ?PartyId
+    {
+        return null === $this->registeredById ? null : PartyId::fromString($this->registeredById);
     }
 
     public function takeUnderReview(\DateTimeImmutable $now): void

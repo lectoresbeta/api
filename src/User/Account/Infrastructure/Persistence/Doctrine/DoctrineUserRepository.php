@@ -68,6 +68,30 @@ final class DoctrineUserRepository extends DoctrineRepository implements UserRep
         return $found;
     }
 
+    public function forAdministration(?string $term, int $limit, int $offset): array
+    {
+        $query = $this->repository()->createQueryBuilder('u')
+            ->orderBy('u.registeredAt', 'DESC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit);
+
+        if (null !== $term && '' !== trim($term)) {
+            // El comodín va **escapado**, igual que en `matching()`: un `%`
+            // tecleado por alguien no puede convertir su búsqueda en
+            // «devuélvemelo todo».
+            $pattern = '%'.addcslashes(trim($term), '%_\\').'%';
+
+            $query
+                ->where('LOWER(u.email) LIKE LOWER(:pattern) OR LOWER(u.username) LIKE LOWER(:pattern) OR LOWER(u.name) LIKE LOWER(:pattern)')
+                ->setParameter('pattern', $pattern);
+        }
+
+        /** @var list<User> $found */
+        $found = $query->getQuery()->getResult();
+
+        return $found;
+    }
+
     public function emailIsTaken(Email $email): bool
     {
         return $this->repository()->count(['email' => $email->value()]) > 0;

@@ -134,6 +134,11 @@ abstract class EconomyScenario extends WebTestCase
         // corrección y `Community` cuenta como reputación del corrector.
         'CorrectionTipped',
 
+        // Y el ajuste manual que ordena un administrador (`FEAT-MOD-005`).
+        // `Credits` no recibe llamadas de nadie: recibe el hecho, y decide
+        // que es un grifo y no una transferencia.
+        'CreditAdjustmentOrdered',
+
         // Y lo que llega por un enlace público (`FEAT-FBK-008`). Solo lo
         // escucha `Notification`: que `Credits` **no** lo consuma es la forma
         // más clara de decir que está fuera de la economía.
