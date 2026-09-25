@@ -436,6 +436,17 @@ received:
         schema:
           type: boolean
           default: false
+      - name: hidden
+        in: query
+        required: false
+        description: |
+          **La segunda bandeja**: solo las apartadas (`FEAT-FBK-007`). Son dos
+          listas y no una con filtro — las apartadas no salen en la normal, y
+          sin esta nadie podría deshacerlo, porque nadie recuerda el
+          identificador de algo que apartó hace tres meses.
+        schema:
+          type: boolean
+          default: false
       - name: limit
         in: query
         required: false
@@ -1037,6 +1048,80 @@ workRating:
               $ref: '../openapi.yaml#/components/schemas/Problem'
       '422':
         description: 'Fuera de 1 a 5. `code: VALIDATION_FAILED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# Apartar de la bandeja una corrección recibida (`FEAT-FBK-007`).
+
+correctionVisibility:
+  put:
+    tags: [Feedback]
+    operationId: setCorrectionVisibility
+    summary: Apartar de la bandeja una corrección recibida, o devolverla
+    description: |
+      **Apartar no es borrar.** Una corrección entregada no se elimina nunca:
+      alguien la escribió, cobró por ella y la tiene en «Mis correcciones». Lo
+      que el autor decide es qué sigue viendo él.
+
+      De ahí las dos reglas que sostienen la funcionalidad:
+
+      - **no se le quita a quien la escribió.** Su lista no cambia, su
+        contador no baja y lo que cobró no se toca. Si apartar afectara a la
+        otra parte, sería una forma de castigar una corrección que no gustó;
+      - **se puede deshacer**, y por eso las apartadas tienen su propia lista
+        en `GET /me/corrections/received?hidden=true`.
+
+      `PUT` con `hidden` y no dos rutas: fija un estado, las dos direcciones
+      son la misma decisión vista al derecho y al revés, y repetirla no cambia
+      nada.
+
+      Solo el destinatario. Quien la escribió no aparta nada: no es su
+      bandeja.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [hidden]
+            properties:
+              hidden:
+                type: boolean
+    responses:
+      '200':
+        description: La visibilidad resultante, para repintar el botón sin otra petición.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [visibility]
+              properties:
+                visibility:
+                  type: string
+                  enum: [VISIBLE, HIDDEN_BY_AUTHOR]
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: CORRECTION_NOT_FOUND`. No existe, o no eres su destinatario:
+          que exista es información sobre una obra que no es tuya.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: CORRECTION_IS_LOCKED`. Una retenida por descubierto no se
+          puede apartar: apartar es una decisión sobre algo que se ha leído, y
+          de una retenida no se ha leído nada. Reponer saldo la libera.
         content:
           application/problem+json:
             schema:

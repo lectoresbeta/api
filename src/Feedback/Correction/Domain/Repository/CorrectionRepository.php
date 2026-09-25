@@ -40,6 +40,12 @@ interface CorrectionRepository
      * responde la pregunta que se hace quien abre la aplicación y quiere
      * saber qué ha llegado, que no viene ordenada por obra.
      *
+     * Las **apartadas** (`FEAT-FBK-007`) no salen, salvo que se pidan con
+     * `$hiddenOnly`. Sin esa segunda lista, apartar sería irreversible en la
+     * práctica: nadie recuerda el identificador de algo que apartó hace tres
+     * meses, y no poder deshacerlo convertiría «apartar» en «borrar», que es
+     * justo lo que `RN-3` prohíbe.
+     *
      * @return list<Correction>
      */
     public function receivedBy(
@@ -49,6 +55,7 @@ interface CorrectionRepository
         bool $unreadOnly,
         int $limit,
         int $offset,
+        bool $hiddenOnly = false,
     ): array;
 
     /**

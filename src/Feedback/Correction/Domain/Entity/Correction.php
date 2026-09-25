@@ -8,6 +8,7 @@ use LectoresBeta\Feedback\Correction\Domain\Enum\CorrectionOrigin;
 use LectoresBeta\Feedback\Correction\Domain\Enum\CorrectionStatus;
 use LectoresBeta\Feedback\Correction\Domain\Enum\CorrectionVisibility;
 use LectoresBeta\Feedback\Correction\Domain\Exception\CorrectionAlreadySubmitted;
+use LectoresBeta\Feedback\Correction\Domain\Exception\CorrectionNotHidable;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\AuthorId;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\ChapterId;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\CorrectionId;
@@ -407,13 +408,55 @@ class Correction
     }
 
     /**
-     * Hidden, never deleted (`RN-3`), and never hidden from whoever wrote it
-     * (`RN-6`).
+     * Se aparta de la bandeja del autor, **nunca se borra** (`RN-3`) y
+     * **nunca se le quita a quien la escribió** (`RN-6`).
+     *
+     * `false` si ya estaba apartada: quien llama lo usa para no anunciar un
+     * hecho que no ha ocurrido.
+     *
+     * **Una retenida no se puede apartar** (`FEAT-FBK-007` `RN-4`). Apartar
+     * es una decisión sobre algo que se ha leído, y de una `LOCKED` no se ha
+     * leído nada. Además mantiene simple la máquina de estados: `VISIBLE` y
+     * `HIDDEN_BY_AUTHOR` se alternan, y `LOCKED` lo decide el descubierto.
      */
-    public function hide(\DateTimeImmutable $now): void
+    public function hide(\DateTimeImmutable $now): bool
     {
+        if (CorrectionVisibility::LOCKED === $this->visibility) {
+            throw CorrectionNotHidable::becauseItIsLocked();
+        }
+
+        if (CorrectionVisibility::HIDDEN_BY_AUTHOR === $this->visibility) {
+            return false;
+        }
+
         $this->visibility = CorrectionVisibility::HIDDEN_BY_AUTHOR;
         $this->updatedAt = $now;
+
+        return true;
+    }
+
+    /**
+     * La devuelve a la bandeja.
+     *
+     * Vuelve a `VISIBLE` y no a lo que fuera antes, y es seguro: una apartada
+     * no se retiene nunca —`lock()` la respeta— y solo se puede apartar lo
+     * que ya se veía, así que `VISIBLE` es de donde salió.
+     */
+    public function show(\DateTimeImmutable $now): bool
+    {
+        if (CorrectionVisibility::HIDDEN_BY_AUTHOR !== $this->visibility) {
+            return false;
+        }
+
+        $this->visibility = CorrectionVisibility::VISIBLE;
+        $this->updatedAt = $now;
+
+        return true;
+    }
+
+    public function isHiddenByAuthor(): bool
+    {
+        return CorrectionVisibility::HIDDEN_BY_AUTHOR === $this->visibility;
     }
 
     public function rate(bool $helpful, \DateTimeImmutable $now): void

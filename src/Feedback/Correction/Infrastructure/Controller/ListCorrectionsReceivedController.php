@@ -45,6 +45,8 @@ final readonly class ListCorrectionsReceivedController
             $request->query->getBoolean('unread'),
             $request->query->getInt('limit', 50),
             $request->query->getInt('offset'),
+            // La segunda bandeja (`FEAT-FBK-007`): solo las apartadas.
+            $request->query->getBoolean('hidden'),
         ));
 
         return new JsonResponse([

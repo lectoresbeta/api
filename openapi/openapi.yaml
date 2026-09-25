@@ -393,6 +393,9 @@ paths:
   /works/{workId}/rating:
     $ref: './paths/corrections.yaml#/workRating'
 
+  /corrections/{correctionId}/visibility:
+    $ref: './paths/corrections.yaml#/correctionVisibility'
+
   /me/notifications:
     $ref: './paths/notifications.yaml#/inbox'
 

@@ -58,6 +58,7 @@ final readonly class ListCorrectionsReceivedHandler
             $query->unreadOnly,
             max(1, min(self::MAX_PAGE, $query->limit)),
             max(0, $query->offset),
+            $query->hiddenOnly,
         );
 
         if ([] === $received) {

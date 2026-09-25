@@ -13,6 +13,11 @@ final readonly class ListCorrectionsReceived
         public bool $unreadOnly = false,
         public int $limit = 50,
         public int $offset = 0,
+        /**
+         * La segunda bandeja: **solo** las apartadas (`FEAT-FBK-007`). Sin
+         * ella, apartar sería irreversible en la práctica.
+         */
+        public bool $hiddenOnly = false,
     ) {
     }
 }

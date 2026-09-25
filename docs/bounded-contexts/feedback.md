@@ -164,11 +164,13 @@ posee.
 
 - `RN-1` Solo puede comentar quien tiene acceso vigente o un enlace público válido.
 - `RN-2` El autor de la obra no puede dejarse feedback a sí mismo.
-- `RN-3` Un comentario, una vez enviado, no se elimina: se oculta.
+- `RN-3` Una corrección, una vez entregada, **no se elimina**: el autor la **aparta** de su
+  bandeja (`FEAT-FBK-007`), y eso no la borra ni se la quita a quien la escribió. Apartar es
+  reversible y tiene su propia lista, porque sin ella sería borrar con otro nombre.
 - `RN-4` Solo el autor de la obra valora, contesta y oculta comentarios.
 - `RN-5` La valoración positiva de un comentario se aplica **una sola vez**; retirarla no
   revierte los créditos (salvo decisión contraria en `C-9`).
-- `RN-6` Ocultar un comentario no lo oculta para quien lo escribió.
+- `RN-6` Apartar una corrección **no se la quita a quien la escribió**: su lista no cambia, su contador no baja y lo que cobró no se toca. Si afectara a la otra parte, sería una forma de castigar una corrección que no gustó.
 - `RN-8` **Valorar una obra es de quien la ha corregido** (`FEAT-FBK-002`): hace falta una
   corrección **entregada**, no un borrador. Es lo único que acredita haber leído mientras
   `H-3` siga sin definir qué cuenta como lectura, y lo que impide que la nota sea barata. Una

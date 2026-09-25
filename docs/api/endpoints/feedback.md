@@ -15,7 +15,7 @@
 | `GET /works/{workId}/corrections` | `listWorkCorrections` | Correcciones recibidas | FEAT-FBK-004 | PENDING |
 | `POST /corrections/{correctionId}/reply` | `replyToCorrection` | Contestar | FEAT-FBK-005 | PENDING |
 | `POST /corrections/{correctionId}/rating` | `rateCorrection` | Valorarla como útil | FEAT-FBK-006 | PENDING |
-| `PUT /corrections/{correctionId}/visibility` | `setCorrectionVisibility` | Ocultarla | FEAT-FBK-007 | PENDING |
+| `PUT /api/v1/corrections/{correctionId}/visibility` | `setCorrectionVisibility` | **Apartarla** de la bandeja, o devolverla. No la borra ni se la quita a quien la escribió | FEAT-FBK-007 | **Implementado** |
 | `GET /me/corrections` | `listMyCorrections` | Mis correcciones | FEAT-FBK-010 | PENDING |
 | `PUT /api/v1/works/{workId}/rating` | `rateWork` | Valorar la obra de 1 a 5, **solo quien la ha corregido** | FEAT-FBK-002 | **Implementado** |
 | `POST /api/v1/public/{token}/chapters/{chapterId}/corrections` | `submitPublicCorrection` | Corregir **sin cuenta**, por un enlace público | FEAT-FBK-008 | **Implementado** |

@@ -55,11 +55,16 @@ final class DoctrineCorrectionRepository extends DoctrineRepository implements C
         bool $unreadOnly,
         int $limit,
         int $offset,
+        bool $hiddenOnly = false,
     ): array {
         $query = $this->repository()->createQueryBuilder('c')
             ->where('c.ownerId = :owner')
             ->andWhere('c.status = :submitted')
+            // Las apartadas salen **solo** cuando se piden, y entonces solo
+            // ellas: son dos bandejas, no una lista con un filtro encima.
+            ->andWhere($hiddenOnly ? 'c.visibility = :hidden' : 'c.visibility != :hidden')
             ->setParameter('owner', $ownerId->value())
+            ->setParameter('hidden', CorrectionVisibility::HIDDEN_BY_AUTHOR)
             ->setParameter('submitted', CorrectionStatus::SUBMITTED)
             ->orderBy('c.submittedAt', 'DESC')
             ->addOrderBy('c.id', 'DESC')

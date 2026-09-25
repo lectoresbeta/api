@@ -106,3 +106,16 @@ rateWork:
     path: /api/v1/works/{workId}/rating
     controller: LectoresBeta\Feedback\Rating\Infrastructure\Controller\RateWorkController::__invoke
     methods: [PUT]
+
+# Apartar de la bandeja una corrección recibida (`FEAT-FBK-007`).
+#
+# **Apartar no es borrar**: una corrección entregada no se elimina nunca, y
+# quien la escribió la sigue teniendo en «Mis correcciones». Lo que el autor
+# decide es qué sigue viendo él.
+#
+# `PUT` con `hidden` y no dos rutas: las dos direcciones son la misma decisión
+# vista al derecho y al revés.
+setCorrectionVisibility:
+    path: /api/v1/corrections/{correctionId}/visibility
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\SetCorrectionVisibilityController::__invoke
+    methods: [PUT]
