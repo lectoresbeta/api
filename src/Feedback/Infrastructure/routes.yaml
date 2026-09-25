@@ -58,3 +58,22 @@ getCorrectedChapterText:
     path: /api/v1/corrections/{correctionId}/chapter-text
     controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\GetCorrectedChapterTextController::__invoke
     methods: [GET]
+
+# Contestar a una corrección (`FEAT-FBK-005`). `PUT` porque es **una**
+# respuesta y no una lista: enviarla dos veces deja una.
+replyToCorrection:
+    path: /api/v1/corrections/{correctionId}/reply
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\ReplyToCorrectionController::__invoke
+    methods: [PUT]
+
+deleteCorrectionReply:
+    path: /api/v1/corrections/{correctionId}/reply
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\ReplyToCorrectionController::__invoke
+    methods: [DELETE]
+
+# Útil o no útil, y nada más (`FEAT-FBK-006`). Una escala fina invita a
+# puntuar a la baja por desacuerdo literario.
+rateCorrection:
+    path: /api/v1/corrections/{correctionId}/rating
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\RateCorrectionController::__invoke
+    methods: [PUT]

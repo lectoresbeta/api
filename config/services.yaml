@@ -145,6 +145,11 @@ services:
                 # (FEAT-FBK-004).
                 - LectoresBeta\Notification\Delivery\Application\Event\CorrectionRead
 
+                # Y lo que la plataforma le devuelve a quien corrigió
+                # (FEAT-FBK-005, FEAT-FBK-006).
+                - LectoresBeta\Notification\Delivery\Application\Event\FeedbackReplied
+                - LectoresBeta\Notification\Delivery\Application\Event\FeedbackRatedPositively
+
                 # Lo que `Notification` escucha para convertir en avisos
                 # (`FEAT-NOT-001`). Son hechos de `Reading` y de `Feedback`, y
                 # cada contexto los modela por su cuenta: aquí llegan cuatro
@@ -479,6 +484,13 @@ services:
     LectoresBeta\Notification\Delivery\Application\Handler\RetireTheCorrectionNotice:
         tags:
             - { name: messenger.message_handler }
+
+    # Dos hechos, un trabajo: contestar y valorar significan lo mismo para
+    # quien corrigió — que el autor hizo algo con su trabajo.
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheReaderOfAnAnsweredCorrection:
+        tags:
+            - { name: messenger.message_handler, method: replied }
+            - { name: messenger.message_handler, method: rated }
 
     LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorOfAnAccessRequest:
         tags:

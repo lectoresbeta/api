@@ -13,6 +13,7 @@ use LectoresBeta\Feedback\Correction\Domain\Enum\CorrectionStatus;
 use LectoresBeta\Feedback\Correction\Domain\Event\CorrectionRead;
 use LectoresBeta\Feedback\Correction\Domain\Exception\CorrectionNotFound;
 use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectionAnswerRepository;
+use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectionReplyRepository;
 use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectionRepository;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\CorrectionId;
 use LectoresBeta\Shared\Application\Event\EventPublisher;
@@ -45,6 +46,7 @@ final readonly class GetCorrectionHandler
     public function __construct(
         private CorrectionRepository $corrections,
         private CorrectionAnswerRepository $answers,
+        private CorrectionReplyRepository $replies,
         private AnsweredQuestionnaires $questionnaires,
         private ChapterHeadings $chapters,
         private EventPublisher $events,
@@ -73,6 +75,7 @@ final readonly class GetCorrectionHandler
             ($correction->submittedAt() ?? $correction->startedAt())->format(\DATE_ATOM),
             $isOwner ? null !== $correction->readAt() : null,
             $correction->helpful(),
+            $this->replies->ofCorrection($correction->id())?->body(),
             $correction->isReadable() ? $this->answersOf($correction) : [],
         );
     }

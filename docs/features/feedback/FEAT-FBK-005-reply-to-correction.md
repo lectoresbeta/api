@@ -5,7 +5,7 @@ context: Feedback
 concept: Reply
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-25 (bloque «que el autor pueda leer lo que compró»)
@@ -103,15 +103,15 @@ garantizado por la base de datos y no por una comprobación en código— y el c
 
 ## Criterios de aceptación
 
-- [ ] El autor contesta a una corrección y quien la escribió la ve.
-- [ ] Contestar dos veces deja una sola respuesta, marcada como editada.
-- [ ] La sustitución no genera un segundo aviso.
-- [ ] Un tercero no ve la respuesta.
-- [ ] No se puede contestar a una corrección bloqueada por descubierto.
-- [ ] No se puede contestar a una corrección llegada por enlace público.
-- [ ] El autor puede retirar su respuesta.
-- [ ] Contestar no mueve créditos.
-- [ ] El texto de la respuesta no aparece en ningún evento.
+- [x] El autor contesta a una corrección y quien la escribió la ve.
+- [x] Contestar dos veces deja una sola respuesta, marcada como editada.
+- [x] La sustitución no genera un segundo aviso.
+- [x] Un tercero no ve la respuesta.
+- [x] No se puede contestar a una corrección bloqueada por descubierto.
+- [x] No se puede contestar a una corrección llegada por enlace público.
+- [x] El autor puede retirar su respuesta.
+- [x] Contestar no mueve créditos.
+- [x] El texto de la respuesta no aparece en ningún evento.
 
 ## Preguntas abiertas
 
@@ -124,5 +124,14 @@ garantizado por la base de datos y no por una comprobación en código— y el c
 
 **Especificación:** `APPROVED` (2026-09-25).
 
-**Implementación:** `TODO`. La entidad `CorrectionReply` ya está en el modelo desde
-`FEAT-FBK-003`; falta todo lo demás.
+**Implementación:** `DONE` (2026-09-25).
+
+Comparte con [`FEAT-FBK-006`](FEAT-FBK-006-rate-correction.md) las tres puertas de entrada
+—solo el autor de la obra, nada si está retenida por descubierto, nada si llegó por enlace
+público— en un único servicio: es la misma pregunta hecha una vez, y separarla en dos sería
+escribirla dos veces y arreglarla una.
+
+La unicidad de `RN-2` la garantiza un **índice único**, no una comprobación en código: con dos
+pestañas abiertas o un doble clic, el código no garantiza nada.
+
+`F-17` y `F-18` siguen abiertas.

@@ -231,6 +231,12 @@ paths:
   /corrections/{correctionId}:
     $ref: './paths/corrections.yaml#/item'
 
+  /corrections/{correctionId}/reply:
+    $ref: './paths/corrections.yaml#/reply'
+
+  /corrections/{correctionId}/rating:
+    $ref: './paths/corrections.yaml#/rating'
+
   /corrections/{correctionId}/chapter-text:
     $ref: './paths/corrections.yaml#/chapterText'
 

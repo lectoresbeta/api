@@ -7,6 +7,7 @@ namespace LectoresBeta\Feedback\Correction\Application\Handler;
 use LectoresBeta\Feedback\Correction\Application\DTO\ReceivedCorrection;
 use LectoresBeta\Feedback\Correction\Application\Query\ListCorrectionsReceived;
 use LectoresBeta\Feedback\Correction\Domain\Entity\Correction;
+use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectionReplyRepository;
 use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectionRepository;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\AuthorId;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\ChapterId;
@@ -34,6 +35,7 @@ final readonly class ListCorrectionsReceivedHandler
 
     public function __construct(
         private CorrectionRepository $corrections,
+        private CorrectionReplyRepository $replies,
         private ChapterHeadings $chapters,
     ) {
     }
@@ -67,8 +69,15 @@ final readonly class ListCorrectionsReceivedHandler
             $received,
         ));
 
+        // En un lote, como los títulos: una consulta por fila sería un N+1
+        // escondido en una bandeja.
+        $replies = $this->replies->ofCorrections(array_map(
+            static fn (Correction $correction) => $correction->id(),
+            $received,
+        ));
+
         return array_map(
-            static function (Correction $correction) use ($headings): ReceivedCorrection {
+            static function (Correction $correction) use ($headings, $replies): ReceivedCorrection {
                 $heading = $headings[$correction->chapterId()->value()] ?? null;
 
                 return new ReceivedCorrection(
@@ -84,6 +93,7 @@ final readonly class ListCorrectionsReceivedHandler
                     ($correction->submittedAt() ?? $correction->startedAt())->format(\DATE_ATOM),
                     null !== $correction->readAt(),
                     $correction->helpful(),
+                    isset($replies[$correction->id()->value()]),
                 );
             },
             $received,

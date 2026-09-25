@@ -91,6 +91,12 @@ abstract class EconomyScenario extends WebTestCase
         // Y el aviso que se retira solo cuando el autor abre lo que recibió
         // (`FEAT-FBK-004`).
         'CorrectionRead',
+
+        // Y lo que el autor hace con lo que recibe (`FEAT-FBK-005`,
+        // `FEAT-FBK-006`), que es lo único que la plataforma le devuelve a
+        // quien corrigió.
+        'FeedbackReplied',
+        'FeedbackRatedPositively',
     ];
 
     /**

@@ -62,6 +62,7 @@ final readonly class ListCorrectionsReceivedController
                     'submittedAt' => $correction->submittedAt,
                     'read' => $correction->read,
                     'helpful' => $correction->helpful,
+                    'replied' => $correction->replied,
                 ],
                 $corrections,
             ),

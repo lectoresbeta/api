@@ -40,6 +40,8 @@ final readonly class CorrectionDetail
          */
         public ?bool $read,
         public ?bool $helpful,
+        /** Lo que contestó el autor, si contestó. La ven las dos partes. */
+        public ?string $reply,
         public array $answers,
     ) {
     }

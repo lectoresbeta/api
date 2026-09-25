@@ -154,6 +154,8 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `CLAIM_MOTIVATION_REQUIRED` | 422 | Toda decisión lleva motivación escrita, también la que desestima |
 | `CLAIM_DECISION_UNKNOWN` | 422 | La decisión no es `UPHELD` ni `REJECTED` |
 | `CORRECTION_NOT_FOUND` | 404 | La corrección no existe, o no es suya para leerla. Una ajena responde como una inexistente (`FEAT-FBK-004`) |
+| `CORRECTION_HAS_NO_AUTHOR` | 409 | Llegó por enlace público: no hay cuenta detrás a la que contestar (`FEAT-FBK-005`) |
+| `EMPTY_REPLY` | 422 | Una respuesta vacía no es una respuesta |
 | `CORRECTION_LOCKED` | 409 | Retenida por descubierto. Se distingue del `404` a propósito: existe, es suya, y se lee reponiendo saldo |
 | `CHAPTER_BLOCKED` | 409 | El capítulo está bloqueado por una reclamación estimada y su contenido se conserva tal cual (`FEAT-WRK-005` `RN-7`) |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |

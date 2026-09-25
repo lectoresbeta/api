@@ -55,6 +55,7 @@ final readonly class GetCorrectionController
             'submittedAt' => $correction->submittedAt,
             'read' => $correction->read,
             'helpful' => $correction->helpful,
+            'reply' => $correction->reply,
             'answers' => array_map(
                 static fn (AnsweredQuestionView $answer): array => [
                     'questionId' => $answer->questionId,

@@ -29,6 +29,7 @@ final readonly class ReceivedCorrection
         public string $submittedAt,
         public bool $read,
         public ?bool $helpful,
+        public bool $replied,
     ) {
     }
 }

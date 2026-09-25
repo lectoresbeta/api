@@ -5,7 +5,7 @@ context: Feedback
 concept: Rating
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-25 (bloque «que el autor pueda leer lo que compró»)
@@ -103,14 +103,14 @@ reclama.
 
 ## Criterios de aceptación
 
-- [ ] El autor marca una corrección como útil y quien la escribió lo ve.
-- [ ] La marca como no útil y quien la escribió también lo ve.
-- [ ] Cambia la valoración y la última es la que vale.
-- [ ] Solo la primera valoración positiva genera aviso.
-- [ ] Cambiar de útil a no útil no genera ningún aviso.
-- [ ] Una corrección bloqueada por descubierto no se puede valorar.
-- [ ] Valorar no mueve ningún crédito.
-- [ ] Un tercero no puede valorar.
+- [x] El autor marca una corrección como útil y quien la escribió lo ve.
+- [x] La marca como no útil y quien la escribió también lo ve.
+- [x] Cambia la valoración y la última es la que vale.
+- [x] Solo la primera valoración positiva genera aviso.
+- [x] Cambiar de útil a no útil no genera ningún aviso.
+- [x] Una corrección bloqueada por descubierto no se puede valorar.
+- [x] Valorar no mueve ningún crédito.
+- [x] Un tercero no puede valorar.
 
 ## Preguntas abiertas
 
@@ -124,4 +124,14 @@ reclama.
 
 **Especificación:** `APPROVED` (2026-09-25). Resuelve `F-5` (binaria).
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25).
+
+`F-5` queda resuelta en el código además de en la ficha: binaria, con «sin valorar» como
+tercer estado y estado inicial.
+
+Lo que costó decidir bien fue **cuándo se anuncia**: solo la primera valoración positiva.
+Cambiarla después no publica nada, así que quien corrigió no recibe nunca un «tu corrección ha
+dejado de ser útil». La regla vive en quien publica el hecho, no en quien lo consume, que es lo
+que hace que no dependa de que nadie se acuerde.
+
+`F-19`, `F-20` y `F-21` siguen abiertas.

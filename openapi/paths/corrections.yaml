@@ -570,6 +570,155 @@ chapterText:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
 
+reply:
+  put:
+    tags: [Feedback]
+    operationId: replyToCorrection
+    summary: Contestar a una corrección
+    description: |
+      Una respuesta por corrección. Volver a enviarla **sustituye** la que
+      había y no vuelve a avisar: recibir tres notificaciones porque alguien
+      corrige sus erratas es ruido.
+
+      **No es una conversación**: quien corrigió no replica. Poner a autor y
+      corrector a discutir sobre un texto es crear el conflicto que la
+      moderación existe para resolver, y quien discrepe tiene dos salidas
+      mejores — no valorarla, o reclamarla si es fraudulenta.
+
+      No se puede contestar a una corrección retenida por descubierto (no se
+      ha leído) ni a una llegada por enlace público (no hay cuenta a la que
+      dirigirse).
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                minLength: 1
+                maxLength: 4000
+    responses:
+      '204':
+        description: Guardada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CORRECTION_NOT_FOUND`. No existe, o no es suya.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CORRECTION_LOCKED` o `CORRECTION_HAS_NO_AUTHOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: EMPTY_REPLY`. Para no decir nada ya está no contestar.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Feedback]
+    operationId: deleteCorrectionReply
+    summary: Retirar la respuesta
+    description: |
+      Lo que se dijo deja de estar. No se conserva un historial visible de lo
+      dicho y retirado: un rastro de «aquí había algo» invita a imaginar lo
+      peor.
+
+      **No se avisa a quien corrigió**: recibir «te han quitado la respuesta»
+      es peor que no enterarse.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Retirada. También cuando no había ninguna.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CORRECTION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+rating:
+  put:
+    tags: [Feedback]
+    operationId: rateCorrection
+    summary: Valorar una corrección como útil o no útil
+    description: |
+      **Binaria**, y ese es el diseño: una escala fina invita a puntuar a la
+      baja por desacuerdo literario, y la pregunta aquí es «¿te ha servido?»,
+      no «¿cuánto te ha gustado lo que dice?».
+
+      Se puede cambiar las veces que haga falta. **Solo la primera valoración
+      positiva avisa**: decirle a alguien que su corrección ha dejado de ser
+      útil es una crueldad sin función.
+
+      **No mueve créditos.** La propina
+      ([`FEAT-CRD-017`](../../docs/features/credits/FEAT-CRD-017-author-tip.md))
+      es otra decisión y otra operación; un abono automático convertiría el
+      pulgar en un botón de dinero.
+
+      Una corrección llegada por enlace público **sí** se valora, y no avisa a
+      nadie: al autor le sirve igual para ordenar lo que ha recibido.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [helpful]
+            properties:
+              helpful:
+                type: boolean
+    responses:
+      '204':
+        description: Guardada. También cuando no cambiaba nada.
+      '400':
+        description: '`helpful` no es `true` ni `false`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CORRECTION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CORRECTION_LOCKED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
 components:
   schemas:
     SavedDraft:
@@ -654,6 +803,8 @@ components:
         helpful:
           type: [boolean, 'null']
           description: Lo que el autor decidió. Nulo mientras no la haya valorado.
+        replied:
+          type: boolean
 
     CorrectionDetail:
       type: object
@@ -692,6 +843,9 @@ components:
             han elegido tener una conversación.
         helpful:
           type: [boolean, 'null']
+        reply:
+          type: [string, 'null']
+          description: Lo que contestó el autor, si contestó. La ven las dos partes.
         answers:
           type: array
           description: '**Vacío** cuando `visibility` es `LOCKED`: la corrección existe y su contenido se retiene.'
