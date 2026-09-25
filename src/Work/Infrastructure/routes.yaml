@@ -121,3 +121,10 @@ restoreWork:
     path: /api/v1/works/{workId}/restore
     controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\RestoreWorkController::__invoke
     methods: [POST]
+
+# «Mis relatos» (`FEAT-WRK-015`). El único listado con los borradores dentro,
+# y el único con la insignia de estado: es gestión, no escaparate.
+listMyWorks:
+    path: /api/v1/me/works
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ListMyWorksController::__invoke
+    methods: [GET]

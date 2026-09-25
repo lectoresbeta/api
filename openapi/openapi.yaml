@@ -159,6 +159,9 @@ paths:
   /works:
     $ref: './paths/works.yaml#/collection'
 
+  /me/works:
+    $ref: './paths/works.yaml#/myWorks'
+
   /works/{workId}:
     $ref: './paths/works.yaml#/work'
 

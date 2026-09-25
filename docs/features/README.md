@@ -18,14 +18,14 @@ verdad sobre el alcance.**
 | Contexto | Total | Con ficha | `APPROVED` | `REVIEW` | `DONE` | `PARTIAL` |
 |---|---|---|---|---|---|---|
 | `User` (USR) | 44 | 30 | 30 | 0 | 12 | 10 |
-| `Work` (WRK) | 17 | 12 | 12 | 0 | 2 | 9 |
+| `Work` (WRK) | 17 | 12 | 12 | 0 | 2 | 10 |
 | `Reading` (RDG) | 10 | 7 | 7 | 0 | 7 | 0 |
 | `Feedback` (FBK) | 12 | 8 | 7 | 0 | 5 | 1 |
 | `Community` (COM) | 38 | 11 | 10 | 0 | 2 | 1 |
 | `Moderation` (MOD) | 12 | 11 | 11 | 0 | 1 | 6 |
 | `Credits` (CRD) | 19 | 13 | 13 | 0 | 3 | 5 |
 | `Notification` (NOT) | 9 | 3 | 3 | 0 | 2 | 1 |
-| **Total** | **161** | **95** | **93** | **0** | **34** | **33** |
+| **Total** | **161** | **95** | **93** | **0** | **34** | **34** |
 
 `APPROVED` y `REVIEW` son estados de la **especificación**; `DONE` y `PARTIAL`, del **código**.
 Las columnas no suman entre sí a propósito: una funcionalidad aprobada y a medio implementar
@@ -181,7 +181,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-012 | Sección «Leer» — catálogo con filtros y ordenación | User | APPROVED | PARTIAL | P1 | [ficha](work/FEAT-WRK-012-browse-catalogue.md) |
 | FEAT-WRK-013 | Calcular el número de palabras y el nivel de extensión | — (sistema) | PENDING | TODO | P0 | — |
 | FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
-| FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
+| FEAT-WRK-015 | Mis relatos — listado con filtros y ordenación | Writer | APPROVED | PARTIAL | P1 | [ficha](work/FEAT-WRK-015-my-works-list.md) |
 | FEAT-WRK-016 | Estado de una obra — borrador, visible y en corrección | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-016-work-status.md) |
 | FEAT-WRK-017 | Clasificación de contenido sensible de una obra | Writer | APPROVED | PARTIAL | P1 | [ficha](work/FEAT-WRK-017-content-rating.md) |
 

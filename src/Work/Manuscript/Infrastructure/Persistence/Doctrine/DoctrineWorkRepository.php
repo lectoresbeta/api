@@ -55,6 +55,35 @@ final class DoctrineWorkRepository extends DoctrineRepository implements WorkRep
         return array_values($this->repository()->findBy($criteria, ['updatedAt' => 'DESC']));
     }
 
+    public function pageOfAuthor(
+        AuthorId $authorId,
+        ?WorkStatus $status,
+        bool $oldestFirst,
+        int $limit,
+        int $offset,
+    ): array {
+        $query = $this->authored($authorId, $status)
+            ->select('w')
+            ->orderBy('w.createdAt', $oldestFirst ? 'ASC' : 'DESC')
+            // El desempate va en la misma dirección que el criterio. Dos
+            // obras creadas en el mismo segundo son lo normal al escribir, y
+            // un desempate fijo haría que «más antiguos» devolviera la más
+            // nueva primero — un orden que se contradice a sí mismo.
+            ->addOrderBy('w.id', $oldestFirst ? 'ASC' : 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
+
+        return array_values($query->getQuery()->getResult());
+    }
+
+    public function countOfAuthor(AuthorId $authorId, ?WorkStatus $status): int
+    {
+        return (int) $this->authored($authorId, $status)
+            ->select('COUNT(w.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function countByAuthor(AuthorId $authorId): int
     {
         // Las archivadas no cuentan (`FEAT-WRK-006` `RN-10`): para el resto
@@ -77,5 +106,18 @@ final class DoctrineWorkRepository extends DoctrineRepository implements WorkRep
     protected function entityClass(): string
     {
         return Work::class;
+    }
+
+    private function authored(AuthorId $authorId, ?WorkStatus $status): \Doctrine\ORM\QueryBuilder
+    {
+        $query = $this->repository()->createQueryBuilder('w')
+            ->where('w.authorId = :author')
+            ->setParameter('author', $authorId->value());
+
+        if (null !== $status) {
+            $query->andWhere('w.status = :status')->setParameter('status', $status);
+        }
+
+        return $query;
     }
 }

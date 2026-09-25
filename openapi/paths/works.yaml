@@ -452,6 +452,124 @@ status:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
 
+myWorks:
+  get:
+    tags: [Works]
+    operationId: listMyWorks
+    summary: Mis relatos
+    description: |
+      Las obras propias, **con los borradores dentro**: es el único listado
+      donde aparecen, y el único que lleva la insignia de `status`. Las dos
+      cosas son lo mismo dicho de dos maneras — esto es la pantalla de gestión
+      del autor, no un escaparate.
+
+      Una obra **archivada** sigue apareciendo, marcada con `archived`. Para
+      el resto del mundo no existe, pero su autor tiene que poder encontrarla:
+      si no, «recuperar» sería una operación sin pantalla desde la que
+      pedirla.
+
+      **Metadatos, nunca contenido.** La sinopsis sí, el texto no.
+
+      Funciona con la cuenta sin activar: es solo lectura.
+
+      Un `sort` no admitido devuelve `422` y dice cuáles valen; **no se ignora
+      en silencio**, porque una lista devuelta en cualquier orden parece
+      funcionar y el error se descubre cuando alguien ya se fió de ella.
+    parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [DRAFT, PUBLISHED, IN_CORRECTION]
+      - name: sort
+        in: query
+        required: false
+        description: |
+          `recent` (por defecto) y `oldest`, por fecha de creación. «Más
+          valorados» y «más leídos» todavía no: dependen de agregados que no
+          existen (`W-12`, `H-3`).
+        schema:
+          type: string
+          enum: [recent, oldest]
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: perPage
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+    responses:
+      '200':
+        description: Las obras propias.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [total, totalPages, page, perPage, works]
+              properties:
+                total:
+                  type: integer
+                totalPages:
+                  type: integer
+                page:
+                  type: integer
+                perPage:
+                  type: integer
+                works:
+                  type: array
+                  items:
+                    type: object
+                    required: [workId, title, status, accessMode, adultsOnly, wordCount, chapterCount, genres, blocked, archived, createdAt, updatedAt]
+                    properties:
+                      workId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      title:
+                        type: string
+                      synopsis:
+                        type: [string, 'null']
+                      status:
+                        type: string
+                        enum: [DRAFT, PUBLISHED, IN_CORRECTION]
+                      accessMode:
+                        type: string
+                      adultsOnly:
+                        type: boolean
+                      wordCount:
+                        type: integer
+                      chapterCount:
+                        type: integer
+                      genres:
+                        type: array
+                        items:
+                          type: string
+                      blocked:
+                        type: boolean
+                      archived:
+                        type: boolean
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNSUPPORTED_SORT`. Lleva `supportedSorts`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
 work:
   get:
     tags: [Works]

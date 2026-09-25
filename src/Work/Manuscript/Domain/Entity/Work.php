@@ -133,6 +133,16 @@ class Work
         return $this->chapterCount;
     }
 
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function updatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
     public function isBlocked(): bool
     {
         return null !== $this->blockedAt;

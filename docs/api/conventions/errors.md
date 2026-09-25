@@ -164,6 +164,7 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `CONFIRMATION_REQUIRED` | 422 | Falta la confirmación explícita. La comprueba el servidor, no solo la pantalla (`FEAT-WRK-006`) |
 | `WORK_BLOCKED` | 409 | La obra está bloqueada por una reclamación estimada y no se puede retirar |
 | `WORK_NOT_ARCHIVED` | 409 | Se pide recuperar una obra que no estaba retirada |
+| `UNSUPPORTED_SORT` | 422 | El criterio de orden no existe. Lleva `supportedSorts`, y no se ignora en silencio (`FEAT-WRK-015`) |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |
