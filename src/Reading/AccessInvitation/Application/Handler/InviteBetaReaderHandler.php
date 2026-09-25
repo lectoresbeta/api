@@ -23,6 +23,7 @@ use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 use LectoresBeta\User\Account\Application\Contract\ReaderMaturity;
 use LectoresBeta\User\Account\Application\Contract\RegisteredUsers;
+use LectoresBeta\User\Preferences\Application\Contract\ProposalRecipients;
 use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
 
 /**
@@ -52,6 +53,7 @@ final readonly class InviteBetaReaderHandler
         private WorkAccessBriefs $works,
         private RegisteredUsers $users,
         private ReaderMaturity $maturity,
+        private ProposalRecipients $recipients,
         private AccessInvitationRepository $invitations,
         private AccessRequestRepository $requests,
         private BetaReaderAccessRepository $accesses,
@@ -79,6 +81,14 @@ final readonly class InviteBetaReaderHandler
         // entrar, sin ninguna explicación.
         if ($work->adultsOnly && !$this->maturity->isOfAge($inviteeId->value())) {
             throw InvitationRefused::readerCannotSeeThisWork();
+        }
+
+        // Quien ha cerrado su buzón de invitaciones no las recibe
+        // (`FEAT-USR-011`). Se comprueba **aquí y no al avisar**: es una
+        // preferencia de recepción, no de notificación, y silenciarla
+        // dejaría la invitación esperando una respuesta que nadie va a dar.
+        if (!$this->recipients->acceptsBetaReaderInvitations($inviteeId->value(), $command->authorId)) {
+            throw InvitationRefused::invitationsNotAccepted();
         }
 
         $workId = WorkId::fromString($command->workId);

@@ -122,8 +122,8 @@ contestan en uno.
 | `BetaReaderAccessRevoked` | Se retira el acceso: al **descartar** un borrador, al **bloquear** a alguien o porque **el autor lo revoca** (`FEAT-RDG-010`) | `Notification` ✅ | `accessId`, `workId`, `readerId`, `revokedAt` |
 | `BetaReaderInvited` | El autor invita | `Notification` ✅ | `invitationId`, `workId`, `authorId`, `readerId` |
 | `BetaReaderInvitationDeclined` | El invitado rechaza | `Notification` | `invitationId`, `workId`, `authorId`, `readerId` |
-| `WritingBuddyProposed` | Se propone el vínculo | `Notification` | `proposalId`, `proposerId`, `targetUserId` |
-| `WritingBuddyLinked` | Se acepta | `Notification`, `Community` | `linkId`, `userIds` |
+| `WritingBuddyProposed` | Se propone el vínculo (`FEAT-RDG-008`) | `Notification` ✅ (`WRITING_BUDDY_PROPOSED`) | `linkId`, `proposerId`, `partnerId`, `proposedAt` |
+| `WritingBuddyLinked` | Se acepta (`FEAT-RDG-009`). **Rechazar no publica nada**: sería un desaire con acuse de recibo | `Community` cuando cuente vínculos; **hoy nadie** | `linkId`, `proposerId`, `partnerId`, `linkedAt`. **El vínculo no habilita ningún acceso** (`R-3`) |
 
 Los tres caminos publican **el mismo hecho**, y a propósito: quien lo consume no tiene por qué
 saber cuál fue. Lo que le importa es que esa persona ya no puede leer esa obra.

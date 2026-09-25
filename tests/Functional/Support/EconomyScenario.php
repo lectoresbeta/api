@@ -172,6 +172,12 @@ abstract class EconomyScenario extends WebTestCase
         // `Credits` **no** está entre los consumidores, y esa ausencia es
         // parte de lo que se comprueba: comentar no mueve un crédito.
         'ChapterCommented',
+
+        // La propuesta de writing buddy (`FEAT-RDG-008`). Aceptar publica
+        // `WritingBuddyLinked`, que **no está aquí**: hoy no lo consume
+        // nadie, y el hecho se publica igual para que haya de qué tirar
+        // cuando `Community` cuente vínculos.
+        'WritingBuddyProposed',
     ];
 
     /**

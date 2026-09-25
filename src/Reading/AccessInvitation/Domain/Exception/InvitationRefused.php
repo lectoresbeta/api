@@ -70,6 +70,25 @@ final class InvitationRefused extends \DomainException implements BusinessFailur
         );
     }
 
+    /**
+     * Esa persona no admite invitaciones a leer (`FEAT-USR-011`).
+     *
+     * **Sí se dice**, a diferencia de la edad. La diferencia es qué revela
+     * cada una: la edad de otro es un dato suyo y un mensaje que la insinuara
+     * convertiría el botón de invitar en un comprobador de quién es menor;
+     * que alguien tenga el buzón de invitaciones cerrado es una decisión
+     * pública en la práctica —se nota a la primera— y callarla dejaría al
+     * autor esperando una respuesta que no va a llegar.
+     */
+    public static function invitationsNotAccepted(): self
+    {
+        return new self(
+            'INVITATIONS_NOT_ACCEPTED',
+            FailureKind::CONFLICT,
+            'That person does not accept invitations to read.',
+        );
+    }
+
     public static function alreadyABetaReader(): self
     {
         return new self(

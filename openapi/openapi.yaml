@@ -152,6 +152,11 @@ paths:
   /me/content-preferences:
     $ref: './paths/settings.yaml#/contentPreferences'
 
+  # Qué propuestas admite cada persona (FEAT-USR-011). Recepción, no aviso:
+  # una invitación silenciada seguiría esperando respuesta en algún sitio.
+  /me/reception-settings:
+    $ref: './paths/settings.yaml#/receptionSettings'
+
   /me/notification-preferences:
     $ref: './paths/settings.yaml#/notificationPreferences'
 
@@ -336,6 +341,18 @@ paths:
 
   /works/{workId}/invitable-readers:
     $ref: './paths/reading.yaml#/invitableReaders'
+
+  # Writing buddy (FEAT-RDG-008, FEAT-RDG-009). El vínculo no habilita nada:
+  # quien quiera leer al otro lo invita, que pasa por donde tiene que pasar.
+
+  /users/{userId}/writing-buddy-proposals:
+    $ref: './paths/reading.yaml#/writingBuddyProposals'
+
+  /writing-buddy-proposals/{linkId}/resolution:
+    $ref: './paths/reading.yaml#/writingBuddyResolution'
+
+  /me/writing-buddies:
+    $ref: './paths/reading.yaml#/myWritingBuddies'
 
   /works/{workId}/questionnaire:
     $ref: './paths/works.yaml#/questionnaire'

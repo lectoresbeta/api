@@ -15,8 +15,16 @@ use LectoresBeta\Reading\WritingBuddy\Domain\ValueObject\WritingBuddyLinkId;
  * and the unique index actually means «one live link per pair». Who proposed
  * is kept in its own column, because that is what the sorting throws away.
  *
- * What the tie enables is still open (`R-3`). It could grant access
- * automatically, which is why nothing here assumes it does.
+ * **El vínculo no habilita nada por sí solo** (`R-3`, resuelta en
+ * `FEAT-RDG-008`). No concede acceso de lector beta a las obras del otro, ni
+ * salta la modalidad que cada autor eligió, ni la clasificación por edad. Es
+ * un vínculo declarado: se ve, se anuncia y ahí acaba.
+ *
+ * La alternativa —acceso mutuo automático— era cómoda y abría una puerta que
+ * no pasa por `AccessRequest` ni por `AccessInvitation`: dos personas
+ * podrían concederse entre ellas lo que el modelo de acceso entero está
+ * hecho para gobernar, y de paso saltarse `ADULTS_ONLY`. Quien quiera leer
+ * al otro lo invita, que cuesta un clic.
  */
 class WritingBuddyLink
 {
@@ -69,6 +77,34 @@ class WritingBuddyLink
     public function involves(ReaderId $reader): bool
     {
         return \in_array($reader->value(), [$this->memberOne, $this->memberTwo], true);
+    }
+
+    /**
+     * La otra parte. Lo pregunta la lista, que enseña con quién es cada
+     * vínculo, y quien avisa, que necesita saber a quién.
+     */
+    public function otherThan(ReaderId $reader): ReaderId
+    {
+        return ReaderId::fromString($reader->value() === $this->memberOne ? $this->memberTwo : $this->memberOne);
+    }
+
+    /**
+     * Quien recibió la propuesta, que es el único que puede resolverla:
+     * el par se guarda ordenado y eso es justo lo que el orden tira.
+     */
+    public function proposedTo(): ReaderId
+    {
+        return $this->otherThan($this->proposedBy());
+    }
+
+    public function proposedAt(): \DateTimeImmutable
+    {
+        return $this->proposedAt;
+    }
+
+    public function resolvedAt(): ?\DateTimeImmutable
+    {
+        return $this->resolvedAt;
     }
 
     public function accept(\DateTimeImmutable $now): void

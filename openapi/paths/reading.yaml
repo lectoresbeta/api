@@ -1011,3 +1011,219 @@ workBetaReader:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# Writing buddy (`FEAT-RDG-008`, `FEAT-RDG-009`).
+
+WritingBuddyCard:
+  type: object
+  required: [linkId, other, status, proposedByMe, proposedAt]
+  properties:
+    linkId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    other:
+      type: [object, 'null']
+      description: |
+        La otra parte. **Nula cuando esa cuenta ya no existe**: la fila sigue,
+        porque el vínculo existió.
+      required: [userId, username]
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    status:
+      type: string
+      enum: [PROPOSED, ACCEPTED]
+    proposedByMe:
+      type: boolean
+      description: |
+        Lo que decide si la pantalla enseña «Aceptar / Rechazar» o «Esperando
+        respuesta». Sin él, el cliente tendría que comparar identificadores.
+    proposedAt:
+      type: string
+      format: date-time
+
+writingBuddyProposals:
+  post:
+    tags: [Reading]
+    operationId: proposeWritingBuddy
+    summary: Proponer a alguien ser writing buddy
+    description: |
+      **El vínculo no habilita nada** (`R-3`, resuelta). No concede acceso de
+      lector beta a las obras del otro, no salta la modalidad que cada autor
+      eligió y no salta la clasificación por edad. Es un vínculo declarado:
+      se ve, se anuncia y ahí acaba. Quien quiera leer al otro lo invita
+      (`FEAT-RDG-004`), que cuesta un clic y pasa por donde tiene que pasar.
+
+      La propuesta **no concede ni siquiera el vínculo**: es una oferta, y
+      quien decide es quien la recibe.
+
+      Uno vivo por par, en cualquiera de las dos direcciones: el par se guarda
+      ordenado.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: A quién se le propone.
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '201':
+        description: Propuesta enviada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [linkId]
+              properties:
+                linkId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: PROPOSALS_NOT_ACCEPTED`. Esa persona no admite propuestas, y
+          **no se dice por qué**: si distinguiera el ajuste de un bloqueo,
+          cualquiera podría averiguar los ajustes de otro probando a
+          proponerle cosas.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: WRITING_BUDDY_LINK_NOT_FOUND`. Esa persona no existe o no
+          está activada, y no se distingue cuál de las dos.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: 'Ya hay uno vivo con esa persona. `code: WRITING_BUDDY_ALREADY_LIVE`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'El destinatario eres tú. `code: CANNOT_BE_YOUR_OWN_BUDDY`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+writingBuddyResolution:
+  put:
+    tags: [Reading]
+    operationId: resolveWritingBuddyProposal
+    summary: Aceptar o rechazar una propuesta de writing buddy
+    description: |
+      Una ruta y no dos: las dos decisiones son la misma operación con
+      distinto desenlace, igual que al resolver una invitación de lector beta.
+
+      **Solo la resuelve quien la recibió.** Para quien la propuso responde
+      `404`, igual que para alguien ajeno: quién le ha propuesto qué a quién
+      no se le debe a nadie que no sea parte.
+
+      **Aceptar anuncia; rechazar, no.** Avisar a alguien de que le han dicho
+      que no convertiría una respuesta discreta en un desaire con acuse de
+      recibo. Quien propuso lo ve en su lista, que es donde fue a mirar.
+
+      Y aceptar **no abre ninguna puerta**: el vínculo queda declarado y nada
+      más.
+    parameters:
+      - name: linkId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [decision]
+            properties:
+              decision:
+                type: string
+                enum: [ACCEPT, DECLINE]
+    responses:
+      '200':
+        description: Cómo ha quedado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [ACCEPTED, DECLINED]
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: WRITING_BUDDY_LINK_NOT_FOUND`. No existe, no es tuya, o ya
+          estaba resuelta: los tres responden igual.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'Decisión desconocida. `code: UNKNOWN_DECISION`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+myWritingBuddies:
+  get:
+    tags: [Reading]
+    operationId: listMyWritingBuddies
+    summary: Mis writing buddies
+    description: |
+      Los vivos: propuestos y aceptados, **en una sola lista** porque son una
+      sola pantalla. Lo que cambia por fila es si hay que decidir algo o si
+      toca esperar, y eso lo dicen `status` y `proposedByMe`.
+
+      Los resueltos no salen. Un vínculo rechazado hace dos meses no es una
+      fila que nadie quiera volver a ver, y guardarlo a la vista sería un
+      histórico de desaires.
+
+      Bajo `/me/` porque no existe la versión de otra persona: con quién tiene
+      alguien un vínculo de escritura no es una lista que se pueda pedir.
+    parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Los vínculos vivos de quien pregunta.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [writingBuddies]
+              properties:
+                writingBuddies:
+                  type: array
+                  items:
+                    $ref: '#/WritingBuddyCard'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

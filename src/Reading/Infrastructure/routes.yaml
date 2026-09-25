@@ -101,3 +101,28 @@ revokeBetaReaderAccess:
     path: /api/v1/works/{workId}/beta-readers/{readerId}
     controller: LectoresBeta\Reading\BetaReaderAccess\Infrastructure\Controller\RevokeBetaReaderAccessController::__invoke
     methods: [DELETE]
+
+# Writing buddy (`FEAT-RDG-008`, `FEAT-RDG-009`).
+#
+# **El vínculo no habilita nada** (`R-3`, resuelta): no concede acceso a las
+# obras del otro, no salta la modalidad que cada autor eligió y no salta la
+# clasificación por edad. Quien quiera leer al otro lo invita, que cuesta un
+# clic y pasa por donde tiene que pasar.
+
+proposeWritingBuddy:
+    path: /api/v1/users/{userId}/writing-buddy-proposals
+    controller: LectoresBeta\Reading\WritingBuddy\Infrastructure\Controller\ProposeWritingBuddyController::__invoke
+    methods: [POST]
+
+# Misma forma que resolver una invitación de lector beta: las dos decisiones
+# son la misma operación con distinto desenlace.
+resolveWritingBuddyProposal:
+    path: /api/v1/writing-buddy-proposals/{linkId}/resolution
+    controller: LectoresBeta\Reading\WritingBuddy\Infrastructure\Controller\ResolveWritingBuddyProposalController::__invoke
+    methods: [PUT]
+
+# Bajo `/me/` porque no existe la versión de otra persona.
+listMyWritingBuddies:
+    path: /api/v1/me/writing-buddies
+    controller: LectoresBeta\Reading\WritingBuddy\Infrastructure\Controller\ListMyWritingBuddiesController::__invoke
+    methods: [GET]

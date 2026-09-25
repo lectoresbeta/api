@@ -315,6 +315,10 @@ services:
                 # paga es el cuestionario respondido.
                 - LectoresBeta\Notification\Delivery\Application\Event\ChapterCommented
 
+                # «Te proponen ser writing buddy» (FEAT-RDG-008). El aviso que
+                # le faltaba a FEAT-NOT-005 para estar completa.
+                - LectoresBeta\Notification\Delivery\Application\Event\WritingBuddyProposed
+
     # Los consumidores de eventos se etiquetan aquí y no con
     # #[AsMessageHandler]: viven en Application, y Application no conoce a
     # Symfony. Es la misma razón por la que los chequeos de salud se etiquetan
@@ -461,6 +465,11 @@ services:
     # quien solo necesita una a depender también de la otra.
     LectoresBeta\User\Privacy\Application\Contract\MessageAudience:
         alias: LectoresBeta\User\Privacy\Application\Service\CheckMessageAudience
+
+    # Si admite que le propongan cosas (FEAT-USR-011). Recepción y no aviso:
+    # una invitación silenciada seguiría esperando respuesta en algún sitio.
+    LectoresBeta\User\Preferences\Application\Contract\ProposalRecipients:
+        alias: LectoresBeta\User\Preferences\Application\Service\CheckProposalRecipients
 
     # Los tres contadores de la cabecera del perfil (FEAT-USR-028). Ninguno es
     # de `User`, y por eso los tres entran por aquí.
@@ -818,6 +827,10 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\Notification\Delivery\Application\Handler\NotifyAboutAChapterComment:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheProposedWritingBuddy:
         tags:
             - { name: messenger.message_handler }
 

@@ -45,7 +45,7 @@ lector beta y los vínculos entre usuarios que lo habilitan.
 | `AccessRequest` | `AccessRequestId` | Una solicitud pendiente por par (usuario, obra). Estados: `PENDING → ACCEPTED \| REJECTED \| CANCELLED`. |
 | `AccessInvitation` | `AccessInvitationId` | Solo el autor de la obra puede emitirla. |
 | `BetaReaderGroup` | `BetaReaderGroupId` | Pertenece a un autor. |
-| `WritingBuddyLink` | `WritingBuddyLinkId` | Recíproco. Un único vínculo vigente por par de usuarios. |
+| `WritingBuddyLink` | `WritingBuddyLinkId` | Recíproco. Un único vínculo vigente por par —propuesto o aceptado—, garantizado por un índice único parcial. **No habilita ningún acceso** (`R-3`). |
 
 ## Cómo se concede el acceso
 
@@ -98,8 +98,8 @@ capítulo y lo consume `Feedback`
 | `AccessRequestRejected` | El autor rechaza | `Notification` |
 | `BetaReaderInvited` | El autor invita a un usuario | `Notification` |
 | `BetaReaderInvitationDeclined` | El invitado rechaza | `Notification` (avisa al autor, que esperaba respuesta) |
-| `WritingBuddyProposed` | Se propone el vínculo | `Notification` |
-| `WritingBuddyLinked` | Se acepta el vínculo | `Notification`, `Community` |
+| `WritingBuddyProposed` | Se propone el vínculo | `Notification` ✅ (`WRITING_BUDDY_PROPOSED`). **Rechazarlo no publica nada**: avisar de un «no» sería un desaire con acuse de recibo |
+| `WritingBuddyLinked` | Se acepta el vínculo | `Community` cuando cuente vínculos. **Hoy nadie**: se publica igual para que ese día haya de qué tirar |
 
 ## Eventos consumidos
 
@@ -178,7 +178,7 @@ que sea el más barato de los tres.
 |---|---|---|
 | R-1 | ¿El autor puede revocar un acceso ya concedido? (`A-4`) | Funcionalidad nueva y sus consecuencias sobre el feedback existente |
 | ~~R-2~~ | ¿Las solicitudes e invitaciones expiran? | **Resuelta: no.** Se cancelan, se retiran y se rechazan; caducar exige un reloj, un estado y un proceso para un problema que esas tres ya resuelven (`FEAT-RDG-002` `RN-10`). Se revisará si aparece volumen |
-| R-3 | ¿Qué habilita exactamente el vínculo de writing buddy? (`A-1`) | Podría conceder accesos automáticos |
+| ~~R-3~~ | ~~¿Qué habilita el vínculo de writing buddy?~~ | **Resuelta** (`FEAT-RDG-008`): **nada automático**. No concede acceso a las obras del otro ni salta la modalidad o la edad. Quien quiera leer al otro lo invita |
 | R-4 | ¿Los grupos de LB conceden acceso en bloque a una obra? | Caso de uso de asignación masiva. Sería una operación por lotes sobre `FEAT-RDG-004`, no un camino de acceso nuevo |
 | R-9 | ¿Hace falta un enfriamiento entre un rechazo y la siguiente solicitud? | Hoy se puede volver a pedir sin límite (`FEAT-RDG-002` `RN-9`) |
 | R-16 | ¿Hay tope de invitaciones pendientes por obra? | Sin tope, invitar es un canal de mensajería con otro nombre |

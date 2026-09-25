@@ -221,6 +221,21 @@ updateMyContentPreferences:
     controller: LectoresBeta\User\Preferences\Infrastructure\Controller\ContentPreferencesController::__invoke
     methods: [PUT]
 
+# Qué propuestas admite cada persona (FEAT-USR-011). **No es una preferencia
+# de aviso sino de recepción** (S-19): no es lo mismo no querer enterarse que
+# no querer recibirlas — una invitación silenciada seguiría esperando
+# respuesta en algún sitio.
+
+getMyReceptionSettings:
+    path: /api/v1/me/reception-settings
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\ReceptionSettingsController::__invoke
+    methods: [GET]
+
+updateMyReceptionSettings:
+    path: /api/v1/me/reception-settings
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\ReceptionSettingsController::__invoke
+    methods: [PUT]
+
 # Preferencias de notificación (`FEAT-USR-039`). Dos canales y un interruptor
 # general que **suspende** y no sobrescribe: apagarlo devuelve a su dueño la
 # configuración que tenía.

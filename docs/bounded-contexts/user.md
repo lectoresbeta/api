@@ -118,6 +118,7 @@ preferencias y presencia pública como autor.
 | `ReaderDirectory` | Hasta N personas cuyo nombre o `@usuario` encajan, como tarjeta de perfil | `Reading` |
 | `AuthorAudience` | **Un booleano**: ¿acepta este autor comentarios de esta persona? Nunca el ajuste | `Feedback` |
 | `MessageAudience` | **Un booleano**: ¿admite esta persona que aquella le abra una conversación? Nunca el ajuste | `Community` |
+| `ProposalRecipients` | **Dos booleanos**: ¿admite que le inviten a leer? ¿y que le propongan ser writing buddy? Nunca el ajuste | `Reading` |
 | `VisibleProfiles` | De estas personas, **las que quien pregunta puede ver**, como tarjeta de perfil | `Community` |
 | `ProfileCards` | Lo mismo **sin filtrar**, y con un solo uso legítimo: la lista de a quién has bloqueado | `Community` |
 
@@ -195,6 +196,16 @@ La misma copia responde `MessageAudience` ([`FEAT-USR-010`](../features/user/FEA
 y por la misma razón. Son dos contratos y no uno aunque salgan del mismo ajuste: aquel habla
 de la audiencia de los **textos** de un autor y este de su **buzón**. Un contrato que
 respondiera las dos cosas obligaría a quien solo necesita una a depender también de la otra.
+
+`ProposalRecipients` es **recepción y no aviso** ([`FEAT-USR-011`](../features/user/FEAT-USR-011-proposal-reception.md)):
+silenciar una notificación deja la invitación creada, esperando respuesta en una lista que su
+destinatario ha decidido no mirar; responder `false` aquí impide que llegue a existir. Lleva
+las dos partes y no solo el destinatario porque **el bloqueo vence al ajuste**, igual que en
+el buzón.
+
+Es un solo contrato para dos preguntas, a diferencia de los dos anteriores. El criterio es el
+mismo: se separa lo que son puertas distintas, y estas no lo son — las dos responden a «¿se le
+puede abordar con una propuesta?», las pregunta el mismo contexto y en el mismo momento.
 
 `MessageAudience` responde sobre **abrir** una conversación, no sobre continuarla. Endurecer
 el ajuste no cierra los hilos ya abiertos, y quien aplica eso es `Community`: aquí no se sabe

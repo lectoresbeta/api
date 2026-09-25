@@ -79,7 +79,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-008 | Editar el perfil — nombre, usuario, biografía, géneros y foto | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-008-edit-profile.md) |
 | FEAT-USR-009 | Editar preferencias literarias | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-009-literary-preferences.md) |
 | FEAT-USR-010 | Configurar recepción de mensajes directos | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-010-who-can-message-me.md) |
-| FEAT-USR-011 | Configurar recepción de propuestas de LB y writing buddy | User | PENDING | TODO | P2 | — |
+| FEAT-USR-011 | Configurar recepción de propuestas de LB y writing buddy | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-011-proposal-reception.md) |
 | FEAT-USR-012 | ~~Configurar notificaciones por email~~ → `FEAT-USR-039` | User | PENDING | DEPRECATED | P3 | — |
 | FEAT-USR-013 | Eliminar la cuenta — anonimización | User | APPROVED | BLOCKED | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
 | FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-014-view-public-profile.md) |
@@ -217,8 +217,8 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 | FEAT-RDG-005 | Aceptar o rechazar una invitación de LB | Reader | APPROVED | DONE | P1 | [ficha](reading/FEAT-RDG-005-resolve-invitation.md) |
 | FEAT-RDG-006 | Buscar lectores beta a quienes invitar | Writer | APPROVED | DONE | P2 | [ficha](reading/FEAT-RDG-006-find-beta-readers.md) |
 | FEAT-RDG-007 | Gestionar grupos de lectores beta (CRUD y miembros) | Writer | PENDING | TODO | P2 | — |
-| FEAT-RDG-008 | Proponer a un usuario ser writing buddy | Writer | PENDING | TODO | P2 | — |
-| FEAT-RDG-009 | Aceptar o rechazar una propuesta de writing buddy | User | PENDING | TODO | P2 | — |
+| FEAT-RDG-008 | Proponer a un usuario ser writing buddy | User | APPROVED | DONE | P2 | [ficha](reading/FEAT-RDG-008-propose-writing-buddy.md) |
+| FEAT-RDG-009 | Aceptar o rechazar una propuesta de writing buddy | User | APPROVED | DONE | P2 | [ficha](reading/FEAT-RDG-009-resolve-writing-buddy-proposal.md) |
 | FEAT-RDG-010 | Revocar el acceso de un lector beta | Writer | APPROVED | DONE | P3 | [ficha](reading/FEAT-RDG-010-revoke-beta-reader-access.md) |
 
 > **`R-4` resuelta (2026-09-24):** en una obra `PUBLIC`, **empezar a corregir concede el
@@ -521,7 +521,7 @@ Ficha del contexto: [`../bounded-contexts/notification.md`](../bounded-contexts/
 | FEAT-NOT-002 | Entregar notificaciones por email | — (sistema) | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-002-notification-emails.md) |
 | FEAT-NOT-003 | Aplicar las preferencias de notificación del usuario | — (sistema) | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-003-apply-notification-preferences.md) |
 | FEAT-NOT-004 | Avisar de nueva obra de un autor al que se sigue | — (sistema) | APPROVED | DONE | P2 | [ficha](notification/FEAT-NOT-004-new-work-notices.md) |
-| FEAT-NOT-005 | Avisar de solicitudes, invitaciones y propuestas | — (sistema) | PENDING | TODO | P1 | — |
+| FEAT-NOT-005 | Avisar de solicitudes, invitaciones y propuestas | — (sistema) | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-005-request-and-proposal-notices.md) |
 | FEAT-NOT-006 | Avisar de feedback recibido, contestado o valorado | — (sistema) | APPROVED | DONE | P1 | [ficha](notification/FEAT-NOT-006-feedback-notices.md) |
 | FEAT-NOT-007 | Enviar el email de invitación a la plataforma | — (sistema) | PENDING | TODO | P2 | — |
 | FEAT-NOT-008 | Enviar el email de activación de cuenta | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](notification/FEAT-NOT-008-account-activation-email.md) |

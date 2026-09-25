@@ -1137,3 +1137,77 @@ NotificationPreferences:
               actual. Un canal que no está aquí no se puede configurar.
             additionalProperties:
               type: boolean
+
+# Qué propuestas admite cada persona (`FEAT-USR-011`).
+
+ReceptionSettings:
+  type: object
+  required: [betaReaderInvitations, writingBuddyProposals, updatedAt]
+  properties:
+    betaReaderInvitations:
+      type: boolean
+      description: Si admite que le inviten a leer una obra como lector beta.
+    writingBuddyProposals:
+      type: boolean
+      description: Si admite que le propongan ser *writing buddy*.
+    updatedAt:
+      type: string
+      format: date-time
+
+receptionSettings:
+  get:
+    tags: [Settings]
+    operationId: getMyReceptionSettings
+    summary: Qué propuestas admito
+    description: |
+      **No son preferencias de aviso sino de recepción**, y la diferencia
+      importa: no es lo mismo no querer enterarse que no querer recibirlas.
+      Una invitación silenciada seguiría esperando respuesta en algún sitio;
+      con esto cerrado, no llega a existir.
+
+      Quien nunca los ha tocado recibe los **valores por defecto**, que son
+      los dos abiertos. La pantalla tiene que poder pintar dos interruptores
+      el primer día.
+    responses:
+      '200':
+        description: Los dos interruptores.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ReceptionSettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  put:
+    tags: [Settings]
+    operationId: updateMyReceptionSettings
+    summary: Cambiar qué propuestas admito
+    description: |
+      **Un campo ausente no cambia nada.** La pantalla tiene dos
+      interruptores y se mueve uno cada vez; exigir los dos en cada petición
+      haría que mover uno pisara el otro con lo que el cliente tuviera
+      cargado, que es como se pierden ajustes sin que nadie lo note.
+
+      Cerrar una puerta **no deshace lo que ya llegó**: una invitación
+      pendiente sigue esperando respuesta. El ajuste dice quién puede
+      proponer a partir de ahora, no borra lo que alguien propuso de buena fe.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              betaReaderInvitations:
+                type: boolean
+              writingBuddyProposals:
+                type: boolean
+    responses:
+      '200':
+        description: Cómo han quedado los dos.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ReceptionSettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
