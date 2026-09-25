@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\Community\Post\Application\Handler;
 
 use LectoresBeta\Community\Interaction\Domain\Entity\PostRepost;
+use LectoresBeta\Community\Interaction\Domain\Repository\PostLikeRepository;
 use LectoresBeta\Community\Interaction\Domain\Repository\PostRepostRepository;
 use LectoresBeta\Community\Mention\Application\Service\ResolveMentions;
 use LectoresBeta\Community\Mention\Domain\Enum\MentionSubject;
@@ -54,6 +55,7 @@ final readonly class ListPostsHandler
         private UserBlockRepository $blocks,
         private VisibleProfiles $profiles,
         private ResolveMentions $mentions,
+        private PostLikeRepository $likes,
     ) {
     }
 
@@ -150,6 +152,16 @@ final readonly class ListPostsHandler
      */
     private function cards(array $rows, string $readerId): array
     {
+        // De golpe y no una consulta por tarjeta: un muro de veinte entradas
+        // serían veinte consultas para pintar veinte corazones.
+        $liked = array_flip($this->likes->likedAmong(
+            MemberId::fromString($readerId),
+            array_values(array_map(
+                static fn (array $row): string => $row['post']->id()->value(),
+                $rows,
+            )),
+        ));
+
         $people = [];
 
         foreach ($rows as $row) {
@@ -207,6 +219,7 @@ final readonly class ListPostsHandler
                 $post->commentCount(),
                 $post->likeCount(),
                 $post->repostCount(),
+                isset($liked[$post->id()->value()]),
                 $post->wasEdited(),
                 $post->createdAt(),
                 $repostedBy,

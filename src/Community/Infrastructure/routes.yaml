@@ -176,3 +176,32 @@ listHomeAuthorSuggestions:
     path: /api/v1/home/author-suggestions
     controller: LectoresBeta\Community\Recommendation\Infrastructure\Controller\ListHomeAuthorSuggestionsController::__invoke
     methods: [GET]
+
+# Los «me gusta» (`FEAT-COM-008`, `FEAT-COM-030`). `PUT` y `DELETE` y no un
+# `POST` que alterne: fijan un estado, y repetirlos no suma.
+#
+# Ojo con el nombre: en `Feedback` una «valoración positiva» de un comentario
+# otorga créditos (`FEAT-FBK-006`). Esto es un gesto social sin efecto
+# económico. Comparten palabra y no concepto.
+
+likePost:
+    path: /api/v1/posts/{postId}/like
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\LikePostController::__invoke
+    methods: [PUT]
+
+unlikePost:
+    path: /api/v1/posts/{postId}/like
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\UnlikePostController::__invoke
+    methods: [DELETE]
+
+# Bajo `/comments/`, que es el prefijo que este contexto ya usa para sus
+# comentarios. Los de `Feedback` cuelgan de `/corrections/`.
+likePostComment:
+    path: /api/v1/comments/{commentId}/like
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\LikePostCommentController::__invoke
+    methods: [PUT]
+
+unlikePostComment:
+    path: /api/v1/comments/{commentId}/like
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\UnlikePostCommentController::__invoke
+    methods: [DELETE]

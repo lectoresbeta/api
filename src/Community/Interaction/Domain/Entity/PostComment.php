@@ -36,6 +36,15 @@ class PostComment
 
     private ?\DateTimeImmutable $deletedAt = null;
 
+    /**
+     * Cuántos apoyos lleva (`FEAT-COM-030` `RN-3`).
+     *
+     * En la fila y no contado al listar, por lo mismo que el de la
+     * publicación: una lista que hace un `COUNT` por comentario se degrada
+     * justo cuando la conversación empieza a valer la pena.
+     */
+    private int $likeCount = 0;
+
     public function __construct(
         PostCommentId $id,
         PostId $postId,
@@ -97,6 +106,21 @@ class PostComment
     public function wasEdited(): bool
     {
         return null !== $this->editedAt;
+    }
+
+    public function likeCount(): int
+    {
+        return $this->likeCount;
+    }
+
+    public function liked(): void
+    {
+        ++$this->likeCount;
+    }
+
+    public function unliked(): void
+    {
+        $this->likeCount = max(0, $this->likeCount - 1);
     }
 
     public function isDeleted(): bool

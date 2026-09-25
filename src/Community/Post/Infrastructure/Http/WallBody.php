@@ -70,6 +70,7 @@ final readonly class WallBody
             'workId' => $post->workId,
             'commentCount' => $post->commentCount,
             'likeCount' => $post->likeCount,
+            'likedByViewer' => $post->likedByViewer,
             'repostCount' => $post->repostCount,
             'edited' => $post->edited,
             'createdAt' => $post->createdAt->format(\DATE_ATOM),

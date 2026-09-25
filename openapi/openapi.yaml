@@ -201,6 +201,15 @@ paths:
   /home/author-suggestions:
     $ref: './paths/community.yaml#/homeAuthorSuggestions'
 
+  # Los «me gusta» (FEAT-COM-008, FEAT-COM-030). Un gesto social, sin efecto
+  # económico: la «valoración positiva» que da créditos es de `Feedback`.
+
+  /posts/{postId}/like:
+    $ref: './paths/community.yaml#/postLike'
+
+  /comments/{commentId}/like:
+    $ref: './paths/community.yaml#/commentLike'
+
   /posts:
     $ref: './paths/community.yaml#/posts'
 

@@ -6,6 +6,7 @@ namespace LectoresBeta\Community\Interaction\Application\Handler;
 
 use LectoresBeta\Community\Interaction\Application\Command\DeletePostComment;
 use LectoresBeta\Community\Interaction\Domain\Exception\CommentNotFound;
+use LectoresBeta\Community\Interaction\Domain\Repository\PostCommentLikeRepository;
 use LectoresBeta\Community\Interaction\Domain\Repository\PostCommentRepository;
 use LectoresBeta\Community\Interaction\Domain\ValueObject\PostCommentId;
 use LectoresBeta\Community\Post\Domain\Repository\PostRepository;
@@ -27,6 +28,7 @@ final readonly class DeletePostCommentHandler
 {
     public function __construct(
         private PostCommentRepository $comments,
+        private PostCommentLikeRepository $likes,
         private PostRepository $posts,
         private TransactionalSession $session,
         private Clock $clock,
@@ -55,10 +57,12 @@ final readonly class DeletePostCommentHandler
         $this->session->execute(function () use ($comment, $replies, $parent, $now): void {
             $comment->delete($now);
             $this->comments->save($comment);
+            $this->likes->removeAllOf($comment->id());
 
             foreach ($replies as $reply) {
                 $reply->delete($now);
                 $this->comments->save($reply);
+                $this->likes->removeAllOf($reply->id());
             }
 
             if (null !== $parent) {

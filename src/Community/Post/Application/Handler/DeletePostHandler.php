@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Community\Post\Application\Handler;
 
+use LectoresBeta\Community\Interaction\Domain\Repository\PostLikeRepository;
 use LectoresBeta\Community\Post\Application\Command\DeletePost;
 use LectoresBeta\Community\Post\Domain\Exception\PostNotFound;
 use LectoresBeta\Community\Post\Domain\Repository\PostRepository;
@@ -30,6 +31,7 @@ final readonly class DeletePostHandler
 {
     public function __construct(
         private PostRepository $posts,
+        private PostLikeRepository $likes,
         private TransactionalSession $session,
         private Clock $clock,
     ) {
@@ -51,6 +53,11 @@ final readonly class DeletePostHandler
 
         $this->session->execute(function () use ($post): void {
             $this->posts->save($post);
+
+            // Los apoyos se van con ella (`FEAT-COM-008` `RN-9`): filas
+            // apuntando a algo que ya no está solo sirven para que un día
+            // alguien las cuente.
+            $this->likes->removeAllOf($post->id());
         });
     }
 }

@@ -23,6 +23,7 @@
         <field name="replyCount" column="reply_count" type="integer"/>
         <field name="createdAt" column="created_at" type="datetime_immutable"/>
         <field name="editedAt" column="edited_at" type="datetime_immutable" nullable="true"/>
+        <field name="likeCount" column="like_count" type="integer"/>
         <field name="deletedAt" column="deleted_at" type="datetime_immutable" nullable="true"/>
 
     </entity>

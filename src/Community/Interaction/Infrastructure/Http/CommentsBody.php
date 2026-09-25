@@ -66,6 +66,8 @@ final readonly class CommentsBody
             'body' => $comment->body,
             'parentCommentId' => $comment->parentCommentId,
             'replyCount' => $comment->replyCount,
+            'likeCount' => $comment->likeCount,
+            'likedByViewer' => $comment->likedByViewer,
             'mine' => $comment->mine,
             'edited' => $comment->edited,
             'createdAt' => $comment->createdAt->format(\DATE_ATOM),

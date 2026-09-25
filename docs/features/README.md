@@ -295,8 +295,8 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-004 | Publicar buscando writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | PENDING | TODO | P2 | — |
 | FEAT-COM-006 | Comentar una publicación | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-006-comment-on-post.md) |
-| FEAT-COM-007 | Reaccionar con emoji a una publicación | User | PENDING | TODO | P2 | — |
-| FEAT-COM-008 | Apoyar una publicación con un "me gusta" | User | PENDING | TODO | P2 | — |
+| FEAT-COM-007 | ~~Reaccionar con emoji a una publicación~~ | — | PENDING | DEPRECATED | P2 | — |
+| FEAT-COM-008 | Apoyar una publicación con un «me gusta» | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-008-like-a-post.md) |
 | FEAT-COM-009 | Filtrar y buscar publicaciones (tipo, texto, usuario, fecha) | User | PENDING | TODO | P2 | — |
 | FEAT-COM-010 | Suscribirse a un autor | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-010-subscribe-to-author.md) |
 | FEAT-COM-011 | Enviar un mensaje directo | User | PENDING | TODO | P2 | — |
@@ -318,7 +318,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-027 | Mis Amigos — seguidos y seguidores | User, Guest | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-027-following-and-followers.md) |
 | FEAT-COM-028 | Incluir un relato de la plataforma en una publicación | User | PENDING | TODO | P2 | — |
 | FEAT-COM-029 | Audiencia de una publicación | User | PENDING | BLOCKED | P1 | — |
-| FEAT-COM-030 | Me gusta en un comentario o respuesta | User | PENDING | TODO | P2 | — |
+| FEAT-COM-030 | «Me gusta» en un comentario o respuesta | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-030-like-a-comment.md) |
 | FEAT-COM-031 | Responder a un comentario | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-031-reply-to-comment.md) |
 | FEAT-COM-032 | Menciones a usuarios | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-032-mentions.md) |
 | FEAT-COM-033 | Silenciar a un usuario | User | PENDING | TODO | P3 | — |
@@ -342,6 +342,12 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 > regla de acceso que atraviesa varios contextos. `FEAT-COM-035` queda `DEFERRED` como las
 > otras dos denuncias: no hay moderación que las atienda (`V-1`).
 >
+> **`FEAT-COM-007` queda derogada** (2026-09-25). `docs/ui/post-interactions.md` dice que el
+> selector de emoji **inserta emojis en el texto del comentario** y «no es un mecanismo de
+> reacción… no añade nada al backend»: la barra de acciones solo tiene me gusta, comentarios,
+> repost y compartido. No había reacciones que construir. La tabla `post_reaction`, que nunca
+> tuvo código que escribiera en ella, se retiró con `FEAT-COM-008`.
+
 > `FEAT-COM-030` a `FEAT-COM-032` salen de la secuencia de interacciones: los comentarios se
 > pueden valorar, admiten respuestas anidadas y llevan **menciones**. Una mención se guarda
 > como referencia al usuario y nunca como texto: los nombres de usuario se reciclan pasados

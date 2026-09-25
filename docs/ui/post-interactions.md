@@ -33,6 +33,9 @@ El selector de emoji inserta emojis **en el texto**; no es un mecanismo de reacc
 maneja en cliente y no añade nada al backend más allá de conservarlos (`RN-4` de
 `FEAT-COM-002`).
 
+> Esta frase es la que **derogó `FEAT-COM-007`** («Reaccionar con emoji a una publicación»):
+> no había reacciones que construir. Ver el registro de funcionalidades.
+
 «Más relevantes» implica una fórmula de relevancia que nadie ha definido. Es el mismo vacío
 que bloquea los rankings (`CM-4`) y la ordenación del muro (`FEAT-COM-024`).
 
@@ -132,7 +135,7 @@ vigente**. Ver `I-6`.
 | 1 | Comentar una publicación | `FEAT-COM-006` |
 | 2 | Ordenar los comentarios por relevancia o fecha | `FEAT-COM-006`, `I-1` |
 | 3 | Contador de comentarios por publicación | `FEAT-COM-006` |
-| 4 | «Me gusta» sobre un comentario, con su contador | `FEAT-COM-030` |
+| 4 | «Me gusta» sobre un comentario, con su contador | `FEAT-COM-030` — **implementado** |
 | 5 | Responder a un comentario, con contador de respuestas | `FEAT-COM-031` |
 | 6 | Menciones guardadas como **referencia al usuario** | `FEAT-COM-032` |
 | 7 | Aviso al usuario mencionado | `FEAT-COM-032`, `FEAT-NOT-009` |

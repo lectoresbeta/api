@@ -21,6 +21,9 @@ final readonly class CommentCard
         public string $body,
         public ?string $parentCommentId,
         public int $replyCount,
+        public int $likeCount,
+        /** Si quien mira lo ha apoyado (`FEAT-COM-030` `RN-4`). */
+        public bool $likedByViewer,
         public bool $mine,
         public bool $edited,
         public \DateTimeImmutable $createdAt,

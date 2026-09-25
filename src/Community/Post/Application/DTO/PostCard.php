@@ -37,6 +37,12 @@ final readonly class PostCard
         public int $commentCount,
         public int $likeCount,
         public int $repostCount,
+        /**
+         * Si quien mira lo ha apoyado, para que el botón salga resaltado
+         * (`FEAT-COM-008` `RN-7`). Va en la tarjeta y no se pregunta aparte:
+         * una petición por corazón sería veinte por muro.
+         */
+        public bool $likedByViewer,
         public bool $edited,
         public \DateTimeImmutable $createdAt,
         /**

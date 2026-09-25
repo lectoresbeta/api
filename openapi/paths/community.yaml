@@ -428,7 +428,7 @@ PostFormat:
 
 PostCard:
   type: object
-  required: [postId, author, body, type, format, audience, commentCount, likeCount, repostCount, edited, createdAt]
+  required: [postId, author, body, type, format, audience, commentCount, likeCount, likedByViewer, repostCount, edited, createdAt]
   description: |
     Una tarjeta del muro. El autor viaja **resuelto** —nombre, `@usuario`,
     avatar— porque una tarjeta con un identificador no se puede pintar.
@@ -480,6 +480,12 @@ PostCard:
         pinta con los datos vivos de la obra, no con una copia envejecida.
     commentCount:
       type: integer
+    likedByViewer:
+      type: boolean
+      description: |
+        Si quien mira lo ha apoyado, para que el botón salga resaltado
+        (`FEAT-COM-008`). Viaja en la tarjeta y no se pregunta aparte: una
+        petición por corazón serían veinte por muro.
     likeCount:
       type: integer
     repostCount:
@@ -878,7 +884,7 @@ CommentIdParam:
 
 CommentCard:
   type: object
-  required: [commentId, author, body, replyCount, mine, edited, createdAt]
+  required: [commentId, author, body, replyCount, likeCount, likedByViewer, mine, edited, createdAt]
   description: |
     Un comentario o una respuesta. Lleva **sus acciones** para que el cliente
     no tenga que pedirlas aparte por cada fila.
@@ -905,6 +911,13 @@ CommentCard:
         El comentario del que cuelga, si es una respuesta. **Siempre de primer
         nivel**: responder a una respuesta cuelga del mismo raíz, y el cliente
         no necesita saber cuál es porque lo resuelve el servidor.
+    likeCount:
+      type: integer
+      description: |
+        Independiente del de la publicación (`FEAT-COM-030`). No es la
+        «valoración positiva» de `Feedback`, que otorga créditos.
+    likedByViewer:
+      type: boolean
     replyCount:
       type: integer
     mine:
@@ -1391,3 +1404,176 @@ homeAuthorSuggestions:
                         type: boolean
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+# Los «me gusta» (`FEAT-COM-008`, `FEAT-COM-030`).
+#
+# **Ojo con el nombre**: en `Feedback` una «valoración positiva» de un
+# comentario de corrección otorga créditos (`FEAT-FBK-006`). Esto es un gesto
+# social sin ningún efecto económico. Comparten palabra y no concepto, y por
+# eso viven en contextos distintos.
+
+postLike:
+  put:
+    tags: [Community]
+    operationId: likePost
+    summary: Apoyar una publicación
+    description: |
+      `PUT` y no `POST` porque **fija un estado**: la publicación acaba
+      apoyada por quien llama, haya pulsado una vez o cinco. Repetirlo no
+      suma.
+
+      **No se puede apoyar lo que no se puede ver**, y responde igual que si
+      no existiera: es el agujero clásico de los contadores — no hace falta
+      leer una publicación para saber, por el error que devuelve, que está
+      ahí.
+
+      Se puede apoyar la propia. Suena raro y es lo correcto: nadie lo prohíbe
+      en ninguna red, y prohibirlo obligaría a explicar por qué.
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '200':
+        description: Apoyada, con el contador para repintar sin otra petición.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe, o no puedes verla. `code: POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: unlikePost
+    summary: Retirar el apoyo a una publicación
+    description: |
+      Idempotente: retirar lo que no se puso responde bien. El estado que se
+      pedía ya se cumple, y quien borra dos veces suele ser un reintento.
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '200':
+        description: Ya no está apoyada. Igual si no lo estaba.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe, o no puedes verla. `code: POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+commentLike:
+  put:
+    tags: [Community]
+    operationId: likePostComment
+    summary: Apoyar un comentario o una respuesta
+    description: |
+      Lo mismo sobre un comentario, con su contador **independiente** del de
+      la publicación.
+
+      Vale igual para un comentario de primer nivel y para una respuesta: son
+      la misma entidad con un padre, así que no hay nada que distinguir.
+
+      Un comentario no tiene audiencia propia —hereda entera la de su
+      publicación—, así que tampoco se apoya el de algo que no se puede ver.
+      Y un comentario borrado no se alcanza: su texto ya no está, y apoyarlo
+      sería la forma de averiguar que estuvo ahí.
+    parameters:
+      - $ref: '#/CommentIdParam'
+    responses:
+      '200':
+        description: Apoyado, con el contador del comentario.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe, se borró, o no puedes ver su publicación. `code: COMMENT_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: unlikePostComment
+    summary: Retirar el apoyo a un comentario
+    description: Idempotente, igual que el de la publicación.
+    parameters:
+      - $ref: '#/CommentIdParam'
+    responses:
+      '200':
+        description: Ya no está apoyado. Igual si no lo estaba.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe, se borró, o no puedes ver su publicación. `code: COMMENT_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+PostIdParam:
+  name: postId
+  in: path
+  required: true
+  schema:
+    type: string
+    format: uuid
+
+CommentIdParam:
+  name: commentId
+  in: path
+  required: true
+  schema:
+    type: string
+    format: uuid
+
+LikeState:
+  type: object
+  required: [liked, likeCount]
+  properties:
+    liked:
+      type: boolean
+    likeCount:
+      type: integer

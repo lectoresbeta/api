@@ -8,12 +8,16 @@ use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostId;
 
 /**
- * Support for a post.
+ * El apoyo a una publicación (`FEAT-COM-008`).
  *
- * Kept apart from the emoji reaction because the sources list them as two
- * mechanisms (`RN-4`) — though the home design only shows this one, so
- * whether both survive is in doubt (`H-5`, `CM-1`). Two tables can be merged
- * later; one table that meant two things could not be told apart.
+ * **La identidad es el par**, y eso es lo que hace que «uno por persona»
+ * (`RN-1`) no dependa de que nadie se acuerde: una segunda fila del mismo par
+ * no cabe.
+ *
+ * La duda sobre si convivía con una reacción con emoji (`CM-1`) está
+ * resuelta: `post-interactions.md` dice que el selector de emoji **inserta
+ * emojis en el texto** y no es un mecanismo de reacción, así que
+ * `FEAT-COM-007` queda derogada y esta es la única forma de apoyar algo.
  */
 class PostLike
 {

@@ -65,6 +65,30 @@ final readonly class ReachableComment
         return $this->root($comment);
     }
 
+    /**
+     * **El comentario en sí**, no el raíz de su hilo, y solo si quien
+     * pregunta llega a su publicación.
+     *
+     * Lo necesita apoyar un comentario (`FEAT-COM-030`): ahí el objetivo es
+     * exactamente el que se señala, respuesta incluida, y subir el contador
+     * del raíz sería contar en el sitio equivocado.
+     *
+     * Un comentario borrado no se alcanza: su texto ya no está, y apoyar algo
+     * que no se ve sería la forma de averiguar que estuvo ahí.
+     */
+    public function itself(string $commentId, string $readerId): PostComment
+    {
+        $comment = $this->live($commentId);
+
+        $this->visible->to($comment->postId()->value(), $readerId);
+
+        if ($comment->isDeleted()) {
+            throw CommentNotFound::create();
+        }
+
+        return $comment;
+    }
+
     private function live(string $commentId): PostComment
     {
         try {

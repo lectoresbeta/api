@@ -8,8 +8,10 @@ use LectoresBeta\Community\Interaction\Application\DTO\CommentCard;
 use LectoresBeta\Community\Interaction\Application\DTO\CommentPage;
 use LectoresBeta\Community\Interaction\Domain\Entity\PostComment;
 use LectoresBeta\Community\Interaction\Domain\Exception\UnsupportedCommentSort;
+use LectoresBeta\Community\Interaction\Domain\Repository\PostCommentLikeRepository;
 use LectoresBeta\Community\Mention\Application\Service\ResolveMentions;
 use LectoresBeta\Community\Mention\Domain\Enum\MentionSubject;
+use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
 use LectoresBeta\Shared\Domain\Exception\InvalidCursor;
 use LectoresBeta\Shared\Domain\Pagination\Cursor;
 use LectoresBeta\Shared\Domain\Pagination\PageSize;
@@ -33,6 +35,7 @@ final readonly class PageOfComments
     public function __construct(
         private VisibleProfiles $profiles,
         private ResolveMentions $mentions,
+        private PostCommentLikeRepository $likes,
     ) {
     }
 
@@ -82,6 +85,16 @@ final readonly class PageOfComments
             $rows,
         ));
 
+        // De golpe, por lo mismo que en el muro: una consulta por comentario
+        // para pintar un corazón es una consulta por comentario.
+        $liked = array_flip($this->likes->likedAmong(
+            MemberId::fromString($readerId),
+            array_values(array_map(
+                static fn (PostComment $comment): string => $comment->id()->value(),
+                $rows,
+            )),
+        ));
+
         $cards = [];
 
         foreach ($rows as $comment) {
@@ -100,6 +113,8 @@ final readonly class PageOfComments
                 $comment->body(),
                 $comment->parentCommentId()?->value(),
                 $comment->replyCount(),
+                $comment->likeCount(),
+                isset($liked[$comment->id()->value()]),
                 $comment->authorId()->value() === $readerId,
                 $comment->wasEdited(),
                 $comment->createdAt(),
