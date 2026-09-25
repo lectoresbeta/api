@@ -5,7 +5,7 @@ context: Credits
 concept: Balance
 actors: []
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P0
 sources:
   - conversation:2026-09-23 (rediseño del sistema de créditos)
@@ -151,17 +151,42 @@ Es el tipo de detalle que se descubre tarde y en producción.
 
 ## Criterios de aceptación
 
-- [ ] Una corrección entregada abona al lector aunque el autor no tenga saldo.
-- [ ] El autor queda exactamente en `saldo − precio`, sin recargo.
-- [ ] Con saldo negativo no se concede ninguna retención nueva sobre sus obras.
-- [ ] Con saldo negativo se puede corregir con normalidad.
-- [ ] Lo ganado corrigiendo salda la deuda automáticamente, sin acción del usuario.
-- [ ] Al llegar a cero, recibir correcciones se desbloquea solo.
-- [ ] El saldo negativo no impide leer, publicar ni comentar.
-- [ ] La suma de todos los saldos cuadra con la invariante contable.
-- [ ] Una corrección que deja al autor en negativo llega bloqueada, con sus metadatos visibles.
-- [ ] Al volver a cero, todas las bloqueadas se desbloquean a la vez.
-- [ ] Una corrección ya leída no vuelve a bloquearse.
+- [x] Una corrección entregada abona al lector aunque el autor no tenga saldo.
+- [x] El autor queda exactamente en `saldo − precio`, sin recargo.
+- [x] Con saldo negativo no se concede ninguna retención nueva sobre sus obras.
+- [x] Con saldo negativo se puede corregir con normalidad.
+- [x] Lo ganado corrigiendo salda la deuda automáticamente, sin acción del usuario.
+- [x] Al llegar a cero, recibir correcciones se desbloquea solo.
+- [x] El saldo negativo no impide leer, publicar ni comentar.
+- [x] La suma de todos los saldos cuadra con la invariante contable.
+- [x] Una corrección que deja al autor en negativo llega bloqueada, con sus metadatos visibles.
+- [x] Al volver a cero, todas las bloqueadas se desbloquean a la vez.
+- [x] Una corrección ya leída no vuelve a bloquearse.
+
+## Estado de la implementación
+
+`DONE` (2026-09-25).
+
+**Al implementarlo apareció un agujero en `RN-2` que solo se ve recorriendo el camino
+entero**: la puerta de recibir correcciones solo se cerraba si alguna vez había estado
+abierta. Un capítulo nace en «no corregible», así que uno cuyo autor **nunca** pudo pagarlo
+coincidía con el valor inicial, no se publicaba ningún cambio, y `Feedback` —donde «no sé»
+significaba «adelante»— lo dejaba pasar. El resultado era que los capítulos más caros, justo
+los que más deuda generan, eran los que se escapaban.
+
+Arreglado en `ChapterPrice`: la primera respuesta siempre es noticia, aunque coincida con el
+valor inicial, porque quien escucha no puede distinguir «no ha cambiado» de «nunca me lo han
+dicho». Hace falta una columna —`correctability_announced_at`— para saber cuál es la primera.
+
+Dos decisiones más que la ficha no fijaba:
+
+- **`CreditBalanceWentNegative` lleva de qué era el movimiento que cruzó.** Es parte del hecho
+  —el saldo bajó *por esto*— y no una instrucción, y es lo que permite a `Feedback` bloquear
+  esa corrección sin tocar las que el autor ya había leído (`RN-11`). Sin ese dato, `RN-9` y
+  `RN-11` son incompatibles.
+- **`RN-12` avisa por un puerto y no por el registro.** `Application` no sabe dónde acaban
+  estos avisos —hoy en el log, mañana quizá en el panel de `FEAT-CRD-012`—; lo que sí sabe es
+  qué merece contarse.
 
 ## Preguntas abiertas
 

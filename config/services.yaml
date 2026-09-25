@@ -105,6 +105,8 @@ services:
                 - LectoresBeta\Credits\Pricing\Application\Event\CorrectionDraftDiscarded
                 - LectoresBeta\Credits\Account\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Feedback\Correction\Application\Event\ChapterCorrectabilityChanged
+                - LectoresBeta\Feedback\Correction\Application\Event\CreditBalanceWentNegative
+                - LectoresBeta\Feedback\Correction\Application\Event\CreditDebtCleared
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionStarted
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionResumed
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionDraftDiscarded
@@ -117,6 +119,8 @@ services:
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordResetRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordChanged
                 - LectoresBeta\Notification\Delivery\Application\Event\EmailChangeRequested
+                - LectoresBeta\Notification\Delivery\Application\Event\CreditBalanceWentNegative
+                - LectoresBeta\Notification\Delivery\Application\Event\CreditDebtCleared
                 - LectoresBeta\User\Privacy\Application\Event\AuthorSubscribed
                 - LectoresBeta\User\Privacy\Application\Event\AuthorUnsubscribed
                 - LectoresBeta\User\Privacy\Application\Event\UserBlocked
@@ -320,6 +324,13 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    # Lo que el descubierto significa aquí (FEAT-CRD-018): el corrector cobra
+    # siempre, y lo que se retiene es la lectura de lo entregado, no el pago.
+    LectoresBeta\Feedback\Correction\Application\Handler\TrackCorrectionLocking:
+        tags:
+            - { name: messenger.message_handler, method: wentNegative }
+            - { name: messenger.message_handler, method: debtCleared }
+
     # Empezar y reanudar conceden igual aquí, y son dos hechos porque en
     # `Credits` no lo son: reanudar no toma hueco ni fija precio.
     LectoresBeta\Reading\BetaReaderAccess\Application\Handler\GrantAccessWhileCorrecting:
@@ -404,6 +415,13 @@ services:
     LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorOfACorrection:
         tags:
             - { name: messenger.message_handler }
+
+    # Los dos cruces del descubierto. El de bajada explica la salida, y el de
+    # subida existe porque el desbloqueo es automático y, por tanto, invisible.
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorAboutTheirDebt:
+        tags:
+            - { name: messenger.message_handler, method: wentNegative }
+            - { name: messenger.message_handler, method: debtCleared }
 
     # El DSN del transporte es configuración, y traducirla a una dependencia
     # tipada es trabajo de Infrastructure: ni Domain ni Application leen

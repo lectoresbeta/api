@@ -27,6 +27,8 @@
         <!-- La respuesta anterior, para poder publicar solo los cambios. -->
         <field name="correctable" type="boolean"/>
         <field name="affordableCorrections" column="affordable_corrections" type="smallint"/>
+        <!-- Nulo = nunca se ha contado. Distinto de «no ha cambiado». -->
+        <field name="correctabilityAnnouncedAt" column="correctability_announced_at" type="datetime_immutable" nullable="true"/>
         <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
 
     </entity>

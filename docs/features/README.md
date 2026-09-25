@@ -427,7 +427,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-015 | Pantalla explicativa de cómo se calcula el precio | User | PENDING | TODO | P2 | — |
 | FEAT-CRD-016 | Precio de una corrección según el esfuerzo | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-016-effort-based-pricing.md) |
 | FEAT-CRD-017 | Propina del autor a una buena corrección | Writer | APPROVED | TODO | P2 | [ficha](credits/FEAT-CRD-017-author-tip.md) |
-| FEAT-CRD-018 | Saldo negativo y correcciones bloqueadas | — (sistema) | APPROVED | TODO | P0 | [ficha](credits/FEAT-CRD-018-negative-balance.md) |
+| FEAT-CRD-018 | Saldo negativo y correcciones bloqueadas | — (sistema) | APPROVED | DONE | P0 | [ficha](credits/FEAT-CRD-018-negative-balance.md) |
 | FEAT-CRD-019 | Corrección en descubierto como gancho de reactivación | — (sistema) | APPROVED | TODO | P2 | [ficha](credits/FEAT-CRD-019-overdraft-correction.md) |
 
 > **El sistema de créditos se ha rediseñado de cero**

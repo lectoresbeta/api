@@ -186,8 +186,8 @@ es de la obra entera.
 | `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, **`Work`** | `chapterId`, `workId`, `correctable`, `affordableCorrections`, `changedAt`. **Sin importes** |
 | `ChapterPriceChanged` | Cambia lo que vale corregir un capítulo | **`Work`** (insignia del catálogo), `Community` | `chapterId`, `workId`, `credits`, `changedAt`. **Lleva importe, y es el único** |
 | `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` | `userId`, `balance`, `changedAt` |
-| `CreditBalanceWentNegative` | El saldo **cruza** a negativo | `Notification`, `Feedback` | `userId`, `balance`, `crossedAt` |
-| `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` | `userId`, `balance` |
+| `CreditBalanceWentNegative` | El saldo **cruza** a negativo | `Notification` ✅, `Feedback` ✅ | `userId`, `balance`, `crossedAt`, `subjectId`. Lo último dice de qué era el movimiento: es lo que permite bloquear esa corrección y no las ya leídas |
+| `CreditDebtCleared` | Vuelve a cero o más | `Feedback` ✅, `Notification` ✅ | `userId`, `balance`, `clearedAt`. Desbloquea **todas** las correcciones retenidas a la vez |
 | `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback`, `Notification` | `holdId`, `userId`, `chapterId`, `amount` |
 | `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` | `userId`, `correctionId` |
 

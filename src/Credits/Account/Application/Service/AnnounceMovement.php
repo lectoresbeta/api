@@ -7,6 +7,7 @@ namespace LectoresBeta\Credits\Account\Application\Service;
 use LectoresBeta\Credits\Account\Domain\Entity\CreditTransaction;
 use LectoresBeta\Credits\Account\Domain\Event\CreditBalanceChanged;
 use LectoresBeta\Credits\Account\Domain\Event\CreditBalanceWentNegative;
+use LectoresBeta\Credits\Account\Domain\Event\CreditDebtCleared;
 use LectoresBeta\Credits\Account\Domain\Event\CreditsAdded;
 use LectoresBeta\Credits\Account\Domain\Event\CreditsSpent;
 use LectoresBeta\Shared\Application\Event\EventPublisher;
@@ -29,8 +30,10 @@ use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
  */
 final readonly class AnnounceMovement
 {
-    public function __construct(private EventPublisher $events)
-    {
+    public function __construct(
+        private EventPublisher $events,
+        private WatchDeepDebt $deepDebt,
+    ) {
     }
 
     public function of(CreditTransaction $movement, int $balanceBefore, int $balanceAfter): void
@@ -52,10 +55,40 @@ final readonly class AnnounceMovement
                 $movement->userId(),
                 $balanceAfter,
                 $movement->occurredAt(),
+                self::subjectOf($movement),
+            );
+        }
+
+        // Y el cruce de vuelta (`FEAT-CRD-018` `RN-7`), que es lo que
+        // desbloquea recibir correcciones otra vez y libera las que llegaron
+        // bloqueadas. Sin este hecho, salir de la deuda no se notaría en
+        // ningún otro contexto.
+        if ($balanceBefore < 0 && $balanceAfter >= 0) {
+            $announcements[] = new CreditDebtCleared(
+                EventId::generate(),
+                $movement->userId(),
+                $balanceAfter,
+                $movement->occurredAt(),
             );
         }
 
         $this->events->publish(...$announcements);
+
+        // Una deuda mucho más honda de lo que el diseño predice no cambia
+        // nada para quien la tiene: es una señal para quien opera.
+        $this->deepDebt->check($movement->userId(), $balanceAfter);
+    }
+
+    /**
+     * De qué era el movimiento, cuando se sabe. Hoy solo las correcciones lo
+     * llevan, y es lo que permite a `Feedback` bloquear **esa** y no las que
+     * el autor ya había leído (`RN-11`).
+     */
+    private static function subjectOf(CreditTransaction $movement): ?string
+    {
+        $correctionId = $movement->metadata()['correctionId'] ?? null;
+
+        return \is_string($correctionId) ? $correctionId : null;
     }
 
     private function narrated(CreditTransaction $movement, int $balanceAfter): IntegrationEvent

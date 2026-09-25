@@ -75,6 +75,11 @@ abstract class EconomyScenario extends WebTestCase
         'BetaReaderAccessGranted',
         'BetaReaderAccessRevoked',
         'BetaReaderInvited',
+
+        // Y los dos cruces del descubierto (`FEAT-CRD-018`): `Feedback`
+        // bloquea y libera la lectura de lo entregado.
+        'CreditBalanceWentNegative',
+        'CreditDebtCleared',
     ];
 
     /**

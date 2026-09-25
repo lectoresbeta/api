@@ -54,6 +54,19 @@ class ChapterPrice
      */
     private int $affordableCorrections = 0;
 
+    /**
+     * Cuándo se contó por última vez la respuesta a «¿se puede corregir?».
+     *
+     * Nulo significa **nunca**, y eso es distinto de «no ha cambiado». Un
+     * capítulo que su autor no ha podido pagar nunca nace ya en `false`, así
+     * que sin esta marca la primera respuesta coincidiría con el valor
+     * inicial, no se publicaría nada, y `Feedback` se quedaría sin saber
+     * —dejándolo pasar por omisión—. Es el agujero por el que `RN-2` de
+     * `FEAT-CRD-018` se caía: la puerta solo se cerraba si alguna vez había
+     * estado abierta.
+     */
+    private ?\DateTimeImmutable $correctabilityAnnouncedAt = null;
+
     private \DateTimeImmutable $updatedAt;
 
     public function __construct(
@@ -125,15 +138,22 @@ class ChapterPrice
      * Returns whether this is news. Only a change is worth an event: the
      * price of a chapter is recomputed far more often than its answer to
      * «can this be corrected?» actually moves.
+     *
+     * **La primera vez siempre es noticia**, aunque el valor coincida con el
+     * inicial. Nadie lo ha oído todavía, y quien escucha no puede distinguir
+     * «no ha cambiado» de «nunca me lo han dicho».
      */
     public function updateCorrectability(bool $correctable, int $affordableCorrections, \DateTimeImmutable $now): bool
     {
-        if ($correctable === $this->correctable && $affordableCorrections === $this->affordableCorrections) {
+        $announced = null !== $this->correctabilityAnnouncedAt;
+
+        if ($announced && $correctable === $this->correctable && $affordableCorrections === $this->affordableCorrections) {
             return false;
         }
 
         $this->correctable = $correctable;
         $this->affordableCorrections = $affordableCorrections;
+        $this->correctabilityAnnouncedAt = $now;
         $this->updatedAt = $now;
 
         return true;
