@@ -25,6 +25,7 @@ final class AdminAccountPayload
             'status' => $account->status,
             'registeredAt' => $account->registeredAt,
             'activatedAt' => $account->activatedAt,
+            'lastSignedInAt' => $account->lastSignedInAt,
             'restrictedUntil' => $account->restrictedUntil,
         ];
     }

@@ -35,6 +35,12 @@ final readonly class AdministrableAccount
         public string $status,
         public string $registeredAt,
         public ?string $activatedAt,
+        /**
+         * Último acceso (`FEAT-USR-005` `RN-5`). Es lo primero que hay que
+         * mirar antes de decidir nada sobre una cuenta: una cuenta que nadie
+         * usa desde hace un año no merece el mismo trato que una viva.
+         */
+        public ?string $lastSignedInAt,
         /** Hasta cuándo no puede escribir, si está restringida (`FEAT-MOD-006`). */
         public ?string $restrictedUntil,
     ) {

@@ -98,6 +98,18 @@ class User
 
     private ?\DateTimeImmutable $activatedAt = null;
 
+    /**
+     * Cuándo entró por última vez (`FEAT-USR-005` `RN-5`).
+     *
+     * **Una fecha y nada más** (`RN-6`): ni dirección, ni navegador, ni
+     * localización. Son datos personales que nadie necesita aquí y que
+     * habría que custodiar, justificar y acabar borrando.
+     *
+     * Nulo significa que todavía no ha entrado, que es distinto de que no
+     * entre desde hace mucho.
+     */
+    private ?\DateTimeImmutable $lastSignedInAt = null;
+
     private \DateTimeImmutable $updatedAt;
 
     private function __construct(
@@ -193,6 +205,27 @@ class User
         $this->authProvider = $provider;
         $this->externalId = $externalId;
         $this->updatedAt = $now;
+    }
+
+    /**
+     * Ha abierto sesión (`FEAT-USR-005` `RN-5`).
+     *
+     * Renovar cuenta como entrar: quien tiene la aplicación abierta la está
+     * usando, y para lo que esta fecha sirve —saber si una cuenta sigue
+     * viva— la distinción no existe.
+     *
+     * **No toca `updatedAt`.** Entrar no modifica la cuenta, y contarlo como
+     * modificación haría que cualquier consulta por «cambiadas desde» se
+     * llenara de gente que solo pasaba por aquí.
+     */
+    public function recordSignIn(\DateTimeImmutable $now): void
+    {
+        $this->lastSignedInAt = $now;
+    }
+
+    public function lastSignedInAt(): ?\DateTimeImmutable
+    {
+        return $this->lastSignedInAt;
     }
 
     public function id(): UserId

@@ -6,6 +6,7 @@ namespace LectoresBeta\User\Authentication\Application\Service;
 
 use LectoresBeta\Shared\Application\Security\SecureTokenFactory;
 use LectoresBeta\Shared\Domain\Clock\Clock;
+use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Authentication\Application\DTO\Session;
 use LectoresBeta\User\Authentication\Application\Port\AccessTokenIssuer;
@@ -14,7 +15,8 @@ use LectoresBeta\User\Authentication\Domain\Repository\RefreshTokenRepository;
 use LectoresBeta\User\Authentication\Domain\ValueObject\RefreshTokenId;
 
 /**
- * Issuing a session: the access token plus a fresh refresh token.
+ * Issuing a session: the access token plus a fresh refresh token, and the
+ * note that this account has been used (`FEAT-USR-005` `RN-5`).
  *
  * Shared by logging in and by renewing, so that a renewed session is built
  * exactly like a new one. Two code paths would drift, and the one that drifts
@@ -29,6 +31,7 @@ final readonly class OpenSession
 
     public function __construct(
         private RefreshTokenRepository $refreshTokens,
+        private UserRepository $users,
         private AccessTokenIssuer $accessTokens,
         private SecureTokenFactory $secureTokens,
         private Clock $clock,
@@ -48,6 +51,12 @@ final readonly class OpenSession
             $now->add(new \DateInterval(self::LIFETIME)),
             $userAgent,
         ));
+
+        // Queda constancia de que esa cuenta se ha usado (`FEAT-USR-005`
+        // `RN-5`). Aquí y no en cada caso de uso: por esto pasan la entrada
+        // con contraseña, la de Google y la renovación, así que ponerlo en
+        // los tres sería garantizar que al cuarto se le olvida.
+        $this->users->ofId($userId)?->recordSignIn($now);
 
         return new Session(
             $this->accessTokens->issueFor($userId),

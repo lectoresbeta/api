@@ -1321,7 +1321,7 @@ OnBehalfClaim:
 
 AdminAccount:
   type: object
-  required: [userId, username, name, email, status, registeredAt, activatedAt, restrictedUntil]
+  required: [userId, username, name, email, status, registeredAt, activatedAt, lastSignedInAt, restrictedUntil]
   description: |
     **Lleva el correo**, y es lo único de esta forma que hay que justificar:
     ninguna otra respuesta de la API lo reparte. Se abre aquí porque quien
@@ -1348,6 +1348,14 @@ AdminAccount:
     activatedAt:
       type: [string, 'null']
       format: date-time
+    lastSignedInAt:
+      type: [string, 'null']
+      format: date-time
+      description: |
+        Último acceso (`FEAT-USR-005`). **Una fecha y nada más**: ni
+        dirección, ni navegador, ni localización. Nulo significa que esa
+        cuenta todavía no ha entrado, que es distinto de que lleve mucho sin
+        hacerlo.
     restrictedUntil:
       type: [string, 'null']
       format: date-time

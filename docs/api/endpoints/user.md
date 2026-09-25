@@ -433,6 +433,18 @@ Lo que se guarda en la fila es el identificador externo y el correo.
 créditos de bienvenida. Los mismos que el alta con correo: para el resto de la plataforma una
 cuenta es una cuenta, venga por donde venga.
 
+### Entrar deja constancia
+
+Abrir sesión —con contraseña, con Google o renovando— anota la fecha del acceso en la cuenta
+([`FEAT-USR-005`](../../features/user/FEAT-USR-005-sign-in-with-google.md) `RN-5`).
+
+**Una fecha y nada más**: ni dirección, ni navegador, ni localización. Son datos personales
+que esto no necesita y que habría que custodiar, justificar y acabar borrando.
+
+Hoy solo la lee el backoffice (`lastSignedInAt` en `GET /api/v1/admin/users/{userId}`).
+Enseñársela a su dueño sigue pendiente (`G-4`), y es lo primero que se mira ante la sospecha
+de que han entrado en una cuenta.
+
 
 ---
 

@@ -73,7 +73,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-002 | Registro con cuenta de Google | Guest | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-002-register-with-google.md) |
 | FEAT-USR-003 | Registro con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-004 | Login con email y contraseña, y ciclo de vida de la sesión | Guest | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-004-login-with-email.md) |
-| FEAT-USR-005 | Login con cuenta de Google | Guest | PENDING | TODO | P0 | — |
+| FEAT-USR-005 | Login con cuenta de Google | Guest | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-005-sign-in-with-google.md) |
 | FEAT-USR-006 | Login con cuenta de Facebook | Guest | PENDING | DEFERRED | P3 | — |
 | FEAT-USR-007 | Recuperar la contraseña | Guest | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-007-recover-password.md) |
 | FEAT-USR-008 | Editar el perfil — nombre, usuario, biografía, géneros y foto | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-008-edit-profile.md) |

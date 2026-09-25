@@ -58,6 +58,7 @@ final readonly class ShowAdministrableAccounts implements AdministrableAccounts
             $user->status()->value,
             $user->registeredAt()->format(\DATE_ATOM),
             $user->activatedAt()?->format(\DATE_ATOM),
+            $user->lastSignedInAt()?->format(\DATE_ATOM),
             $user->restrictedUntil()?->format(\DATE_ATOM),
         );
     }

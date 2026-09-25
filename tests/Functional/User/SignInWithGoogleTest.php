@@ -283,6 +283,70 @@ final class SignInWithGoogleTest extends EconomyScenario
      * —primero sin afirmar que el correo está verificado, después
      * afirmándolo— que es exactamente lo que hay que comprobar.
      */
+    /**
+     * `FEAT-USR-005` `RN-5`: **entrar deja constancia**, y renovar la sesión
+     * cuenta como entrar.
+     *
+     * No lo pedía ningún diseño. Hace falta para tres cosas que hoy no se
+     * pueden responder: si una cuenta sigue viva antes de decidir nada sobre
+     * ella, si alguien está realmente dormido —hoy se deduce del historial de
+     * créditos, que se equivoca con quien lee y no corrige— y qué contestarle
+     * a quien sospecha que han entrado en su cuenta.
+     */
+    public function testSigningInLeavesATraceAndSoDoesRenewing(): void
+    {
+        $this->providerSays('google-trace', 'huella@ejemplo.com');
+        $this->comeBack(['code' => 'ok', 'acceptedLegalVersions' => self::VERSIONS]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $primera = $this->userOf('huella@ejemplo.com')->lastSignedInAt();
+        self::assertNotNull($primera, 'Crear la cuenta abre sesión, y eso es entrar.');
+
+        $refresh = (string) $this->payload()['refreshToken'];
+
+        $this->client->request('POST', '/api/v1/auth/refresh', server: [
+            'CONTENT_TYPE' => 'application/json',
+        ], content: json_encode(['refreshToken' => $refresh], \JSON_THROW_ON_ERROR));
+        self::assertResponseIsSuccessful();
+
+        self::assertGreaterThanOrEqual(
+            $primera,
+            $this->userOf('huella@ejemplo.com')->lastSignedInAt(),
+            'Quien tiene la aplicación abierta la está usando.',
+        );
+    }
+
+    /**
+     * `FEAT-USR-005` `RN-6`: **una fecha y nada más**.
+     *
+     * Ni dirección, ni navegador, ni localización. Son datos personales que
+     * esto no necesita y que habría que custodiar, justificar y acabar
+     * borrando.
+     */
+    public function testTheTraceIsADateAndNothingElse(): void
+    {
+        $this->providerSays('google-solo-fecha', 'solofecha@ejemplo.com');
+        $this->comeBack(['code' => 'ok', 'acceptedLegalVersions' => self::VERSIONS]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $moderador = $this->administrator('backoffice');
+        $userId = $this->userOf('solofecha@ejemplo.com')->id()->value();
+
+        $this->client->request('GET', \sprintf('/api/v1/admin/users/%s', $userId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$moderador['token'],
+        ]);
+        self::assertResponseIsSuccessful();
+
+        $cuenta = $this->payload()['account'];
+
+        self::assertNotNull($cuenta['lastSignedInAt'], 'El backoffice lo enseña.');
+        self::assertSame(
+            [],
+            array_intersect(['ipAddress', 'userAgent', 'location'], array_keys($cuenta)),
+            'Y no enseña nada más sobre el acceso, porque no se guarda nada más.',
+        );
+    }
+
     private function providerSays(string $externalId, ?string $email, bool $verified = true): void
     {
         $this->provider ??= new FakeOAuthProvider();

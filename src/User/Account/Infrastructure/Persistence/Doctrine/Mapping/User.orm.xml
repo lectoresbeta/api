@@ -72,6 +72,7 @@
 
         <field name="registeredAt" column="registered_at" type="datetime_immutable"/>
         <field name="activatedAt" column="activated_at" type="datetime_immutable" nullable="true"/>
+        <field name="lastSignedInAt" column="last_signed_in_at" type="datetime_immutable" nullable="true"/>
         <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
 
     </entity>
