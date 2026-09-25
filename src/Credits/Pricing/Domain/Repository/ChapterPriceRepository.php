@@ -27,4 +27,14 @@ interface ChapterPriceRepository
      * @return list<ChapterPrice>
      */
     public function ofAuthor(UserId $authorId): array;
+
+    /**
+     * Cuántos capítulos admiten corrección ahora mismo (`FEAT-CRD-012`).
+     *
+     * Es la mitad de «capítulos corregibles por corrector activo». La otra
+     * mitad —cuántos correctores están activos— la sabe `Feedback`, y este
+     * contexto no la pregunta: publicaría una cifra compuesta de dos
+     * contextos en un panel que es de uno.
+     */
+    public function countCorrectable(): int;
 }

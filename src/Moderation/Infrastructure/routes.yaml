@@ -68,3 +68,59 @@ reviewClaim:
     path: /api/v1/admin/claims/{claimId}/review
     controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\ReviewClaimController::__invoke
     methods: [POST]
+
+# El registro de auditoría (`FEAT-MOD-007`). **Solo `ADMIN`**: un moderador no
+# audita a sus compañeros. Se escribía desde el primer día y nadie podía
+# leerlo, que es la peor forma de tener un registro — invita a confiar en que
+# hay control sin que lo haya.
+listAuditLog:
+    path: /api/v1/admin/audit-log
+    controller: LectoresBeta\Moderation\AuditLog\Infrastructure\Controller\ListAuditLogController::__invoke
+    methods: [GET]
+
+# Levantar un bloqueo (`FEAT-MOD-003` `RN-7`). Hasta aquí un bloqueo era
+# definitivo **de hecho**: la regla decía que un moderador podía revocarlo y
+# no había por dónde pedirlo.
+liftModerationBlock:
+    path: /api/v1/admin/moderation-blocks/lift
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\LiftWorkBlockController::__invoke
+    methods: [POST]
+
+# El catálogo de sanciones (`FEAT-MOD-006`).
+#
+# `Moderation` registra la sanción y `User` la aplica: aquí no se toca la
+# cuenta de nadie. Si este contexto la marcara directamente habría dos dueños
+# del estado del usuario.
+imposeSanction:
+    path: /api/v1/admin/sanctions
+    controller: LectoresBeta\Moderation\Sanction\Infrastructure\Controller\ImposeSanctionController::__invoke
+    methods: [POST]
+
+# `POST` y no `DELETE`: levantar una sanción no la borra, la cierra — su
+# rastro se queda en el historial, y lleva motivo.
+liftSanction:
+    path: /api/v1/admin/sanctions/{sanctionId}/lift
+    controller: LectoresBeta\Moderation\Sanction\Infrastructure\Controller\LiftSanctionController::__invoke
+    methods: [POST]
+
+# La conversación con las partes (`FEAT-MOD-009`).
+#
+# Tiene forma de estrella, no de sala: cada parte tiene un hilo privado con
+# moderación y no sabe qué dice la otra, ni siquiera si hay otra. Poner a
+# denunciante y denunciado a discutir crearía el conflicto que la moderación
+# existe para evitar.
+writeToClaimParty:
+    path: /api/v1/admin/claims/{claimId}/messages
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\WriteToClaimPartyController::__invoke
+    methods: [POST]
+
+# La ruta de la parte **no elige hilo**: el suyo se deduce de quién pregunta.
+listMyClaimThread:
+    path: /api/v1/me/claims/{claimId}/messages
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\MyClaimThreadController::__invoke
+    methods: [GET]
+
+replyToModeration:
+    path: /api/v1/me/claims/{claimId}/messages
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\MyClaimThreadController::__invoke
+    methods: [POST]

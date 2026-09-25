@@ -74,3 +74,92 @@ listContentWarnings:
     path: /api/v1/content-warnings
     controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ListContentWarningsController::__invoke
     methods: [GET]
+
+# Editar (`FEAT-WRK-005`). Hasta aquí una obra se creaba y ya no se podía
+# tocar: ni una errata.
+updateWork:
+    path: /api/v1/works/{workId}
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\UpdateWorkController::__invoke
+    methods: [PATCH]
+
+# `PUT` porque se sustituye el texto entero. Si alguien había empezado a
+# corregir esta versión, el guardado archiva una copia antes de pisarla.
+updateChapter:
+    path: /api/v1/chapters/{chapterId}
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\UpdateChapterController::__invoke
+    methods: [PUT]
+
+# Estructurar la obra (`FEAT-WRK-003`). La lista entera en el orden deseado,
+# no «mueve este de la 3 a la 7»: la lista completa es idempotente.
+reorderChapters:
+    path: /api/v1/works/{workId}/chapters/order
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\ReorderChaptersController::__invoke
+    methods: [PUT]
+
+# Solo capítulos que nadie ha corregido: los demás se ocultan.
+removeChapter:
+    path: /api/v1/chapters/{chapterId}
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\RemoveChapterController::__invoke
+    methods: [DELETE]
+
+# La visibilidad es **del capítulo**; la obra tiene estado (`FEAT-WRK-008`).
+setChapterVisibility:
+    path: /api/v1/chapters/{chapterId}/visibility
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\SetChapterVisibilityController::__invoke
+    methods: [PUT]
+
+# Retirar una obra (`FEAT-WRK-006`). El botón dice «Eliminar» y lo que ocurre
+# es un archivado: de una obra cuelgan correcciones pagadas y reclamaciones
+# resueltas, y borrarla destruiría lo que no es de su autor.
+archiveWork:
+    path: /api/v1/works/{workId}
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ArchiveWorkController::__invoke
+    methods: [DELETE]
+
+# Vuelve a borrador, nunca publicada: reabrir la puerta es otra decisión.
+restoreWork:
+    path: /api/v1/works/{workId}/restore
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\RestoreWorkController::__invoke
+    methods: [POST]
+
+# «Mis relatos» (`FEAT-WRK-015`). El único listado con los borradores dentro,
+# y el único con la insignia de estado: es gestión, no escaparate.
+listMyWorks:
+    path: /api/v1/me/works
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ListMyWorksController::__invoke
+    methods: [GET]
+
+# El enlace público (`FEAT-WRK-010`). El autor cambia privacidad por feedback,
+# y por eso los controles para deshacerlo son suyos: crear, ver y revocar.
+createPublicLink:
+    path: /api/v1/works/{workId}/public-links
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\CreatePublicLinkController::__invoke
+    methods: [POST]
+
+listPublicLinks:
+    path: /api/v1/works/{workId}/public-links
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\ListPublicLinksController::__invoke
+    methods: [GET]
+
+# `DELETE` sobre el enlace y no sobre la obra: lo que se revoca es una puerta
+# concreta, y repartir uno por grupo es lo que permite cerrar solo el que se
+# fue de las manos.
+revokePublicLink:
+    path: /api/v1/public-links/{publicLinkId}
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\RevokePublicLinkController::__invoke
+    methods: [DELETE]
+
+# Y las dos lecturas sin sesión. Son las únicas de una obra que no la exigen,
+# y van en `access_control` con `PUBLIC_ACCESS` y no en un cortafuegos sin
+# seguridad: hace falta **leer** la sesión aunque no se exija, porque a quien
+# ya tiene cuenta se le manda al flujo normal, donde cobra (`FEAT-FBK-008`
+# `RN-1`).
+getPublicCorrectionPage:
+    path: /api/v1/public/{token}
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\GetPublicCorrectionPageController::__invoke
+    methods: [GET]
+
+getPublicChapter:
+    path: /api/v1/public/{token}/chapters/{chapterId}
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\GetPublicChapterController::__invoke
+    methods: [GET]

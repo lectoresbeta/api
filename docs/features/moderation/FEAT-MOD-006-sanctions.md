@@ -5,14 +5,14 @@ context: Moderation
 concept: Sanction
 actors: [Moderator]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P2
 sources:
   - conversation:2026-09-23 (catálogo de sanciones)
-endpoints: []
+endpoints: [POST /admin/sanctions, POST /admin/sanctions/{sanctionId}/lift]
 events: [SanctionImposed, SanctionLifted]
 depends_on: [FEAT-MOD-002]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-MOD-006 — Catálogo de sanciones
@@ -147,16 +147,16 @@ directamente habría dos dueños del estado del usuario.
 
 ## Criterios de aceptación
 
-- [ ] Existen las cuatro familias y ninguna más.
-- [ ] Las de plazo fijo caducan sin intervención.
-- [ ] La suspensión total no caduca sola y aparece como asunto vivo en el backoffice.
-- [ ] La expulsión deja la cuenta en `BLOCKED` y **no** la anonimiza.
-- [ ] Una cuenta en `BLOCKED` no autentica y su correo no se puede reutilizar.
-- [ ] La suspensión parcial permite entrar y leer, e impide publicar, comentar y corregir.
-- [ ] Toda sanción se comunica al usuario con motivo y duración.
-- [ ] Las sanciones caducadas siguen en el historial.
-- [ ] Ninguna sanción mueve créditos.
-- [ ] Una sanción no salda ni condona la deuda del usuario.
+- [x] Existen las cuatro familias y ninguna más.
+- [x] Las de plazo fijo caducan sin intervención.
+- [ ] La suspensión total no caduca sola —**cierto**— y aparece como asunto vivo en el backoffice. **La segunda mitad falta**: no hay cola de asuntos vivos (`MOD-25`).
+- [x] La expulsión deja la cuenta en `BLOCKED` y **no** la anonimiza.
+- [x] Una cuenta en `BLOCKED` no autentica. El correo **no se libera**, que es lo que lo impide.
+- [x] La suspensión parcial permite entrar y leer, e impide publicar, comentar y corregir.
+- [ ] Toda sanción se comunica al usuario con motivo y duración. **El hecho ya los lleva**; quien avisa es `Notification`, que no lo escucha todavía.
+- [x] Las sanciones caducadas siguen en el historial.
+- [x] Ninguna sanción mueve créditos.
+- [x] Una sanción no salda ni condona la deuda del usuario: no toca `Credits` en absoluto.
 
 ## Preguntas abiertas
 
@@ -175,4 +175,28 @@ Resueltas: `MOD-27` (**solo lectura**), `MOD-26` (la expulsión **bloquea, no an
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). Las cuatro familias, imponerlas, levantarlas y el
+rastro en auditoría. La frontera que la ficha pedía está donde debe: **`Moderation` registra la
+sanción y `User` la aplica**, por hecho de integración. Si este contexto marcara la cuenta
+directamente habría dos dueños del estado del usuario.
+
+Dos decisiones de modelo que la implementación obligó a tomar:
+
+- **la suspensión parcial es una fecha, no un estado de cuenta.** Caduca sola (`RN-2`), y un
+  estado que hay que acordarse de apagar es un estado que alguien olvidará. Las otras dos sí
+  son estados —`SUSPENDED` y `BLOCKED`— precisamente porque **no** caducan;
+- **levantar una sanción no es idempotente**, al revés que casi todo lo demás en esta API.
+  Levantar lo ya levantado responde `409`: es un acto administrativo que se registra y se
+  comunica, y hacerlo dos veces dejaría en el historial algo que no ocurrió.
+
+**Faltan** tres cosas, y conviene verlas separadas:
+
+- **el aviso al usuario** (`RN-4`). El hecho ya lleva tipo, motivo y hasta cuándo; quien se lo
+  cuenta es `Notification`, que todavía no lo escucha. Es la pieza que hace que una sanción
+  corrija en vez de solo castigar;
+- **la congelación de la deuda** durante la suspensión parcial (`RN-9`, `MOD-43`). Es una
+  decisión de `Credits`, no de aquí, y necesita que ese contexto escuche `SanctionImposed`.
+  Sin ella, quien tenga saldo negativo y una suspensión parcial queda atrapado: corregir es la
+  única forma de saldar la deuda y la sanción se lo impide;
+- **la cola de asuntos vivos** del backoffice (`MOD-25`), que es lo que evita que una
+  suspensión indefinida se convierta en una expulsión que nadie decidió.

@@ -7,9 +7,12 @@
     <entity name="LectoresBeta\Feedback\Correction\Domain\Entity\CorrectionReply"
             table="correction_reply" schema="feedback_ctx">
 
-        <indexes>
-            <index name="idx_correction_reply_correction" columns="correction_id,created_at"/>
-        </indexes>
+        <unique-constraints>
+            <!-- Una respuesta por corrección (`FEAT-FBK-005` `RN-2`). Volver a
+                 enviarla sustituye la que había; bajo concurrencia, el índice
+                 es la única garantía real de que no queden dos. -->
+            <unique-constraint name="uniq_correction_reply" columns="correction_id"/>
+        </unique-constraints>
 
         <id name="id" type="guid" column="id">
             <generator strategy="NONE"/>

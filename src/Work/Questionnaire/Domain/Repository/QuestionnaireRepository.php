@@ -29,6 +29,15 @@ interface QuestionnaireRepository
     public function currentOf(WorkId $workId): ?Questionnaire;
 
     /**
+     * Una versión concreta, que puede ya no ser la vigente.
+     *
+     * Existe para `FEAT-FBK-004`: quien lee una corrección entregada hace un
+     * mes necesita **los enunciados de entonces**, no los de ahora. Sin esto,
+     * las versiones antiguas se conservan y no sirven para nada.
+     */
+    public function ofVersion(WorkId $workId, int $version): ?Questionnaire;
+
+    /**
      * @return list<Question>
      */
     public function questionsOf(QuestionnaireId $questionnaireId): array;

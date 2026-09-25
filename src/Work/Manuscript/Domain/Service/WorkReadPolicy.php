@@ -21,7 +21,7 @@ use LectoresBeta\Work\Manuscript\Domain\ValueObject\AuthorId;
  *
  * 1. **the author always reads their own work**, in any state;
  * 2. a draft **does not exist** for anybody else;
- * 3. a blocked work disappears for everybody but its author;
+ * 3. a blocked **or archived** work disappears for everybody but its author;
  * 4. `ADULTS_ONLY` needs somebody of age, and «has not said» counts as «no»;
  * 5. a beta reader reads what they were given access to, whatever the mode.
  *
@@ -39,7 +39,7 @@ final class WorkReadPolicy
             return true;
         }
 
-        if (!$work->status()->isReadableByOthers() || $work->isBlocked()) {
+        if (!$work->status()->isReadableByOthers() || $work->isBlocked() || $work->isArchived()) {
             return false;
         }
 

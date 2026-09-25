@@ -21,4 +21,14 @@ interface WorkGenreRepository
      * @return list<string>
      */
     public function codesOf(WorkId $workId): array;
+
+    /**
+     * Las temáticas de varias obras de una vez, para pintar una página sin
+     * una consulta por tarjeta.
+     *
+     * @param list<WorkId> $workIds
+     *
+     * @return array<string, list<string>> indexado por identificador de obra
+     */
+    public function codesOfWorks(array $workIds): array;
 }

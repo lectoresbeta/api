@@ -5,7 +5,7 @@ context: Work
 concept: Catalog
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-22 (pestaña «Mis relatos»)
@@ -103,16 +103,16 @@ Parámetros: `status` para el filtro y `sort` para el orden, además de la pagin
 
 ## Criterios de aceptación
 
-- [ ] Devuelve solo las obras del usuario autenticado.
-- [ ] **Nunca devuelve obras de otro autor, ni siquiera sus borradores.**
-- [ ] El filtro «En borrador» devuelve las obras en `DRAFT`.
-- [ ] Los tres filtros de estado suman el total de «Todas».
-- [ ] «Más recientes» y «Más antiguos» ordenan por fecha en sentidos opuestos.
+- [x] Devuelve solo las obras del usuario autenticado.
+- [x] **Nunca devuelve obras de otro autor, ni siquiera sus borradores.**
+- [x] El filtro «En borrador» devuelve las obras en `DRAFT`.
+- [x] Los tres filtros de estado suman el total de «Todas».
+- [x] «Más recientes» y «Más antiguos» ordenan por fecha en sentidos opuestos.
 - [ ] «Más leídos» ordena por número de lecturas.
-- [ ] No se devuelve el contenido de ninguna obra.
-- [ ] El listado se pagina.
-- [ ] Un criterio de orden no admitido devuelve `422`.
-- [ ] Funciona con la cuenta sin activar.
+- [x] No se devuelve el contenido de ninguna obra.
+- [x] El listado se pagina.
+- [x] Un criterio de orden no admitido devuelve `422`.
+- [x] Funciona con la cuenta sin activar.
 
 ## Preguntas abiertas
 
@@ -129,4 +129,21 @@ Parámetros: `status` para el filtro y `sort` para el orden, además de la pagin
 **Especificación:** `APPROVED` (2026-09-24). Depende de `FEAT-WRK-016`, ya aprobada. Lo que queda
 —qué métrica usa «más valorados», qué cuenta como lectura— no impide listar las obras propias.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). El listado, los tres filtros de estado, la
+paginación y los dos órdenes por fecha. Una obra **archivada** aparece marcada, que no estaba
+en la ficha y hacía falta: si no apareciera, «recuperar» sería una operación sin pantalla
+desde la que pedirla.
+
+**Faltan los dos órdenes que dependen de agregados que no existen**: «más valorados» (`W-12`,
+sin decidir si mide `WorkRating` o los «me gusta») y «más leídos» (`H-3`, sin definir qué
+cuenta como lectura). Hoy los dos responden `422` como cualquier otro valor desconocido, que
+es preferible a devolver la lista en un orden cualquiera y dejar que alguien se fíe.
+
+**Falta también la nota «alguien está corrigiendo este texto ahora…»**: vive en `Feedback` y
+`Work` no puede preguntárselo sin un contrato nuevo. Es una nota silenciosa de la tarjeta, no
+una regla, y entra cuando se decida si merece su propio contrato de consulta.
+
+Un detalle que encontró la prueba: **el desempate del orden va en la misma dirección que el
+criterio**. Dos obras creadas en el mismo segundo son lo normal al escribir, y un desempate
+fijo hacía que «más antiguos» devolviera la más nueva primero — un orden que se contradice a
+sí mismo.

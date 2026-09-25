@@ -45,6 +45,8 @@ final readonly class AddChapterController
             $user->getUserIdentifier(),
             (string) $body->string('content'),
             $body->string('title'),
+            // Sin `position`, al final: es lo que hace quien escribe en orden.
+            $body->int('position'),
         ));
 
         return new JsonResponse(['chapterId' => $chapterId], Response::HTTP_CREATED);

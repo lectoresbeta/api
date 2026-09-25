@@ -45,5 +45,25 @@ interface WorkRepository
      */
     public function countByAuthor(AuthorId $authorId): int;
 
+    /**
+     * Una página de «Mis relatos» (`FEAT-WRK-015`), con los borradores
+     * dentro: es el único listado donde aparecen.
+     *
+     * @return list<Work>
+     */
+    public function pageOfAuthor(
+        AuthorId $authorId,
+        ?WorkStatus $status,
+        bool $oldestFirst,
+        int $limit,
+        int $offset,
+    ): array;
+
+    /**
+     * Cuántas tiene con ese estado, para la paginación y para que los tres
+     * filtros sumen el total.
+     */
+    public function countOfAuthor(AuthorId $authorId, ?WorkStatus $status): int;
+
     public function remove(Work $work): void;
 }

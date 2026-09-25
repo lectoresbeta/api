@@ -30,10 +30,12 @@ seguimiento de autores, los mensajes directos y los rankings.
 | Concepto | Responsabilidad |
 |---|---|
 | `Post` | Publicaciones del muro, su intención y su formato |
-| `Interaction` | Comentarios y respuestas, apoyos, reacciones, reposts, compartidos y menciones |
+| `Interaction` | Comentarios y respuestas, apoyos, reacciones, reposts y compartidos |
+| `Mention` | A quién se nombra, en una publicación o en un comentario. Concepto propio desde que se puede mencionar en los dos sitios: dentro de uno, el otro dependería de él |
 | `Subscription` | Seguimiento de autores, sus sugerencias y los listados de seguidos y seguidores |
 | `Relationship` | Silenciados y bloqueados |
-| `Recommendation` | Read models que alimentan la Home: obras recomendadas y autores sugeridos |
+| `Recommendation` | Read models que alimentan la Home y el onboarding: obras recomendadas y autores sugeridos |
+| `EventProcessing` | El registro de hechos ya aplicados. Hace falta porque las proyecciones **acumulan**, y RabbitMQ no garantiza entrega única |
 | `Messaging` | Mensajes directos y conversaciones |
 | `Ranking` | Read models de escritores, obras y lectores |
 
@@ -74,6 +76,9 @@ periodo.
 | Evento | Cuándo | Consumidores |
 |---|---|---|
 | `PostPublished` | Se publica en el muro | `Notification` (suscriptores del autor) |
+| `PostCommented` | Se comenta o se responde | `Notification`. Lleva **a quién avisar**, no el texto |
+| `UserMentioned` | Se nombra a alguien | `Notification`. **No se publica** si el mencionado no puede ver dónde se le menciona |
+| `PostReposted` | Se vuelve a sacar una publicación | `Notification` (el autor original) |
 | `AuthorSubscribed` | Un usuario sigue a un autor | **`User`** (proyección de audiencias `FOLLOWERS`), `Notification` |
 | `AuthorUnsubscribed` | Un usuario deja de seguir a un autor | **`User`**. Nadie lo notifica: dejar de seguir es asunto de quien lo hace |
 | `UserBlocked` | Un usuario bloquea a otro | **`User`**, **`Reading`**, y `Feedback`, `Credits` y `Notification` cuando existan |

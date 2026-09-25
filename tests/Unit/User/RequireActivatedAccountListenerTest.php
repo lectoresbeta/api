@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Tests\Unit\User;
 
+use LectoresBeta\Tests\Unit\Shared\FrozenClock;
 use LectoresBeta\User\Account\Domain\Entity\User;
 use LectoresBeta\User\Account\Domain\Exception\AccountNotActivated;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
@@ -116,6 +117,7 @@ final class RequireActivatedAccountListenerTest extends TestCase
         $listener = new RequireActivatedAccountListener(
             new Security(new ServiceLocator(['security.token_storage' => static fn (): TokenStorage => $tokens])),
             new InMemoryUsers($user),
+            new FrozenClock(new \DateTimeImmutable('2026-09-25 10:00:00')),
         );
 
         $request = Request::create('/api/v1/whatever', $method);

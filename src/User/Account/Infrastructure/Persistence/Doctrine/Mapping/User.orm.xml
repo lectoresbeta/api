@@ -51,6 +51,10 @@
         <field name="name" type="string" length="80" nullable="true"/>
         <field name="description" type="text" nullable="true"/>
         <field name="birthDate" column="birth_date" type="date_immutable" nullable="true"/>
+        <!-- La suspensión parcial (`FEAT-MOD-006`). Fecha y no estado: caduca
+             sola, y un estado que hay que acordarse de apagar es un estado
+             que alguien olvidará. -->
+        <field name="restrictedUntil" column="restricted_until" type="datetime_immutable" nullable="true"/>
 
         <field name="avatarUrl" column="avatar_url" type="string" length="512" nullable="true"/>
         <field name="avatarOriginalUrl" column="avatar_original_url" type="string" length="512" nullable="true"/>

@@ -26,6 +26,8 @@ tags:
     description: Cuenta, preferencias y página de autor
   - name: Works
     description: Obras, fragmentos, cuestionario y enlaces
+  - name: PublicLink
+    description: Lo que se lee y se corrige sin cuenta, por un enlace repartido fuera
   - name: Reading
     description: Accesos de lector beta, grupos y writing buddies
   - name: Feedback
@@ -99,6 +101,12 @@ paths:
   /me/onboarding/genres:
     $ref: './paths/onboarding.yaml#/genres'
 
+  /me/onboarding/complete:
+    $ref: './paths/onboarding.yaml#/complete'
+
+  /onboarding/author-suggestions:
+    $ref: './paths/onboarding.yaml#/authorSuggestions'
+
   /genres:
     $ref: './paths/onboarding.yaml#/catalogue'
 
@@ -132,6 +140,9 @@ paths:
   /media/{key}:
     $ref: './paths/health.yaml#/media'
 
+  /me/content-preferences:
+    $ref: './paths/settings.yaml#/contentPreferences'
+
   /me/privacy-settings:
     $ref: './paths/settings.yaml#/privacySettings'
 
@@ -156,14 +167,50 @@ paths:
   /me/blocked-users:
     $ref: './paths/community.yaml#/blockedUsers'
 
+  /home/author-suggestions:
+    $ref: './paths/community.yaml#/homeAuthorSuggestions'
+
+  /posts:
+    $ref: './paths/community.yaml#/posts'
+
+  /posts/{postId}:
+    $ref: './paths/community.yaml#/post'
+
+  /posts/{postId}/image:
+    $ref: './paths/community.yaml#/postImage'
+
+  /posts/{postId}/comments:
+    $ref: './paths/community.yaml#/postComments'
+
+  /posts/{postId}/repost:
+    $ref: './paths/community.yaml#/repost'
+
+  /comments/{commentId}:
+    $ref: './paths/community.yaml#/comment'
+
+  /comments/{commentId}/replies:
+    $ref: './paths/community.yaml#/commentReplies'
+
   /works:
     $ref: './paths/works.yaml#/collection'
+
+  /me/works:
+    $ref: './paths/works.yaml#/myWorks'
 
   /works/{workId}:
     $ref: './paths/works.yaml#/work'
 
   /chapters/{chapterId}:
     $ref: './paths/works.yaml#/chapter'
+
+  /works/{workId}/restore:
+    $ref: './paths/works.yaml#/workRestore'
+
+  /works/{workId}/chapters/order:
+    $ref: './paths/works.yaml#/chapterOrder'
+
+  /chapters/{chapterId}/visibility:
+    $ref: './paths/works.yaml#/chapterVisibility'
 
   /works/{workId}/chapters:
     $ref: './paths/works.yaml#/chapters'
@@ -219,11 +266,46 @@ paths:
   /works/{workId}/questionnaire:
     $ref: './paths/works.yaml#/questionnaire'
 
+  /works/{workId}/public-links:
+    $ref: './paths/works.yaml#/publicLinks'
+
+  /public-links/{publicLinkId}:
+    $ref: './paths/works.yaml#/publicLink'
+
+  # Lo que se sirve por el enlace: los tres únicos endpoints de una obra que
+  # no exigen sesión (FEAT-WRK-010, FEAT-FBK-008).
+  /public/{token}:
+    $ref: './paths/public-link.yaml#/page'
+
+  /public/{token}/chapters/{chapterId}:
+    $ref: './paths/public-link.yaml#/chapter'
+
+  /public/{token}/chapters/{chapterId}/corrections:
+    $ref: './paths/public-link.yaml#/corrections'
+
   /chapters/{chapterId}/questionnaire:
     $ref: './paths/corrections.yaml#/questionnaire'
 
   /chapters/{chapterId}/corrections:
     $ref: './paths/corrections.yaml#/collection'
+
+  /me/corrections:
+    $ref: './paths/corrections.yaml#/mine'
+
+  /me/corrections/received:
+    $ref: './paths/corrections.yaml#/received'
+
+  /corrections/{correctionId}:
+    $ref: './paths/corrections.yaml#/item'
+
+  /corrections/{correctionId}/reply:
+    $ref: './paths/corrections.yaml#/reply'
+
+  /corrections/{correctionId}/rating:
+    $ref: './paths/corrections.yaml#/rating'
+
+  /corrections/{correctionId}/chapter-text:
+    $ref: './paths/corrections.yaml#/chapterText'
 
   /chapters/{chapterId}/corrections/start:
     $ref: './paths/corrections.yaml#/start'
@@ -255,6 +337,24 @@ paths:
   /admin/claims/{claimId}/review:
     $ref: './paths/moderation.yaml#/claimReview'
 
+  /admin/audit-log:
+    $ref: './paths/moderation.yaml#/auditLog'
+
+  /admin/claims/{claimId}/messages:
+    $ref: './paths/moderation.yaml#/claimMessages'
+
+  /me/claims/{claimId}/messages:
+    $ref: './paths/moderation.yaml#/myClaimThread'
+
+  /admin/sanctions:
+    $ref: './paths/moderation.yaml#/sanctions'
+
+  /admin/sanctions/{sanctionId}/lift:
+    $ref: './paths/moderation.yaml#/sanctionLift'
+
+  /admin/moderation-blocks/lift:
+    $ref: './paths/moderation.yaml#/blockLift'
+
   /admin/moderators:
     $ref: './paths/moderation.yaml#/moderators'
 
@@ -263,6 +363,15 @@ paths:
 
   /me/moderator-alerts:
     $ref: './paths/moderation.yaml#/moderatorAlerts'
+
+  /credits/movements:
+    $ref: './paths/credits.yaml#/movements'
+
+  /admin/credits/health:
+    $ref: './paths/credits.yaml#/health'
+
+  /corrections/{correctionId}/tip:
+    $ref: './paths/credits.yaml#/tip'
 
   /credits/balance:
     $ref: './paths/credits.yaml#/balance'

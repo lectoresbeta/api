@@ -71,19 +71,39 @@ final readonly class AddChapterHandler
         }
 
         $now = $this->clock->now();
-        $storedChapters = $this->chapters->countOfWork($work->id());
+        $siblings = $this->chapters->ofWork($work->id());
+        $storedChapters = \count($siblings);
         $storedWords = $this->chapters->wordCountOfWork($work->id());
+
+        // Intercalar, no solo añadir al final (`FEAT-WRK-003` `RN-3`). Las
+        // posiciones son consecutivas desde 1 y se recalculan enteras: una
+        // lista de capítulos con un hueco es una lista rota.
+        $at = min(max($command->position ?? $storedChapters + 1, 1), $storedChapters + 1);
+        $displaced = [];
+
+        foreach ($siblings as $sibling) {
+            if ($sibling->position() >= $at) {
+                $sibling->moveTo($sibling->position() + 1, $now);
+                $displaced[] = $sibling;
+            }
+        }
 
         $chapter = new Chapter(
             ChapterId::generate(),
             $work->id(),
-            $storedChapters + 1,
+            $at,
             $now,
             $command->title,
         );
         $chapter->replaceContent($content, $this->words, $now);
 
-        $this->session->execute(function () use ($work, $chapter, $storedChapters, $storedWords, $now): void {
+        $this->session->execute(function () use ($work, $chapter, $displaced, $storedChapters, $storedWords, $now): void {
+            // Los desplazados desde el final hacia atrás, para que las
+            // posiciones no se pisen entre sí en ningún momento intermedio.
+            foreach (array_reverse($displaced) as $sibling) {
+                $this->chapters->save($sibling);
+            }
+
             $this->chapters->save($chapter);
 
             $work->recountContent(

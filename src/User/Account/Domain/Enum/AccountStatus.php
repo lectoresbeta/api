@@ -8,14 +8,25 @@ namespace LectoresBeta\User\Account\Domain\Enum;
  * The life of an account.
  *
  * `PENDING_ACTIVATION → ACTIVE → DELETED` is the ordinary path.
- * `BLOCKED` is not part of it: it is imposed from outside, when `Moderation`
- * publishes an expulsion (`FEAT-MOD-006`). A blocked account keeps its data —
- * it is not anonymised — and can read but not write (`MOD-26`, `MOD-27`).
+ *
+ * Two states are **not** part of it and llegan desde fuera, cuando
+ * `Moderation` publica una sanción (`FEAT-MOD-006`):
+ *
+ * - `SUSPENDED` es la suspensión total. **Es indefinida por diseño**: no
+ *   caduca sola, alguien tiene que levantarla;
+ * - `BLOCKED` es la expulsión. La cuenta **conserva sus datos** —no se
+ *   anonimiza (`MOD-26`)— precisamente porque no se puede a la vez borrar a
+ *   alguien y recordarlo para impedirle volver.
+ *
+ * Las dos impiden entrar. La **suspensión parcial** no es un estado de la
+ * cuenta: deja entrar y leer, y solo bloquea las escrituras, así que vive en
+ * una fecha aparte (`User::restrictedUntil`).
  */
 enum AccountStatus: string
 {
     case PENDING_ACTIVATION = 'PENDING_ACTIVATION';
     case ACTIVE = 'ACTIVE';
+    case SUSPENDED = 'SUSPENDED';
     case BLOCKED = 'BLOCKED';
     case DELETED = 'DELETED';
 
@@ -51,5 +62,18 @@ enum AccountStatus: string
     public function canAuthenticate(): bool
     {
         return self::PENDING_ACTIVATION === $this || self::ACTIVE === $this;
+    }
+
+    /**
+     * Si el correo de esta cuenta se puede volver a usar para registrarse.
+     *
+     * `BLOCKED` es el único que dice que no, y es lo que hace efectiva a la
+     * expulsión: si se anonimizara, la persona podría registrarse de nuevo al
+     * minuto siguiente y la sanción más grave del catálogo sería la más fácil
+     * de esquivar (`FEAT-MOD-006`).
+     */
+    public function releasesItsEmail(): bool
+    {
+        return self::BLOCKED !== $this;
     }
 }

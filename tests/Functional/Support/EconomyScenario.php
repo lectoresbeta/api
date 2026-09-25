@@ -7,6 +7,9 @@ namespace LectoresBeta\Tests\Functional\Support;
 use Doctrine\Persistence\ManagerRegistry;
 use LectoresBeta\Credits\Account\Domain\Repository\CreditAccountRepository;
 use LectoresBeta\Credits\Account\Domain\ValueObject\UserId as CreditsUserId;
+use LectoresBeta\Moderation\ModeratorRole\Application\Command\SetModeratorRole;
+use LectoresBeta\Moderation\ModeratorRole\Application\Handler\SetModeratorRoleHandler;
+use LectoresBeta\Moderation\ModeratorRole\Domain\Enum\ModeratorLevel;
 use LectoresBeta\Shared\Application\Security\SecureTokenFactory;
 use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
@@ -87,6 +90,54 @@ abstract class EconomyScenario extends WebTestCase
         // lo que se cobró; el bloqueo, a su vez, avisa al autor.
         'ClaimUpheld',
         'WorkBlockedByModeration',
+
+        // Y el aviso que se retira solo cuando el autor abre lo que recibió
+        // (`FEAT-FBK-004`).
+        'CorrectionRead',
+
+        // Y lo que el autor hace con lo que recibe (`FEAT-FBK-005`,
+        // `FEAT-FBK-006`), que es lo único que la plataforma le devuelve a
+        // quien corrigió.
+        'FeedbackReplied',
+        'FeedbackRatedPositively',
+
+        // Y el eco de lo que se pagó por cada corrección (`FEAT-FBK-010`).
+        'CreditsAdded',
+        'CreditsSpent',
+
+        // Y lo que mover o quitar un capítulo significa para el precio
+        // (`FEAT-WRK-003`).
+        'ChaptersReordered',
+        'ChapterRemoved',
+
+        // Y lo que retirar una obra significa para quien la estaba leyendo
+        // (`FEAT-WRK-006`).
+        'WorkArchived',
+
+        // Y el aviso a quien tenía trabajo a medias, con el bloqueo que un
+        // moderador levanta (`FEAT-MOD-003` `RN-4`, `RN-7`).
+        'CorrectionClosed',
+        'ModerationBlockLifted',
+
+        // Y lo que alimenta las sugerencias de autor (`FEAT-COM-016`):
+        // `Community` no consulta las tablas de `User` ni las de `Work`,
+        // mantiene su propia proyección a partir de estos hechos.
+        'LiteraryPreferencesUpdated',
+        'WorkPublished',
+        'OnboardingCompleted',
+
+        // Lo que `Moderation` decide y `User` aplica (`FEAT-MOD-006`).
+        'SanctionImposed',
+        'SanctionLifted',
+
+        // Y la propina (`FEAT-CRD-017`), que `Feedback` apunta en la
+        // corrección y `Community` cuenta como reputación del corrector.
+        'CorrectionTipped',
+
+        // Y lo que llega por un enlace público (`FEAT-FBK-008`). Solo lo
+        // escucha `Notification`: que `Credits` **no** lo consuma es la forma
+        // más clara de decir que está fuera de la economía.
+        'PublicCorrectionSubmitted',
     ];
 
     /**
@@ -417,6 +468,37 @@ abstract class EconomyScenario extends WebTestCase
      * Alguien que ha iniciado sesión pero **no ha activado la cuenta**, que
      * es lo que separa leer de escribir (`FEAT-USR-025`).
      */
+    /**
+     * Alguien con el rol de administrador, por el mismo camino que el comando
+     * de consola: saltando la regla de «nadie se toca su propio rol», porque
+     * la primera vez no hay ningún administrador que firme.
+     *
+     * @return array{token: string, userId: string}
+     */
+    protected function administrator(string $local): array
+    {
+        return $this->moderator($local, ModeratorLevel::ADMIN);
+    }
+
+    /**
+     * @return array{token: string, userId: string}
+     */
+    protected function moderator(string $local, ModeratorLevel $level = ModeratorLevel::MODERATOR): array
+    {
+        $person = $this->activatedPerson($local);
+
+        /** @var SetModeratorRoleHandler $setRole */
+        $setRole = self::getContainer()->get(SetModeratorRoleHandler::class);
+        $setRole(new SetModeratorRole(
+            SetModeratorRoleHandler::CONSOLE,
+            $person['userId'],
+            $level->value,
+            fromConsole: true,
+        ));
+
+        return $person;
+    }
+
     protected function signedInWithoutActivating(string $local): string
     {
         $email = $this->address($local);
@@ -468,7 +550,7 @@ abstract class EconomyScenario extends WebTestCase
      * créditos se mueven de verdad, y por tanto el único desde el que se
      * puede comprobar que una reversión los devuelve.
      *
-     * @return array{0: array{token: string, userId: string}, 1: array{token: string, userId: string}, 2: string, 3: string}
+     * @return array{0: array{token: string, userId: string}, 1: array{token: string, userId: string}, 2: string, 3: string, 4: string}
      */
     protected function aDeliveredCorrection(): array
     {
@@ -516,7 +598,7 @@ abstract class EconomyScenario extends WebTestCase
         $this->capture();
         $this->consumeEverything();
 
-        return [$autora, $lectora, $correctionId, $workId];
+        return [$autora, $lectora, $correctionId, $workId, $chapterId];
     }
 
     /**

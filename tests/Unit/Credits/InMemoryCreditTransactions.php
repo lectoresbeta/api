@@ -27,11 +27,31 @@ final class InMemoryCreditTransactions implements CreditTransactionRepository
         return $this->movements;
     }
 
-    public function historyOf(UserId $userId, int $limit = 50, int $offset = 0): array
-    {
+    public function historyOf(
+        UserId $userId,
+        int $limit = 50,
+        int $offset = 0,
+        ?CreditTransactionReason $reason = null,
+        ?\DateTimeImmutable $from = null,
+        ?\DateTimeImmutable $to = null,
+    ): array {
         return array_values(array_filter(
             $this->movements,
-            static fn (CreditTransaction $m): bool => $m->userId()->equals($userId),
+            static fn (CreditTransaction $m): bool => $m->userId()->equals($userId)
+                && (null === $reason || $m->reason() === $reason)
+                && (null === $from || $m->occurredAt() >= $from)
+                && (null === $to || $m->occurredAt() <= $to),
+        ));
+    }
+
+    public function sumAfter(UserId $userId, CreditTransaction $movement): int
+    {
+        return array_sum(array_map(
+            static fn (CreditTransaction $m): int => $m->amount(),
+            array_filter(
+                $this->historyOf($userId),
+                static fn (CreditTransaction $m): bool => $m->occurredAt() > $movement->occurredAt(),
+            ),
         ));
     }
 
@@ -68,5 +88,28 @@ final class InMemoryCreditTransactions implements CreditTransactionRepository
             static fn (CreditTransaction $m): int => $m->reason()->isTap() ? $m->amount() : 0,
             $this->movements,
         ));
+    }
+
+    public function totalMoved(): int
+    {
+        return array_sum(array_map(
+            static fn (CreditTransaction $m): int => $m->amount(),
+            $this->movements,
+        ));
+    }
+
+    public function tallyOfReason(CreditTransactionReason $reason, ?\DateTimeImmutable $from, ?\DateTimeImmutable $to): array
+    {
+        $matching = array_filter(
+            $this->movements,
+            static fn (CreditTransaction $m): bool => $m->reason() === $reason
+                && (null === $from || $m->occurredAt() >= $from)
+                && (null === $to || $m->occurredAt() <= $to),
+        );
+
+        return [
+            'count' => \count($matching),
+            'net' => array_sum(array_map(static fn (CreditTransaction $m): int => $m->amount(), $matching)),
+        ];
     }
 }

@@ -42,6 +42,24 @@ final class DoctrineWorkGenreRepository extends DoctrineRepository implements Wo
         return array_map(static fn (WorkGenre $genre): string => $genre->genreCode(), $this->rowsOf($workId));
     }
 
+    public function codesOfWorks(array $workIds): array
+    {
+        if ([] === $workIds) {
+            return [];
+        }
+
+        $codes = [];
+
+        foreach ($this->repository()->findBy(
+            ['workId' => array_map(static fn (WorkId $id): string => $id->value(), $workIds)],
+            ['genreCode' => 'ASC'],
+        ) as $genre) {
+            $codes[$genre->workId()->value()][] = $genre->genreCode();
+        }
+
+        return $codes;
+    }
+
     protected function entityClass(): string
     {
         return WorkGenre::class;

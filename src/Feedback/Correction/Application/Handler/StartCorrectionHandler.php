@@ -96,6 +96,7 @@ final readonly class StartCorrectionHandler
             AuthorId::fromString($brief->authorId),
             $brief->questionnaireVersion,
             $now,
+            $brief->chapterVersion,
         );
 
         $this->session->execute(function () use ($correction): void {

@@ -84,6 +84,13 @@ final readonly class AnnounceMovement
      * llevan, y es lo que permite a `Feedback` bloquear **esa** y no las que
      * el autor ya había leído (`RN-11`).
      */
+    /**
+     * La corrección que causó el movimiento, cuando el movimiento la cita.
+     *
+     * La leen dos cosas distintas: el cruce a negativo, para saber **qué**
+     * corrección se retiene, y `Feedback`, para poder decirle a quien corrigió
+     * cuánto ganó por ella sin preguntarle nada a este contexto.
+     */
     private static function subjectOf(CreditTransaction $movement): ?string
     {
         $correctionId = $movement->metadata()['correctionId'] ?? null;
@@ -101,6 +108,7 @@ final readonly class AnnounceMovement
                 $movement->reason()->value,
                 $balanceAfter,
                 $movement->occurredAt(),
+                self::subjectOf($movement),
             );
         }
 
@@ -111,6 +119,7 @@ final readonly class AnnounceMovement
             $movement->reason()->value,
             $balanceAfter,
             $movement->occurredAt(),
+            self::subjectOf($movement),
         );
     }
 }

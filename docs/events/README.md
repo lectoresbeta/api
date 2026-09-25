@@ -86,10 +86,16 @@ decisión sobre agrupación (`N-2`).
 | `WorkPublished` | La obra pasa a `PUBLISHED` | `Reading`, `Community`, `Notification` | `workId`, `authorId`, `title`, `wordCount`, `chapterCount`, `publishedAt` |
 | `WorkOpenedForCorrection` | La obra pasa a `IN_CORRECTION` | `Reading`, **`Credits`** | `workId`, `authorId`, `openedAt` |
 | `WorkClosedForCorrection` | La obra vuelve a `PUBLISHED` | `Reading`, **`Credits`** | `workId`, `authorId`, `closedAt` |
-| `ChapterContentUpdated` | Cambia el texto de un capítulo | `Feedback`, **`Credits`** | `chapterId`, `workId`, `authorId`, `position`, `wordCount`, `updatedAt` |
+| `ChapterContentUpdated` | Cambia el texto de un capítulo | `Feedback`, **`Credits`** ✅ | `chapterId`, `workId`, `authorId`, `position`, `wordCount`, `version`, `updatedAt`. `version` la añade `FEAT-WRK-005` |
 | `WorkAccessModeChanged` | Cambia la modalidad | `Reading` | `workId`, `authorId`, `accessMode`, `changedAt` |
-| `WorkDeleted` | Se elimina | `Reading`, `Feedback`, `Community` | `workId`, `authorId` |
-| `WorkBlockedByModeration` | Se bloquea la obra o uno de sus capítulos tras una reclamación estimada (`FEAT-MOD-003`) | `Notification` ✅, `Community`, **`Credits`** | `workId`, `authorId`, `title`, `scope`, `chapterId?`, `reason`, `blockedAt` |
+| `WorkUpdated` | Cambian el título o la sinopsis (`FEAT-WRK-005`) | `Community`, `Reading` | `workId`, `authorId`, `updatedAt`. **Sin el texto** |
+| `ChaptersReordered` | Cambia el orden (`FEAT-WRK-003`) | **`Credits`** ✅ | `workId`, `authorId`, `order`. Importa porque el último capítulo puede ser otro, y con él las preguntas que se cobran |
+| `ChapterRemoved` | Se elimina un capítulo, de los que nadie corrigió | **`Credits`** ✅, `Feedback` | `chapterId`, `workId`, `authorId`, `order` (el que queda) |
+| `ChapterVisibilityChanged` | El autor oculta o muestra un capítulo (`FEAT-WRK-008`) | **`Feedback`** ✅ (avisa a quien estaba corrigiendo), `Credits` |  `chapterId`, `workId`, `authorId`, `visibility`, `changedAt` |
+| `WorkArchived` | El autor retira la obra (`FEAT-WRK-006`) | **`Reading`** ✅ (revoca los accesos), **`Feedback`** ✅ (avisa a quien estaba corrigiendo), `Credits`, `Community`, `Notification` | `workId`, `authorId`, `archivedAt` |
+| `WorkRestored` | La recupera | Los mismos | `workId`, `authorId`, `restoredAt` |
+| `WorkDeleted` | Se borra de verdad | `Reading`, `Feedback`, `Community` | `workId`, `authorId`. **Borrado definitivo**, no el botón de «Eliminar»: lo publica `FEAT-USR-013` |
+| `WorkBlockedByModeration` | Se bloquea la obra o uno de sus capítulos tras una reclamación estimada (`FEAT-MOD-003`) | `Notification` ✅, **`Feedback`** ✅ (avisa a quien estaba corrigiendo), `Community`, **`Credits`** | `workId`, `authorId`, `title`, `scope`, `chapterId?`, `reason`, `blockedAt` |
 | `QuestionnaireUpdated` | Cambia el cuestionario: nueva versión | **`Credits`** | `workId`, `version`, `questionCount`, `requiredWords`, `requiredWordsForEveryChapter`, `updatedAt` |
 
 **Ningún evento de `Work` transporta el contenido de la obra**, y `QuestionnaireUpdated`
@@ -144,16 +150,17 @@ tiene acceso.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `CorrectionStarted` | Un LB pulsa «Empezar corrección» | **`Credits`** (anota el precio), `Notification` | `chapterId`, `workId`, `authorId`, `readerId`, `startedAt` |
+| `CorrectionStarted` | Un LB pulsa «Empezar corrección» | **`Credits`** (anota el precio), **`Work`** ✅ (marca esa versión del capítulo como leída, `FEAT-WRK-005`), `Notification` | `chapterId`, `workId`, `authorId`, `readerId`, `startedAt` |
 | `CorrectionResumed` | Un LB vuelve a abrir el panel de una corrección **que ya tenía empezada** | **`Reading`** ✅ (concede el acceso si no lo tiene). **`Credits` NO lo consume**: no toma hueco ni fija precio, porque las dos cosas ocurrieron al empezar | `correctionId`, `chapterId`, `workId`, `authorId`, `readerId`, `resumedAt` |
 | `FeedbackSubmitted` | Un LB **envía una corrección** de un capítulo | **`Credits`**, `Notification` ✅, `Community` | `correctionId`, `workId`, **`chapterId`**, `authorId`, `readerId`, `questionnaireVersion`, `submittedAt` |
 | `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación), **`Reading`** (revoca el acceso) | `chapterId`, `workId`, `readerId`, `discardedAt` |
-| `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` | `correctionId`, `authorId`, `readerId`, `amount` |
-| `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` NO lo consume** | `correctionId`, `workId`, `chapterId`, `authorId`, `authorLabel?` |
-| `FeedbackRatedPositively` | El autor lo valora como útil | `Notification`, `Community`. **`Credits` ya no lo consume**: la bonificación automática se sustituyó por la propina | `correctionId`, `readerId`, `authorId` |
-| `FeedbackReplied` | El autor contesta | `Notification` | `feedbackId`, `reviewerId` |
+| `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification` ✅. **`Credits` NO lo consume** | `correctionId`, `workId`, `chapterId`, `authorId`, `authorLabel?`, `submittedAt`. **Sin `readerId`**: eso es lo que lo distingue de `FeedbackSubmitted` |
+| `FeedbackRatedPositively` | El autor valora una corrección como útil, **la primera vez** (`FEAT-FBK-006`) | `Notification` ✅, `Community`. **`Credits` ya no lo consume**: la bonificación automática se sustituyó por la propina | `correctionId`, `chapterId`, `workId`, `readerId`, `ratedAt`. Cambiar la valoración después **no publica nada**: avisar a alguien de que su corrección ha dejado de ser útil es una crueldad sin función |
+| `FeedbackReplied` | El autor contesta a una corrección, **la primera vez** (`FEAT-FBK-005`) | `Notification` ✅ | `correctionId`, `chapterId`, `workId`, `readerId`, `repliedAt`. **Sin el texto** |
+| `CorrectionRead` | El autor abre una corrección recibida (`FEAT-FBK-004`) | `Notification` ✅, que retira el aviso pendiente |
+| `CorrectionClosed` | Lo que alguien estaba corrigiendo deja de estar disponible: la obra se bloquea, su autor la retira o le oculta el capítulo | `Notification` ✅ | `correctionId`, `chapterId`, `workId`, `readerId`, `reason`, `closedAt`. **El borrador no se borra**: es texto suyo | `correctionId`, `readerId`, `readAt`. **No se le dice a quien corrigió**: sería una confirmación de lectura entre dos personas que no han elegido conversar |
 | `FeedbackHidden` | El autor lo oculta | `Community`, `Credits`* | `feedbackId`, `workId` |
-| `WorkRated` | Un LB valora la obra | `Community` | `workId`, `authorId`, `readerId`, `rating` |
+| `WorkRated` | Un LB valora la obra (`FEAT-FBK-002`) | `Community` | `workId`, `authorId`, `readerId`, `rating` (1–5, fijado por el modelo) |
 
 \* Solo si se decide revertir créditos al ocultar (`C-9`).
 
@@ -182,8 +189,8 @@ es de la obra entera.
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `CreditsAdded` | Se abonan créditos | `Notification` | `userId`, `amount`, `reason`, `balance`, `addedAt` |
-| `CreditsSpent` | Se carga una corrección recibida | `Notification` | `userId`, `amount`, `reason`, `balance`, `spentAt` |
+| `CreditsAdded` | Se abonan créditos | `Notification`, **`Feedback`** ✅ (proyecta lo ganado por cada corrección, `FEAT-FBK-010`) | `userId`, `amount`, `reason`, `balance`, `correctionId?`, `addedAt` |
+| `CreditsSpent` | Se carga una corrección recibida | `Notification`, **`Feedback`** ✅ (retira lo ganado cuando una reclamación estimada lo revierte) | `userId`, `amount`, `reason`, `balance`, `correctionId?`, `spentAt` |
 | `ChapterCorrectabilityChanged` | Un capítulo pasa a ser corregible o deja de serlo | **`Feedback`**, **`Work`** | `chapterId`, `workId`, `correctable`, `affordableCorrections`, `changedAt`. **Sin importes** |
 | `ChapterPriceChanged` | Cambia lo que vale corregir un capítulo | **`Work`** (insignia del catálogo), `Community` | `chapterId`, `workId`, `credits`, `changedAt`. **Lleva importe, y es el único** |
 | `CreditBalanceChanged` | Cambia el saldo | `User` ✅ (copia el número para el menú lateral), `Notification` | `userId`, `balance`, `changedAt` |
@@ -191,6 +198,7 @@ es de la obra entera.
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback` ✅, `Notification` ✅ | `userId`, `balance`, `clearedAt`. Desbloquea **todas** las correcciones retenidas a la vez |
 | `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback`, `Notification` | `holdId`, `userId`, `chapterId`, `amount` |
 | `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` | `userId`, `correctionId` |
+| `CorrectionTipped` | El autor propina una corrección recibida | **`Feedback`** ✅ (la corrección muestra que fue propinada), `Community` ✅ (reputación del corrector), `Notification` | `correctionId`, `authorId`, `readerId`, `amount`, `tippedAt` |
 
 **Ningún evento de `Credits` bloquea a otro contexto.** Como no se retiene nada, `Feedback`
 abre el panel de corrección contra su propia proyección de `ChapterCorrectabilityChanged`, sin
@@ -226,6 +234,11 @@ más veces de las que su corregibilidad se mueve.
 hunde la cuenta y no otra vez mientras siga hundida: quien recibiera uno por cada cargo no
 podría distinguir el instante del estado, y es el instante el que merece un aviso y el que
 bloquea la corrección recién llegada.
+
+Los dos llevan `correctionId` cuando el movimiento cita una corrección. Es una **referencia**,
+no un dato de nadie, y permite a `Feedback` decirle a quien corrigió cuánto ganó sin
+preguntarle nada a `Credits`, que no responde preguntas de nadie. Es el mismo dato que
+`CreditBalanceWentNegative` usa desde `FEAT-CRD-018`, leído de los metadatos del movimiento.
 
 `CreditsAdded` y `CreditsSpent` narran **un movimiento y su motivo**, que es de donde se
 escribe un aviso a la persona; `CreditBalanceChanged` dice **cuál es la cifra ahora**, que es
@@ -297,6 +310,7 @@ autor convertiría una acción discreta en un desaire con acuse de recibo.
 | `ClaimSubmitted` | Se presenta una reclamación | **`Notification`** (avisa a los moderadores) | `claimId`, `type`, `targetType`, `targetId`, `reporterId`, `reason`. **Sin el texto del reclamante** |
 | `ClaimUpheld` | El moderador la estima | **`Credits`** ✅ (revierte lo cobrado), **`Work`** ✅ (bloquea lo reclamado), **`User`**, `Notification` | `claimId`, `type`, `targetType`, `targetId`, `subjectId` |
 | `ClaimRejected` | La desestima | `Notification` | `claimId`, `reporterId` |
+| `ModerationBlockLifted` | Un moderador levanta un bloqueo (`FEAT-MOD-003` `RN-7`) | **`Work`** ✅ (lo ejecuta, igual que el bloqueo) | `targetType`, `targetId`, `liftedAt`. **Sin la motivación**: va al registro de auditoría |
 | `ClaimMessageSent` | El moderador o una parte escribe | `Notification` | `claimId`, `thread`, `authorType`. **Sin el cuerpo del mensaje** |
 | `ContentReviewPassed` | El revisor automático aprueba | **`Work`** | `workId`, `chapterId?`, `reviewerVersion` |
 | `ContentReviewFlagged` | El revisor lo marca | **`Work`**, `Notification` | `workId`, `chapterId?`, `reason`, `reviewerVersion` |

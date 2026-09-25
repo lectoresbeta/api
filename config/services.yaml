@@ -21,6 +21,31 @@ parameters:
     app.pricing.min_price: 2
     app.pricing.max_price: 20
 
+    # Los umbrales del panel de salud de la economía (FEAT-CRD-012 C-34).
+    #
+    # El de deuda sale de FEAT-CRD-018 RN-12, que propone −40: por debajo de
+    # ahí, salir del descubierto deja de parecer un trabajo pendiente y
+    # empieza a parecer una condena.
+    #
+    # Los otros dos son una primera propuesta a falta de datos reales, y
+    # están aquí precisamente para poder corregirlos cuando los haya: más de
+    # la mitad de las cuentas a cero significa que el saldo se está
+    # concentrando, y un descubierto que se salda menos de la mitad de las
+    # veces es emisión pura disfrazada de gancho.
+    app.economy.debt_alert_threshold: -40
+    app.economy.zero_balance_alert_share: 0.5
+    app.economy.overdraft_recovery_alert_rate: 0.5
+
+    # Cuántas sugerencias de autor hacen falta para que el paso 3 del
+    # onboarding merezca enseñarse, y cuántas se enseñan como mucho
+    # (FEAT-COM-016). Por debajo del mínimo la pantalla no se percibe como una
+    # recomendación sino como un catálogo vacío, así que el paso se omite.
+    #
+    # Es configuración y no una constante repartida por el código porque es
+    # exactamente la palanca que habrá que mover según crezca la plataforma.
+    app.suggestions.minimum: 3
+    app.suggestions.maximum: 10
+
 services:
     _defaults:
         autowire: true
@@ -95,6 +120,27 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    LectoresBeta\Community\Recommendation\Application\Handler\ListAuthorSuggestionsHandler:
+        arguments:
+            $minimum: '%app.suggestions.minimum%'
+            $maximum: '%app.suggestions.maximum%'
+
+    # La copia local de qué le interesa a cada persona: `Community` no
+    # consulta la tabla de géneros de `User`, recibe el hecho (FEAT-COM-016).
+    LectoresBeta\Community\Recommendation\Application\Handler\ProjectMemberGenres:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Tres hechos que mueven la misma fila, y un solo consumidor: tenerlos
+    # juntos deja ver de un vistazo qué cambia los contadores por los que se
+    # ordena una sugerencia.
+    LectoresBeta\Community\Recommendation\Application\Handler\ProjectAuthorStats:
+        tags:
+            - { name: messenger.message_handler, method: followed }
+            - { name: messenger.message_handler, method: unfollowed }
+            - { name: messenger.message_handler, method: published }
+            - { name: messenger.message_handler, method: tipped }
+
     LectoresBeta\Shared\Infrastructure\Messenger\IncomingEventRegistry:
         arguments:
             $eventClasses:
@@ -107,6 +153,11 @@ services:
                 - LectoresBeta\Feedback\Correction\Application\Event\ChapterCorrectabilityChanged
                 - LectoresBeta\Feedback\Correction\Application\Event\CreditBalanceWentNegative
                 - LectoresBeta\Feedback\Correction\Application\Event\CreditDebtCleared
+
+                # El eco de lo que se pagó por cada corrección (FEAT-FBK-010).
+                # Proyección y no contrato: `Credits` no publica ninguno.
+                - LectoresBeta\Feedback\Correction\Application\Event\CreditsAdded
+                - LectoresBeta\Feedback\Correction\Application\Event\CreditsSpent
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionStarted
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionResumed
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\CorrectionDraftDiscarded
@@ -114,6 +165,49 @@ services:
                 - LectoresBeta\Work\Catalogue\Application\Event\ChapterCorrectabilityChanged
                 - LectoresBeta\Work\Catalogue\Application\Event\ChapterPriceChanged
                 - LectoresBeta\Work\Catalogue\Application\Event\FeedbackSubmitted
+
+                # Alguien ha empezado a corregir: a partir de ahí, editar ese
+                # capítulo cuesta una copia (FEAT-WRK-005).
+                - LectoresBeta\Work\Chapter\Application\Event\CorrectionStarted
+
+                # Mover o quitar un capítulo cambia dónde acaba la obra, y con
+                # ello lo que cuesta corregir dos de ellos (FEAT-WRK-003).
+                - LectoresBeta\Credits\Pricing\Application\Event\ChaptersReordered
+                - LectoresBeta\Credits\Pricing\Application\Event\ChapterRemoved
+
+                # El autor retira su obra: ya no hay nada que leer, así que
+                # los accesos de lector beta dejan de tener objeto
+                # (FEAT-WRK-006).
+                - LectoresBeta\Reading\BetaReaderAccess\Application\Event\WorkArchived
+
+                # Quien tenía trabajo a medias sobre algo que acaba de
+                # cerrarse: tres causas, un aviso (FEAT-MOD-003 RN-4,
+                # FEAT-WRK-006 RN-4, FEAT-WRK-008 RN-5).
+                - LectoresBeta\Feedback\Correction\Application\Event\WorkBlockedByModeration
+                - LectoresBeta\Feedback\Correction\Application\Event\WorkArchived
+                - LectoresBeta\Feedback\Correction\Application\Event\ChapterVisibilityChanged
+                - LectoresBeta\Notification\Delivery\Application\Event\CorrectionClosed
+
+                # Y el bloqueo que un moderador levanta, que ejecuta `Work`
+                # igual que el que impone (FEAT-MOD-003 RN-7).
+                - LectoresBeta\Work\Manuscript\Application\Event\ModerationBlockLifted
+                # Lo que alimenta las sugerencias de autor (FEAT-COM-016).
+                # `Community` no consulta las tablas de `User` ni las de
+                # `Work`: recibe los hechos y mantiene su propia proyección.
+                - LectoresBeta\Community\Recommendation\Application\Event\LiteraryPreferencesUpdated
+                - LectoresBeta\Community\Recommendation\Application\Event\AuthorSubscribed
+                - LectoresBeta\Community\Recommendation\Application\Event\AuthorUnsubscribed
+                - LectoresBeta\Community\Recommendation\Application\Event\WorkPublished
+
+                # La propina, que alimenta la reputación del corrector sin
+                # que `Credits` sepa nada de rankings (FEAT-CRD-017).
+                - LectoresBeta\Community\Recommendation\Application\Event\CorrectionTipped
+                - LectoresBeta\Feedback\Correction\Application\Event\CorrectionTipped
+
+                # Lo que `Moderation` decide y `User` aplica (FEAT-MOD-006).
+                - LectoresBeta\User\Account\Application\Event\SanctionImposed
+                - LectoresBeta\User\Account\Application\Event\SanctionLifted
+
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
                 - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordResetRequested
@@ -137,6 +231,15 @@ services:
                 - LectoresBeta\Credits\Account\Application\Event\ClaimUpheld
                 - LectoresBeta\Notification\Delivery\Application\Event\WorkBlockedByModeration
 
+                # El autor ha abierto la corrección: el aviso sobra
+                # (FEAT-FBK-004).
+                - LectoresBeta\Notification\Delivery\Application\Event\CorrectionRead
+
+                # Y lo que la plataforma le devuelve a quien corrigió
+                # (FEAT-FBK-005, FEAT-FBK-006).
+                - LectoresBeta\Notification\Delivery\Application\Event\FeedbackReplied
+                - LectoresBeta\Notification\Delivery\Application\Event\FeedbackRatedPositively
+
                 # Lo que `Notification` escucha para convertir en avisos
                 # (`FEAT-NOT-001`). Son hechos de `Reading` y de `Feedback`, y
                 # cada contexto los modela por su cuenta: aquí llegan cuatro
@@ -148,6 +251,11 @@ services:
                 - LectoresBeta\Notification\Delivery\Application\Event\BetaReaderAccessRevoked
                 - LectoresBeta\Notification\Delivery\Application\Event\BetaReaderInvited
                 - LectoresBeta\Notification\Delivery\Application\Event\FeedbackSubmitted
+
+                # Lo que llega por un enlace público (FEAT-FBK-008). Solo lo
+                # escucha `Notification`: que `Credits` no lo consuma es la
+                # forma más clara de decir que está fuera de la economía.
+                - LectoresBeta\Notification\Delivery\Application\Event\PublicCorrectionSubmitted
 
     # Los consumidores de eventos se etiquetan aquí y no con
     # #[AsMessageHandler]: viven en Application, y Application no conoce a
@@ -176,6 +284,22 @@ services:
     LectoresBeta\User\Account\Infrastructure\Controller\ChangeMyPasswordController:
         arguments:
             $byAccount: '@limiter.password_change_attempts'
+
+    LectoresBeta\Work\PublicLink\Infrastructure\Security\PublicLinkThrottle:
+        arguments:
+            $byAddress: '@limiter.public_link_by_ip'
+
+    # Los umbrales de la salud de la economía (FEAT-CRD-012 C-34). Viven en
+    # configuración porque son lo primero que se va a mover en cuanto haya
+    # datos reales, y mover un umbral no debería ser un despliegue.
+    #
+    # Sin umbral, una métrica es decorativa: dice una cifra y no dice si está
+    # bien.
+    LectoresBeta\Credits\Monitoring\Application\Handler\GetEconomyHealthHandler:
+        arguments:
+            $debtAlertThreshold: '%app.economy.debt_alert_threshold%'
+            $zeroBalanceAlertShare: '%app.economy.zero_balance_alert_share%'
+            $overdraftRecoveryAlertRate: '%app.economy.overdraft_recovery_alert_rate%'
 
     LectoresBeta\User\Authentication\Infrastructure\Security\LexikAccessTokenIssuer:
         arguments:
@@ -208,6 +332,19 @@ services:
     # tiene que dejar de valer en el acto (FEAT-MOD-004 RN-4).
     LectoresBeta\Moderation\ModeratorRole\Application\Contract\ModeratorRoles:
         alias: LectoresBeta\Moderation\ModeratorRole\Application\Service\CheckModeratorRole
+
+    # Qué abre un token de enlace público (FEAT-WRK-010). Lo pregunta
+    # `Feedback` antes de aceptar una corrección anónima; no gasta cupo ni
+    # revoca nada, porque un contrato pregunta y no manda.
+    LectoresBeta\Work\PublicLink\Application\Contract\PublicLinkAccess:
+        alias: LectoresBeta\Work\PublicLink\Application\Service\ResolvePublicLinkAccess
+
+    # Las propinas recibidas, para el contador del perfil (FEAT-CRD-017
+    # RN-3c). Lo contesta `Community` y no `Credits`, que no publica
+    # contratos: la puerta se abre donde ya está el dato, no donde está su
+    # origen.
+    LectoresBeta\Community\Recommendation\Application\Contract\TipsReceived:
+        alias: LectoresBeta\Community\Recommendation\Application\Service\CountTipsReceived
 
     # Si una corrección se puede reclamar, y por quién (FEAT-MOD-001 RN-4,
     # RN-5). No lleva su texto: autorizar no necesita leerla.
@@ -256,6 +393,23 @@ services:
     LectoresBeta\Work\Chapter\Application\Contract\CorrectionBriefs:
         alias: LectoresBeta\Work\Chapter\Application\Service\ResolveCorrectionBriefs
 
+    # Lo que hace falta para **leer** una corrección entregada, y no para
+    # escribirla (FEAT-FBK-004): cómo se llama el capítulo, qué se preguntaba
+    # en la versión que se respondió, y el texto de entonces.
+    #
+    # `AnsweredQuestionnaires` es un contrato aparte de `CorrectionBriefs` a
+    # propósito: uno responde qué se pregunta **ahora** y el otro qué se
+    # preguntaba **entonces**, que son dos preguntas distintas y solo la
+    # segunda sirve para leer lo que llegó hace un mes.
+    LectoresBeta\Work\Chapter\Application\Contract\ChapterHeadings:
+        alias: LectoresBeta\Work\Chapter\Application\Service\ResolveChapterHeadings
+
+    LectoresBeta\Work\Chapter\Application\Contract\ChapterTexts:
+        alias: LectoresBeta\Work\Chapter\Application\Service\ResolveChapterText
+
+    LectoresBeta\Work\Questionnaire\Application\Contract\AnsweredQuestionnaires:
+        alias: LectoresBeta\Work\Questionnaire\Application\Service\ResolveAnsweredQuestionnaire
+
     LectoresBeta\Reading\BetaReaderAccess\Application\Contract\BetaReaderAccessCheck:
         alias: LectoresBeta\Reading\BetaReaderAccess\Application\Service\CheckBetaReaderAccess
 
@@ -265,6 +419,12 @@ services:
     # ninguna de las dos implementaciones llama a la otra mientras responde.
     LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs:
         alias: LectoresBeta\Work\Manuscript\Application\Service\ResolveWorkAccessBriefs
+
+    # La otra mitad del contenido sensible (FEAT-WRK-017, FEAT-USR-043): el
+    # autor declara qué hay y el lector decide qué quiere, así que quien
+    # construye una lista de obras necesita saber qué ha excluido.
+    LectoresBeta\User\Preferences\Application\Contract\ReaderContentPreferences:
+        alias: LectoresBeta\User\Preferences\Application\Service\ResolveContentPreferences
 
     LectoresBeta\User\Profile\Application\Contract\GenreCatalogue:
         alias: LectoresBeta\User\Profile\Application\Service\CheckGenreCatalogue
@@ -337,6 +497,11 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    LectoresBeta\Credits\Pricing\Application\Handler\RepriceWorkOnStructureChange:
+        tags:
+            - { name: messenger.message_handler, method: reordered }
+            - { name: messenger.message_handler, method: removed }
+
     LectoresBeta\Credits\Pricing\Application\Handler\QuoteCorrectionOnStart:
         tags:
             - { name: messenger.message_handler }
@@ -355,6 +520,21 @@ services:
 
     # Lo que el descubierto significa aquí (FEAT-CRD-018): el corrector cobra
     # siempre, y lo que se retiene es la lectura de lo entregado, no el pago.
+    # Dos hechos, un trabajo: lo que se cobró por una corrección y lo que una
+    # reclamación estimada retira después.
+    # Tres hechos, un trabajo: avisar a quien tenía una corrección a medias
+    # sobre algo que acaba de dejar de estar disponible.
+    LectoresBeta\Feedback\Correction\Application\Handler\CloseDraftsOnContentWithdrawn:
+        tags:
+            - { name: messenger.message_handler, method: blocked }
+            - { name: messenger.message_handler, method: archived }
+            - { name: messenger.message_handler, method: hidden }
+
+    LectoresBeta\Feedback\Correction\Application\Handler\TrackCorrectionEarnings:
+        tags:
+            - { name: messenger.message_handler, method: earned }
+            - { name: messenger.message_handler, method: reversed }
+
     LectoresBeta\Feedback\Correction\Application\Handler\TrackCorrectionLocking:
         tags:
             - { name: messenger.message_handler, method: wentNegative }
@@ -385,6 +565,22 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    # Que una corrección fue propinada (FEAT-CRD-017). El importe no se
+    # enseña corrección a corrección —exponer quién recibe reconocimiento y
+    # quién no desanima al corrector novato—, así que lo que se apunta aquí
+    # es el hecho.
+    LectoresBeta\Feedback\Correction\Application\Handler\RecordTipOnCorrection:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Lo que una sanción significa dentro de `User` (FEAT-MOD-006).
+    # `Moderation` la registra y este contexto la aplica: dos dueños del
+    # estado de una cuenta serían uno de más.
+    LectoresBeta\User\Account\Application\Handler\ApplySanction:
+        tags:
+            - { name: messenger.message_handler, method: imposed }
+            - { name: messenger.message_handler, method: lifted }
+
     LectoresBeta\User\Privacy\Application\Handler\RememberFollower:
         tags:
             - { name: messenger.message_handler }
@@ -409,6 +605,10 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    LectoresBeta\Reading\BetaReaderAccess\Application\Handler\RevokeAccessOnWorkArchived:
+        tags:
+            - { name: messenger.message_handler }
+
     # Quién ejecuta el bloqueo de una obra reclamada: `Work`, porque es un
     # cambio en el ciclo de vida de la obra y ese es su modelo
     # (FEAT-MOD-003). Si lo escribiera `Moderation`, dos contextos
@@ -417,9 +617,17 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    LectoresBeta\Work\Manuscript\Application\Handler\UnblockContentOnBlockLifted:
+        tags:
+            - { name: messenger.message_handler }
+
     # Y qué significa esa misma decisión para el saldo, que lo decide
     # `Credits` a solas: el hecho no lleva importes.
     LectoresBeta\Credits\Account\Application\Handler\ReverseCorrectionOnClaimUpheld:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Work\Chapter\Application\Handler\MarkChapterVersionRead:
         tags:
             - { name: messenger.message_handler }
 
@@ -447,6 +655,21 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheReaderOfAClosedCorrection:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Notification\Delivery\Application\Handler\RetireTheCorrectionNotice:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Dos hechos, un trabajo: contestar y valorar significan lo mismo para
+    # quien corrigió — que el autor hizo algo con su trabajo.
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheReaderOfAnAnsweredCorrection:
+        tags:
+            - { name: messenger.message_handler, method: replied }
+            - { name: messenger.message_handler, method: rated }
+
     LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorOfAnAccessRequest:
         tags:
             - { name: messenger.message_handler }
@@ -473,6 +696,12 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorOfACorrection:
+        tags:
+            - { name: messenger.message_handler }
+
+    # El mismo aviso, sin actor: al otro lado del enlace público no hay cuenta
+    # de la que pedir un perfil (FEAT-FBK-008).
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorOfAPublicCorrection:
         tags:
             - { name: messenger.message_handler }
 

@@ -30,6 +30,18 @@ interface UserBlockRepository
      */
     public function blockedBy(MemberId $blockerId, ?Cursor $after, int $limit): array;
 
+    /**
+     * Con quién hay un bloqueo, **en cualquiera de las dos direcciones**
+     * (`FEAT-COM-001` `RN-7`).
+     *
+     * Es `existsBetween` preguntado para un muro entero: la misma regla
+     * —unilateral en la intención, bidireccional en el efecto— resuelta de
+     * una vez en lugar de una por tarjeta.
+     *
+     * @return list<string> identificadores de las otras personas
+     */
+    public function involving(MemberId $member): array;
+
     public function save(UserBlock $block): void;
 
     public function remove(UserBlock $block): void;

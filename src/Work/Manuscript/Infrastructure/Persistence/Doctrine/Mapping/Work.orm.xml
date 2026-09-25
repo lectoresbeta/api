@@ -30,6 +30,7 @@
         <field name="wordCount" column="word_count" type="integer"/>
         <field name="chapterCount" column="chapter_count" type="smallint"/>
         <field name="blockedAt" column="blocked_at" type="datetime_immutable" nullable="true"/>
+        <field name="archivedAt" column="archived_at" type="datetime_immutable" nullable="true"/>
         <field name="createdAt" column="created_at" type="datetime_immutable"/>
         <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
 

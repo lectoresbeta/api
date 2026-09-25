@@ -37,6 +37,16 @@ interface NotificationRepository
     public function countUnread(RecipientId $recipientId): int;
 
     /**
+     * Retira el aviso de una corrección que su destinatario acaba de abrir
+     * (`FEAT-FBK-004` `RN-7`).
+     *
+     * Un centro de notificaciones que sigue marcando como nuevo algo que ya
+     * se ha leído deja de significar nada en una semana, y entonces la gente
+     * deja de mirarlo.
+     */
+    public function markReadByCorrection(RecipientId $recipientId, string $correctionId, \DateTimeImmutable $now): void;
+
+    /**
      * Marca de una vez todo lo que quede sin leer (`RN-5`).
      *
      * En una sola sentencia y no fila a fila: quien lleva meses sin entrar

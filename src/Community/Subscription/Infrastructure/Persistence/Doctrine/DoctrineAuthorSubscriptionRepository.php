@@ -35,6 +35,19 @@ final class DoctrineAuthorSubscriptionRepository extends DoctrineRepository impl
         );
     }
 
+    public function followedBy(MemberId $subscriberId): array
+    {
+        /** @var list<array{authorId: string}> $rows */
+        $rows = $this->repository()->createQueryBuilder('s')
+            ->select('s.authorId')
+            ->where('s.subscriberId = :member')
+            ->setParameter('member', $subscriberId->value())
+            ->getQuery()
+            ->getResult();
+
+        return array_map(static fn (array $row): string => $row['authorId'], $rows);
+    }
+
     public function subscribersOf(MemberId $authorId, ?Cursor $after, int $limit): array
     {
         return $this->page(

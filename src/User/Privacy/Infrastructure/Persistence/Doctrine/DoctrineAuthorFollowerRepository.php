@@ -57,6 +57,16 @@ final class DoctrineAuthorFollowerRepository extends DoctrineRepository implemen
         $this->forget($follower);
     }
 
+    public function countFollowersOf(UserId $authorId): int
+    {
+        return $this->repository()->count(['authorId' => $authorId->value()]);
+    }
+
+    public function countFollowedBy(UserId $followerId): int
+    {
+        return $this->repository()->count(['followerId' => $followerId->value()]);
+    }
+
     protected function entityClass(): string
     {
         return AuthorFollower::class;

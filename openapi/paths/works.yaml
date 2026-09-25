@@ -322,6 +322,14 @@ chapters:
               title:
                 type: string
                 maxLength: 180
+              position:
+                type: integer
+                minimum: 1
+                description: |
+                  Dónde intercalarlo. **Sin él va al final**, que es lo que
+                  hace quien escribe en orden — y una novela se escribe
+                  raramente en orden. Los capítulos que estén en esa posición
+                  o después se desplazan.
     responses:
       '201':
         description: Capítulo añadido.
@@ -444,6 +452,124 @@ status:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
 
+myWorks:
+  get:
+    tags: [Works]
+    operationId: listMyWorks
+    summary: Mis relatos
+    description: |
+      Las obras propias, **con los borradores dentro**: es el único listado
+      donde aparecen, y el único que lleva la insignia de `status`. Las dos
+      cosas son lo mismo dicho de dos maneras — esto es la pantalla de gestión
+      del autor, no un escaparate.
+
+      Una obra **archivada** sigue apareciendo, marcada con `archived`. Para
+      el resto del mundo no existe, pero su autor tiene que poder encontrarla:
+      si no, «recuperar» sería una operación sin pantalla desde la que
+      pedirla.
+
+      **Metadatos, nunca contenido.** La sinopsis sí, el texto no.
+
+      Funciona con la cuenta sin activar: es solo lectura.
+
+      Un `sort` no admitido devuelve `422` y dice cuáles valen; **no se ignora
+      en silencio**, porque una lista devuelta en cualquier orden parece
+      funcionar y el error se descubre cuando alguien ya se fió de ella.
+    parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [DRAFT, PUBLISHED, IN_CORRECTION]
+      - name: sort
+        in: query
+        required: false
+        description: |
+          `recent` (por defecto) y `oldest`, por fecha de creación. «Más
+          valorados» y «más leídos» todavía no: dependen de agregados que no
+          existen (`W-12`, `H-3`).
+        schema:
+          type: string
+          enum: [recent, oldest]
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: perPage
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+    responses:
+      '200':
+        description: Las obras propias.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [total, totalPages, page, perPage, works]
+              properties:
+                total:
+                  type: integer
+                totalPages:
+                  type: integer
+                page:
+                  type: integer
+                perPage:
+                  type: integer
+                works:
+                  type: array
+                  items:
+                    type: object
+                    required: [workId, title, status, accessMode, adultsOnly, wordCount, chapterCount, genres, blocked, archived, createdAt, updatedAt]
+                    properties:
+                      workId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      title:
+                        type: string
+                      synopsis:
+                        type: [string, 'null']
+                      status:
+                        type: string
+                        enum: [DRAFT, PUBLISHED, IN_CORRECTION]
+                      accessMode:
+                        type: string
+                      adultsOnly:
+                        type: boolean
+                      wordCount:
+                        type: integer
+                      chapterCount:
+                        type: integer
+                      genres:
+                        type: array
+                        items:
+                          type: string
+                      blocked:
+                        type: boolean
+                      archived:
+                        type: boolean
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNSUPPORTED_SORT`. Lleva `supportedSorts`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
 work:
   get:
     tags: [Works]
@@ -519,6 +645,144 @@ work:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
 
+  patch:
+    tags: [Works]
+    operationId: updateWork
+    summary: Editar el título o la sinopsis
+    description: |
+      Campos sueltos: **lo que no se envía, no se toca**. La diferencia entre
+      no enviar `synopsis` y enviarla a `null` es real y se respeta — lo
+      primero la deja como está, lo segundo la borra.
+
+      **No versiona nada y no toca el precio.** Nadie corrige una sinopsis, y
+      el precio de un capítulo sale de sus palabras y de su cuestionario.
+
+      Géneros y clasificación de contenido tienen sus propias operaciones
+      (`setWorkGenres`, `setWorkContentRating`) y no se duplican aquí. La
+      portada queda fuera mientras `FEAT-USR-028` siga abierta.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                maxLength: 180
+              synopsis:
+                type: [string, 'null']
+    responses:
+      '204':
+        description: Guardado. También cuando no había nada que cambiar.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suya. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/ValidationFailed'
+
+  delete:
+    tags: [Works]
+    operationId: archiveWork
+    summary: Retirar una obra
+    description: |
+      El botón dice «Eliminar» y lo que ocurre es un **archivado**: la obra
+      desaparece del catálogo, del perfil y de las búsquedas, deja de poder
+      corregirse, los accesos de lector beta se revocan, y **su autor la sigue
+      viendo**.
+
+      Borrar no es una operación local. De una obra cuelgan correcciones
+      **pagadas**, reclamaciones resueltas y movimientos de crédito que la
+      citan; borrarla destruiría el trabajo de otras personas y la prueba de
+      lo que se decidió.
+
+      El mensaje de confirmación tiene que decirlo con estas palabras: deja de
+      verla todo el mundo menos tú, las correcciones que recibiste siguen ahí,
+      los créditos no se devuelven, y **puedes recuperarla**. Un diálogo que
+      diga «esta acción no se puede deshacer» sobre algo que sí se deshace
+      enseña a no leer los diálogos.
+
+      La confirmación viaja en el cuerpo: un `DELETE` que se dispara por un
+      enlace mal pulsado no debería vaciar un perfil.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [confirm]
+            properties:
+              confirm:
+                type: boolean
+                description: Debe ser `true`. Lo comprueba el servidor, no solo la pantalla.
+    responses:
+      '204':
+        description: Archivada. También cuando ya lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suya. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: WORK_BLOCKED`. Una obra bloqueada por moderación no se archiva: sería la vía para hacer desaparecer contenido reclamado.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CONFIRMATION_REQUIRED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+workRestore:
+  post:
+    tags: [Works]
+    operationId: restoreWork
+    summary: Recuperar una obra retirada
+    description: |
+      Vuelve **a borrador**, nunca publicada ni en corrección: reabrir la
+      puerta a los lectores beta es una decisión aparte, y tomarla por el
+      autor sería volver a enseñar una obra que él retiró.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Recuperada, en borrador.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suya. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: WORK_NOT_ARCHIVED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
 chapter:
   get:
     tags: [Works]
@@ -563,6 +827,211 @@ chapter:
         description: |
           No existe, está oculto, está bloqueado, o pertenece a una obra que
           no puedes abrir. `code: CHAPTER_NOT_FOUND`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  put:
+    tags: [Works]
+    operationId: updateChapter
+    summary: Sustituir el texto de un capítulo
+    description: |
+      El contenido entero, que es lo que hace un editor al guardar.
+
+      **Si alguien había empezado a corregir esta versión, el guardado archiva
+      una copia antes de pisarla** y el capítulo pasa a la siguiente versión
+      ([`FEAT-WRK-005`](../../docs/features/work/FEAT-WRK-005-edit-work-and-chapter.md)).
+      Quien esté corrigiendo sigue viendo el texto que empezó a leer, y una
+      corrección ya entregada sigue hablando de un texto que existe. Si nadie
+      lo había leído, se sobrescribe y la versión no cambia.
+
+      El recuento de palabras **lo calcula el servidor**: de él depende el
+      precio de cada corrección, y dejar que lo fije quien llama sería dejar
+      que lo fije quien paga. Guardar reprecia el capítulo para las
+      correcciones que empiecen después; las ya empezadas conservan su
+      cotización.
+
+      El HTML se sanea con las mismas reglas que al crearlo. Una puerta de
+      edición que acepta lo que la de creación rechaza es la puerta que se
+      usa.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [contentHtml]
+            properties:
+              title:
+                type: [string, 'null']
+              contentHtml:
+                type: string
+    responses:
+      '204':
+        description: Guardado. También cuando no había nada que cambiar.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suyo. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CHAPTER_BLOCKED`. Bloqueado por una reclamación estimada: el contenido reclamado se conserva tal cual.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'El contenido queda vacío tras sanear. `code: EMPTY_CHAPTER`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Works]
+    operationId: removeChapter
+    summary: Eliminar un capítulo
+    description: |
+      Solo capítulos que **nadie ha corregido**. Los demás se ocultan con
+      `setChapterVisibility`: borrarlos destruiría el trabajo de quien los
+      corrigió y el rastro de un cobro.
+
+      Tampoco uno **bloqueado por moderación**, que sería la vía para hacer
+      desaparecer contenido reclamado, ni el último de una obra publicada —en
+      borrador sí, que ahí no hay nadie leyendo—.
+
+      Las posiciones de los que quedan se recalculan: una lista de capítulos
+      con un hueco es una lista rota.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Eliminado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suyo. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CHAPTER_HAS_CORRECTIONS`, `CHAPTER_BLOCKED` o `WORK_NEEDS_A_CHAPTER`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterOrder:
+  put:
+    tags: [Works]
+    operationId: reorderChapters
+    summary: Reordenar los capítulos
+    description: |
+      Recibe **la lista completa** de identificadores en el orden deseado, no
+      «mueve este de la 3 a la 7»: la lista entera es idempotente y sobrevive
+      a que dos pestañas hagan lo mismo a la vez.
+
+      Se rechaza **entera** si no contiene exactamente los capítulos de la
+      obra. Aplicar la mitad deja la obra en un estado que el autor no pidió y
+      no sabe leer.
+
+      **No es cosmético**: el último capítulo es el que responde las preguntas
+      de alcance `LAST_CHAPTER`, así que esto cambia lo que se pide —y lo que
+      se paga— en dos capítulos.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [order]
+            properties:
+              order:
+                type: array
+                items:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Reordenada. También cuando el orden ya era ese.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suya. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CHAPTER_ORDER_INCOMPLETE`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterVisibility:
+  put:
+    tags: [Works]
+    operationId: setChapterVisibility
+    summary: Ocultar o volver a mostrar un capítulo
+    description: |
+      **La visibilidad es del capítulo.** La obra no tiene visibilidad: tiene
+      estado, y se cambia con `changeWorkStatus`.
+
+      Un capítulo oculto **solo lo ve su autor**: para cualquier otra persona
+      responde `404`, no `403`. Y deja de admitir correcciones, ni empezarlas
+      ni entregarlas.
+
+      Ocultar **no borra nada**: las correcciones entregadas sobre él se
+      siguen leyendo por las dos partes. Es la alternativa a eliminar cuando
+      alguien ya lo corrigió.
+
+      Un capítulo **bloqueado por moderación** no cambia de visibilidad por
+      esta vía: el bloqueo lo levanta un moderador y nadie más.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [visibility]
+            properties:
+              visibility:
+                type: string
+                enum: [VISIBLE, HIDDEN]
+    responses:
+      '204':
+        description: Guardado. También cuando ya estaba así.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suyo. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CHAPTER_BLOCKED`.'
         content:
           application/problem+json:
             schema:
@@ -1033,3 +1502,180 @@ contentWarnings:
                   type: array
                   items:
                     $ref: '#/ContentWarning'
+
+publicLinks:
+  post:
+    tags: [Works]
+    operationId: createPublicLink
+    summary: Crear un enlace público de la obra
+    description: |
+      Genera una URL que abre la obra **sin sesión**, para repartirla fuera de
+      la plataforma (`FEAT-WRK-010`).
+
+      Quien la recibe lee y corrige sin registrarse, y esa corrección **no
+      mueve créditos en ninguna dirección**
+      ([`FEAT-FBK-008`](../../docs/features/feedback/FEAT-FBK-008-public-link-correction.md)).
+      Es la válvula de seguridad de la economía: un autor sin saldo siempre
+      tiene una salida que no depende de nadie más que de su agenda.
+
+      **El token se devuelve una sola vez.** Se guarda cifrado, así que
+      después no hay forma de recuperarlo: quien pierde la URL crea otro
+      enlace. La alternativa —guardarlo en claro para poder enseñarlo
+      siempre— dejaría una credencial legible en la base de datos y en cada
+      copia de seguridad, y eso no se deshace.
+
+      Funciona sobre un **borrador**, que es justamente el caso: se reparte
+      para conseguir feedback antes de publicar.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              maxCorrections:
+                type: integer
+                minimum: 1
+                maximum: 100
+                default: 10
+                description: |
+                  Diez cubre el caso real —repartirlo a tu grupo de
+                  escritura— y limita el daño si la URL circula más de la
+                  cuenta.
+              expiresAt:
+                type: [string, 'null']
+                format: date-time
+                description: Sin ella, el enlace dura hasta que se revoque.
+              label:
+                type: [string, 'null']
+                maxLength: 80
+                description: |
+                  Una nota del autor para sí mismo —«taller de los martes»—.
+                  **No la ve quien abre el enlace.**
+    responses:
+      '201':
+        description: |
+          Creado. `Cache-Control: no-store`: una credencial que un
+          intermediario guarda es una credencial que ya no controla su dueño.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/PublicLink'
+                - type: object
+                  required: [token]
+                  properties:
+                    token:
+                      type: string
+                      description: '**La única vez que se devuelve.**'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: WORK_NOT_FOUND`. No existe o no es suya: se contestan igual.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: PUBLIC_LINK_CAP_OUT_OF_RANGE` —lleva `minimum` y `maximum`—
+          o `PUBLIC_LINK_EXPIRY_IN_THE_PAST`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  get:
+    tags: [Works]
+    operationId: listPublicLinks
+    summary: Los enlaces públicos de una obra
+    description: |
+      Incluye los revocados y los caducados: el autor necesita saber **qué
+      repartió**, no solo qué sigue abierto.
+
+      **Sin el token.** Lo que se revoca es el enlace, no la URL.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '200':
+        description: Sus enlaces, del más reciente al más antiguo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [publicLinks]
+              properties:
+                publicLinks:
+                  type: array
+                  items:
+                    $ref: '#/PublicLink'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+publicLink:
+  delete:
+    tags: [Works]
+    operationId: revokePublicLink
+    summary: Revocar un enlace público
+    description: |
+      Inmediata e irreversible. Un enlace revocado no se reactiva: se crea
+      otro.
+
+      Revocar dos veces devuelve `204` las dos: lo que se pedía —que ese
+      enlace no sirva— ya está cumplido.
+    parameters:
+      - name: publicLinkId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Revocado, o ya lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: PUBLIC_LINK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+PublicLink:
+  type: object
+  required: [publicLinkId, label, maxCorrections, createdAt, expiresAt, revokedAt, usable]
+  properties:
+    publicLinkId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    label:
+      type: [string, 'null']
+    maxCorrections:
+      type: integer
+    createdAt:
+      type: string
+      format: date-time
+    expiresAt:
+      type: [string, 'null']
+      format: date-time
+    revokedAt:
+      type: [string, 'null']
+      format: date-time
+    usable:
+      type: boolean
+      description: Ni revocado, ni caducado, ni de una obra bloqueada.

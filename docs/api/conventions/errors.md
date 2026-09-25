@@ -153,6 +153,18 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `CLAIM_ALREADY_RESOLVED` | 409 | Ya está resuelta, y el estado no retrocede. También es lo que ve el segundo moderador que llega a la vez |
 | `CLAIM_MOTIVATION_REQUIRED` | 422 | Toda decisión lleva motivación escrita, también la que desestima |
 | `CLAIM_DECISION_UNKNOWN` | 422 | La decisión no es `UPHELD` ni `REJECTED` |
+| `CORRECTION_NOT_FOUND` | 404 | La corrección no existe, o no es suya para leerla. Una ajena responde como una inexistente (`FEAT-FBK-004`) |
+| `CORRECTION_HAS_NO_AUTHOR` | 409 | Llegó por enlace público: no hay cuenta detrás a la que contestar (`FEAT-FBK-005`) |
+| `EMPTY_REPLY` | 422 | Una respuesta vacía no es una respuesta |
+| `CORRECTION_LOCKED` | 409 | Retenida por descubierto. Se distingue del `404` a propósito: existe, es suya, y se lee reponiendo saldo |
+| `CHAPTER_HAS_CORRECTIONS` | 409 | Alguien lo corrigió: se oculta, no se borra (`FEAT-WRK-003`) |
+| `WORK_NEEDS_A_CHAPTER` | 409 | Una obra publicada no se queda sin capítulos. En borrador sí |
+| `CHAPTER_ORDER_INCOMPLETE` | 422 | El orden enviado no contiene exactamente los capítulos de la obra. Se rechaza entero |
+| `CHAPTER_BLOCKED` | 409 | El capítulo está bloqueado por una reclamación estimada y su contenido se conserva tal cual (`FEAT-WRK-005` `RN-7`) |
+| `CONFIRMATION_REQUIRED` | 422 | Falta la confirmación explícita. La comprueba el servidor, no solo la pantalla (`FEAT-WRK-006`) |
+| `WORK_BLOCKED` | 409 | La obra está bloqueada por una reclamación estimada y no se puede retirar |
+| `WORK_NOT_ARCHIVED` | 409 | Se pide recuperar una obra que no estaba retirada |
+| `UNSUPPORTED_SORT` | 422 | El criterio de orden no existe. Lleva `supportedSorts`, y no se ignora en silencio (`FEAT-WRK-015`) |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |

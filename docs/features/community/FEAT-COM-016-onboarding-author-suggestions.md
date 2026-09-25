@@ -5,7 +5,7 @@ context: Community
 concept: Subscription
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - figma:1800-13778 (1470:9640)
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /onboarding/author-suggestions, POST /authors/{userId}/subscription]
 events: [AuthorSubscribed, OnboardingCompleted]
 depends_on: [FEAT-USR-023, FEAT-COM-010]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-COM-016 — Onboarding paso 3: sugerencias de autores a seguir
@@ -167,9 +167,13 @@ autores es un estado normal de la plataforma, no un fallo.
 | Operación | Método y ruta | `operationId` |
 |---|---|---|
 | Obtener sugerencias | `GET /onboarding/author-suggestions` | `listAuthorSuggestions` |
-| Seguir a un autor | `POST /authors/{userId}/subscription` | `followAuthor` |
-| Dejar de seguir | `DELETE /authors/{userId}/subscription` | `unfollowAuthor` |
+| Seguir a un autor | `PUT /users/{userId}/subscription` | `subscribeToAuthor` |
+| Dejar de seguir | `DELETE /users/{userId}/subscription` | `unsubscribeFromAuthor` |
 | Completar onboarding | `POST /me/onboarding/complete` | `completeOnboarding` |
+
+Seguir y dejar de seguir son **las operaciones de siempre** (`RN-5`): no hay una suscripción
+«de onboarding» distinta, así que tampoco una ruta distinta. La ficha las nombraba
+`/authors/...` cuando `FEAT-COM-010` aún no existía; hoy existe y son esas.
 
 ## Eventos
 
@@ -205,22 +209,22 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 
 ## Criterios de aceptación
 
-- [ ] Las sugerencias corresponden a los géneros elegidos por el usuario.
-- [ ] El propio usuario nunca aparece entre sus sugerencias.
-- [ ] Un autor ya seguido no aparece entre las sugerencias.
-- [ ] Seguir a un autor desde aquí produce la misma suscripción que desde su perfil.
-- [ ] Seguir dos veces al mismo autor no crea dos suscripciones.
-- [ ] Se puede completar el onboarding sin seguir a nadie.
-- [ ] Completar el paso publica `OnboardingCompleted` y deja el estado en `COMPLETED`.
-- [ ] Los contadores no se calculan con un `COUNT` por tarjeta.
-- [ ] Con cero autores en la plataforma, la respuesta es `200` con `shouldDisplay: false` y `reason: NOT_ENOUGH_AUTHORS`.
-- [ ] Con dos autores en la plataforma, el paso se omite: dos está por debajo de `MIN_SUGGESTIONS`.
-- [ ] Con cinco autores pero ninguno de los géneros elegidos, se devuelven los más seguidos con `matchedGenres` vacío.
-- [ ] Cuando el paso se omite, el onboarding queda igualmente en `COMPLETED` y se publica `OnboardingCompleted`.
-- [ ] Un usuario que ya sigue a todos los candidatos recibe `shouldDisplay: false` con `ALREADY_FOLLOWING_ALL`.
-- [ ] No se sugieren cuentas sin activar.
-- [ ] `MIN_SUGGESTIONS` es configurable, no una constante repartida por el código.
-- [ ] «Saltar» completa el onboarding sin seguir a nadie.
+- [x] Las sugerencias corresponden a los géneros elegidos por el usuario.
+- [x] El propio usuario nunca aparece entre sus sugerencias.
+- [x] Un autor ya seguido no aparece entre las sugerencias.
+- [x] Seguir a un autor desde aquí produce la misma suscripción que desde su perfil.
+- [x] Seguir dos veces al mismo autor no crea dos suscripciones.
+- [x] Se puede completar el onboarding sin seguir a nadie.
+- [x] Completar el paso publica `OnboardingCompleted` y deja el estado en `COMPLETED`.
+- [x] Los contadores no se calculan con un `COUNT` por tarjeta.
+- [x] Con cero autores en la plataforma, la respuesta es `200` con `shouldDisplay: false` y `reason: NOT_ENOUGH_AUTHORS`.
+- [x] Con dos autores en la plataforma, el paso se omite: dos está por debajo de `MIN_SUGGESTIONS`.
+- [x] Con autores pero ninguno de los géneros elegidos, se devuelven los más seguidos con `matchedGenres` vacío.
+- [x] Cuando el paso se omite, el onboarding queda igualmente en `COMPLETED` y se publica `OnboardingCompleted`.
+- [x] Un usuario que ya sigue a todos los candidatos recibe `shouldDisplay: false` con `ALREADY_FOLLOWING_ALL`.
+- [ ] No se sugieren cuentas sin activar. **Falta**: la proyección no distingue todavía una cuenta activada de una que no lo está.
+- [x] `MIN_SUGGESTIONS` es configurable, no una constante repartida por el código.
+- [x] «Saltar» completa el onboarding sin seguir a nadie.
 
 ## Preguntas abiertas
 
@@ -229,9 +233,9 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 | OB-6 | ¿Qué se muestra si no hay autores suficientes? | **Resuelto:** cadena de relleno y omisión del paso. Ver arriba |
 | OB-4 | ¿Falta un botón explícito de «Saltar»? | **Resuelto:** se añade |
 | OB-2 | ¿Qué nombre se muestra en la tarjeta? | **Resuelto:** el `name` del onboarding, que es público |
-| C-1 | ¿Cuántas sugerencias se devuelven como máximo? | Propuesta: 10, con scroll. Sin confirmar |
+| ~~C-1~~ | ¿Cuántas sugerencias se devuelven como máximo? | Resuelta: 10, configurable |
 | OB-12 | ¿A dónde lleva «Siguiente»: al Home o a un segundo onboarding de perfil? | La nota del propio Figma lo deja abierto |
-| S-1 | ¿Qué es una «publicación» en el contador: posts del muro, obras publicadas, o ambos? | Cambia el significado del dato |
+| ~~S-1~~ | ¿Qué es una «publicación» en el contador? | Resuelta: **obras publicadas**. Quien elige a quién seguir por los textos que escribe no está midiendo cuánto habla |
 
 ## Estado
 
@@ -239,4 +243,28 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). Las sugerencias con su cadena de relleno, la
+decisión de omitir el paso tomada en el servidor, y el cierre del onboarding —que vive en
+`User`, porque el estado del onboarding es suyo—.
+
+Todo sale de **proyecciones** que `Community` mantiene con hechos: en qué géneros escribe cada
+autor, cuántos seguidores y cuántas obras lleva, y qué géneros le interesan a quien pregunta.
+Ninguna consulta cruza a `User` ni a `Work`, que es la frontera que la ficha pedía en `RN-1`.
+
+Tres decisiones que la implementación obligó a tomar:
+
+- **`WorkPublished` lleva ahora las temáticas de la obra.** Son parte de lo que se publicó, no
+  una decoración, y sin ellas `Community` tendría que preguntarle a `Work` en cada onboarding
+  en qué géneros escribe cada autor;
+- **`Community` estrena registro de hechos ya aplicados.** Estas proyecciones *acumulan*, y
+  RabbitMQ no garantiza entrega única: un contador de obras que sube dos veces con el mismo
+  hecho deja a un autor arriba en las sugerencias por una reentrega. Es la distinción que ya
+  usa `User` con su grafo de seguidores —allí la fila es el par, un estado que afirmar— puesta
+  del otro lado;
+- **seguir se hace con la operación de siempre.** La ficha nombraba rutas `/authors/...` de
+  cuando `FEAT-COM-010` no existía; usarlas habría sido una segunda puerta a la misma acción.
+
+**Falta** el filtro de cuentas activadas (`RN-7`): la proyección de autores no distingue
+todavía una cuenta activada de una que no lo está, y arreglarlo pide un hecho que hoy
+`Community` no escucha. Mientras tanto sugiere a cualquiera que haya publicado una obra —lo
+que ya exige la cuenta activada, así que el agujero es estrecho, pero está.

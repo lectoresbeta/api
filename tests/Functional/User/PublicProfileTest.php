@@ -37,7 +37,10 @@ final class PublicProfileTest extends EconomyScenario
         self::assertSame('USER_ID', $this->payload()['resolvedVia']);
 
         self::assertSame(
-            ['userId', 'username', 'canonicalUsername', 'resolvedVia', 'name', 'description', 'avatarUrl', 'coverUrl'],
+            [
+                'userId', 'username', 'canonicalUsername', 'resolvedVia', 'name', 'description',
+                'avatarUrl', 'coverUrl', 'counters', 'isFollowing', 'isFollowedBy', 'isBlocked',
+            ],
             array_keys($this->payload()),
         );
     }
@@ -288,6 +291,104 @@ final class PublicProfileTest extends EconomyScenario
         $this->byId($person['userId'], $sinActivar);
 
         self::assertResponseIsSuccessful();
+    }
+
+    /**
+     * La relación en los dos sentidos, que es lo que permite al cliente
+     * pintar el botón sin una segunda petición (`RN-5`).
+     *
+     * Seguir es **unilateral**, así que las dos direcciones son preguntas
+     * distintas: «le sigo» no implica «me sigue», y un cliente que asumiera
+     * lo contrario pintaría «Te sigue» a quien no le sigue nadie.
+     */
+    public function testTheProfileCarriesTheRelationshipInBothDirections(): void
+    {
+        $persona = $this->namedPerson('persona', 'Ana García');
+        $visitante = $this->activatedPerson('visitante');
+
+        $this->byId($persona['userId'], $visitante['token']);
+        self::assertResponseIsSuccessful();
+        self::assertFalse($this->payload()['isFollowing']);
+        self::assertFalse($this->payload()['isFollowedBy']);
+        self::assertFalse($this->payload()['isBlocked']);
+
+        $this->follow($visitante['token'], $persona['userId']);
+
+        $this->byId($persona['userId'], $visitante['token']);
+        self::assertTrue($this->payload()['isFollowing'], 'Ahora le sigue.');
+        self::assertFalse($this->payload()['isFollowedBy'], 'Seguir no es recíproco.');
+
+        // Y desde el otro lado, la misma relación leída al revés.
+        $this->byId($visitante['userId'], $persona['token']);
+        self::assertFalse($this->payload()['isFollowing']);
+        self::assertTrue($this->payload()['isFollowedBy'], '«Te sigue».');
+    }
+
+    /**
+     * **Nula sin sesión**, que no es lo mismo que falsa: no hay relación que
+     * contar con un visitante anónimo, y un `false` diría que no le sigue.
+     */
+    public function testWithoutASessionThereIsNoRelationshipToTell(): void
+    {
+        $persona = $this->namedPerson('persona', 'Ana García');
+
+        $this->byId($persona['userId']);
+
+        self::assertResponseIsSuccessful();
+        self::assertNull($this->payload()['isFollowing']);
+        self::assertNull($this->payload()['isFollowedBy']);
+        self::assertNull($this->payload()['isBlocked']);
+    }
+
+    /**
+     * Los contadores de la cabecera, que son de otros tres contextos y salen
+     * por sus contratos publicados. Ninguno se lee de una tabla ajena.
+     */
+    public function testTheProfileCarriesTheSameCountersAsTheOwnProfile(): void
+    {
+        $persona = $this->namedPerson('persona', 'Ana García');
+        $visitante = $this->activatedPerson('visitante');
+
+        $this->follow($visitante['token'], $persona['userId']);
+
+        $this->byId($persona['userId']);
+
+        self::assertSame(
+            ['following' => 0, 'followers' => 1, 'works' => 0, 'corrections' => 0, 'tips' => 0],
+            $this->payload()['counters'],
+        );
+    }
+
+    /**
+     * `FEAT-CRD-017` `RN-3c`: la propina es visible en el perfil del
+     * corrector, **agregada**. Nunca corrección a corrección: exponer quién
+     * recibe reconocimiento y quién no desanima al corrector novato.
+     *
+     * La cifra la contesta `Community`, que ya la mantiene para su propia
+     * reputación. `Credits` no publica contratos, así que la puerta se abre
+     * donde ya está el dato y no donde está su origen.
+     */
+    public function testTipsShowUpAggregatedInTheCorrectorsProfile(): void
+    {
+        [$autora, $lectora, $correctionId] = $this->aDeliveredCorrection();
+
+        $this->client->request('POST', \sprintf('/api/v1/corrections/%s/tip', $correctionId), server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$autora['token'],
+        ], content: json_encode(['amount' => 4], \JSON_THROW_ON_ERROR));
+        self::assertResponseIsSuccessful();
+        $this->capture();
+        $this->consumeEverything();
+
+        $this->byId($lectora['userId']);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(4, $this->payload()['counters']['tips']);
+        self::assertSame(1, $this->payload()['counters']['corrections']);
+
+        // Y en el de la autora no aparece: lo que se cuenta es lo recibido.
+        $this->byId($autora['userId']);
+        self::assertSame(0, $this->payload()['counters']['tips']);
     }
 
     /**

@@ -38,6 +38,16 @@ class Post
     /** Set when the post promotes a work. The work itself belongs to `Work`. */
     private ?string $workId = null;
 
+    /**
+     * La dirección del enlace externo, cuando el formato es `LINK`.
+     *
+     * Se guarda la URL y **nada más** (`FEAT-COM-002` `RN-6`): el título y la
+     * descripción de la tarjeta de artículo los generaría el servidor
+     * visitando la dirección que escribió alguien, y eso es una capacidad que
+     * se decide aparte.
+     */
+    private ?string $linkUrl = null;
+
     private int $commentCount = 0;
 
     private int $likeCount = 0;
@@ -47,6 +57,16 @@ class Post
     private \DateTimeImmutable $createdAt;
 
     private \DateTimeImmutable $updatedAt;
+
+    /**
+     * Cuándo se cambió el texto, si se cambió.
+     *
+     * Columna propia y no `updatedAt != createdAt`: el registro de
+     * modificación se mueve por cualquier cosa, y lo que hay que poder
+     * afirmar delante de un comentario es **que el texto de arriba no es el
+     * que había** cuando se escribió (`RN-13`).
+     */
+    private ?\DateTimeImmutable $editedAt = null;
 
     private ?\DateTimeImmutable $deletedAt = null;
 
@@ -104,9 +124,39 @@ class Post
         return null === $this->workId ? null : WorkId::fromString($this->workId);
     }
 
+    public function linkUrl(): ?string
+    {
+        return $this->linkUrl;
+    }
+
     public function isDeleted(): bool
     {
         return null !== $this->deletedAt;
+    }
+
+    public function wasEdited(): bool
+    {
+        return null !== $this->editedAt;
+    }
+
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function commentCount(): int
+    {
+        return $this->commentCount;
+    }
+
+    public function likeCount(): int
+    {
+        return $this->likeCount;
+    }
+
+    public function repostCount(): int
+    {
+        return $this->repostCount;
     }
 
     public function promoteWork(WorkId $workId): void
@@ -114,10 +164,35 @@ class Post
         $this->workId = $workId->value();
     }
 
-    public function edit(string $body, \DateTimeImmutable $now): void
+    public function linkTo(string $url): void
     {
-        $this->body = trim($body);
+        $this->linkUrl = $url;
+    }
+
+    /**
+     * Cambiar el texto, que es lo **único** que se puede cambiar (`RN-13`).
+     *
+     * Ni la audiencia ni el adjunto: ampliar la audiencia haría aparecer ante
+     * todos algo escrito para un círculo cerrado, y cambiar el adjunto
+     * alteraría aquello a lo que ya respondió alguien.
+     *
+     * Un texto idéntico **no marca la publicación como editada**. Quien pulsa
+     * «guardar» sin haber tocado nada no ha editado nada, y la marca existe
+     * para avisar a quien lee, no para contar pulsaciones.
+     */
+    public function edit(string $body, \DateTimeImmutable $now): bool
+    {
+        $body = trim($body);
+
+        if ($body === $this->body) {
+            return false;
+        }
+
+        $this->body = $body;
+        $this->editedAt = $now;
         $this->updatedAt = $now;
+
+        return true;
     }
 
     public function delete(\DateTimeImmutable $now): void
@@ -149,5 +224,10 @@ class Post
     public function reposted(): void
     {
         ++$this->repostCount;
+    }
+
+    public function repostUndone(): void
+    {
+        $this->repostCount = max(0, $this->repostCount - 1);
     }
 }

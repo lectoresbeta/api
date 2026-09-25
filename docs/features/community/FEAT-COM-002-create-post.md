@@ -5,16 +5,16 @@ context: Community
 concept: Post
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - _sources/use-cases.pdf#p3
   - conversation:2026-09-22 (modal de publicación)
   - docs/ui/create-post.md
-endpoints: [POST /posts]
+endpoints: [POST /posts, PATCH /posts/{postId}, DELETE /posts/{postId}]
 events: [PostPublished]
 depends_on: [FEAT-USR-025]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-COM-002 — Crear una publicación
@@ -65,18 +65,66 @@ filtración.
 almacenamiento y coste que no se han valorado. **Se registra aparte** (`FEAT-COM-037`) para no
 bloquear la publicación de texto e imagen, que es lo que el producto necesita ya.
 
+## Un adjunto como máximo
+
+**Decidido** (`C-5`, `C-10`): una publicación lleva **cero o un adjunto**, nunca dos, y el
+texto es opcional cuando hay adjunto.
+
+| Lleva | ¿Se publica? |
+|---|---|
+| Solo texto | Sí |
+| Solo imagen | Sí |
+| Solo enlace, o solo relato | Sí |
+| Texto y un adjunto | Sí |
+| Dos adjuntos | No, `422` |
+| Ni texto ni adjunto | No, `422` |
+
+Lo que se rechaza es **la publicación vacía**, no la que no lleva texto. Obligar a escribir
+algo junto a una foto es una fricción que nadie espera en un muro, y el resultado sería gente
+escribiendo un punto.
+
+El formato (`PostFormat`) **se deriva del adjunto** y no se envía: una publicación con imagen
+es `IMAGE`, con enlace `LINK`, con relato `WORK`, y sin nada `TEXT`. Pedir que el cliente lo
+declare es pedirle que repita algo que ya está diciendo, y abrir la puerta a que lo diga mal.
+
+## El enlace se guarda, no se previsualiza
+
+**Decidido** (`C-8`): se almacena **la URL y nada más**. El título y la descripción de la
+tarjeta de artículo no los genera el backend.
+
+La alternativa era que el servidor visitara la dirección que escribe el usuario, y eso es una
+capacidad peligrosa por sí misma: convierte cualquier publicación en una petición saliente
+hacia donde diga quien publica, alcanzable a direcciones internas, y ata publicar a que un
+sitio ajeno responda a tiempo. Se registrará como funcionalidad propia cuando se decida quién
+la genera y con qué salvaguardas.
+
+Mientras tanto el cliente pinta un enlace simple, que es información honesta: la URL es lo
+que se sabe.
+
+## Editar y eliminar
+
+**Decidido** (`C-9`): el autor puede hacer las dos cosas con lo suyo.
+
+- **Editar cambia el texto.** El adjunto y la audiencia se fijan al publicar. Cambiar el
+  adjunto bajo comentarios ya escritos altera aquello a lo que la gente respondió, que es el
+  problema que tiene editar en un muro; y ampliar la audiencia haría aparecer ante todos algo
+  escrito para un círculo cerrado.
+- **La publicación editada se marca como tal.** Quien lee un comentario tiene derecho a saber
+  que lo que hay encima no es lo que había cuando se escribió.
+- **Eliminar es un borrado lógico y es definitivo para todos**, incluido su autor. No hay
+  papelera: «eliminar» tiene que significar lo que la gente cree que significa.
+
 ## Reglas de negocio
 
-- `RN-1` El texto es el único contenido que puede ir solo. Un adjunto sin texto **está por
-  decidir** (`C-10`).
+- `RN-1` Una publicación lleva **texto, un adjunto, o ambos**. Vacía se rechaza.
 - `RN-2` El autor es siempre el usuario autenticado. No se acepta un `authorId` en la
   petición.
 - `RN-3` Publicar exige la cuenta activada (`FEAT-USR-025`).
 - `RN-4` El texto se sanea: no admite HTML arbitrario. Los emojis sí se conservan.
 - `RN-5` Las imágenes y los vídeos adjuntos se procesan al subirse y **pierden los metadatos
   EXIF**, igual que el avatar (`file-uploads.md`).
-- `RN-6` Un enlace externo se guarda como URL. Su previsualización —título y descripción— se
-  obtiene aparte; ver `C-8`.
+- `RN-6` Un enlace externo se guarda **como URL y nada más** (`C-8`). Solo `http` y `https`:
+  cualquier otro esquema es una forma de que el cliente ejecute algo al pulsar.
 - `RN-7` Un relato de la plataforma se guarda como **`WorkId`, no como URL**: la tarjeta se
   pinta con los datos vivos de la obra (`FEAT-COM-028`).
 - `RN-8` La audiencia determina quién ve la publicación en el muro. El filtrado es de
@@ -84,6 +132,15 @@ bloquear la publicación de texto e imagen, que es lo que el producto necesita y
 - `RN-9` Una publicación no consume ni genera créditos.
 - `RN-10` Publicar emite `PostPublished`, que `Notification` usa para avisar a los
   suscriptores del autor.
+- `RN-11` El texto no pasa de **5.000 caracteres** (`C-6`), medidos **después** de limpiar el
+  marcado: contar contra el límite algo que ni se va a guardar castigaría a quien pega desde
+  un procesador de textos.
+- `RN-12` El **formato se deriva del adjunto**; no se acepta del cliente.
+- `RN-13` Editar cambia **solo el texto**, lo marca como editado y no toca audiencia ni
+  adjunto. Eliminar es lógico, definitivo y para todos. Ambas, solo el autor: para cualquier
+  otro la publicación **no existe** (`404`), no está prohibida.
+- `RN-14` Un relato adjunto tiene que **existir y ser visible para quien publica**. No se
+  promociona lo que no se puede abrir.
 
 `RN-8` es la regla que hay que vigilar: en cuanto haya audiencias distintas de «cualquiera»,
 cualquier consulta del muro que olvide el filtro se convierte en una fuga.
@@ -93,17 +150,18 @@ cualquier consulta del muro que olvide el filtro se convierte en una fuga.
 | Tipo | Icono | Estado |
 |---|---|---|
 | Imagen | Foto con «+» | Definido. Mismas reglas que el resto de imágenes |
-| **Vídeo** | Cámara con «+» | **Sin definir** (`C-2`). Límites, duración y transcodificación |
-| Enlace | Cadena | Definido a medias: falta quién genera la previsualización (`C-8`) |
-| Relato | — *(sin icono en el modal)* | Aparece en el muro pero **no hay forma visible de añadirlo** (`C-11`) |
+| **Vídeo** | Cámara con «+» | **Fuera de alcance** (`C-2`), registrado como `FEAT-COM-037` |
+| Enlace | Cadena | Definido: se guarda la URL, sin previsualización (`C-8`) |
+| Relato | — *(sin icono en el modal)* | Definido por la API (`C-11`): `POST /posts` admite un `workId` |
 
 El vídeo merece atención aparte: su coste de almacenamiento y de proceso no se parece al de
 una imagen, y arrastra transcodificación, duración máxima y reproducción. Aceptar vídeo es
 una decisión de producto con consecuencias de infraestructura, no un adjunto más.
 
-El relato plantea otro problema: la captura del muro muestra una publicación con una tarjeta
-de obra, pero el modal solo ofrece vídeo, imagen y enlace. **O falta un icono, o esa
-publicación se crea desde otro sitio** —por ejemplo desde la propia obra al publicarla—.
+El relato se resuelve **en la API** (`C-11`): `POST /posts` admite un `workId` y comprueba que
+la obra exista y sea visible para quien publica. Desde qué pantalla se pulsa —el modal o la
+propia obra— es una decisión de diseño que no toca el backend, y no se crea sola al publicar
+una obra: publicar un texto y anunciarlo en el muro son dos decisiones distintas de su autor.
 
 ## Flujo principal
 
@@ -133,6 +191,8 @@ publicación se crea desde otro sitio** —por ejemplo desde la propia obra al p
 | Operación | Método y ruta | `operationId` |
 |---|---|---|
 | Crear publicación | `POST /posts` | `createPost` |
+| Editar el texto | `PATCH /posts/{postId}` | `editPost` |
+| Eliminar | `DELETE /posts/{postId}` | `deletePost` |
 
 Lleva texto, audiencia y, según el caso, el adjunto. Los ficheros van en `multipart`; el
 enlace y el `workId`, en el cuerpo.
@@ -158,36 +218,58 @@ para el muro general.
 
 ## Criterios de aceptación
 
-- [ ] Publicar un texto crea la publicación y devuelve `201`.
-- [ ] El autor es el usuario autenticado, aunque la petición incluya otro `authorId`.
-- [ ] Una publicación sin texto ni adjunto se rechaza.
-- [ ] El texto se almacena saneado frente a inyección de HTML, conservando los emojis.
-- [ ] Una imagen adjunta pierde sus metadatos EXIF.
-- [ ] Un relato adjunto se guarda por `workId`, no por URL.
-- [ ] La audiencia se guarda y el muro **filtra en servidor** por ella.
-- [ ] Publicar no mueve créditos.
-- [ ] Con la cuenta sin activar devuelve `403`.
-- [ ] Se publica `PostPublished` con la audiencia incluida.
+- [x] Publicar un texto crea la publicación y devuelve `201`.
+- [x] Una publicación con solo imagen, solo enlace o solo relato se acepta.
+- [x] Dos adjuntos a la vez se rechazan.
+- [x] Un enlace con un esquema que no sea `http` o `https` se rechaza.
+- [x] El texto que pasa de 5.000 caracteres se rechaza.
+- [x] El autor puede editar el texto de lo suyo, y queda marcado como editado.
+- [x] Editar no cambia la audiencia ni el adjunto.
+- [x] El autor puede eliminar lo suyo, y deja de existir para todos.
+- [x] Nadie edita ni elimina la publicación de otro, y recibe `404`.
+- [x] El autor es el usuario autenticado, aunque la petición incluya otro `authorId`.
+- [x] Una publicación sin texto ni adjunto se rechaza.
+- [x] El texto se almacena saneado frente a inyección de HTML, conservando los emojis.
+- [x] Una imagen adjunta pierde sus metadatos EXIF.
+- [x] Un relato adjunto se guarda por `workId`, no por URL.
+- [x] La audiencia se guarda y el muro **filtra en servidor** por ella.
+- [x] Publicar no mueve créditos.
+- [x] Con la cuenta sin activar devuelve `403`.
+- [x] Se publica `PostPublished` con la audiencia incluida.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
 | ~~C-1~~ | ¿Qué opciones tiene el selector de audiencia? | **Bloqueante** para el modelo y el filtrado |
-| **C-2** | ¿Se admite vídeo? ¿Con qué límites y transcodificación? | Coste de infraestructura muy superior al de una imagen |
-| C-5 | ¿Se pueden combinar adjuntos, o son excluyentes? | El pie sugiere combinables; la nota de la Home, excluyentes |
-| C-6 | ¿Longitud máxima del texto? | Validación |
-| C-8 | ¿Quién genera la previsualización de un enlace externo? | Si es el backend, hace peticiones salientes a URLs que aporta el usuario |
-| C-10 | ¿Se puede publicar solo una imagen, sin texto? | Validación |
-| C-11 | ¿Desde dónde se adjunta un relato? El modal no ofrece icono para ello | Falta una entrada o la publicación nace en otro sitio |
-| C-9 | ¿Se puede editar o eliminar una publicación propia? | El menú «···» no tiene diseño para publicaciones propias |
+| ~~C-2~~ | ¿Se admite vídeo? | Fuera de alcance, registrado como `FEAT-COM-037` |
+| ~~C-5~~ | ¿Se pueden combinar adjuntos? | Resuelta: uno como máximo |
+| ~~C-6~~ | ¿Longitud máxima del texto? | Resuelta: 5.000 caracteres |
+| ~~C-8~~ | ¿Quién genera la previsualización de un enlace? | Resuelta: nadie por ahora; se guarda la URL |
+| ~~C-9~~ | ¿Se puede editar o eliminar una publicación propia? | Resuelta: las dos, con el texto como único campo editable |
+| ~~C-10~~ | ¿Se puede publicar solo una imagen? | Resuelta: sí |
+| ~~C-11~~ | ¿Desde dónde se adjunta un relato? | Resuelta: la API acepta un `workId` |
+| C-14 | ¿Se puede recuperar una publicación eliminada? | Hoy no. Una papelera es otra funcionalidad |
 
-`C-8` tiene una arista de seguridad: si el servidor visita la URL que el usuario escribe para
-generar la previsualización, hay que impedir que se use para alcanzar direcciones internas.
+`C-8` se resolvió justamente por su arista de seguridad: si el servidor visitara la URL que
+escribe el usuario, habría que impedir además que se usara para alcanzar direcciones internas.
+No generarla no es aplazar el problema, es no crearlo todavía.
 
 ## Estado
 
-**Especificación:** `APPROVED` (2026-09-24). `C-1` resuelta: dos audiencias, `EVERYONE` y `FOLLOWERS`.
-El vídeo (`C-2`) queda fuera de alcance y se registra como `FEAT-COM-037`.
+**Especificación:** `APPROVED` (2026-09-25). `C-1` resuelta: dos audiencias, `EVERYONE` y
+`FOLLOWERS`. El vídeo (`C-2`) queda fuera de alcance y se registra como `FEAT-COM-037`.
 
-**Implementación:** `TODO`.
+Resueltas en la implementación, con producto: un adjunto como máximo y texto opcional
+(`C-5`, `C-10`), 5.000 caracteres (`C-6`), el enlace se guarda sin previsualizar (`C-8`),
+se puede editar el texto y eliminar (`C-9`), y el relato se adjunta por `workId` desde la
+API (`C-11`).
+
+**Implementación:** `DONE` (2026-09-25). Se implementa junto a
+[`FEAT-COM-001`](FEAT-COM-001-main-wall.md) porque son las dos mitades de lo
+mismo: sin el muro, publicar es escribir en un sitio que nadie mira, y la
+audiencia —que es una regla de privacidad— no tiene dónde defenderse.
+
+`PostPublished` se publica y **todavía no lo escucha nadie**: avisar a quien
+sigue al autor es `FEAT-NOT-001`, y el hecho ya viaja con su audiencia para
+que ese día no haya que cambiar el contrato.

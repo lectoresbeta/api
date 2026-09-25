@@ -17,6 +17,7 @@ use LectoresBeta\Work\Manuscript\Domain\Event\WorkOpenedForCorrection;
 use LectoresBeta\Work\Manuscript\Domain\Event\WorkPublished;
 use LectoresBeta\Work\Manuscript\Domain\Exception\IllegalWorkTransition;
 use LectoresBeta\Work\Manuscript\Domain\Exception\WorkNotFound;
+use LectoresBeta\Work\Manuscript\Domain\Repository\WorkGenreRepository;
 use LectoresBeta\Work\Manuscript\Domain\Repository\WorkRepository;
 use LectoresBeta\Work\Manuscript\Domain\ValueObject\AuthorId;
 use LectoresBeta\Work\Manuscript\Domain\ValueObject\WorkId;
@@ -48,6 +49,7 @@ final readonly class ChangeWorkStatusHandler
 {
     public function __construct(
         private WorkRepository $works,
+        private WorkGenreRepository $genres,
         private TransactionalSession $session,
         private EventPublisher $events,
         private Clock $clock,
@@ -110,6 +112,10 @@ final readonly class ChangeWorkStatusHandler
             $work->title()->value(),
             $work->wordCount(),
             $work->chapterCount(),
+            // Las temáticas viajan con el hecho porque son parte de lo que se
+            // publicó: `Community` proyecta en qué géneros escribe cada autor
+            // para poder sugerir por afinidad sin leer las tablas de `Work`.
+            $this->genres->codesOf($work->id()),
             $now,
         );
     }

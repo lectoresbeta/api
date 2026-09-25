@@ -80,7 +80,15 @@ confundiría sobre algo suyo.
 | `REQUEST_ALREADY_RESOLVED` | 409 | La solicitud ya estaba cerrada |
 | `INVITATION_ALREADY_PENDING` | 409 | Ya hay una invitación abierta para esa persona |
 | `INVITATION_ALREADY_RESOLVED` | 409 | La invitación ya estaba cerrada, incluso si fue el autor quien la retiró |
+| `READER_CANNOT_SEE_THIS_WORK` | 409 | Esa persona no podría abrir la obra. Hoy: obra no apta para menores e invitado que no es mayor de edad |
 | `WORK_GONE` | 410 | La obra se borró mientras la solicitud o la invitación esperaban |
+
+`READER_CANNOT_SEE_THIS_WORK` **no dice por qué**, y es deliberado: la edad de otra persona no
+es asunto de quien invita, y un mensaje que lo insinuara convertiría el botón de invitar en un
+comprobador de quién es menor. Se comprueba al invitar y no solo al leer
+([`FEAT-USR-044`](../../features/user/FEAT-USR-044-age-based-content-filtering.md) `RN-10`),
+porque una invitación que se cursa y falla después deja al autor viendo a alguien aceptar y no
+poder entrar, sin explicación ninguna.
 
 `410` y no `404` en el último: quien resuelve conoce esa obra —es suya o le invitaron a
 ella—, y fingir que nunca existió sería mentirle sobre algo que vio.

@@ -15,13 +15,19 @@ use LectoresBeta\User\Profile\Application\DTO\PublicProfile;
  * `canonicalUsername` va siempre, no solo al resolver por alias. Así el
  * cliente puede comparar sin preguntarse si el campo aplica, que es como se
  * acaban escribiendo dos ramas donde había una.
+ *
+ * Los contadores llegan **desde fuera** y no del perfil, por lo mismo que en
+ * el perfil propio: los compone la frontera preguntando a tres contextos, y
+ * un `null` significa «no se ha podido saber», que no es lo mismo que cero.
  */
 final readonly class PublicProfileBody
 {
     /**
+     * @param array{following: ?int, followers: ?int, works: ?int, corrections: ?int, tips: ?int} $counters
+     *
      * @return array<string, mixed>
      */
-    public static function of(PublicProfile $profile): array
+    public static function of(PublicProfile $profile, array $counters): array
     {
         return [
             'userId' => $profile->userId,
@@ -32,6 +38,12 @@ final readonly class PublicProfileBody
             'description' => $profile->description,
             'avatarUrl' => MediaUrl::of($profile->avatarUrl),
             'coverUrl' => $profile->coverUrl,
+            'counters' => $counters,
+            // Nulos sin sesión: quien los reciba así no tiene ningún botón de
+            // relación que pintar, porque no hay nadie de quien hablar.
+            'isFollowing' => $profile->isFollowing,
+            'isFollowedBy' => $profile->isFollowedBy,
+            'isBlocked' => $profile->isBlocked,
         ];
     }
 }

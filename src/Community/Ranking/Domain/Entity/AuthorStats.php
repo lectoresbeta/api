@@ -52,6 +52,29 @@ class AuthorStats
         return $this->followers;
     }
 
+    /**
+     * Cuántas obras lleva publicadas.
+     *
+     * Es lo que la tarjeta de sugerencia llama «publicaciones» (`S-1`): obras
+     * de la plataforma, no mensajes del muro. Quien elige a quién seguir por
+     * los textos que escribe no está midiendo cuánto habla.
+     */
+    public function publishedWorks(): int
+    {
+        return $this->publishedWorks;
+    }
+
+    /**
+     * Créditos recibidos en propinas (`FEAT-CRD-017` `RN-3c`).
+     *
+     * **Agregados y no corrección a corrección**: exponer quién recibe
+     * reconocimiento y quién no desanima al corrector novato.
+     */
+    public function tipsReceived(): int
+    {
+        return $this->tipsReceived;
+    }
+
     public function describe(?string $displayName, ?string $avatarUrl, \DateTimeImmutable $now): void
     {
         $this->displayName = $displayName;

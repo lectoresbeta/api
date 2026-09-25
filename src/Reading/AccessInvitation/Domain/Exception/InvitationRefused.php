@@ -48,6 +48,28 @@ final class InvitationRefused extends \DomainException implements BusinessFailur
         );
     }
 
+    /**
+     * La obra es `ADULTS_ONLY` y la persona invitada no tiene edad
+     * ([`FEAT-USR-044`](../../../../../docs/features/user/FEAT-USR-044-age-based-content-filtering.md)
+     * `U-22`).
+     *
+     * Se comprueba **al invitar** y no solo al leer. Antes la invitación se
+     * cursaba y la lectura fallaba después, así que el autor veía a alguien
+     * aceptar y no poder entrar, sin ninguna explicación.
+     *
+     * No dice **por qué** esa persona no puede: la edad de otro no es asunto
+     * de quien invita, y un mensaje que lo insinuara convertiría el botón de
+     * invitar en un comprobador de quién es menor.
+     */
+    public static function readerCannotSeeThisWork(): self
+    {
+        return new self(
+            'READER_CANNOT_SEE_THIS_WORK',
+            FailureKind::CONFLICT,
+            'That person cannot be given access to this work.',
+        );
+    }
+
     public static function alreadyABetaReader(): self
     {
         return new self(

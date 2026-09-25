@@ -12,10 +12,10 @@ duplica aquí.
 | `Work` | [work.md](work.md) | Crear obra y capítulos implementados |
 | `Reading` | reading.md | Por crear |
 | `Feedback` | [feedback.md](feedback.md) | Correcciones especificadas |
-| `Community` | [community.md](community.md) | Seguir a un autor implementado |
+| `Community` | [community.md](community.md) | Muro, publicaciones, comentarios, respuestas, menciones, reposts y sugerencias |
 | `Credits` | [credits.md](credits.md) | Saldo implementado |
 | `Notification` | [notification.md](notification.md) | Bandeja y contador implementados |
-| `Moderation` | moderation.md | Por crear. Rol de moderador, reclamaciones y su resolución implementados; contrato en `openapi/paths/moderation.yaml` |
+| `Moderation` | [moderation.md](moderation.md) | Sanciones documentadas; reclamaciones, resolución, rol y auditoría implementados, con contrato en `openapi/paths/moderation.yaml` |
 
 Se crean a partir de [`../../_templates/endpoint.md`](../../_templates/endpoint.md) conforme
 se especifican las funcionalidades correspondientes.

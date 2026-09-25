@@ -75,6 +75,11 @@ class ClaimMessage
         return $this->body;
     }
 
+    public function sentAt(): \DateTimeImmutable
+    {
+        return $this->sentAt;
+    }
+
     /**
      * A party reads only their own thread; a moderator reads both.
      */

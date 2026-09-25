@@ -5,7 +5,7 @@ context: Community
 concept: Subscription
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - figma:1820-15883
@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /home/author-suggestions]
 events: [AuthorSubscribed]
 depends_on: [FEAT-COM-016, FEAT-COM-010]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-COM-018 — Home: sugerencias de autores en el muro
@@ -97,7 +97,7 @@ reutilización.
 | Operación | Método y ruta | `operationId` |
 |---|---|---|
 | Sugerencias para la Home | `GET /home/author-suggestions` | `listHomeAuthorSuggestions` |
-| Seguir a un autor | `POST /authors/{userId}/subscription` | `followAuthor` |
+| Seguir a un autor | `PUT /users/{userId}/subscription` | `subscribeToAuthor` |
 
 Podría reutilizarse `GET /onboarding/author-suggestions`, pero conviene separar las rutas: el
 contexto de uso es distinto y es previsible que el criterio o el tamaño de la lista diverjan.
@@ -105,20 +105,20 @@ Ambas delegan en el mismo caso de uso.
 
 ## Criterios de aceptación
 
-- [ ] El bloque aparece cuando el usuario no sigue a ningún autor.
-- [ ] El bloque desaparece en cuanto sigue a uno.
-- [ ] Las sugerencias coinciden con las del onboarding para el mismo usuario y momento.
-- [ ] La lógica de sugerencia está implementada una sola vez, no duplicada.
-- [ ] Sin candidatos, el bloque no se muestra y el muro se pinta sin él.
-- [ ] Seguir desde aquí produce la misma suscripción que desde el perfil del autor.
-- [ ] El bloque no se muestra a quien ya sigue a alguien, aunque su muro esté vacío.
+- [x] El bloque aparece cuando el usuario no sigue a ningún autor.
+- [x] El bloque desaparece en cuanto sigue a uno.
+- [x] Las sugerencias coinciden con las del onboarding para el mismo usuario y momento.
+- [x] La lógica de sugerencia está implementada una sola vez, no duplicada.
+- [x] Sin candidatos, el bloque no se muestra y el muro se pinta sin él.
+- [x] Seguir desde aquí produce la misma suscripción que desde el perfil del autor.
+- [x] El bloque no se muestra a quien ya sigue a alguien, aunque su muro esté vacío.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
 | ~~H-8~~ | ¿Qué compone el muro de quien no sigue a nadie? | Define si el muro es cronológico por seguidos o algorítmico |
-| S-2 | ¿Cuántas sugerencias se muestran aquí? El diseño pinta cuatro | Propuesta: cuatro, frente a las diez del onboarding |
+| ~~S-2~~ | ¿Cuántas sugerencias se muestran aquí? | Resuelta: cuatro, frente a las diez del onboarding |
 | S-3 | ¿A dónde lleva «Explorar más perfiles»? | Pantalla de descubrimiento sin diseñar |
 | OB-6 | Criterio de orden de las sugerencias | Compartido con `FEAT-COM-016` |
 
@@ -127,4 +127,13 @@ Ambas delegan en el mismo caso de uso.
 **Especificación:** `APPROVED` (2026-09-24). `H-8` resuelta: cuatro fuentes, incluidas sugerencias de
 corrección. Queda `H-10`, la cuenta institucional, que se registra aparte.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). El bloque, sobre **el mismo caso de uso** que el
+paso 3: lo único propio es la ruta, cuántas tarjetas caben y la condición de no seguir a nadie.
+Hay una prueba dedicada a que las dos pantallas respondan lo mismo para la misma persona en el
+mismo momento, que es la forma de notar el día que alguien duplique el criterio.
+
+**Falta** lo que la ficha llama las otras dos fuentes del muro de quien no sigue a nadie: las
+**publicaciones de la plataforma** —que necesitan la cuenta institucional, `H-10`, y son
+`FEAT-COM-038`— y las **sugerencias de corrección**, que son la fuente con más valor y la que
+un muro social no tendría, porque ofrece trabajo. Hoy el muro de esa persona trae lo público,
+que es la primera fuente, y este bloque, que es la segunda.

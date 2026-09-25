@@ -34,6 +34,26 @@ final class DoctrineUserBlockRepository extends DoctrineRepository implements Us
         ]) > 0;
     }
 
+    public function involving(MemberId $member): array
+    {
+        /** @var list<array{blockerId: string, blockedId: string}> $rows */
+        $rows = $this->repository()->createQueryBuilder('b')
+            ->select('b.blockerId', 'b.blockedId')
+            ->where('b.blockerId = :member OR b.blockedId = :member')
+            ->setParameter('member', $member->value())
+            ->getQuery()
+            ->getResult();
+
+        $others = [];
+
+        foreach ($rows as $row) {
+            $other = $row['blockerId'] === $member->value() ? $row['blockedId'] : $row['blockerId'];
+            $others[$other] = true;
+        }
+
+        return array_keys($others);
+    }
+
     public function blockedBy(MemberId $blockerId, ?Cursor $after, int $limit): array
     {
         $query = $this->repository()->createQueryBuilder('b')

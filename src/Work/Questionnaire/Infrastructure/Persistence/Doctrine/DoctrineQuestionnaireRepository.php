@@ -31,6 +31,11 @@ final class DoctrineQuestionnaireRepository extends DoctrineRepository implement
         return $this->repository()->findOneBy(['workId' => $workId->value()], ['version' => 'DESC']);
     }
 
+    public function ofVersion(WorkId $workId, int $version): ?Questionnaire
+    {
+        return $this->repository()->findOneBy(['workId' => $workId->value(), 'version' => $version]);
+    }
+
     public function questionsOf(QuestionnaireId $questionnaireId): array
     {
         return array_values($this->entityManager

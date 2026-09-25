@@ -49,9 +49,16 @@ Los publicados hasta ahora:
 | `RegisteredUsers` | `User` | Un booleano: ¿existe este usuario? |
 | `ReaderDirectory` | `User` | Las personas cuyo nombre o `@usuario` encajan con un texto |
 | `AuthorAudience` | `User` | Un booleano: ¿acepta este autor comentarios de esta persona? |
+| `ReaderContentPreferences` | `User` | Qué etiquetas de contenido ha excluido esta persona |
 
 Casi todos devuelven **un booleano o poco más**, y no es casualidad: un contrato que devuelve
 mucho suele ser un modelo compartido con otro nombre.
+
+`ReaderContentPreferences` responde solo hacia un lado, y es lo que lo hace seguro: se puede
+preguntar qué ha excluido **una** persona, nunca cuánta gente excluye una etiqueta. Con ese
+segundo número un autor sabría cuánta audiencia pierde por etiquetar bien, y con él tendría un
+incentivo directo para etiquetar mal. La regla vive en la forma del contrato, no en una
+advertencia.
 
 `GenreCatalogue` pregunta al revés de como parecería natural —qué códigos *no* existen, en vez
 de cuáles sí— y eso también es deliberado: es la respuesta que hace falta, porque un código

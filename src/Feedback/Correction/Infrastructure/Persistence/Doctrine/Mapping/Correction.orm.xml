@@ -21,6 +21,11 @@
             <index name="idx_correction_reader" columns="reader_id,status"/>
             <index name="idx_correction_chapter" columns="chapter_id,status"/>
             <index name="idx_correction_owner" columns="owner_id,submitted_at"/>
+            <!-- La bandeja filtrada por «sin leer» (`FEAT-FBK-004` `RN-6`). -->
+            <index name="idx_correction_owner_unread" columns="owner_id,read_at"/>
+            <!-- Cuántas lleva un enlace público, que es como se aplica su
+                 tope (`FEAT-FBK-008` `RN-4`). -->
+            <index name="idx_correction_public_link" columns="public_link_id"/>
         </indexes>
 
         <unique-constraints>
@@ -46,8 +51,11 @@
         <field name="chapterId" column="chapter_id" type="guid"/>
         <field name="readerId" column="reader_id" type="guid" nullable="true"/>
         <field name="authorLabel" column="author_label" type="string" length="80" nullable="true"/>
+        <field name="publicLinkId" column="public_link_id" type="guid" nullable="true"/>
+        <field name="termsAcceptedAt" column="terms_accepted_at" type="datetime_immutable" nullable="true"/>
         <field name="ownerId" column="owner_id" type="guid"/>
         <field name="questionnaireVersion" column="questionnaire_version" type="smallint"/>
+        <field name="chapterVersion" column="chapter_version" type="smallint" nullable="true"/>
         <field name="status" type="string" length="16"
                enum-type="LectoresBeta\Feedback\Correction\Domain\Enum\CorrectionStatus"/>
         <field name="origin" type="string" length="16"
@@ -58,6 +66,8 @@
         <field name="ratedAt" column="rated_at" type="datetime_immutable" nullable="true"/>
         <field name="tipAmount" column="tip_amount" type="smallint" nullable="true"/>
         <field name="tippedAt" column="tipped_at" type="datetime_immutable" nullable="true"/>
+        <field name="readAt" column="read_at" type="datetime_immutable" nullable="true"/>
+        <field name="withdrawalNoticedAt" column="withdrawal_noticed_at" type="datetime_immutable" nullable="true"/>
         <field name="startedAt" column="started_at" type="datetime_immutable"/>
         <field name="submittedAt" column="submitted_at" type="datetime_immutable" nullable="true"/>
         <field name="updatedAt" column="updated_at" type="datetime_immutable"/>

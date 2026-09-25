@@ -75,3 +75,104 @@ listBlockedUsers:
     path: /api/v1/me/blocked-users
     controller: LectoresBeta\Community\Relationship\Infrastructure\Controller\ListBlockedUsersController::__invoke
     methods: [GET]
+
+# El muro y lo que se escribe en él (`FEAT-COM-001`, `FEAT-COM-002`).
+#
+# El listado exige sesión: sin saber quién mira no se puede resolver qué
+# publicaciones `FOLLOWERS` le alcanzan.
+listPosts:
+    path: /api/v1/posts
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\ListPostsController::__invoke
+    methods: [GET]
+
+createPost:
+    path: /api/v1/posts
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\CreatePostController::__invoke
+    methods: [POST]
+
+editPost:
+    path: /api/v1/posts/{postId}
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\EditPostController::__invoke
+    methods: [PATCH]
+
+deletePost:
+    path: /api/v1/posts/{postId}
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\DeletePostController::__invoke
+    methods: [DELETE]
+
+# La imagen se pide **por la publicación** y no desde la carpeta pública: una
+# publicación para seguidores es una regla de privacidad, y una clave difícil
+# de adivinar no es una comprobación.
+getPostImage:
+    path: /api/v1/posts/{postId}/image
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\GetPostImageController::__invoke
+    methods: [GET]
+
+# Los comentarios de una publicación (`FEAT-COM-006`).
+#
+# Solo comenta quien puede ver la publicación: con audiencias distintas de
+# «cualquiera», comentar es la otra vía por la que alguien tocaría contenido
+# que no debería ver.
+listPostComments:
+    path: /api/v1/posts/{postId}/comments
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\ListPostCommentsController::__invoke
+    methods: [GET]
+
+createPostComment:
+    path: /api/v1/posts/{postId}/comments
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\CreatePostCommentController::__invoke
+    methods: [POST]
+
+editPostComment:
+    path: /api/v1/comments/{commentId}
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\EditPostCommentController::__invoke
+    methods: [PATCH]
+
+deletePostComment:
+    path: /api/v1/comments/{commentId}
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\DeletePostCommentController::__invoke
+    methods: [DELETE]
+
+# Las respuestas de un comentario (`FEAT-COM-031`).
+#
+# Los hilos son planos: si `commentId` es una respuesta, el servidor resuelve
+# al comentario raíz. El cliente no necesita saber cuál es.
+listCommentReplies:
+    path: /api/v1/comments/{commentId}/replies
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\ListCommentRepliesController::__invoke
+    methods: [GET]
+
+replyToComment:
+    path: /api/v1/comments/{commentId}/replies
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\ReplyToCommentController::__invoke
+    methods: [POST]
+
+# Repostear (`FEAT-COM-019`). El `POST` alterna y el `DELETE` quita: dicen
+# cosas distintas, y por eso están los dos.
+repostPost:
+    path: /api/v1/posts/{postId}/repost
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\RepostPostController::__invoke
+    methods: [POST]
+
+undoRepost:
+    path: /api/v1/posts/{postId}/repost
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\UndoRepostController::__invoke
+    methods: [DELETE]
+
+# Paso 3 del onboarding (`FEAT-COM-016`). Responde siempre `200`: que no haya
+# autores que sugerir es un estado normal de una plataforma recién lanzada, y
+# quien decide si el paso se enseña es el servidor.
+listAuthorSuggestions:
+    path: /api/v1/onboarding/author-suggestions
+    controller: LectoresBeta\Community\Recommendation\Infrastructure\Controller\ListAuthorSuggestionsController::__invoke
+    methods: [GET]
+
+# El bloque «todavía no sigues a ningún autor» del muro (`FEAT-COM-018`).
+#
+# Ruta aparte y **mismo caso de uso** que el paso 3 del onboarding: el
+# contexto de uso es distinto y es previsible que el tamaño de la lista
+# diverja, pero duplicar el criterio sería tener dos sitios donde cambiarlo.
+listHomeAuthorSuggestions:
+    path: /api/v1/home/author-suggestions
+    controller: LectoresBeta\Community\Recommendation\Infrastructure\Controller\ListHomeAuthorSuggestionsController::__invoke
+    methods: [GET]

@@ -39,13 +39,17 @@ final readonly class ResolveCorrectionBriefs implements CorrectionBriefs
     {
         $chapter = $this->chapters->ofId(ChapterId::fromString($chapterId));
 
-        if (null === $chapter || $chapter->isBlocked()) {
+        // Oculto y bloqueado dan lo mismo aquí: no hay nada que corregir.
+        // Ocultar un capítulo lo cierra para empezar **y para entregar**,
+        // porque los dos caminos pasan por este contrato (`FEAT-WRK-008`
+        // `RN-3`, `RN-5`).
+        if (null === $chapter || $chapter->isBlocked() || $chapter->isHidden()) {
             return null;
         }
 
         $work = $this->works->ofId($chapter->workId());
 
-        if (null === $work || $work->isBlocked()) {
+        if (null === $work || $work->isBlocked() || $work->isArchived()) {
             return null;
         }
 
@@ -61,6 +65,7 @@ final readonly class ResolveCorrectionBriefs implements CorrectionBriefs
             $work->accessMode()->value,
             $work->isAdultsOnly(),
             $questionnaire?->version() ?? 0,
+            $chapter->version(),
             $this->asked($questions, $isLast),
         );
     }

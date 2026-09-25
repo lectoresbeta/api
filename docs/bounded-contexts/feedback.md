@@ -78,7 +78,6 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 | `CorrectionResumed` | Un lector vuelve a abrir un panel que ya tenía empezado | `Reading` (le devuelve el acceso si lo había perdido). **`Credits` no**: el hueco y el precio se tomaron al empezar |
 | `FeedbackSubmitted` | Se **entrega** una corrección | **`Credits`**, `Notification`, `Community` (rankings) |
 | `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación; no hay nada que liberar) |
-| `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` (reputación) |
 | `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` no lo consume**: está fuera de la economía |
 | `FeedbackRatedPositively` | El autor valora la corrección como útil | `Notification`, `Community`. **Ya no mueve créditos**: la bonificación automática se sustituyó por la propina |
 | `FeedbackReplied` | El autor contesta | `Notification` |
@@ -120,6 +119,7 @@ personas, y una cola que persiste, reintenta y aparca mensajes no es sitio para 
 | `CreditBalanceWentNegative` | `Credits` | La corrección recién llegada se marca **bloqueada** para el autor |
 | `OverdraftCorrectionGranted` | `Credits` | Igual, para el descubierto deliberado |
 | `CorrectionUnlocked` | `Credits` | El autor repuso saldo: se desbloquea el contenido |
+| `CorrectionTipped` | `Credits` | Apunta en la corrección que fue propinada. **El importe no se publica corrección a corrección** |
 | `WorkClosedForCorrection` | `Work` | Los borradores en curso dejan de poder enviarse (`Q-5`) |
 
 **Ningún evento de `Credits` bloquea a este contexto.** Con las retenciones desapareció el

@@ -30,9 +30,11 @@
 | `PUT /api/v1/works/{workId}/questionnaire` | `updateWorkQuestionnaire` | Definir el cuestionario. Crea una versión | FEAT-WRK-014 | **Implementado** |
 | `POST /works/{workId}/questionnaire/estimate` | `estimateQuestionnairePricing` | Simular coste y recompensa | FEAT-WRK-014 | BLOCKED |
 | `PUT /api/v1/works/{workId}/status` | `changeWorkStatus` | Publicar, abrir o cerrar la corrección | FEAT-WRK-016 | **Implementado** |
-| `POST /works/{workId}/public-link` | `createPublicLink` | Crear enlace público | FEAT-WRK-010 | PENDING |
-| `DELETE /public-links/{linkId}` | `revokePublicLink` | Revocar enlace público | FEAT-WRK-010 | PENDING |
-| `GET /public-links/{token}` | `readByPublicLink` | Leer sin sesión | FEAT-WRK-010 | PENDING |
+| `POST /api/v1/works/{workId}/public-links` | `createPublicLink` | Crear un enlace público. **Devuelve el token una sola vez** | FEAT-WRK-010 | **Implementado** |
+| `GET /api/v1/works/{workId}/public-links` | `listPublicLinks` | Los enlaces de una obra, sin sus tokens | FEAT-WRK-010 | **Implementado** |
+| `DELETE /api/v1/public-links/{publicLinkId}` | `revokePublicLink` | Revocar. Inmediata e irreversible | FEAT-WRK-010 | **Implementado** |
+| `GET /api/v1/public/{token}` | `getPublicCorrectionPage` | La obra y su índice, **sin sesión** | FEAT-WRK-010 | **Implementado** |
+| `GET /api/v1/public/{token}/chapters/{chapterId}` | `getPublicChapter` | El texto y el cuestionario, **sin sesión** | FEAT-WRK-010 | **Implementado** |
 | `GET /works/{workId}/share-link` | `getShareLink` | Enlace para redes sociales | FEAT-WRK-011 | PENDING |
 | `GET /works/{workId}/authorship-records` | `listAuthorshipRecords` | Registros de autoría | FEAT-WRK-009 | BLOCKED |
 
@@ -531,3 +533,85 @@ Está bloqueada porque el cálculo es de `Credits` y todavía no existe quien lo
 [`decision:0014`](../../decisions/0014-published-contracts-between-contexts.md) permite. Es el
 caso raro en que la consulta síncrona está justificada: el precio se necesita en el momento, y
 un evento llega tarde.
+
+---
+
+## El enlace público
+
+**`operationId`:** `createPublicLink`, `listPublicLinks`, `revokePublicLink`,
+`getPublicCorrectionPage`, `getPublicChapter` ·
+**Funcionalidad:** [`FEAT-WRK-010`](../../features/work/FEAT-WRK-010-public-correction-link.md)
+
+### Propósito
+
+Que el autor genere una URL de su obra y la reparta **fuera de la plataforma**. Quien la recibe
+lee y corrige sin registrarse ([`FEAT-FBK-008`](../../features/feedback/FEAT-FBK-008-public-link-correction.md)).
+
+Es la **válvula de seguridad de la economía de créditos**: un autor sin saldo no recibe
+correcciones, y para conseguir saldo necesita textos que corregir. El enlace rompe ese círculo
+por fuera, sin tocar la masa de créditos y sin depender de nadie más que de su agenda.
+
+### El token
+
+Opaco, largo y aleatorio. **No se deriva de nada** —ni del identificador de la obra, ni del
+autor, ni de una fecha—: cualquiera de esas tres cosas convertiría la única credencial que
+protege obra inédita en algo que se adivina sabiendo lo que ya se sabe.
+
+Se guarda cifrado y **se devuelve una sola vez**, en la respuesta que lo crea. Después no hay
+forma de recuperarlo: quien pierde la URL crea otro enlace.
+
+Es incómodo y es deliberado. Guardarlo en claro para poder enseñarlo siempre dejaría una
+credencial legible en la base de datos y en cada copia de seguridad, y eso no se deshace; crear
+otro enlace cuesta un clic. El caso real —repartirlo a tu grupo de escritura— se resuelve
+copiando la URL en el momento, que es cuando se está mirando.
+
+### Autorización
+
+Las tres primeras operaciones son **del autor de la obra**, y no existe ni se contesta lo que
+no es suyo: «no existe» y «no es tuya» comparten `404`.
+
+Las dos lecturas **no exigen sesión**, y son las únicas de una obra que no la exigen. Lo que
+autoriza es el token.
+
+**Pero sí la leen.** Está en `access_control` con `PUBLIC_ACCESS` y no en un cortafuegos sin
+seguridad, y la distinción es la que sostiene `FEAT-FBK-008` `RN-1`: a quien ya tiene cuenta se
+le manda al flujo normal, donde su corrección se paga, y para eso hay que saber que la tiene.
+Sin esa línea, el autor podría pegar el enlace en su muro y conseguir que usuarios registrados
+le corrigiesen gratis.
+
+### Qué se sirve
+
+La portada trae la obra y su índice de **capítulos visibles**. Un capítulo que su autor ha
+ocultado no sale aquí ni por su URL directa: el enlace abre una puerta, no la levanta.
+
+El texto va en su propio endpoint. Una novela entera en una respuesta son megabytes que casi
+nadie lee de una sentada, y además es como se lee.
+
+Los dos llevan `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet` y `Cache-Control:
+no-store`. Es obra inédita: no puede acabar en un buscador ni quedarse en un intermediario. La
+cabecera y no una etiqueta `meta` porque esto devuelve JSON, y una etiqueta dentro del HTML solo
+la pondría el cliente.
+
+### Errores específicos
+
+| Código HTTP | `code` | Cuándo |
+|---|---|---|
+| `404` | `WORK_NOT_FOUND` / `PUBLIC_LINK_NOT_FOUND` | No es suya, o ese token nunca existió |
+| `409` | `USE_THE_NORMAL_FLOW` | Quien abre tiene sesión. Lleva `workId` |
+| `410` | `PUBLIC_LINK_GONE` | Revocado, caducado, o de una obra bloqueada |
+| `422` | `PUBLIC_LINK_CAP_OUT_OF_RANGE` | El tope va de 1 a 100 |
+| `422` | `PUBLIC_LINK_EXPIRY_IN_THE_PAST` | La caducidad tiene que estar en el futuro |
+| `429` | `TOO_MANY_ATTEMPTS` | Límite por origen. Lleva `Retry-After` |
+
+**El `410` no es un `404` disfrazado.** Quien tiene la URL sabe que existió; fingir lo contrario
+no protege nada y le deja sin entender por qué no funciona.
+
+El límite es **por origen y no por token**, que es lo contrario de lo que parece natural:
+limitar un token protegería al enlace de ser abierto mucho, que es justo lo que su autor quiere.
+Lo que hay que frenar es a quien prueba tokens distintos.
+
+### Efectos
+
+Ninguno sobre créditos, en ninguna de las cinco operaciones. Crear y revocar no publican
+eventos: el enlace es un asunto interno de `Work` hasta que alguien corrige por él, y entonces
+el hecho lo publica `Feedback`.

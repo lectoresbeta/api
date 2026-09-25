@@ -456,3 +456,547 @@ claimReview:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+auditLog:
+  get:
+    tags: [Moderation]
+    operationId: listAuditLog
+    summary: El registro de auditoría
+    description: |
+      Toda acción administrativa, con **quién, qué, sobre qué, cuándo y por
+      qué**, de lo más reciente a lo más antiguo.
+
+      **Solo un `ADMIN`.** Un moderador no audita a sus compañeros: el
+      registro existe para que el poder que se ejerce sobre los usuarios sea
+      revisable por quien responde de la plataforma, no para vigilancia
+      horizontal dentro del equipo — saberse observado por los iguales cambia
+      cómo se decide, y lo cambia hacia decidir lo que no genera preguntas en
+      vez de lo correcto.
+
+      Lleva la **motivación** de cada decisión, que es material interno del
+      expediente y **no sale por ninguna otra puerta**: ningún evento la
+      transporta y las partes no la ven.
+
+      El `payload` nunca contiene contenido: ni texto de obras, ni de
+      correcciones, ni de mensajes. El registro dice qué se hizo, no qué
+      estaba escrito.
+
+      **Es de solo lectura, y consultarlo no se anota**: anotar cada lectura
+      convertiría el registro en su propio ruido.
+    parameters:
+      - name: actorId
+        in: query
+        required: false
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: action
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: targetType
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: targetId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Las entradas del registro.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entries]
+              properties:
+                entries:
+                  type: array
+                  items:
+                    type: object
+                    required: [entryId, actorId, action, targetType, targetId, payload, occurredAt]
+                    properties:
+                      entryId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      actorId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      action:
+                        type: string
+                      targetType:
+                        type: string
+                      targetId:
+                        type: string
+                      reason:
+                        type: [string, 'null']
+                        description: La motivación escrita, cuando la hubo.
+                      payload:
+                        type: object
+                        additionalProperties: true
+                      occurredAt:
+                        type: string
+                        format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: No es administrador.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+blockLift:
+  post:
+    tags: [Moderation]
+    operationId: liftModerationBlock
+    summary: Levantar un bloqueo
+    description: |
+      El bloqueo por reclamación estimada es **indefinido y solo lo revoca un
+      moderador** ([`FEAT-MOD-003`](../../docs/features/moderation/FEAT-MOD-003-block-work.md)
+      `RN-7`). Hasta esta operación era definitivo **de hecho**: la regla
+      decía que se podía revocar y no había por dónde pedirlo, así que un
+      error no tenía arreglo.
+
+      Lleva **motivación escrita**, como la decisión que lo impuso: deshacer
+      una decisión necesita explicarse todavía más que tomarla, y va al
+      registro de auditoría.
+
+      `Moderation` **no toca el estado de la obra**: publica que el bloqueo se
+      ha levantado y `Work` lo aplica, igual que al bloquear.
+
+      Desbloquear un capítulo **no desbloquea la obra** si la obra tiene su
+      propio bloqueo (`RN-10`).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [targetType, targetId, motivation]
+            properties:
+              targetType:
+                type: string
+                enum: [WORK, CHAPTER]
+              targetId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+              motivation:
+                type: string
+                minLength: 1
+    responses:
+      '204':
+        description: Levantado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: No modera.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CLAIM_MOTIVATION_REQUIRED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+SanctionType:
+  type: string
+  description: |
+    Las cuatro familias, y ninguna más. Un catálogo corto es una virtud:
+    cuantos más matices tenga, más difícil es que dos moderadores sancionen lo
+    mismo de la misma manera.
+
+    - `WARNING` no tiene efecto funcional; queda registrado, que es lo que
+      hace que la reincidencia pese.
+    - `PARTIAL_SUSPENSION` deja **entrar y leer** y cierra las escrituras
+      hasta una fecha. Que pueda entrar no es una concesión menor: es lo que
+      le permite leer la sanción y ver cuándo termina.
+    - `FULL_SUSPENSION` cierra la puerta y **no caduca sola**.
+    - `EXPULSION` deja la cuenta bloqueada y **conserva sus datos**: no se
+      puede a la vez borrar a alguien y recordarlo para impedirle volver.
+  enum:
+    - WARNING
+    - PARTIAL_SUSPENSION
+    - FULL_SUSPENSION
+    - EXPULSION
+
+SuspensionDuration:
+  type: string
+  description: Solo para la suspensión parcial, que **siempre lleva plazo**.
+  enum:
+    - THREE_DAYS
+    - ONE_WEEK
+    - ONE_MONTH
+
+sanctions:
+  post:
+    tags: [Moderation]
+    operationId: imposeSanction
+    summary: Sancionar a alguien
+    description: |
+      **`Moderation` registra la sanción; `User` la aplica.** Este contexto no
+      toca la cuenta de nadie: publica el hecho y `User` decide qué significa
+      en su modelo. Si marcara la cuenta directamente habría dos dueños del
+      estado del usuario.
+
+      El **motivo es obligatorio**: al usuario se le comunica tipo, motivo y
+      duración, y una sanción que no se entiende no corrige nada, solo hace
+      que la persona se vaya.
+
+      Una suspensión parcial **siempre lleva plazo**; las demás no lo admiten,
+      para que nadie ponga una fecha a una expulsión y crea que caduca.
+
+      **No mueve créditos.** Devolver el crédito repara al perjudicado y la
+      sanción corrige al infractor: una reclamación puede producir lo primero
+      sin lo segundo, y al revés.
+
+      Queda en el registro de auditoría con la identidad de quien la impuso.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [userId, type, reason]
+            properties:
+              userId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+              type:
+                $ref: '#/SanctionType'
+              reason:
+                type: string
+              duration:
+                $ref: '#/SuspensionDuration'
+              claimId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '201':
+        description: Impuesta.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sanctionId]
+              properties:
+                sanctionId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo moderación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: USER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNKNOWN_SANCTION_TYPE`, `SANCTION_REASON_REQUIRED`,
+          `SANCTION_DURATION_REQUIRED` o `UNKNOWN_SANCTION_DURATION`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+sanctionLift:
+  post:
+    tags: [Moderation]
+    operationId: liftSanction
+    summary: Levantar una sanción antes de tiempo
+    description: |
+      **Cualquiera se puede levantar, incluida la expulsión.** Al no
+      anonimizar, la expulsión no destruye nada que impida volver atrás: esa
+      es la otra mitad de por qué conserva los datos.
+
+      `POST` y no `DELETE` porque **no la borra, la cierra**: su rastro se
+      queda en el historial, que es lo que permite que la reincidencia pese, y
+      lleva motivo, que un `DELETE` no tendría dónde poner.
+
+      Levantar lo ya levantado **sí es un error aquí**, al revés que en otras
+      operaciones idempotentes de esta API: es un acto administrativo que se
+      registra y se comunica, y hacerlo dos veces dejaría en el historial algo
+      que no ocurrió.
+    parameters:
+      - name: sanctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [reason]
+            properties:
+              reason:
+                type: string
+    responses:
+      '204':
+        description: Levantada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo moderación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: SANCTION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: SANCTION_NOT_IN_FORCE`. Ya se levantó o ya caducó.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: SANCTION_REASON_REQUIRED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+ClaimIdParam:
+  name: claimId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+claimMessages:
+  post:
+    tags: [Moderation]
+    operationId: writeToClaimParty
+    summary: Escribir a una de las partes
+    description: |
+      Antes de decidir, el moderador puede hablar con cada parte **por
+      separado**: pedir aclaraciones al reclamante, dar al reclamado la
+      oportunidad de explicarse.
+
+      **La conversación tiene forma de estrella, no de sala.** Las partes
+      nunca se ven entre sí, y no saben qué dice la otra ni siquiera si hay
+      otra. No es una restricción técnica: poner a denunciante y denunciado a
+      discutir crearía el conflicto que la moderación existe para evitar.
+
+      Esta ruta indica **a qué parte** se escribe; la de la parte no lo
+      necesita, porque solo tiene un hilo.
+
+      El mensaje es **inmutable**: no se edita ni se borra. Si alguien pudiera
+      reescribir lo que dijo, el expediente dejaría de ser prueba de nada.
+    parameters:
+      - $ref: '#/ClaimIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [party, body]
+            properties:
+              party:
+                type: string
+                enum: [REPORTER, SUBJECT]
+              body:
+                type: string
+    responses:
+      '201':
+        description: Enviado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messageId]
+              properties:
+                messageId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo moderación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: CLAIM_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: CLAIM_ALREADY_RESOLVED` si el expediente está cerrado, o
+          `CLAIM_HAS_NO_SUBJECT` si lo reclamado era una obra y no señala a
+          nadie con quien abrir el segundo hilo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: EMPTY_MESSAGE` o `UNKNOWN_THREAD_PARTY`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+myClaimThread:
+  get:
+    tags: [Moderation]
+    operationId: listMyClaimThread
+    summary: Mi conversación con moderación
+    description: |
+      **Solo el hilo propio**, y no hay forma de pedir otro: se deduce de
+      quién pregunta. Con un identificador de hilo en la ruta, leer el de la
+      otra parte sería cambiar una palabra en la dirección.
+
+      Los mensajes llegan **sin identidad de quien escribe**: solo si vinieron
+      de moderación o de uno mismo. Protege al moderador de represalias, y es
+      lo que permite que la decisión se discuta por su contenido y no por
+      quién la tomó.
+
+      Un hilo vacío es una respuesta legítima: significa que moderación no ha
+      abierto conversación, no que algo haya fallado.
+
+      Quien no es parte recibe `404`: un permiso denegado le confirmaría que
+      hay un expediente abierto, que ya es información sobre otras personas.
+    parameters:
+      - $ref: '#/ClaimIdParam'
+    responses:
+      '200':
+        description: El hilo, del mensaje más antiguo al más reciente.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messages]
+              properties:
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    required: [messageId, from, body, sentAt]
+                    properties:
+                      messageId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      from:
+                        type: string
+                        enum: [MODERATION, ME]
+                      body:
+                        type: string
+                      sentAt:
+                        type: string
+                        format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CLAIM_NOT_FOUND`. No existe, **o no eres parte**.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  post:
+    tags: [Moderation]
+    operationId: replyToModeration
+    summary: Responder a moderación
+    description: |
+      **Solo se puede responder, no iniciar.** Una parte no abre conversación
+      por su cuenta: si pudiera, la cola del moderador se llenaría de alegatos
+      no solicitados y el expediente dejaría de ser un procedimiento para
+      convertirse en una bandeja de entrada.
+
+      El hilo se **cierra al resolverse** la reclamación. Se puede leer, no
+      continuar: seguir escribiendo en un expediente cerrado sería alegar ante
+      quien ya decidió.
+    parameters:
+      - $ref: '#/ClaimIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+    responses:
+      '201':
+        description: Enviado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messageId]
+              properties:
+                messageId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: CLAIM_NOT_FOUND`. No existe, o no eres parte.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: THREAD_NOT_OPEN` si moderación no ha escrito todavía, o
+          `CLAIM_ALREADY_RESOLVED` si el expediente ya se cerró.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: EMPTY_MESSAGE`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

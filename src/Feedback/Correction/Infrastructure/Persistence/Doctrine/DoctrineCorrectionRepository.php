@@ -48,6 +48,71 @@ final class DoctrineCorrectionRepository extends DoctrineRepository implements C
         ));
     }
 
+    public function receivedBy(
+        AuthorId $ownerId,
+        ?WorkId $workId,
+        ?ChapterId $chapterId,
+        bool $unreadOnly,
+        int $limit,
+        int $offset,
+    ): array {
+        $query = $this->repository()->createQueryBuilder('c')
+            ->where('c.ownerId = :owner')
+            ->andWhere('c.status = :submitted')
+            ->setParameter('owner', $ownerId->value())
+            ->setParameter('submitted', CorrectionStatus::SUBMITTED)
+            ->orderBy('c.submittedAt', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
+
+        if (null !== $workId) {
+            $query->andWhere('c.workId = :work')->setParameter('work', $workId->value());
+        }
+
+        if (null !== $chapterId) {
+            $query->andWhere('c.chapterId = :chapter')->setParameter('chapter', $chapterId->value());
+        }
+
+        if ($unreadOnly) {
+            $query->andWhere('c.readAt IS NULL');
+        }
+
+        return array_values($query->getQuery()->getResult());
+    }
+
+    public function writtenBy(
+        ReaderId $readerId,
+        ?WorkId $workId,
+        ?CorrectionStatus $status,
+        int $limit,
+        int $offset,
+    ): array {
+        $query = $this->repository()->createQueryBuilder('c')
+            ->where('c.readerId = :reader')
+            ->setParameter('reader', $readerId->value())
+            // Lo entregado por fecha de entrega y lo empezado por fecha de
+            // inicio: un borrador no tiene la primera, y ordenar por ella lo
+            // mandaría al final de la lista de su propio autor. `HIDDEN`
+            // porque es un criterio de orden, no una columna del resultado:
+            // sin él, la consulta devolvería tuplas en vez de correcciones.
+            ->addSelect('COALESCE(c.submittedAt, c.startedAt) AS HIDDEN activity')
+            ->orderBy('activity', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
+
+        if (null !== $workId) {
+            $query->andWhere('c.workId = :work')->setParameter('work', $workId->value());
+        }
+
+        if (null !== $status) {
+            $query->andWhere('c.status = :status')->setParameter('status', $status);
+        }
+
+        return array_values($query->getQuery()->getResult());
+    }
+
     public function deliveredBy(ReaderId $readerId, int $limit = 50, int $offset = 0): array
     {
         return array_values($this->repository()->findBy(
@@ -66,12 +131,38 @@ final class DoctrineCorrectionRepository extends DoctrineRepository implements C
         ]);
     }
 
+    public function publicCountOfLink(string $publicLinkId): int
+    {
+        return $this->repository()->count(['publicLinkId' => $publicLinkId]);
+    }
+
     public function lockedFor(AuthorId $ownerId): array
     {
         return array_values($this->repository()->findBy([
             'ownerId' => $ownerId->value(),
             'visibility' => CorrectionVisibility::LOCKED,
         ]));
+    }
+
+    public function draftsOn(?WorkId $workId, ?ChapterId $chapterId): array
+    {
+        if (null === $workId && null === $chapterId) {
+            return [];
+        }
+
+        $query = $this->repository()->createQueryBuilder('c')
+            ->where('c.status = :draft')
+            ->setParameter('draft', CorrectionStatus::DRAFT);
+
+        if (null !== $workId) {
+            $query->andWhere('c.workId = :work')->setParameter('work', $workId->value());
+        }
+
+        if (null !== $chapterId) {
+            $query->andWhere('c.chapterId = :chapter')->setParameter('chapter', $chapterId->value());
+        }
+
+        return array_values($query->getQuery()->getResult());
     }
 
     public function discardDraft(Correction $correction): void

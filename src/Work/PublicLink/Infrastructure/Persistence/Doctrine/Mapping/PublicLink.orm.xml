@@ -22,6 +22,7 @@
         <field name="workId" column="work_id" type="guid"/>
         <field name="tokenHash" column="token_hash" type="string" length="64"/>
         <field name="label" type="string" length="80" nullable="true"/>
+        <field name="maxCorrections" column="max_corrections" type="smallint"/>
         <field name="createdAt" column="created_at" type="datetime_immutable"/>
         <field name="revokedAt" column="revoked_at" type="datetime_immutable" nullable="true"/>
         <field name="expiresAt" column="expires_at" type="datetime_immutable" nullable="true"/>

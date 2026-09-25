@@ -47,9 +47,40 @@ class Correction
     /** The name a public corrector typed for themselves. Not an identity. */
     private ?string $authorLabel = null;
 
+    /**
+     * Por qué enlace llegó (`FEAT-FBK-008` `RN-8`).
+     *
+     * Hace dos cosas con un solo dato: **marca** la corrección como llegada
+     * por enlace público —sin ella el autor no entendería por qué en unas
+     * puede dar propina y en otras no— y permite **contar** cuántas lleva ese
+     * enlace, que es como se aplica su tope. El tope lo guarda `Work`, que es
+     * de quien es el enlace; contarlas es de quien las tiene, que es este
+     * contexto.
+     */
+    private ?string $publicLinkId = null;
+
+    /**
+     * Cuándo aceptó las condiciones quien la escribió (`RN-7`).
+     *
+     * Está aportando un texto propio sin haber aceptado nada, y sin cuenta no
+     * hay dónde apuntar ese consentimiento más que aquí.
+     */
+    private ?\DateTimeImmutable $termsAcceptedAt = null;
+
     private string $ownerId;
 
     private int $questionnaireVersion;
+
+    /**
+     * La versión del **texto** del capítulo que esta persona leyó
+     * ([`FEAT-WRK-005`](../../../../../docs/features/work/FEAT-WRK-005-edit-work-and-chapter.md)).
+     *
+     * Es el hermano de `questionnaireVersion` y existe por lo mismo: quien
+     * empezó a trabajar sobre unas condiciones las conserva. Nula en las
+     * correcciones anteriores al versionado, que no tienen versión que
+     * recordar.
+     */
+    private ?int $chapterVersion = null;
 
     private CorrectionStatus $status;
 
@@ -63,12 +94,36 @@ class Correction
     private ?\DateTimeImmutable $ratedAt = null;
 
     /**
-     * The tip the author chose to give (`FEAT-CRD-017`). The intent is
-     * recorded here; the credits are moved by `Credits` on `CorrectionTipped`.
+     * Lo que el autor dio de propina (`FEAT-CRD-017`).
+     *
+     * **Se apunta aquí después, no se decide aquí.** La propina la mueve
+     * `Credits`, que es quien sabe si el autor tenía saldo, y este contexto
+     * la anota al recibir `CorrectionTipped` porque es donde autor y
+     * corrector la van a ver.
      */
     private ?int $tipAmount = null;
 
     private ?\DateTimeImmutable $tippedAt = null;
+
+    /**
+     * Cuándo la abrió el autor por primera vez (`FEAT-FBK-004` `RN-7`).
+     *
+     * Es del destinatario y de nadie más: quien la escribió **no** ve si se
+     * ha leído. Sería una confirmación de lectura entre dos personas que no
+     * han elegido tener una conversación (`F-14`).
+     */
+    private ?\DateTimeImmutable $readAt = null;
+
+    /**
+     * Cuándo se avisó a quien lo escribía de que lo que estaba corrigiendo
+     * había dejado de estar disponible.
+     *
+     * **Es una marca de aviso, no de estado.** Si el contenido vuelve, el
+     * borrador se entrega igual: quién puede corregir lo decide `Work` cada
+     * vez que se pregunta. Esto solo impide avisar dos veces de lo mismo, que
+     * es lo que ocurriría en cuanto la cola reentregase el hecho.
+     */
+    private ?\DateTimeImmutable $withdrawalNoticedAt = null;
 
     private \DateTimeImmutable $startedAt;
 
@@ -105,6 +160,7 @@ class Correction
         AuthorId $ownerId,
         int $questionnaireVersion,
         \DateTimeImmutable $now,
+        ?int $chapterVersion = null,
     ): self {
         $correction = new self(
             $id,
@@ -116,6 +172,7 @@ class Correction
             $now,
         );
         $correction->readerId = $readerId->value();
+        $correction->chapterVersion = $chapterVersion;
 
         return $correction;
     }
@@ -123,6 +180,12 @@ class Correction
     /**
      * A correction left through a public link (`FEAT-FBK-008`). Outside the
      * economy: it costs nothing and pays nobody.
+     *
+     * Nace **entregada**. En el flujo normal empezar y entregar son dos
+     * momentos —hay un panel que se abre, un borrador que se guarda y un
+     * precio que se anota entremedias—; aquí no hay nada de eso, porque no
+     * hay cuenta que reservar ni saldo que comprobar. La corrección existe
+     * cuando se envía.
      */
     public static function startFromPublicLink(
         CorrectionId $id,
@@ -132,6 +195,9 @@ class Correction
         int $questionnaireVersion,
         \DateTimeImmutable $now,
         ?string $authorLabel = null,
+        ?int $chapterVersion = null,
+        ?string $publicLinkId = null,
+        ?\DateTimeImmutable $termsAcceptedAt = null,
     ): self {
         $correction = new self(
             $id,
@@ -143,6 +209,9 @@ class Correction
             $now,
         );
         $correction->authorLabel = $authorLabel;
+        $correction->chapterVersion = $chapterVersion;
+        $correction->publicLinkId = $publicLinkId;
+        $correction->termsAcceptedAt = $termsAcceptedAt;
 
         return $correction;
     }
@@ -177,6 +246,11 @@ class Correction
         return $this->questionnaireVersion;
     }
 
+    public function chapterVersion(): ?int
+    {
+        return $this->chapterVersion;
+    }
+
     public function status(): CorrectionStatus
     {
         return $this->status;
@@ -192,9 +266,106 @@ class Correction
         return $this->visibility;
     }
 
+    public function startedAt(): \DateTimeImmutable
+    {
+        return $this->startedAt;
+    }
+
     public function submittedAt(): ?\DateTimeImmutable
     {
         return $this->submittedAt;
+    }
+
+    public function authorLabel(): ?string
+    {
+        return $this->authorLabel;
+    }
+
+    public function helpful(): ?bool
+    {
+        return $this->helpful;
+    }
+
+    public function ratedAt(): ?\DateTimeImmutable
+    {
+        return $this->ratedAt;
+    }
+
+    public function tipAmount(): ?int
+    {
+        return $this->tipAmount;
+    }
+
+    public function publicLinkId(): ?string
+    {
+        return $this->publicLinkId;
+    }
+
+    public function termsAcceptedAt(): ?\DateTimeImmutable
+    {
+        return $this->termsAcceptedAt;
+    }
+
+    /**
+     * Se **fija**, no se acumula: el hecho dice cuánto fue la propina, así
+     * que una reentrega escribe la misma cifra. Sumar convertiría un
+     * reintento de la cola en una propina más grande de la que nadie dio.
+     */
+    public function recordTip(int $amount, \DateTimeImmutable $now): void
+    {
+        $this->tipAmount = $amount;
+        $this->tippedAt ??= $now;
+    }
+
+    public function readAt(): ?\DateTimeImmutable
+    {
+        return $this->readAt;
+    }
+
+    /**
+     * Si su contenido se puede enseñar. Una retenida por descubierto existe
+     * y se ve que existe, pero no se lee (`FEAT-CRD-018`).
+     */
+    public function isReadable(): bool
+    {
+        return CorrectionVisibility::LOCKED !== $this->visibility;
+    }
+
+    /**
+     * La primera vez y solo la primera: la fecha dice **cuándo se leyó**, y
+     * pisarla en cada visita la convertiría en «cuándo se miró por última
+     * vez», que es otra cosa y no la que hace falta.
+     *
+     * Una retenida no se marca: no se ha leído nada.
+     */
+    public function markRead(\DateTimeImmutable $now): bool
+    {
+        if (null !== $this->readAt || !$this->isReadable() || CorrectionStatus::SUBMITTED !== $this->status) {
+            return false;
+        }
+
+        $this->readAt = $now;
+        $this->updatedAt = $now;
+
+        return true;
+    }
+
+    /**
+     * Avisa una vez y solo una. Devuelve si este aviso es el primero, que es
+     * lo que decide si el hecho llega a publicarse: el transporte entrega al
+     * menos una vez, y un segundo «has perdido tu trabajo» por el mismo
+     * motivo es gratuito y cruel.
+     */
+    public function noteWithdrawalNotice(\DateTimeImmutable $now): bool
+    {
+        if (null !== $this->withdrawalNoticedAt) {
+            return false;
+        }
+
+        $this->withdrawalNoticedAt = $now;
+        $this->updatedAt = $now;
+
+        return true;
     }
 
     public function isDraft(): bool

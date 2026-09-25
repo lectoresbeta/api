@@ -35,6 +35,12 @@ final readonly class CorrectionBrief
         public string $accessMode,
         public bool $adultsOnly,
         public int $questionnaireVersion,
+        /**
+         * La versión del **texto** que se va a leer (`FEAT-WRK-005`). Quien
+         * empieza a corregir la guarda, y a partir de ahí el texto deja de
+         * cambiar bajo sus pies.
+         */
+        public int $chapterVersion,
         public array $questions,
     ) {
     }

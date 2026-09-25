@@ -58,6 +58,19 @@ framework:
         # reenvío, y un tope diario más bajo: una avalancha de correos
         # «restablece tu contraseña» no solo es spam, es como se prepara un
         # engaño. P-20 sigue abierta sobre las cifras.
+        # Abrir un enlace público (FEAT-WRK-010 RN-16). Por origen y no por
+        # token: limitar un token protegería al enlace de ser abierto mucho,
+        # que es justo lo que su autor quiere; lo que hay que frenar es a
+        # quien prueba tokens distintos, y eso solo se ve desde la dirección.
+        #
+        # Generoso a propósito: un grupo de escritura detrás de una misma
+        # salida a internet comparte dirección, y leer una novela son muchas
+        # peticiones.
+        public_link_by_ip:
+            policy: sliding_window
+            limit: 120
+            interval: '1 hour'
+
         password_reset_interval:
             policy: fixed_window
             limit: 1

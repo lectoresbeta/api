@@ -85,6 +85,18 @@ final readonly class JsonBody
     }
 
     /**
+     * Un entero, y **solo si vino como entero**. Una cadena `"3"` responde
+     * `null` por lo mismo que el resto de accesores: aceptar un tipo distinto
+     * del declarado convierte el contrato en una sugerencia.
+     */
+    public function int(string $field): ?int
+    {
+        $value = $this->values[$field] ?? null;
+
+        return \is_int($value) ? $value : null;
+    }
+
+    /**
      * A field holding a list of strings, such as the chosen genres.
      *
      * Anything that is not a string is dropped rather than coerced: turning
@@ -102,6 +114,34 @@ final readonly class JsonBody
         }
 
         return array_values(array_filter($value, \is_string(...)));
+    }
+
+    /**
+     * A field holding a list of objects, such as the mentions of a comment.
+     *
+     * Anything in the list that is not an object is dropped rather than
+     * coerced, for the same reason as `stringList()`: turning nonsense into a
+     * value only moves the failure somewhere it is harder to explain.
+     *
+     * @return list<self>
+     */
+    public function objectList(string $field): array
+    {
+        $value = $this->values[$field] ?? null;
+
+        if (!\is_array($value)) {
+            return [];
+        }
+
+        $objects = [];
+
+        foreach ($value as $item) {
+            if (\is_array($item)) {
+                $objects[] = new self($item);
+            }
+        }
+
+        return $objects;
     }
 
     /**

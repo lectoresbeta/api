@@ -5,7 +5,7 @@ context: Credits
 concept: Transaction
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P2
 sources:
   - conversation:2026-09-23 (rediseño del sistema de créditos)
@@ -14,7 +14,7 @@ endpoints:
   - POST /corrections/{correctionId}/tip
 events: [CorrectionTipped]
 depends_on: [FEAT-CRD-016]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-CRD-017 — Propina del autor
@@ -83,9 +83,10 @@ propina es voluntaria. Permitir endeudarse por ser generoso sería una trampa.
 | Sin disponible | Se rechaza | `409` |
 | Importe fuera de rango | Se rechaza | `422` |
 | Ya propinada | Se rechaza | `409` |
-| No es su obra | Se rechaza | `403` |
-| Corrección por enlace público | Se rechaza | `409` |
-| Petición repetida | Devuelve la propina existente | `200` |
+| No es su obra | Se rechaza | `404` |
+| Corrección por enlace público | Se rechaza | `404` |
+| Petición repetida con la misma `Idempotency-Key` | Devuelve el saldo, sin mover nada | `200` |
+| Petición repetida sin llave, o con otra | Se rechaza | `409` |
 
 ## Contrato de API
 
@@ -113,13 +114,13 @@ Cargo al autor y abono al lector por el mismo importe. Masa constante.
 
 ## Criterios de aceptación
 
-- [ ] Un autor puede propinar una corrección recibida y el lector recibe el importe exacto.
-- [ ] Sin saldo disponible, la propina se rechaza y **no** genera saldo negativo.
-- [ ] No se puede propinar dos veces la misma corrección.
-- [ ] No se puede propinar una corrección ajena.
-- [ ] Las correcciones por enlace público no admiten propina.
-- [ ] La propina no altera el precio de ninguna corrección futura.
-- [ ] Dos peticiones con la misma `Idempotency-Key` producen un solo movimiento.
+- [x] Un autor puede propinar una corrección recibida y el lector recibe el importe exacto.
+- [x] Sin saldo disponible, la propina se rechaza y **no** genera saldo negativo.
+- [x] No se puede propinar dos veces la misma corrección.
+- [x] No se puede propinar una corrección ajena.
+- [x] Las correcciones por enlace público no admiten propina.
+- [x] La propina no altera el precio de ninguna corrección futura.
+- [x] Dos peticiones con la misma `Idempotency-Key` producen un solo movimiento.
 
 ## Preguntas abiertas
 
@@ -139,4 +140,35 @@ su bolsillo**, así que es mucho más difícil de falsear que un «me gusta».
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25). Cargo y abono en la misma transacción, `CorrectionTipped`
+publicado, y `Feedback` y `Community` proyectándolo cada uno a lo suyo.
+
+Cuatro cosas que la ficha no preveía y que la implementación obligó a decidir:
+
+- **el endpoint vive en `Credits`, no en `Feedback`.** La ficha pedía comprobar el disponible
+  antes de aceptar; con el endpoint en `Feedback`, esa comprobación sería una pregunta a
+  `Credits`, y este contexto no publica contratos
+  ([`decision:0002`](../../decisions/0002-credits-as-isolated-bounded-context.md)). Aceptar la
+  intención y aplicarla después por un evento obligaría a compensar cuando el saldo no llegara,
+  que es mucha maquinaria para un gesto voluntario. Y no hace falta preguntar nada: `Credits`
+  ya sabe de quién es cada corrección, porque tiene apuntado quién pagó y quién cobró;
+- **«no es tuya» se contesta `404` y no `403`.** Distinguirlas diría algo sobre las
+  correcciones de otra persona: que existe una con ese identificador. Las tres situaciones —no
+  existe, no es suya, no se ha cobrado— comparten respuesta;
+- **`RN-6` se cumple sin código propio.** Una corrección por enlace público no costó nada y no
+  pagó a nadie, así que `Credits` no tiene ningún cargo apuntado sobre ella y responde como
+  ante una ajena. El código `NOBODY_TO_TIP` queda como red de seguridad para un libro mayor
+  incoherente —un cargo sin abono—, que es un estado que no debería existir;
+- **la `Idempotency-Key` se guarda en el propio movimiento**, no en una tabla de respuestas.
+  Basta porque la corrección admite una sola propina: el movimiento duplicado no puede existir,
+  y lo único que la llave decide es si repetir la petición se lee como un reintento —y contesta
+  el saldo— o como una segunda propina, que se rechaza.
+
+**Falta** el agregado de `RN-3c` en el perfil del corrector —«142 créditos recibidos en
+propinas»—. La cifra ya se acumula en `Community` al consumir `CorrectionTipped`; lo que no hay
+es la pantalla ni el endpoint que la enseñe, y eso pertenece al perfil público
+([`FEAT-USR-014`](../user/FEAT-USR-014-view-public-profile.md)). El corrector sí ve, hoy, que una
+corrección suya fue propinada y el abono en su histórico de movimientos.
+
+Y **falta el aviso al lector** del paso 6 del flujo: `Notification` todavía no consume
+`CorrectionTipped`.

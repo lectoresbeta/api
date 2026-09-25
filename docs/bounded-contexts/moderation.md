@@ -151,6 +151,7 @@ saldo negativo no recibe correcciones, pero sí puede corregir para saldarlo.
 | `ContentReviewFlagged` | El revisor lo marca | **`Work`**, `Notification` |
 | `ClaimUpheld` | El moderador la estima | **`Credits`** (revierte lo cobrado), **`Work`** (bloquea lo reclamado), **`User`**, `Notification` |
 | `ClaimRejected` | El moderador la desestima | `Notification` |
+| `ModerationBlockLifted` | Un moderador levanta un bloqueo | **`Work`** |
 | `SanctionImposed` | Se sanciona a un usuario | **`User`**, `Notification` |
 | `SanctionLifted` | Caduca o se levanta | `User`, `Notification` |
 | `CreditAdjustmentOrdered` | Ajuste manual desde el backoffice | **`Credits`**, `Notification` |

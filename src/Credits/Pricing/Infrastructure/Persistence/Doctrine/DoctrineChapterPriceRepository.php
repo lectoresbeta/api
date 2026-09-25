@@ -36,6 +36,11 @@ final class DoctrineChapterPriceRepository extends DoctrineRepository implements
         return array_values($this->repository()->findBy(['authorId' => $authorId->value()]));
     }
 
+    public function countCorrectable(): int
+    {
+        return $this->repository()->count(['correctable' => true]);
+    }
+
     protected function entityClass(): string
     {
         return ChapterPrice::class;

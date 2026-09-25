@@ -27,4 +27,16 @@ final class InMemoryCreditAccounts implements CreditAccountRepository
     {
         return array_sum(array_map(static fn (CreditAccount $a): int => $a->balance(), $this->accounts));
     }
+
+    public function balanceSpread(): array
+    {
+        $balances = array_map(static fn (CreditAccount $a): int => $a->balance(), $this->accounts);
+
+        return [
+            'total' => \count($balances),
+            'atZeroOrBelow' => \count(array_filter($balances, static fn (int $b): bool => $b <= 0)),
+            'inDebt' => \count(array_filter($balances, static fn (int $b): bool => $b < 0)),
+            'deepestDebt' => min(0, ...[0, ...$balances]),
+        ];
+    }
 }
