@@ -243,3 +243,22 @@ los créditos de bienvenida, inicio de sesión y consulta de saldo. Lo que falta
 - Nadie purga `processed_event` ni los alias caducados: los comandos existen, la programación
   no.
 - No hay entorno de producción definido (`docs/architecture/07-observability-and-operations.md`).
+
+## El primer administrador
+
+El backoffice no se abre solo. Quien vaya a administrar **se registra como todo el mundo** y
+activa su cuenta; después, desde el servidor:
+
+```bash
+bin/console lectoresbeta:admin:grant tu@correo.com
+```
+
+Y `--revoke` para quitarlo, que es la salida si el único administrador pierde el acceso.
+
+**No hay ninguna otra vía desde la API** (`FEAT-MOD-012` `RN-6`), y eso es lo que hace que el
+registro de auditoría signifique algo: si existiera un endpoint para autoconcederse el rol,
+cualquier fallo de autorización sería catastrófico.
+
+Tampoco hay una semilla, a propósito: una semilla crea el administrador en todos los entornos
+por igual y con credenciales conocidas, que es el origen clásico del `admin/admin` que
+sobrevive hasta producción.

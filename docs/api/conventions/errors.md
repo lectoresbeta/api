@@ -140,6 +140,9 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `EMAIL_CHANGE_REFUSED` | 422 | La dirección ya la tiene otra cuenta **o** es la que ya tienes. Un solo código a propósito: decir cuál convertiría el formulario en un comprobador de quién tiene cuenta (`FEAT-USR-040`) |
 | `INVALID_EMAIL_CHANGE_TOKEN` | 404 | Ese enlace de confirmación no existe |
 | `EMAIL_CHANGE_LINK_NO_LONGER_VALID` | 410 | Usado, caducado o anulado por una solicitud posterior: los tres significan «pídelo otra vez» |
+| `LEGAL_VERSION_OUTDATED` | 422 | Se aceptó una versión de los textos legales que ya no rige. **Lleva las vigentes**, para poder recargar y volver a pedir (`FEAT-USR-024`) |
+| `NO_LEGAL_DOCUMENTS_PUBLISHED` | 409 | No hay condiciones vigentes que aceptar. Falla cerrado: un consentimiento vacío es peor que no crear la cuenta |
+| `MODERATOR_ROLE_REFUSED` | 422 | La cuenta no existe o no está activada, es la propia de quien lo pide, o el nivel no existe (`FEAT-MOD-004`) |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |
