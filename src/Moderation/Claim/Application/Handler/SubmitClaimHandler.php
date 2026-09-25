@@ -19,6 +19,7 @@ use LectoresBeta\Moderation\Claim\Domain\ValueObject\PartyId;
 use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
+use LectoresBeta\User\Account\Application\Contract\RegisteredUsers;
 use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
 
 /**
@@ -58,6 +59,7 @@ final readonly class SubmitClaimHandler
         private ClaimRestrictionRepository $restrictions,
         private ClaimableCorrections $corrections,
         private WorkAccessBriefs $works,
+        private RegisteredUsers $people,
         private TransactionalSession $session,
         private Clock $clock,
     ) {
@@ -71,8 +73,17 @@ final readonly class SubmitClaimHandler
         $reason = ClaimReason::tryFrom($command->reason)
             ?? throw ClaimRefused::becauseThatReasonDoesNotExist($command->reason);
 
-        // Antes que nada, lo que ya existe: un reintento no consume cupo ni
-        // vuelve a comprobar nada. Reclamar dos veces suele ser un doble clic.
+        // La forma del identificador, **antes de tocar la base de datos**.
+        // Todos los objetos reclamables se identifican por UUID, y la columna
+        // es de ese tipo: sin esta puerta, un `targetId` con una errata llega
+        // hasta la consulta y revienta contra PostgreSQL en vez de
+        // rechazarse. Responde lo mismo que un objeto inexistente, que es lo
+        // correcto — quien escribe mal un identificador no tiene por qué
+        // distinguir las dos cosas.
+        $this->partyOrRefuse($command->targetId);
+
+        // Y ahora lo que ya existe: un reintento no consume cupo ni vuelve a
+        // comprobar nada. Reclamar dos veces suele ser un doble clic.
         $existing = $this->claims->of($reporterId, $targetType, $command->targetId);
 
         if (null !== $existing) {
@@ -163,7 +174,24 @@ final readonly class SubmitClaimHandler
         }
 
         if (ClaimTargetType::USER === $targetType) {
-            return $this->partyOrRefuse($targetId);
+            $subject = $this->partyOrRefuse($targetId);
+
+            // Nadie se denuncia a sí mismo (`FEAT-COM-035` `RN-3`): gastaría
+            // su propio cupo y el tiempo de quien la lee, y no hay desenlace
+            // que signifique nada.
+            if ($subject->equals($reporterId)) {
+                throw ClaimRefused::againstYourself();
+            }
+
+            // Y a quien no existe tampoco. Responde lo mismo que un objeto no
+            // reclamable, que es lo correcto: decir «esa cuenta no existe»
+            // convertiría el formulario de denunciar en un comprobador de
+            // quién está en la plataforma.
+            if (!$this->people->exists($targetId)) {
+                throw ClaimRefused::becauseTheTargetIsNotClaimable();
+            }
+
+            return $subject;
         }
 
         // Capítulos y publicaciones: el objeto existe en otro contexto y

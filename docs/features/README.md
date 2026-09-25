@@ -249,7 +249,7 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-006 | Valorar una corrección recibida | Writer | APPROVED | DONE | P1 | [ficha](feedback/FEAT-FBK-006-rate-correction.md) |
 | FEAT-FBK-007 | Apartar de la bandeja una corrección recibida | Writer | APPROVED | DONE | P2 | [ficha](feedback/FEAT-FBK-007-set-aside-a-correction.md) |
 | FEAT-FBK-008 | Corregir por enlace público sin cuenta | Guest | APPROVED | DONE | P1 | [ficha](feedback/FEAT-FBK-008-public-link-correction.md) |
-| FEAT-FBK-009 | Denunciar una corrección abusiva → `FEAT-MOD-001` | User | PENDING | TODO | P2 | — |
+| FEAT-FBK-009 | Denunciar una corrección abusiva → `FEAT-MOD-001` | User | APPROVED | DONE | P2 | [ficha](feedback/FEAT-FBK-009-report-an-abusive-correction.md) |
 | FEAT-FBK-010 | Mis correcciones — lo que he corregido | BetaReader | APPROVED | DONE | P2 | [ficha](feedback/FEAT-FBK-010-my-corrections.md) |
 | FEAT-FBK-011 | Guardar un borrador de corrección | BetaReader | APPROVED | DONE | P1 | [ficha](feedback/FEAT-FBK-011-save-correction-draft.md) |
 | FEAT-FBK-012 | Control antifraude de las correcciones | — (sistema) | PENDING | BLOCKED | P0 | [ficha](feedback/FEAT-FBK-012-correction-fraud-control.md) |
@@ -342,7 +342,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-032 | Menciones a usuarios | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-032-mentions.md) |
 | FEAT-COM-033 | Silenciar a un usuario | User | PENDING | TODO | P3 | — |
 | FEAT-COM-034 | Bloquear a un usuario | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-034-block-user.md) |
-| FEAT-COM-035 | Denunciar a un usuario → `FEAT-MOD-001` | User | PENDING | TODO | P2 | — |
+| FEAT-COM-035 | Denunciar a un usuario → `FEAT-MOD-001` | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-035-report-a-user.md) |
 | FEAT-COM-036 | Interacciones sociales sobre un capítulo (like y comentario) | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-036-chapter-interactions.md) |
 | FEAT-COM-037 | Adjuntar vídeo a una publicación | User | PENDING | DEFERRED | P3 | — |
 | FEAT-COM-038 | Publicaciones de la plataforma (cuenta institucional) | Admin | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-038-platform-account.md) |

@@ -48,6 +48,22 @@ final class ClaimRefused extends \DomainException implements BusinessFailure, Fa
      * `RN-5`: una corrección retenida por descubierto **todavía no se ha
      * podido leer**, y reclamarla a ciegas sería una forma de no pagarla.
      */
+    /**
+     * Nadie se denuncia a sí mismo (`FEAT-COM-035` `RN-3`).
+     *
+     * No es una formalidad: gasta el cupo mensual de quien la presenta y el
+     * tiempo de quien la lee, y no hay desenlace posible que signifique algo.
+     * Si alguien quiere irse, eso es dar de baja la cuenta.
+     */
+    public static function againstYourself(): self
+    {
+        return new self(
+            'CANNOT_CLAIM_AGAINST_YOURSELF',
+            FailureKind::INVALID,
+            'You cannot report yourself.',
+        );
+    }
+
     public static function becauseTheCorrectionHasNotBeenRead(): self
     {
         return new self(

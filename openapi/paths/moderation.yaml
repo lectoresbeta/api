@@ -230,18 +230,30 @@ claims:
           `code: CLAIM_TARGET_NOT_CLAIMABLE`. No existe, o no es suyo para
           reclamarlo: una corrección ajena responde lo mismo que una
           inexistente.
+
+          **Denunciar a una cuenta que no existe responde esto mismo**
+          (`FEAT-COM-035` `RN-4`): decir «esa cuenta no existe» convertiría el
+          formulario de denunciar en un comprobador de quién está en la
+          plataforma. Un `targetId` mal formado también, por lo mismo.
         content:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
       '409':
-        description: '`code: CLAIM_CORRECTION_NOT_READ`. Todavía no se ha podido leer.'
+        description: |
+          `code: CLAIM_CORRECTION_NOT_READ`. Todavía no se ha podido leer
+          (`FEAT-FBK-009` `RN-3`). Cierra una vía sutil: denunciar a ciegas
+          una corrección retenida por descubierto, solo para no pagarla.
         content:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
       '422':
-        description: '`code: CLAIM_REASON_UNKNOWN`.'
+        description: |
+          `code: CLAIM_REASON_UNKNOWN`, o `CANNOT_CLAIM_AGAINST_YOURSELF`
+          (`FEAT-COM-035` `RN-3`): denunciarse a uno mismo gastaría el cupo de
+          quien la presenta y el tiempo de quien la lee, y no hay desenlace
+          que signifique nada.
         content:
           application/problem+json:
             schema:
