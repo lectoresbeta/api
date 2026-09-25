@@ -63,7 +63,7 @@ decisión sobre agrupación (`N-2`).
 | `EmailChanged` | Se confirma el cambio de correo | `Notification`, read models | `userId`, `changedAt`. Sin la dirección: una copia guardada por otro contexto es una copia que envejece |
 | `PasswordChanged` | Se cambia la contraseña, **desde dentro o restableciéndola** | `Notification` ✅ | `userId`, `viaReset`, `changedAt`. **Nunca la contraseña ni su hash**. `viaReset` no decide si se avisa, decide qué dice el aviso |
 | `PrivacySettingsChanged` | Cambian los ajustes de privacidad | `Community`, read models de visibilidad | `userId`, `profileVisibility`, `commentPermission`, `messagePermission`, `changedAt`. **Nada del perfil** |
-| `NotificationPreferencesChanged` | Cambian las preferencias de aviso | `Notification` | `userId`, preferencias modificadas |
+| `NotificationPreferencesChanged` | Cambian las preferencias de aviso | **Nadie, hoy**: `Notification` las **pregunta al entregar** y no las proyecta, que es lo que hace que un cambio surta efecto en el acto. Se publica como traza de qué cambió y cuándo | `userId`, `changedTopics`, `allMuted?`, `changedAt`. **Nunca la configuración entera**: los ajustes de una persona no viajan por una cola para decir que cambiaron |
 | `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt`. En `User` convierte su nombre de usuario en alias bloqueado 30 días |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` | `inviterId`, `invitedUserId` |
 

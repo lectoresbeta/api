@@ -67,6 +67,15 @@ enum NotificationKind: string
     case CLAIM_RESOLVED = 'CLAIM_RESOLVED';
     case WORK_BLOCKED = 'WORK_BLOCKED';
 
+    /**
+     * **Sin `default`, y es la mitad de `RN-4c`.**.
+     *
+     * Con un `default` a `false`, un tipo nuevo se comportaría en silencio
+     * como notificación —silenciable—, que es exactamente el valor
+     * equivocado para cualquier cosa que tenga que ver con la seguridad de
+     * una cuenta. Sin él, el análisis estático se queja en cuanto alguien
+     * añade un caso, y la clasificación deja de poder olvidarse.
+     */
     public function isOperational(): bool
     {
         return match ($this) {
@@ -79,7 +88,26 @@ enum NotificationKind: string
             self::MODERATION_ALERT,
             self::WORK_BLOCKED,
             self::PLATFORM_INVITATION => true,
-            default => false,
+
+            self::CORRECTION_RECEIVED,
+            self::CORRECTION_REPLIED,
+            self::CORRECTION_RATED,
+            self::CHAPTER_COMMENT,
+            self::ACCESS_REQUESTED,
+            self::ACCESS_REQUEST_RESOLVED,
+            self::BETA_READER_INVITATION,
+            self::BETA_READER_ACCESS_REVOKED,
+            self::WRITING_BUDDY_PROPOSED,
+            self::DIRECT_MESSAGE_RECEIVED,
+            self::MENTION,
+            self::POST_REPLY,
+            self::SUBSCRIBED_AUTHOR_PUBLISHED,
+            self::CREDITS_ADDED,
+            self::CREDITS_SPENT,
+            self::BALANCE_WENT_NEGATIVE,
+            self::CORRECTION_UNLOCKED,
+            self::CORRECTION_CLOSED,
+            self::CLAIM_RESOLVED => false,
         };
     }
 }

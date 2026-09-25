@@ -14,6 +14,7 @@ use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 use LectoresBeta\User\Account\Application\Contract\DirectoryEntry;
 use LectoresBeta\User\Account\Application\Contract\ProfileCards;
+use LectoresBeta\User\Preferences\Application\Contract\NotificationChoices;
 use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
 
 /**
@@ -33,7 +34,18 @@ use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
  * - **nadie se avisa a sí mismo** (`RN-3`). Quien provoca el hecho ya sabe lo
  *   que ha hecho, y un aviso propio es ruido que enseña a ignorar la campana;
  * - **destinatario que no se puede resolver, aviso que no se crea** (`RN-6`).
- *   Una cuenta eliminada no recibe nada, y reintentar no la va a resucitar.
+ *   Una cuenta eliminada no recibe nada, y reintentar no la va a resucitar;
+ * - **lo que su dueño ha silenciado no se entrega**
+ *   ([`FEAT-USR-039`](../../../../../docs/features/user/FEAT-USR-039-notification-preferences.md)
+ *   `RN-1`). Se pregunta **aquí y no al publicar el hecho**: el emisor no
+ *   conoce las preferencias de nadie, y entre el hecho y la entrega pueden
+ *   haber cambiado.
+ *
+ * Los mensajes **operativos** no preguntan nada (`RN-3`). La activación, el
+ * restablecimiento de contraseña y los avisos de seguridad no son
+ * notificaciones, y si el interruptor general los alcanzara dejaría a alguien
+ * sin poder recuperar su cuenta. La clasificación vive en el propio catálogo
+ * de tipos, que no admite un tipo sin clasificar.
  *
  * Los nombres y los títulos se piden a `User` y a `Work` por sus contratos
  * publicados. Que esto sea legítimo y la consulta desde `CheckAuthorAudience`
@@ -42,10 +54,20 @@ use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
  */
 final readonly class Notify
 {
+    /**
+     * Esta clase entrega **dentro de la plataforma** y solo por ahí pregunta.
+     * El canal de correo es
+     * `FEAT-NOT-002`, que todavía no existe: sus preferencias se guardan y se sirven desde ya
+     * —la pantalla las ofrece— y no las aplica nadie hasta que haya quien
+     * mande correos de aviso.
+     */
+    private const PLATFORM = 'PLATFORM';
+
     public function __construct(
         private NotificationRepository $notifications,
         private ProfileCards $profiles,
         private WorkAccessBriefs $works,
+        private NotificationChoices $choices,
         private TransactionalSession $session,
         private Clock $clock,
     ) {
@@ -74,6 +96,10 @@ final readonly class Notify
         }
 
         if ($this->notifications->existsFor($recipient, $kind, $sourceEventId)) {
+            return;
+        }
+
+        if (!$kind->isOperational() && !$this->choices->allows($recipientId, $kind->value, self::PLATFORM)) {
             return;
         }
 

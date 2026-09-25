@@ -76,6 +76,12 @@ abstract class EconomyScenario extends WebTestCase
         // hecho lo escuchan varios contextos, cada uno con su clase.
         'AccessRequested',
         'AccessRequestRejected',
+
+        // Y el aviso que **ningún ajuste silencia** (`FEAT-USR-039` `RN-3`):
+        // es lo único que le dice a alguien que acaban de entrar en su
+        // cuenta.
+        'PasswordChanged',
+
         'BetaReaderAccessGranted',
         'BetaReaderAccessRevoked',
         'BetaReaderInvited',

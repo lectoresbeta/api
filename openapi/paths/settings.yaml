@@ -1011,3 +1011,129 @@ contentPreferences:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+notificationPreferences:
+  get:
+    tags: [Settings]
+    operationId: getMyNotificationPreferences
+    summary: Qué avisos quiero recibir y por dónde
+    description: |
+      Devuelve **el catálogo entero con sus canales**, no solo los valores
+      (`FEAT-USR-039`). Si el cliente llevase la lista codificada, cada aviso
+      nuevo exigiría desplegar el frontal.
+
+      **No hay matriz completa**: un aviso puede existir en un canal y no en
+      el otro. Nadie quiere un correo por cada mensaje directo, y un consejo
+      de uso no es un aviso de actividad — así que cada tipo dice en qué
+      canales existe.
+
+      Por defecto **todo está activado salvo las actualizaciones de la
+      plataforma**.
+
+      `allMuted` va aparte y no plegado en los valores: el interruptor general
+      **suspende**, no sobrescribe. Con él puesto, las casillas siguen
+      diciendo lo que su dueño eligió, que es lo que recuperará al quitarlo.
+
+      **El catálogo solo contiene lo silenciable.** Activación,
+      restablecimiento de contraseña, cambios de correo, sanciones, bloqueos
+      de obra y comunicaciones legales no están, y no es un olvido: son
+      operativos y quedan fuera de estas preferencias, incluido el interruptor
+      general. Un catálogo que los incluyera invitaría a apagarlos, y el
+      primero que faltase dejaría a alguien sin poder recuperar su cuenta.
+    responses:
+      '200':
+        description: El catálogo y lo que su dueño ha elegido.
+        content:
+          application/json:
+            schema:
+              $ref: '#/NotificationPreferences'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  put:
+    tags: [Settings]
+    operationId: updateMyNotificationPreferences
+    summary: Cambiar qué avisos recibo
+    description: |
+      **Parcial a propósito**: llega lo que se ha tocado, no el catálogo
+      entero. Una pantalla con veinte avisos y dos canales manda dos campos al
+      pulsar una casilla, no cuarenta.
+
+      Devuelve la foto completa, que es lo que la pantalla necesita para
+      repintarse sin una segunda petición.
+
+      Las preferencias **se comprueban al entregar**, no al publicar el hecho,
+      así que un cambio surte efecto en el acto.
+
+      Silenciar un aviso **no impide que el hecho ocurra**: quien silencia los
+      mensajes sigue recibiéndolos, solo no se le avisa. No querer enterarse y
+      no querer recibir son cosas distintas.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              allMuted:
+                type: boolean
+                description: |
+                  Suspende todo lo silenciable. **No alcanza a los mensajes
+                  operativos**, y el texto de la pantalla que promete lo
+                  contrario hay que corregirlo.
+              preferences:
+                type: array
+                items:
+                  type: object
+                  required: [topic, channel, enabled]
+                  properties:
+                    topic:
+                      type: string
+                    channel:
+                      type: string
+                      enum: [EMAIL, PLATFORM]
+                    enabled:
+                      type: boolean
+    responses:
+      '200':
+        description: Guardado, con la foto completa.
+        content:
+          application/json:
+            schema:
+              $ref: '#/NotificationPreferences'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: |
+          `code: UNKNOWN_NOTIFICATION_TOPIC`, `UNKNOWN_NOTIFICATION_CHANNEL` o
+          `CHANNEL_NOT_AVAILABLE_FOR_TOPIC`.
+
+          El último se rechaza en vez de guardarse en silencio: aceptar una
+          casilla de correo en un aviso que no existe por correo sería
+          prometer algo que nunca va a llegar.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+NotificationPreferences:
+  type: object
+  required: [allMuted, topics]
+  properties:
+    allMuted:
+      type: boolean
+    topics:
+      type: array
+      items:
+        type: object
+        required: [topic, channels]
+        properties:
+          topic:
+            type: string
+          channels:
+            type: object
+            description: |
+              Los canales en los que **existe** este aviso, con su valor
+              actual. Un canal que no está aquí no se puede configurar.
+            additionalProperties:
+              type: boolean

@@ -220,3 +220,20 @@ updateMyContentPreferences:
     path: /api/v1/me/content-preferences
     controller: LectoresBeta\User\Preferences\Infrastructure\Controller\ContentPreferencesController::__invoke
     methods: [PUT]
+
+# Preferencias de notificación (`FEAT-USR-039`). Dos canales y un interruptor
+# general que **suspende** y no sobrescribe: apagarlo devuelve a su dueño la
+# configuración que tenía.
+#
+# La respuesta lleva el catálogo con sus canales y no solo los valores: si el
+# cliente llevara la lista codificada, cada aviso nuevo exigiría desplegar el
+# frontal.
+getMyNotificationPreferences:
+    path: /api/v1/me/notification-preferences
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\NotificationPreferencesController::__invoke
+    methods: [GET]
+
+updateMyNotificationPreferences:
+    path: /api/v1/me/notification-preferences
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\NotificationPreferencesController::__invoke
+    methods: [PUT]

@@ -5,44 +5,100 @@ declare(strict_types=1);
 namespace LectoresBeta\User\Preferences\Domain\Enum;
 
 /**
- * What a person can choose to be told about (`FEAT-USR-039`).
+ * El catálogo de lo que se puede configurar (`FEAT-USR-039`).
  *
- * It is a *topic*, not the delivery catalogue of `Notification`: this context
- * owns the preference, the other owns the notification. They are duplicated
- * on purpose — a shared enum would couple the two contexts (`AGENTS.md`).
+ * **Solo lo silenciable.** Activación, restablecimiento de contraseña,
+ * cambios de correo, sanciones, bloqueos de obra, avisos a moderadores y
+ * comunicaciones legales no están aquí y no es un olvido: son **operativos**
+ * y quedan fuera de estas preferencias, incluido el interruptor general
+ * (`RN-3`). Un catálogo que los incluyera invitaría a apagarlos.
  *
- * `CORRECTION_RECEIVED` and `CHAPTER_COMMENT` are separate (`S-11`). Folding
- * them together would mean that muting social chatter also mutes the
- * corrections the author has paid for.
+ * Los nombres coinciden con los de `NotificationKind` en `Notification`, y
+ * esa coincidencia es deliberada y no un acoplamiento: son dos preguntas
+ * distintas —**qué se puede configurar** y **qué se entrega**— que se
+ * responden en dos contextos, y compartir el vocabulario es lo que permite
+ * cruzarlas sin una tabla de traducción que alguien tendría que mantener.
  *
- * Operational messages — activation, password reset, security warnings, legal
- * notices — are not here at all (`RN-3`). They are not notifications, and the
- * master switch does not reach them either.
+ * Un tipo que se entrega y no está aquí toma el valor por defecto, que es
+ * «activado» (`RN-4`): un aviso nuevo llega hasta que alguien decida que se
+ * puede apagar, y no al revés.
  */
 enum NotificationTopic: string
 {
+    // Actividad sobre lo que escribo.
     case CORRECTION_RECEIVED = 'CORRECTION_RECEIVED';
+    case CORRECTION_CLOSED = 'CORRECTION_CLOSED';
     case CHAPTER_COMMENT = 'CHAPTER_COMMENT';
-    case CORRECTION_REPLIED = 'CORRECTION_REPLIED';
-    case CORRECTION_RATED = 'CORRECTION_RATED';
-    case ACCESS_REQUESTED = 'ACCESS_REQUESTED';
-    case ACCESS_RESOLVED = 'ACCESS_RESOLVED';
-    case BETA_READER_INVITATION = 'BETA_READER_INVITATION';
-    case WRITING_BUDDY_PROPOSED = 'WRITING_BUDDY_PROPOSED';
-    case DIRECT_MESSAGE = 'DIRECT_MESSAGE';
-    case MENTION = 'MENTION';
     case POST_REPLY = 'POST_REPLY';
-    case SUBSCRIBED_AUTHOR_ACTIVITY = 'SUBSCRIBED_AUTHOR_ACTIVITY';
-    case CREDIT_MOVEMENT = 'CREDIT_MOVEMENT';
+    case MENTION = 'MENTION';
+
+    // Mi actividad como corrector.
+    case CORRECTION_RATED = 'CORRECTION_RATED';
+    case CORRECTION_REPLIED = 'CORRECTION_REPLIED';
+    case CORRECTION_UNLOCKED = 'CORRECTION_UNLOCKED';
+
+    // Relación con otros.
+    case SUBSCRIBED_AUTHOR_PUBLISHED = 'SUBSCRIBED_AUTHOR_PUBLISHED';
+    case DIRECT_MESSAGE_RECEIVED = 'DIRECT_MESSAGE_RECEIVED';
+    case ACCESS_REQUESTED = 'ACCESS_REQUESTED';
+    case ACCESS_REQUEST_RESOLVED = 'ACCESS_REQUEST_RESOLVED';
+    case BETA_READER_INVITATION = 'BETA_READER_INVITATION';
+    case BETA_READER_ACCESS_REVOKED = 'BETA_READER_ACCESS_REVOKED';
+    case WRITING_BUDDY_PROPOSED = 'WRITING_BUDDY_PROPOSED';
+
+    // Créditos.
+    case CREDITS_ADDED = 'CREDITS_ADDED';
+    case CREDITS_SPENT = 'CREDITS_SPENT';
+    case BALANCE_WENT_NEGATIVE = 'BALANCE_WENT_NEGATIVE';
+
+    // Divulgación. No existen en la plataforma: no son actividad.
     case PLATFORM_UPDATES = 'PLATFORM_UPDATES';
+    case USAGE_TIPS = 'USAGE_TIPS';
 
     /**
-     * Everything is on by default except platform updates (`RN-4`). A missing
-     * row means this value, which is what lets new topics ship without a
-     * migration.
+     * En qué canales existe este aviso.
+     *
+     * Sin `default` a propósito: un tipo nuevo tiene que declarar sus canales
+     * o el análisis estático se queja, que es la única forma de que la lista
+     * no envejezca a espaldas de nadie.
+     *
+     * @return list<NotificationChannel>
      */
-    public function enabledByDefault(): bool
+    public function channels(): array
+    {
+        return match ($this) {
+            // Nadie quiere un correo por cada mensaje directo ni por cada
+            // respuesta a un comentario suyo: son de ritmo social.
+            self::POST_REPLY,
+            self::DIRECT_MESSAGE_RECEIVED,
+            self::CORRECTION_RATED,
+            self::CREDITS_ADDED,
+            self::CREDITS_SPENT => [NotificationChannel::PLATFORM],
+
+            // Y la divulgación es lo contrario: se lee en el buzón, no es
+            // actividad que mirar en una campana.
+            self::PLATFORM_UPDATES,
+            self::USAGE_TIPS => [NotificationChannel::EMAIL],
+
+            default => [NotificationChannel::EMAIL, NotificationChannel::PLATFORM],
+        };
+    }
+
+    /**
+     * Si viene activado de fábrica.
+     *
+     * **Todo sí, salvo las actualizaciones de la plataforma** (`RN-4`). Que
+     * el valor por defecto sea explícito por tipo y no un booleano global es
+     * lo que permite añadir un aviso nuevo sin migración: no hay fila hasta
+     * que alguien cambia algo.
+     */
+    public function defaultEnabled(): bool
     {
         return self::PLATFORM_UPDATES !== $this;
+    }
+
+    public function admits(NotificationChannel $channel): bool
+    {
+        return \in_array($channel, $this->channels(), true);
     }
 }

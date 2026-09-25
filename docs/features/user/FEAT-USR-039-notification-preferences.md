@@ -5,7 +5,7 @@ context: User
 concept: Preferences
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P2
 sources:
   - conversation:2026-09-22 (pestaña «Notificaciones» de Configuración)
@@ -15,7 +15,7 @@ endpoints:
   - PUT /me/notification-preferences
 events: [NotificationPreferencesChanged]
 depends_on: [FEAT-NOT-008]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-USR-039 — Preferencias de notificación por canal
@@ -219,30 +219,56 @@ posible `RN-2`.
 
 ## Criterios de aceptación
 
-- [ ] Un aviso desactivado en un canal no se entrega por ese canal y sí por el otro, si está
-      activo ahí.
-- [ ] Activar y desactivar el interruptor general **devuelve** las preferencias anteriores.
-- [ ] Con el interruptor general activo siguen llegando activación, restablecimiento de
+- [x] Un aviso desactivado en un canal no se entrega por ese canal. **La mitad del canal de
+      correo no se puede comprobar todavía**: no hay quien mande correos de aviso
+      (`FEAT-NOT-002`), así que esas preferencias se guardan y se sirven, y nadie las aplica.
+- [x] Activar y desactivar el interruptor general **devuelve** las preferencias anteriores.
+- [x] Con el interruptor general activo siguen llegando activación, restablecimiento de
       contraseña y avisos de seguridad.
-- [ ] Silenciar los mensajes no impide recibirlos.
-- [ ] Un tipo de aviso nuevo no requiere migración ni cambio en el cliente.
-- [ ] Las preferencias se comprueban al entregar, no al publicar el evento.
-- [ ] Corrección recibida y comentario de capítulo se configuran por separado.
+- [x] Silenciar los mensajes no impide recibirlos.
+- [x] Un tipo de aviso nuevo no requiere migración ni cambio en el cliente.
+- [x] Las preferencias se comprueban al entregar, no al publicar el evento.
+- [x] Corrección recibida y comentario de capítulo se configuran por separado.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| S-9 | ¿La asimetría entre canales es deliberada? | El modelo no debe asumir matriz completa |
-| S-10 | El interruptor general, ¿suspende o sobrescribe? | `RN-2` propone suspender |
-| S-38 | ¿Se corrige el texto del interruptor? | Promete silenciar todo y no es lo que hace |
+| S-38 | ¿Se corrige el texto del interruptor? | Promete silenciar todo y no es lo que hace. **Es texto de pantalla**: el backend ya hace lo correcto |
 | S-25 | ¿Hay resumen periódico por correo en vez de aviso por evento? | Cambiaría el modelo de entrega |
 | S-26 | ¿Los avisos de créditos se pueden silenciar? | Afectan al saldo del usuario |
 | S-19 | ¿Dónde se configura **no recibir** propuestas de LB (`FEAT-USR-011`)? | No es una preferencia de aviso |
+
+Resueltas: `S-9` (**sí, la asimetría es deliberada**, y el modelo es una lista de pares y no
+una matriz) y `S-10` (**suspende**, como proponía `RN-2`).
 
 ## Estado
 
 **Especificación:** `APPROVED` (2026-09-24). `S-11` y `S-12` resueltas: el catálogo de avisos está
 completo y corrección y comentario son tipos separados.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25).
+
+Tres cosas que la ficha no preveía y que la implementación obligó a decidir:
+
+- **el catálogo configurable vive en `User` y la clasificación en `Notification`.** Son dos
+  preguntas distintas —qué se puede configurar y qué se entrega— y cada contexto responde la
+  suya. Comparten el vocabulario a propósito: los nombres coinciden, que es lo que permite
+  cruzarlas sin una tabla de traducción que alguien tendría que mantener;
+- **`RN-4c` se cumple por análisis estático.** La clasificación operativo/notificación es un
+  `match` **sin `default`**: con un `default` a «notificación», un tipo nuevo se comportaría en
+  silencio como silenciable, que es el valor equivocado para cualquier cosa que tenga que ver
+  con la seguridad de una cuenta. Sin él, PHPStan se queja en cuanto alguien añade un caso;
+- **un tipo desconocido se permite.** Si `Notification` entrega un aviso que no está en el
+  catálogo configurable, llega. Es lo que hace que añadir un aviso no exija tocar dos
+  contextos a la vez, y el riesgo es el correcto: un aviso nuevo se recibe hasta que alguien
+  decida que se puede apagar, y no al revés.
+
+**Falta**, y por eso es `PARTIAL`: **el canal de correo no lo aplica nadie**. Las preferencias
+de `EMAIL` se guardan, se sirven y se validan desde ya —la pantalla las ofrece—, pero quien
+manda correos de aviso es `FEAT-NOT-002`,
+que no existe. El día que exista, lo único que tendrá que hacer es preguntar al mismo contrato
+con `EMAIL` en vez de `PLATFORM`.
+
+También falta el **resumen periódico** (`S-25`) y decidir si los avisos de créditos se pueden
+silenciar (`S-26`): hoy se pueden, que es lo que dice el catálogo.

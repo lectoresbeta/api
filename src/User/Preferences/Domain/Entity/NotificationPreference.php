@@ -9,22 +9,25 @@ use LectoresBeta\User\Preferences\Domain\Enum\NotificationChannel;
 use LectoresBeta\User\Preferences\Domain\Enum\NotificationTopic;
 
 /**
- * One explicit choice: this topic, this channel, on or off.
+ * Una decisión explícita sobre un aviso y un canal (`FEAT-USR-039`).
  *
- * Only choices that differ from the default are stored. A row per topic and
- * channel — instead of a column per topic — is what lets a new topic ship
- * without a migration (`FEAT-USR-039`).
+ * **Una fila por preferencia cambiada, no una columna por tipo.** Es lo que
+ * permite que un aviso nuevo no exija migración ni despliegue del cliente: lo
+ * que no tiene fila toma su valor por defecto, y ese valor lo declara el
+ * propio tipo.
+ *
+ * Una tabla con una columna por aviso habría envejecido al primer tipo nuevo,
+ * y el catálogo de esta funcionalidad ya trae veinte.
  */
 class NotificationPreference
 {
     private string $userId;
 
     /**
-     * Held as the backed value and handed out as the enum.
-     *
-     * It is part of the primary key, and Doctrine's XML mapping does not
-     * allow an enum on an identifier — the XSD rejects `enum-type` there.
-     * Same trade-off the identifiers make, for the same reason.
+     * Guardados como texto y no como enumerado, porque son parte de la clave
+     * primaria y el mapeo XML no admite enumerados ahí. El tipo sigue siendo
+     * el enumerado para todo el que los use: la conversión vive en los dos
+     * accesores y en ningún otro sitio.
      */
     private string $topic;
 
@@ -48,11 +51,6 @@ class NotificationPreference
         $this->updatedAt = $now;
     }
 
-    public function userId(): UserId
-    {
-        return UserId::fromString($this->userId);
-    }
-
     public function topic(): NotificationTopic
     {
         return NotificationTopic::from($this->topic);
@@ -68,7 +66,7 @@ class NotificationPreference
         return $this->enabled;
     }
 
-    public function change(bool $enabled, \DateTimeImmutable $now): void
+    public function set(bool $enabled, \DateTimeImmutable $now): void
     {
         $this->enabled = $enabled;
         $this->updatedAt = $now;

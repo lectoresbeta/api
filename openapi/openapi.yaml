@@ -143,6 +143,9 @@ paths:
   /me/content-preferences:
     $ref: './paths/settings.yaml#/contentPreferences'
 
+  /me/notification-preferences:
+    $ref: './paths/settings.yaml#/notificationPreferences'
+
   /me/privacy-settings:
     $ref: './paths/settings.yaml#/privacySettings'
 

@@ -7,12 +7,22 @@ namespace LectoresBeta\User\Preferences\Domain\Entity;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 
 /**
- * The master switch (`FEAT-USR-039`).
+ * El interruptor general (`FEAT-USR-039` `RN-2`).
  *
- * A field of its own and not a value written over every preference row: it
- * **suspends**, it does not overwrite (`RN-2`). Somebody who turns it on and
- * off again gets their configuration back exactly as they left it — which is
- * impossible if flipping the switch rewrites the rows.
+ * **Un campo aparte y no un valor de las preferencias individuales**, y esa
+ * es toda la razón de que esta clase exista: el interruptor **suspende**, no
+ * sobrescribe. Quien lo activa y lo desactiva recupera su configuración tal y
+ * como la dejó.
+ *
+ * Parece un detalle de interfaz y no lo es. Si sobrescribiera, quien lo
+ * encendiera y lo apagara volvería con todo silenciado y no sabría por qué
+ * dejó de recibir avisos.
+ *
+ * **No alcanza a los mensajes operativos** (`RN-3`). La pantalla promete
+ * silenciarlo todo y no es lo que ocurre; ese texto hay que corregirlo
+ * (`S-38`), porque lo que está mal es la promesa, no el comportamiento: sin
+ * el correo de activación no hay cuenta usable, y sin el de contraseña nadie
+ * recupera la suya.
  */
 class UserNotificationSettings
 {
@@ -38,15 +48,9 @@ class UserNotificationSettings
         return $this->allMuted;
     }
 
-    public function muteAll(\DateTimeImmutable $now): void
+    public function muteEverything(bool $muted, \DateTimeImmutable $now): void
     {
-        $this->allMuted = true;
-        $this->updatedAt = $now;
-    }
-
-    public function unmuteAll(\DateTimeImmutable $now): void
-    {
-        $this->allMuted = false;
+        $this->allMuted = $muted;
         $this->updatedAt = $now;
     }
 }

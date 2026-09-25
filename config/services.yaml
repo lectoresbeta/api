@@ -358,6 +358,13 @@ services:
     LectoresBeta\Work\PublicLink\Application\Contract\PublicLinkAccess:
         alias: LectoresBeta\Work\PublicLink\Application\Service\ResolvePublicLinkAccess
 
+    # Si alguien quiere ese aviso por ese canal (FEAT-USR-039 RN-6). Lo
+    # pregunta `Notification` **al entregar** y no quien publica el hecho: el
+    # emisor no conoce las preferencias de nadie, y entre el hecho y la
+    # entrega pueden haber cambiado.
+    LectoresBeta\User\Preferences\Application\Contract\NotificationChoices:
+        alias: LectoresBeta\User\Preferences\Application\Service\CheckNotificationChoices
+
     # Las cuentas, para quien las administra (FEAT-MOD-005). Es la puerta más
     # ancha que publica `User` —la única que reparte direcciones de correo
     # hacia una pantalla— y lo que la contrapesa es que toda consulta queda
