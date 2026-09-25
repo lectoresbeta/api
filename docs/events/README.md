@@ -86,9 +86,16 @@ decisión sobre agrupación (`N-2`).
 | `WorkPublished` | La obra pasa a `PUBLISHED` | `Reading`, `Community`, `Notification` | `workId`, `authorId`, `title`, `wordCount`, `chapterCount`, `publishedAt` |
 | `WorkOpenedForCorrection` | La obra pasa a `IN_CORRECTION` | `Reading`, **`Credits`** | `workId`, `authorId`, `openedAt` |
 | `WorkClosedForCorrection` | La obra vuelve a `PUBLISHED` | `Reading`, **`Credits`** | `workId`, `authorId`, `closedAt` |
-| `ChapterContentUpdated` | Cambia el texto de un capítulo | `Feedback`, **`Credits`** | `chapterId`, `workId`, `authorId`, `position`, `wordCount`, `updatedAt` |
+| `ChapterContentUpdated` | Cambia el texto de un capítulo | `Feedback`, **`Credits`** ✅ | `chapterId`, `workId`, `authorId`, `position`, `wordCount`, `version`, `updatedAt`. `version` la añade `FEAT-WRK-005` |
 | `WorkAccessModeChanged` | Cambia la modalidad | `Reading` | `workId`, `authorId`, `accessMode`, `changedAt` |
-| `WorkDeleted` | Se elimina | `Reading`, `Feedback`, `Community` | `workId`, `authorId` |
+| `WorkUpdated` | Cambian el título o la sinopsis (`FEAT-WRK-005`) | `Community`, `Reading` | `workId`, `authorId`, `updatedAt`. **Sin el texto** |
+| `ChapterAdded` | Se añade un capítulo (`FEAT-WRK-003`) | `Credits`, `Reading` | `chapterId`, `workId`, `authorId`, `position` |
+| `ChaptersReordered` | Cambia el orden (`FEAT-WRK-003`) | **`Credits`** | `workId`, `authorId`, `order`. Importa porque el último capítulo puede ser otro, y con él las preguntas que se cobran |
+| `ChapterRemoved` | Se elimina un capítulo | `Credits`, `Feedback` | `chapterId`, `workId`, `authorId` |
+| `ChapterVisibilityChanged` | El autor oculta o muestra un capítulo (`FEAT-WRK-008`) | **`Credits`**, `Feedback` | `chapterId`, `workId`, `authorId`, `visibility`, `changedAt` |
+| `WorkArchived` | El autor retira la obra (`FEAT-WRK-006`) | `Reading`, `Feedback`, `Credits`, `Community`, `Notification` | `workId`, `authorId`, `archivedAt` |
+| `WorkRestored` | La recupera | Los mismos | `workId`, `authorId`, `restoredAt` |
+| `WorkDeleted` | Se borra de verdad | `Reading`, `Feedback`, `Community` | `workId`, `authorId`. **Borrado definitivo**, no el botón de «Eliminar»: lo publica `FEAT-USR-013` |
 | `WorkBlockedByModeration` | Se bloquea la obra o uno de sus capítulos tras una reclamación estimada (`FEAT-MOD-003`) | `Notification` ✅, `Community`, **`Credits`** | `workId`, `authorId`, `title`, `scope`, `chapterId?`, `reason`, `blockedAt` |
 | `QuestionnaireUpdated` | Cambia el cuestionario: nueva versión | **`Credits`** | `workId`, `version`, `questionCount`, `requiredWords`, `requiredWordsForEveryChapter`, `updatedAt` |
 
@@ -150,10 +157,11 @@ tiene acceso.
 | `CorrectionDraftDiscarded` | El lector descarta su borrador | **`Credits`** (descarta la anotación), **`Reading`** (revoca el acceso) | `chapterId`, `workId`, `readerId`, `discardedAt` |
 | `CorrectionTipped` | El autor propina una corrección | **`Credits`**, `Community` | `correctionId`, `authorId`, `readerId`, `amount` |
 | `PublicCorrectionSubmitted` | Corrección por enlace público | `Notification`. **`Credits` NO lo consume** | `correctionId`, `workId`, `chapterId`, `authorId`, `authorLabel?` |
-| `FeedbackRatedPositively` | El autor lo valora como útil | `Notification`, `Community`. **`Credits` ya no lo consume**: la bonificación automática se sustituyó por la propina | `correctionId`, `readerId`, `authorId` |
-| `FeedbackReplied` | El autor contesta | `Notification` | `feedbackId`, `reviewerId` |
+| `FeedbackRatedPositively` | El autor valora una corrección como útil, **la primera vez** (`FEAT-FBK-006`) | `Notification`, `Community`. **`Credits` ya no lo consume**: la bonificación automática se sustituyó por la propina | `correctionId`, `chapterId`, `workId`, `readerId`, `ratedAt`. Cambiar la valoración después **no publica nada**: avisar a alguien de que su corrección ha dejado de ser útil es una crueldad sin función |
+| `FeedbackReplied` | El autor contesta a una corrección, **la primera vez** (`FEAT-FBK-005`) | `Notification` | `correctionId`, `chapterId`, `workId`, `readerId`, `repliedAt`. **Sin el texto** |
+| `CorrectionRead` | El autor abre una corrección recibida (`FEAT-FBK-004`) | `Notification`, que retira el aviso pendiente | `correctionId`, `readerId`, `readAt`. **No se le dice a quien corrigió**: sería una confirmación de lectura entre dos personas que no han elegido conversar |
 | `FeedbackHidden` | El autor lo oculta | `Community`, `Credits`* | `feedbackId`, `workId` |
-| `WorkRated` | Un LB valora la obra | `Community` | `workId`, `authorId`, `readerId`, `rating` |
+| `WorkRated` | Un LB valora la obra (`FEAT-FBK-002`) | `Community` | `workId`, `authorId`, `readerId`, `rating` (1–5, fijado por el modelo) |
 
 \* Solo si se decide revertir créditos al ocultar (`C-9`).
 
