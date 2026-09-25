@@ -47,6 +47,26 @@ class Correction
     /** The name a public corrector typed for themselves. Not an identity. */
     private ?string $authorLabel = null;
 
+    /**
+     * Por qué enlace llegó (`FEAT-FBK-008` `RN-8`).
+     *
+     * Hace dos cosas con un solo dato: **marca** la corrección como llegada
+     * por enlace público —sin ella el autor no entendería por qué en unas
+     * puede dar propina y en otras no— y permite **contar** cuántas lleva ese
+     * enlace, que es como se aplica su tope. El tope lo guarda `Work`, que es
+     * de quien es el enlace; contarlas es de quien las tiene, que es este
+     * contexto.
+     */
+    private ?string $publicLinkId = null;
+
+    /**
+     * Cuándo aceptó las condiciones quien la escribió (`RN-7`).
+     *
+     * Está aportando un texto propio sin haber aceptado nada, y sin cuenta no
+     * hay dónde apuntar ese consentimiento más que aquí.
+     */
+    private ?\DateTimeImmutable $termsAcceptedAt = null;
+
     private string $ownerId;
 
     private int $questionnaireVersion;
@@ -160,6 +180,12 @@ class Correction
     /**
      * A correction left through a public link (`FEAT-FBK-008`). Outside the
      * economy: it costs nothing and pays nobody.
+     *
+     * Nace **entregada**. En el flujo normal empezar y entregar son dos
+     * momentos —hay un panel que se abre, un borrador que se guarda y un
+     * precio que se anota entremedias—; aquí no hay nada de eso, porque no
+     * hay cuenta que reservar ni saldo que comprobar. La corrección existe
+     * cuando se envía.
      */
     public static function startFromPublicLink(
         CorrectionId $id,
@@ -170,6 +196,8 @@ class Correction
         \DateTimeImmutable $now,
         ?string $authorLabel = null,
         ?int $chapterVersion = null,
+        ?string $publicLinkId = null,
+        ?\DateTimeImmutable $termsAcceptedAt = null,
     ): self {
         $correction = new self(
             $id,
@@ -182,6 +210,8 @@ class Correction
         );
         $correction->authorLabel = $authorLabel;
         $correction->chapterVersion = $chapterVersion;
+        $correction->publicLinkId = $publicLinkId;
+        $correction->termsAcceptedAt = $termsAcceptedAt;
 
         return $correction;
     }
@@ -264,6 +294,16 @@ class Correction
     public function tipAmount(): ?int
     {
         return $this->tipAmount;
+    }
+
+    public function publicLinkId(): ?string
+    {
+        return $this->publicLinkId;
+    }
+
+    public function termsAcceptedAt(): ?\DateTimeImmutable
+    {
+        return $this->termsAcceptedAt;
     }
 
     /**

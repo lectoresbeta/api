@@ -130,6 +130,11 @@ abstract class EconomyScenario extends WebTestCase
         // Y la propina (`FEAT-CRD-017`), que `Feedback` apunta en la
         // corrección y `Community` cuenta como reputación del corrector.
         'CorrectionTipped',
+
+        // Y lo que llega por un enlace público (`FEAT-FBK-008`). Solo lo
+        // escucha `Notification`: que `Credits` **no** lo consuma es la forma
+        // más clara de decir que está fuera de la economía.
+        'PublicCorrectionSubmitted',
     ];
 
     /**

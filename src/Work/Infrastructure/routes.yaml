@@ -128,3 +128,38 @@ listMyWorks:
     path: /api/v1/me/works
     controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ListMyWorksController::__invoke
     methods: [GET]
+
+# El enlace público (`FEAT-WRK-010`). El autor cambia privacidad por feedback,
+# y por eso los controles para deshacerlo son suyos: crear, ver y revocar.
+createPublicLink:
+    path: /api/v1/works/{workId}/public-links
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\CreatePublicLinkController::__invoke
+    methods: [POST]
+
+listPublicLinks:
+    path: /api/v1/works/{workId}/public-links
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\ListPublicLinksController::__invoke
+    methods: [GET]
+
+# `DELETE` sobre el enlace y no sobre la obra: lo que se revoca es una puerta
+# concreta, y repartir uno por grupo es lo que permite cerrar solo el que se
+# fue de las manos.
+revokePublicLink:
+    path: /api/v1/public-links/{publicLinkId}
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\RevokePublicLinkController::__invoke
+    methods: [DELETE]
+
+# Y las dos lecturas sin sesión. Son las únicas de una obra que no la exigen,
+# y van en `access_control` con `PUBLIC_ACCESS` y no en un cortafuegos sin
+# seguridad: hace falta **leer** la sesión aunque no se exija, porque a quien
+# ya tiene cuenta se le manda al flujo normal, donde cobra (`FEAT-FBK-008`
+# `RN-1`).
+getPublicCorrectionPage:
+    path: /api/v1/public/{token}
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\GetPublicCorrectionPageController::__invoke
+    methods: [GET]
+
+getPublicChapter:
+    path: /api/v1/public/{token}/chapters/{chapterId}
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\GetPublicChapterController::__invoke
+    methods: [GET]

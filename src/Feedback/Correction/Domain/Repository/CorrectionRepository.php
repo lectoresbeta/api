@@ -78,6 +78,16 @@ interface CorrectionRepository
     public function deliveredCountBy(ReaderId $readerId): int;
 
     /**
+     * Cuántas correcciones han llegado ya por un enlace público
+     * (`FEAT-FBK-008` `RN-4`).
+     *
+     * Se cuenta aquí y no en `Work` porque las correcciones están aquí. El
+     * enlace publica su tope; una copia del contador al otro lado sería un
+     * segundo número, y uno de los dos se quedaría viejo.
+     */
+    public function publicCountOfLink(string $publicLinkId): int;
+
+    /**
      * The corrections an author cannot read yet because their balance went
      * negative (`FEAT-CRD-018`). Topping up unlocks all of them at once.
      *

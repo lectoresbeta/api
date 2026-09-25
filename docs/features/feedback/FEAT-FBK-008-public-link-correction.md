@@ -5,17 +5,16 @@ context: Feedback
 concept: Correction
 actors: [Guest]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-23 (enlace público de corrección)
   - docs/decisions/0006-credit-system.md
 endpoints:
-  - GET /public/{token}
-  - POST /public/{token}/corrections
+  - POST /public/{token}/chapters/{chapterId}/corrections
 events: [PublicCorrectionSubmitted]
 depends_on: [FEAT-WRK-010, FEAT-FBK-003]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-FBK-008 — Corregir por enlace público
@@ -134,8 +133,12 @@ que darle los controles.
 
 | Operación | Método y ruta | `operationId` |
 |---|---|---|
-| Ver el texto y el cuestionario | `GET /public/{token}` | `getPublicCorrectionPage` |
-| Enviar la corrección | `POST /public/{token}/corrections` | `submitPublicCorrection` |
+| Ver el texto y el cuestionario | `GET /public/{token}/chapters/{chapterId}` | `getPublicChapter` |
+| Enviar la corrección | `POST /public/{token}/chapters/{chapterId}/corrections` | `submitPublicCorrection` |
+
+Las lecturas son de [`FEAT-WRK-010`](../work/FEAT-WRK-010-public-correction-link.md); esta
+ficha aporta el envío. La ruta lleva el capítulo porque una obra tiene varios y la corrección
+es de uno: sin él, habría que adivinar cuál.
 
 El token es **opaco, largo y aleatorio**: es la única credencial que protege obra inédita.
 
@@ -165,16 +168,20 @@ varias personas pueden corregir el mismo capítulo por el mismo enlace.
 
 ## Criterios de aceptación
 
-- [ ] Alguien sin cuenta puede leer y corregir desde el enlace.
-- [ ] La corrección no mueve créditos en ninguna dirección.
-- [ ] Un usuario con sesión iniciada es redirigido al flujo normal, con créditos.
-- [ ] El autor puede revocar el enlace y deja de servir de inmediato.
-- [ ] Las páginas del enlace llevan `noindex`.
-- [ ] Se respeta el tope de correcciones del enlace.
-- [ ] La corrección aparece marcada como pública y no admite propina.
-- [ ] Al enviar se muestra el valor en créditos que habría tenido.
-- [ ] **No se abona ningún crédito** al corrector, ni al registrarse después.
-- [ ] Hay limitación de frecuencia.
+- [x] Alguien sin cuenta puede leer y corregir desde el enlace.
+- [x] La corrección no mueve créditos en ninguna dirección.
+- [x] Un usuario con sesión iniciada es redirigido al flujo normal, con créditos.
+- [x] El autor puede revocar el enlace y deja de servir de inmediato.
+- [x] Las páginas del enlace llevan `noindex`.
+- [x] Se respeta el tope de correcciones del enlace.
+- [x] La corrección aparece marcada como pública y no admite propina.
+- [x] Al enviar se muestra el valor en créditos que habría tenido.
+- [x] **No se abona ningún crédito** al corrector, ni al registrarse después.
+- [x] Hay limitación de frecuencia.
+
+El noveno no tiene código que lo implemente, y ese es justamente el punto: **no existe ningún
+camino por el que un crédito llegue a un corrector anónimo**, porque `Credits` no consume el
+hecho. La prueba comprueba que el saldo del autor no se mueve, que es la mitad observable.
 
 ## Preguntas abiertas
 
@@ -195,4 +202,28 @@ explícita y base legal, no de pasada. La idea es buena y puede volver más adel
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25), junto a
+[`FEAT-WRK-010`](../work/FEAT-WRK-010-public-correction-link.md), que esta ficha declaraba como
+dependencia y que no tenía ficha.
+
+Cuatro cosas que la ficha no preveía y que la implementación obligó a decidir:
+
+- **el envío no comprueba que la obra esté abierta a corrección.** El enlace funciona sobre un
+  borrador a propósito (`FEAT-WRK-010` `RN-14`): se reparte para conseguir feedback **antes**
+  de publicar, que es cuando hace falta. Exigir el estado habría dejado la funcionalidad sin
+  su caso principal;
+- **quien tiene sesión recibe `409` y no `302`.** La ficha decía redirigir, y una redirección
+  HTTP no es lo que una API le debe a un cliente: lo que necesita es saber **por qué** y
+  **adónde**, así que la respuesta lleva `USE_THE_NORMAL_FLOW` y el identificador de la obra o
+  del capítulo. Quien redirige es el cliente;
+- **la corrección se marca con el enlace por el que llegó**, no solo con su origen. El mismo
+  dato hace las dos cosas que hacían falta: marcarla en la bandeja (`RN-8`) y contar cuántas
+  lleva ese enlace, que es como se aplica su tope;
+- **el tope se cuenta aquí y se publica allí.** El enlace es de `Work` y las correcciones están
+  en este contexto; contar en los dos sitios sería tener el número dos veces, y uno se quedaría
+  viejo.
+
+**Falta** la prueba de la aceptación legal contra una **versión concreta** de los textos. Hoy
+se exige la casilla y se guarda cuándo se aceptó, que es lo que hay sin cuenta; atarla a la
+versión publicada exigiría un contrato de `User` que no existe, y crearlo para esto sería
+decidir de pasada algo que merece decidirse a propósito, como ya se dijo de `C-35`.

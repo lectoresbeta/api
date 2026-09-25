@@ -29,13 +29,17 @@ security:
             pattern: ^/health(/|$)
             security: false
 
-        # Endpoints públicos: registro, activación, login, enlaces públicos.
+        # Endpoints públicos: registro, activación, login, textos legales.
         #
         # Los patrones llevan `(/|$)` al final, y no es cosmético: sin él,
         # `^/auth` deja también `/authors` sin autenticar, y nadie se entera
         # hasta que ese endpoint existe.
+        #
+        # Los **enlaces públicos** no están aquí a propósito: necesitan que la
+        # sesión se lea aunque no se exija, así que van más abajo en
+        # `access_control` (`FEAT-WRK-010`).
         public:
-            pattern: ^/api/v1/(auth|public|legal|genres|content-warnings)(/|$)
+            pattern: ^/api/v1/(auth|legal|genres|content-warnings)(/|$)
             security: false
 
         api:
@@ -78,6 +82,14 @@ security:
         # donde esté abierto el buzón nuevo, que muchas veces es otro
         # dispositivo. Lo que autoriza es el token, de un solo uso.
         - { path: '^/api/v1/me/email-change/confirm$', methods: [POST], roles: PUBLIC_ACCESS }
+
+        # El enlace público de una obra (FEAT-WRK-010). Sin sesión, y aquí y
+        # no en un cortafuegos sin seguridad por la misma razón que el perfil:
+        # hace falta **reconocer** a quien sí la tiene. A un usuario
+        # registrado no se le da el formulario anónimo —se le manda al flujo
+        # normal, donde su corrección se paga (FEAT-FBK-008 RN-1)—, y para eso
+        # hay que saber que lo es.
+        - { path: '^/api/v1/public/', methods: [GET, POST], roles: PUBLIC_ACCESS }
 
         # Los textos legales vigentes (FEAT-USR-024): el formulario de alta
         # los necesita antes de que exista ninguna sesión.

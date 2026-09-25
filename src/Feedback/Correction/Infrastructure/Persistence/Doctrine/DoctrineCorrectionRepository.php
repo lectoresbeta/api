@@ -131,6 +131,11 @@ final class DoctrineCorrectionRepository extends DoctrineRepository implements C
         ]);
     }
 
+    public function publicCountOfLink(string $publicLinkId): int
+    {
+        return $this->repository()->count(['publicLinkId' => $publicLinkId]);
+    }
+
     public function lockedFor(AuthorId $ownerId): array
     {
         return array_values($this->repository()->findBy([

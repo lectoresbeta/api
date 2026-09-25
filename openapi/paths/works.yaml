@@ -1502,3 +1502,180 @@ contentWarnings:
                   type: array
                   items:
                     $ref: '#/ContentWarning'
+
+publicLinks:
+  post:
+    tags: [Works]
+    operationId: createPublicLink
+    summary: Crear un enlace público de la obra
+    description: |
+      Genera una URL que abre la obra **sin sesión**, para repartirla fuera de
+      la plataforma (`FEAT-WRK-010`).
+
+      Quien la recibe lee y corrige sin registrarse, y esa corrección **no
+      mueve créditos en ninguna dirección**
+      ([`FEAT-FBK-008`](../../docs/features/feedback/FEAT-FBK-008-public-link-correction.md)).
+      Es la válvula de seguridad de la economía: un autor sin saldo siempre
+      tiene una salida que no depende de nadie más que de su agenda.
+
+      **El token se devuelve una sola vez.** Se guarda cifrado, así que
+      después no hay forma de recuperarlo: quien pierde la URL crea otro
+      enlace. La alternativa —guardarlo en claro para poder enseñarlo
+      siempre— dejaría una credencial legible en la base de datos y en cada
+      copia de seguridad, y eso no se deshace.
+
+      Funciona sobre un **borrador**, que es justamente el caso: se reparte
+      para conseguir feedback antes de publicar.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              maxCorrections:
+                type: integer
+                minimum: 1
+                maximum: 100
+                default: 10
+                description: |
+                  Diez cubre el caso real —repartirlo a tu grupo de
+                  escritura— y limita el daño si la URL circula más de la
+                  cuenta.
+              expiresAt:
+                type: [string, 'null']
+                format: date-time
+                description: Sin ella, el enlace dura hasta que se revoque.
+              label:
+                type: [string, 'null']
+                maxLength: 80
+                description: |
+                  Una nota del autor para sí mismo —«taller de los martes»—.
+                  **No la ve quien abre el enlace.**
+    responses:
+      '201':
+        description: |
+          Creado. `Cache-Control: no-store`: una credencial que un
+          intermediario guarda es una credencial que ya no controla su dueño.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/PublicLink'
+                - type: object
+                  required: [token]
+                  properties:
+                    token:
+                      type: string
+                      description: '**La única vez que se devuelve.**'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: WORK_NOT_FOUND`. No existe o no es suya: se contestan igual.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: PUBLIC_LINK_CAP_OUT_OF_RANGE` —lleva `minimum` y `maximum`—
+          o `PUBLIC_LINK_EXPIRY_IN_THE_PAST`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  get:
+    tags: [Works]
+    operationId: listPublicLinks
+    summary: Los enlaces públicos de una obra
+    description: |
+      Incluye los revocados y los caducados: el autor necesita saber **qué
+      repartió**, no solo qué sigue abierto.
+
+      **Sin el token.** Lo que se revoca es el enlace, no la URL.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '200':
+        description: Sus enlaces, del más reciente al más antiguo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [publicLinks]
+              properties:
+                publicLinks:
+                  type: array
+                  items:
+                    $ref: '#/PublicLink'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+publicLink:
+  delete:
+    tags: [Works]
+    operationId: revokePublicLink
+    summary: Revocar un enlace público
+    description: |
+      Inmediata e irreversible. Un enlace revocado no se reactiva: se crea
+      otro.
+
+      Revocar dos veces devuelve `204` las dos: lo que se pedía —que ese
+      enlace no sirva— ya está cumplido.
+    parameters:
+      - name: publicLinkId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Revocado, o ya lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: PUBLIC_LINK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+PublicLink:
+  type: object
+  required: [publicLinkId, label, maxCorrections, createdAt, expiresAt, revokedAt, usable]
+  properties:
+    publicLinkId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    label:
+      type: [string, 'null']
+    maxCorrections:
+      type: integer
+    createdAt:
+      type: string
+      format: date-time
+    expiresAt:
+      type: [string, 'null']
+      format: date-time
+    revokedAt:
+      type: [string, 'null']
+      format: date-time
+    usable:
+      type: boolean
+      description: Ni revocado, ni caducado, ni de una obra bloqueada.

@@ -57,6 +57,7 @@ final readonly class ListCorrectionsReceivedController
                     'chapterPosition' => $correction->chapterPosition,
                     'readerId' => $correction->readerId,
                     'authorLabel' => $correction->authorLabel,
+                    'origin' => $correction->origin,
                     'visibility' => $correction->visibility,
                     'questionnaireVersion' => $correction->questionnaireVersion,
                     'submittedAt' => $correction->submittedAt,

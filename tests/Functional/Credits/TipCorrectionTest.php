@@ -6,12 +6,6 @@ namespace LectoresBeta\Tests\Functional\Credits;
 
 use LectoresBeta\Credits\Pricing\Domain\Repository\ChapterPriceRepository;
 use LectoresBeta\Credits\Pricing\Domain\ValueObject\ChapterId as PricedChapterId;
-use LectoresBeta\Feedback\Correction\Domain\Entity\Correction;
-use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectionRepository;
-use LectoresBeta\Feedback\Correction\Domain\ValueObject\AuthorId;
-use LectoresBeta\Feedback\Correction\Domain\ValueObject\ChapterId;
-use LectoresBeta\Feedback\Correction\Domain\ValueObject\CorrectionId;
-use LectoresBeta\Feedback\Correction\Domain\ValueObject\WorkId;
 use LectoresBeta\Tests\Functional\Support\EconomyScenario;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -199,7 +193,7 @@ final class TipCorrectionTest extends EconomyScenario
     {
         [$autora, , , $workId, $chapterId] = $this->aDeliveredCorrection();
 
-        $porEnlace = $this->aPublicLinkCorrectionOn($workId, $chapterId, $autora['userId']);
+        $porEnlace = $this->aPublicLinkCorrectionOn($workId, $chapterId, $autora['token']);
         $antes = (int) $this->balanceOf($autora['userId']);
 
         $this->tip($porEnlace, $autora['token'], 1);
@@ -393,27 +387,44 @@ final class TipCorrectionTest extends EconomyScenario
     }
 
     /**
-     * Una corrección llegada por enlace público, escrita directamente en el
-     * repositorio: `FEAT-FBK-008` todavía no tiene endpoint, y lo que hay que
-     * probar aquí es qué pasa al intentar propinarla.
+     * Una corrección llegada de verdad por un enlace público
+     * (`FEAT-FBK-008`), no fabricada: pasa por el endpoint anónimo, como la
+     * escribiría alguien sin cuenta.
      */
-    private function aPublicLinkCorrectionOn(string $workId, string $chapterId, string $ownerId): string
+    private function aPublicLinkCorrectionOn(string $workId, string $chapterId, string $authorToken): string
     {
-        /** @var CorrectionRepository $corrections */
-        $corrections = self::getContainer()->get(CorrectionRepository::class);
+        $this->client->request('POST', \sprintf('/api/v1/works/%s/public-links', $workId), server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$authorToken,
+        ], content: '{}');
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $token = (string) $this->payload()['token'];
 
-        $id = CorrectionId::generate();
-        $corrections->save(Correction::startFromPublicLink(
-            $id,
-            WorkId::fromString($workId),
-            ChapterId::fromString($chapterId),
-            AuthorId::fromString($ownerId),
-            1,
-            new \DateTimeImmutable(),
-            'Alguien de fuera',
-        ));
+        $this->client->request('GET', \sprintf('/api/v1/public/%s/chapters/%s', $token, $chapterId));
+        self::assertResponseIsSuccessful();
+        /** @var list<array{questionId: string}> $questions */
+        $questions = $this->payload()['questions'];
 
-        return $id->value();
+        $this->client->request('POST', \sprintf('/api/v1/public/%s/chapters/%s/corrections', $token, $chapterId), server: [
+            'CONTENT_TYPE' => 'application/json',
+        ], content: json_encode([
+            'answers' => array_map(
+                static fn (array $question): array => [
+                    'questionId' => $question['questionId'],
+                    'text' => implode(' ', array_fill(0, 60, 'palabra')),
+                ],
+                $questions,
+            ),
+            'acceptedTerms' => true,
+            'name' => 'Alguien de fuera',
+        ], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $id = (string) $this->payload()['correctionId'];
+        $this->capture();
+        $this->consumeEverything();
+
+        return $id;
     }
 
     private function priceOf(string $chapterId): ?int

@@ -18,6 +18,7 @@
 | `PUT /corrections/{correctionId}/visibility` | `setCorrectionVisibility` | Ocultarla | FEAT-FBK-007 | PENDING |
 | `GET /me/corrections` | `listMyCorrections` | Mis correcciones | FEAT-FBK-010 | PENDING |
 | `POST /works/{workId}/rating` | `rateWork` | Valorar la obra | FEAT-FBK-002 | PENDING |
+| `POST /api/v1/public/{token}/chapters/{chapterId}/corrections` | `submitPublicCorrection` | Corregir **sin cuenta**, por un enlace público | FEAT-FBK-008 | **Implementado** |
 
 Las rutas cuelgan del **capítulo**: la corrección es por capítulo (`R-2`). Las preguntas son
 del autor y viven en `Work`; las respuestas son de `Feedback`, y el cuestionario del lector
@@ -242,3 +243,88 @@ Publica `CorrectionDraftDiscarded`, que sueltan dos contextos a la vez:
 
 **No se exige seguir pudiendo corregir.** Cerrarle la salida a quien perdió el acceso, o cuya
 obra se cerró, dejaría borradores imposibles de borrar ocupando sitio para siempre.
+
+---
+
+## `POST /api/v1/public/{token}/chapters/{chapterId}/corrections`
+
+**`operationId`:** `submitPublicCorrection` ·
+**Funcionalidad:** [`FEAT-FBK-008`](../../features/feedback/FEAT-FBK-008-public-link-correction.md)
+
+### Propósito
+
+Que alguien **sin cuenta** entregue una corrección, llegado por un enlace que el autor repartió
+fuera de la plataforma ([`FEAT-WRK-010`](../../features/work/FEAT-WRK-010-public-correction-link.md)).
+
+### La única escritura de la API sin sesión
+
+Y conviene decir qué la sostiene, porque no es la costumbre de este contexto:
+
+- **lo que autoriza es el token**, opaco y aleatorio, que solo tiene quien lo recibió;
+- **lo que contiene es el tope del enlace**, diez correcciones por defecto. Un formulario
+  público sin tope es una invitación al abuso;
+- **lo que la hace inofensiva es que no mueve nada.** No hay cargo, no hay abono, `Credits` ni
+  siquiera consume el hecho. Si nadie cobra, una corrección vacía por enlace público no daña a
+  nadie más que al autor que la pidió.
+
+### Autorización
+
+Nadie, y eso es el punto. Pero **quien tiene sesión no pasa por aquí**: recibe `409
+USE_THE_NORMAL_FLOW` y su cliente le lleva al flujo normal, donde su corrección se paga.
+
+Sin esa regla, el autor podría pegar el enlace en su muro y conseguir que usuarios registrados
+le corrigiesen gratis: él se ahorraría los créditos y ellos perderían los suyos.
+
+### Petición
+
+Las respuestas al cuestionario, la aceptación de las condiciones y, opcionalmente, un nombre.
+
+`acceptedTerms` **lo comprueba el servidor**, no solo la pantalla: quien envía está aportando un
+texto propio sin haber aceptado nada.
+
+`name` es una **etiqueta, no una identidad**. Nadie la verifica, y al autor le importa
+distinguir la crítica de su hermana de la de un compañero de taller.
+
+### Respuesta
+
+`201 Created`, con el identificador de la corrección y `wouldHaveBeenWorth`.
+
+Esa cifra es el **mensaje de captación**: «acabas de escribir una corrección que en Lectores
+Beta vale 6 créditos». Es el único sitio del sistema donde una cifra de créditos se le enseña a
+alguien sin cuenta, y es informativa: no hay saldo, no hay movimiento.
+
+**Esos créditos no se abonan**, ni al registrarse después. Hacerlo abriría el agujero
+evidente —publico un texto con el cuestionario más exigente posible, abro un enlace que no me
+cuesta nada, me corrijo a mí mismo de incógnito y me registro con otra cuenta— y, más de fondo,
+convertiría un flujo sin apuestas en uno con dinero, arrastrando hasta aquí todo el control
+antifraude que hoy no necesita.
+
+### Errores específicos
+
+| Código HTTP | `code` | Cuándo |
+|---|---|---|
+| `404` | `PUBLIC_LINK_NOT_FOUND` | Ese token nunca existió |
+| `404` | `CHAPTER_NOT_FOUND` | Ese capítulo no está detrás de este enlace |
+| `409` | `USE_THE_NORMAL_FLOW` | Quien envía tiene sesión. Lleva `chapterId` |
+| `409` | `PUBLIC_LINK_FULL` | El enlace agotó su tope. Lleva `maxCorrections` |
+| `409` | `NO_QUESTIONNAIRE` | La obra no tiene nada que responder |
+| `410` | `PUBLIC_LINK_GONE` | Revocado, caducado o de una obra bloqueada |
+| `422` | `TERMS_NOT_ACCEPTED` | Sin aceptar las condiciones |
+| `429` | `TOO_MANY_ATTEMPTS` | Límite por origen |
+
+**No se comprueba que la obra esté abierta a corrección**, al revés que el flujo normal. El
+enlace funciona sobre un borrador a propósito: se reparte para conseguir feedback **antes** de
+publicar, que es cuando hace falta.
+
+Agotar el tope cierra el envío y **no la lectura**: se puede seguir leyendo la obra.
+
+### Efectos
+
+Crea la corrección, marcada con el enlace por el que llegó. Ese mismo dato hace las dos cosas
+que hacían falta: **marcarla** en la bandeja del autor —sin la marca no entendería por qué en
+unas puede dar propina y en otras no— y **contarlas** por enlace, que es como se aplica el tope.
+
+Publica `PublicCorrectionSubmitted`, que consume `Notification` para avisar al autor. **`Credits`
+no lo consume, y esa ausencia es la especificación.**
+
+No cuenta en el contador público de correcciones del perfil de nadie: no hay perfil.

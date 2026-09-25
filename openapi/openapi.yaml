@@ -26,6 +26,8 @@ tags:
     description: Cuenta, preferencias y página de autor
   - name: Works
     description: Obras, fragmentos, cuestionario y enlaces
+  - name: PublicLink
+    description: Lo que se lee y se corrige sin cuenta, por un enlace repartido fuera
   - name: Reading
     description: Accesos de lector beta, grupos y writing buddies
   - name: Feedback
@@ -263,6 +265,23 @@ paths:
 
   /works/{workId}/questionnaire:
     $ref: './paths/works.yaml#/questionnaire'
+
+  /works/{workId}/public-links:
+    $ref: './paths/works.yaml#/publicLinks'
+
+  /public-links/{publicLinkId}:
+    $ref: './paths/works.yaml#/publicLink'
+
+  # Lo que se sirve por el enlace: los tres únicos endpoints de una obra que
+  # no exigen sesión (FEAT-WRK-010, FEAT-FBK-008).
+  /public/{token}:
+    $ref: './paths/public-link.yaml#/page'
+
+  /public/{token}/chapters/{chapterId}:
+    $ref: './paths/public-link.yaml#/chapter'
+
+  /public/{token}/chapters/{chapterId}/corrections:
+    $ref: './paths/public-link.yaml#/corrections'
 
   /chapters/{chapterId}/questionnaire:
     $ref: './paths/corrections.yaml#/questionnaire'

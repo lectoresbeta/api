@@ -23,6 +23,9 @@
             <index name="idx_correction_owner" columns="owner_id,submitted_at"/>
             <!-- La bandeja filtrada por «sin leer» (`FEAT-FBK-004` `RN-6`). -->
             <index name="idx_correction_owner_unread" columns="owner_id,read_at"/>
+            <!-- Cuántas lleva un enlace público, que es como se aplica su
+                 tope (`FEAT-FBK-008` `RN-4`). -->
+            <index name="idx_correction_public_link" columns="public_link_id"/>
         </indexes>
 
         <unique-constraints>
@@ -48,6 +51,8 @@
         <field name="chapterId" column="chapter_id" type="guid"/>
         <field name="readerId" column="reader_id" type="guid" nullable="true"/>
         <field name="authorLabel" column="author_label" type="string" length="80" nullable="true"/>
+        <field name="publicLinkId" column="public_link_id" type="guid" nullable="true"/>
+        <field name="termsAcceptedAt" column="terms_accepted_at" type="datetime_immutable" nullable="true"/>
         <field name="ownerId" column="owner_id" type="guid"/>
         <field name="questionnaireVersion" column="questionnaire_version" type="smallint"/>
         <field name="chapterVersion" column="chapter_version" type="smallint" nullable="true"/>

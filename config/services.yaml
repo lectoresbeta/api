@@ -237,6 +237,11 @@ services:
                 - LectoresBeta\Notification\Delivery\Application\Event\BetaReaderInvited
                 - LectoresBeta\Notification\Delivery\Application\Event\FeedbackSubmitted
 
+                # Lo que llega por un enlace público (FEAT-FBK-008). Solo lo
+                # escucha `Notification`: que `Credits` no lo consuma es la
+                # forma más clara de decir que está fuera de la economía.
+                - LectoresBeta\Notification\Delivery\Application\Event\PublicCorrectionSubmitted
+
     # Los consumidores de eventos se etiquetan aquí y no con
     # #[AsMessageHandler]: viven en Application, y Application no conoce a
     # Symfony. Es la misma razón por la que los chequeos de salud se etiquetan
@@ -264,6 +269,10 @@ services:
     LectoresBeta\User\Account\Infrastructure\Controller\ChangeMyPasswordController:
         arguments:
             $byAccount: '@limiter.password_change_attempts'
+
+    LectoresBeta\Work\PublicLink\Infrastructure\Security\PublicLinkThrottle:
+        arguments:
+            $byAddress: '@limiter.public_link_by_ip'
 
     LectoresBeta\User\Authentication\Infrastructure\Security\LexikAccessTokenIssuer:
         arguments:
@@ -296,6 +305,12 @@ services:
     # tiene que dejar de valer en el acto (FEAT-MOD-004 RN-4).
     LectoresBeta\Moderation\ModeratorRole\Application\Contract\ModeratorRoles:
         alias: LectoresBeta\Moderation\ModeratorRole\Application\Service\CheckModeratorRole
+
+    # Qué abre un token de enlace público (FEAT-WRK-010). Lo pregunta
+    # `Feedback` antes de aceptar una corrección anónima; no gasta cupo ni
+    # revoca nada, porque un contrato pregunta y no manda.
+    LectoresBeta\Work\PublicLink\Application\Contract\PublicLinkAccess:
+        alias: LectoresBeta\Work\PublicLink\Application\Service\ResolvePublicLinkAccess
 
     # Si una corrección se puede reclamar, y por quién (FEAT-MOD-001 RN-4,
     # RN-5). No lleva su texto: autorizar no necesita leerla.
@@ -647,6 +662,12 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorOfACorrection:
+        tags:
+            - { name: messenger.message_handler }
+
+    # El mismo aviso, sin actor: al otro lado del enlace público no hay cuenta
+    # de la que pedir un perfil (FEAT-FBK-008).
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorOfAPublicCorrection:
         tags:
             - { name: messenger.message_handler }
 

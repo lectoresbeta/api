@@ -85,3 +85,14 @@ listMyCorrections:
     path: /api/v1/me/corrections
     controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\ListMyCorrectionsController::__invoke
     methods: [GET]
+
+# Corregir por un enlace público, sin cuenta (`FEAT-FBK-008`). **La única
+# escritura de la API que no exige sesión**: lo que autoriza es el token y lo
+# que contiene es el tope del enlace.
+#
+# Cuelga de `/public/{token}` y no de `/chapters/{chapterId}` a propósito: sin
+# el token delante, sería un endpoint anónimo sobre cualquier capítulo.
+submitPublicCorrection:
+    path: /api/v1/public/{token}/chapters/{chapterId}/corrections
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\SubmitPublicCorrectionController::__invoke
+    methods: [POST]

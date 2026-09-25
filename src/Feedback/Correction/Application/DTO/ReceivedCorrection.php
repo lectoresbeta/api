@@ -24,6 +24,13 @@ final readonly class ReceivedCorrection
         public int $chapterPosition,
         public ?string $readerId,
         public ?string $authorLabel,
+        /**
+         * De dónde llegó (`FEAT-FBK-008` `RN-8`).
+         *
+         * No es cosmético: sin la marca, el autor no entendería por qué en
+         * unas correcciones puede dar propina y en otras no.
+         */
+        public string $origin,
         public string $visibility,
         public int $questionnaireVersion,
         public string $submittedAt,

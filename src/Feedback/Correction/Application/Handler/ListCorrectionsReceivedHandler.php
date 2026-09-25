@@ -88,6 +88,7 @@ final readonly class ListCorrectionsReceivedHandler
                     $heading->position ?? 0,
                     $correction->readerId()?->value(),
                     $correction->authorLabel(),
+                    $correction->origin()->value,
                     $correction->visibility()->value,
                     $correction->questionnaireVersion(),
                     ($correction->submittedAt() ?? $correction->startedAt())->format(\DATE_ATOM),
