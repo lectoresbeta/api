@@ -5,7 +5,7 @@ context: Work
 concept: Chapter
 actors: [Writer]
 spec_status: APPROVED
-impl_status: PARTIAL
+impl_status: DONE
 priority: P0
 sources:
   - conversation:2026-09-25 (bloque de ciclo de vida de la obra)
@@ -107,15 +107,15 @@ preguntas que se cobran.
 
 ## Criterios de aceptación
 
-- [ ] Se añade un capítulo en una posición intermedia y el resto se desplaza.
-- [ ] Se reordena la obra entera con una sola operación.
-- [ ] Una lista de orden incompleta o con intrusos se rechaza sin aplicar nada.
-- [ ] Las posiciones quedan consecutivas desde 1 después de cualquier operación.
-- [ ] Una corrección entregada sigue apuntando a su capítulo después de reordenar.
-- [ ] Reordenar reprecia el capítulo que deja de ser el último y el que pasa a serlo.
-- [ ] Un capítulo con correcciones no se puede eliminar.
-- [ ] Una obra publicada no se queda sin capítulos.
-- [ ] El recuento de palabras de la obra cuadra con la suma de los capítulos.
+- [x] Se añade un capítulo en una posición intermedia y el resto se desplaza.
+- [x] Se reordena la obra entera con una sola operación.
+- [x] Una lista de orden incompleta o con intrusos se rechaza sin aplicar nada.
+- [x] Las posiciones quedan consecutivas desde 1 después de cualquier operación.
+- [x] Una corrección entregada sigue apuntando a su capítulo después de reordenar.
+- [x] Reordenar reprecia el capítulo que deja de ser el último y el que pasa a serlo.
+- [x] Un capítulo con correcciones no se puede eliminar.
+- [x] Una obra publicada no se queda sin capítulos.
+- [x] El recuento de palabras de la obra cuadra con la suma de los capítulos.
 
 ## Preguntas abiertas
 
@@ -123,11 +123,32 @@ preguntas que se cobran.
 |---|---|---|
 | W-27 | ¿Se pueden agrupar capítulos en partes o secciones? | Una novela larga lo pide; el modelo hoy es plano |
 | W-28 | ¿Dividir un capítulo en dos, o unir dos en uno? | Es lo que de verdad hace un autor al reestructurar, y no se resuelve con reordenar |
+| W-34 | Sin índice único en `(work_id, position)`, ¿basta la transacción para mantenerlas consecutivas? | Hoy sí, porque solo el autor reordena su obra. Con edición delegada (`W-23`) dejaría de bastar |
 
 ## Estado
 
 **Especificación:** `APPROVED` (2026-09-25).
 
-**Implementación:** `PARTIAL`. Existe `addChapter`, siempre al final. **Falta** insertar en
-una posición, reordenar y eliminar, con todo lo que eso arrastra: el índice diferido, el
-recálculo de posiciones y el reprecio del último capítulo.
+**Implementación:** `DONE` (2026-09-25). Insertar en una posición, reordenar con la lista
+entera y eliminar, con el recálculo de posiciones y el reprecio del capítulo que deja de ser
+el último y del que pasa a serlo — que es lo que hace que `RN-5` sea verdad y no una
+intención.
+
+**Que un capítulo tenga correcciones se responde sin salir del contexto.** La versión del
+capítulo solo sube al archivar una que alguien leyó
+([`FEAT-WRK-005`](FEAT-WRK-005-edit-work-and-chapter.md)), así que estar por encima de la
+primera —o tener la actual marcada— equivale exactamente a «aquí hubo correcciones».
+Preguntárselo a `Feedback` daría el mismo sí con una llamada síncrona de más.
+
+**Una desviación de `RN-2`, y conviene que se vea.** El índice único diferido sobre
+`(work_id, position)` **no está**: Doctrine no modela restricciones `DEFERRABLE` en su mapeo,
+así que añadirla dejaría el esquema permanentemente «fuera de sincronía» para
+`doctrine:schema:validate`, y un despliegue que siempre avisa es un despliegue que nadie mira.
+Lo que mantiene las posiciones consecutivas hoy es el recálculo entero dentro de una
+transacción y el orden de las escrituras. Queda como `W-34`.
+
+El hecho `ChapterAdded` de la tabla de eventos **no se publica**, y es deliberado:
+`ChapterContentUpdated` ya anuncia un capítulo nuevo —es lo que `Credits` usa para estrenarle
+precio— y dos nombres para el mismo hecho obligan a cada consumidor a decidir cuál escuchar.
+
+`W-27` y `W-28` siguen abiertas.

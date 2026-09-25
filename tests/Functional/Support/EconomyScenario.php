@@ -101,6 +101,11 @@ abstract class EconomyScenario extends WebTestCase
         // Y el eco de lo que se pagó por cada corrección (`FEAT-FBK-010`).
         'CreditsAdded',
         'CreditsSpent',
+
+        // Y lo que mover o quitar un capítulo significa para el precio
+        // (`FEAT-WRK-003`).
+        'ChaptersReordered',
+        'ChapterRemoved',
     ];
 
     /**

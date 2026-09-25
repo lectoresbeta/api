@@ -157,6 +157,9 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `CORRECTION_HAS_NO_AUTHOR` | 409 | Llegó por enlace público: no hay cuenta detrás a la que contestar (`FEAT-FBK-005`) |
 | `EMPTY_REPLY` | 422 | Una respuesta vacía no es una respuesta |
 | `CORRECTION_LOCKED` | 409 | Retenida por descubierto. Se distingue del `404` a propósito: existe, es suya, y se lee reponiendo saldo |
+| `CHAPTER_HAS_CORRECTIONS` | 409 | Alguien lo corrigió: se oculta, no se borra (`FEAT-WRK-003`) |
+| `WORK_NEEDS_A_CHAPTER` | 409 | Una obra publicada no se queda sin capítulos. En borrador sí |
+| `CHAPTER_ORDER_INCOMPLETE` | 422 | El orden enviado no contiene exactamente los capítulos de la obra. Se rechaza entero |
 | `CHAPTER_BLOCKED` | 409 | El capítulo está bloqueado por una reclamación estimada y su contenido se conserva tal cual (`FEAT-WRK-005` `RN-7`) |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |

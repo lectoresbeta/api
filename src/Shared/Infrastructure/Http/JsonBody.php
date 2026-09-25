@@ -85,6 +85,18 @@ final readonly class JsonBody
     }
 
     /**
+     * Un entero, y **solo si vino como entero**. Una cadena `"3"` responde
+     * `null` por lo mismo que el resto de accesores: aceptar un tipo distinto
+     * del declarado convierte el contrato en una sugerencia.
+     */
+    public function int(string $field): ?int
+    {
+        $value = $this->values[$field] ?? null;
+
+        return \is_int($value) ? $value : null;
+    }
+
+    /**
      * A field holding a list of strings, such as the chosen genres.
      *
      * Anything that is not a string is dropped rather than coerced: turning

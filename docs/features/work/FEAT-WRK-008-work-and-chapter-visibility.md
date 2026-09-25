@@ -103,14 +103,14 @@ avisa a quien tuviera un borrador en curso.
 
 ## Criterios de aceptación
 
-- [ ] El autor oculta y vuelve a mostrar un capítulo.
-- [ ] Un capítulo oculto responde `404` a cualquiera que no sea su autor.
-- [ ] Un capítulo oculto no admite empezar una corrección.
-- [ ] Las correcciones entregadas sobre un capítulo oculto se siguen leyendo por las dos partes.
+- [x] El autor oculta y vuelve a mostrar un capítulo.
+- [x] Un capítulo oculto responde `404` a cualquiera que no sea su autor.
+- [x] Un capítulo oculto no admite empezar una corrección.
+- [x] Las correcciones entregadas sobre un capítulo oculto se siguen leyendo por las dos partes.
 - [ ] Quien tenía un borrador sobre él recibe aviso y no puede entregarlo.
 - [ ] Las palabras del capítulo oculto no cuentan en el recuento visible de la obra.
-- [ ] Un capítulo bloqueado por moderación no cambia de visibilidad por esta vía.
-- [ ] Una obra con todos los capítulos ocultos sigue publicada.
+- [x] Un capítulo bloqueado por moderación no cambia de visibilidad por esta vía.
+- [x] Una obra con todos los capítulos ocultos sigue publicada.
 
 ## Preguntas abiertas
 
@@ -124,6 +124,15 @@ avisa a quien tuviera un borrador en curso.
 **Especificación:** `APPROVED` (2026-09-25). Resuelve de paso la
 ambigüedad «visibilidad de la obra», que no existe: la obra tiene estado.
 
-**Implementación:** `PARTIAL`. `ChapterVisibility` existe en el modelo y las lecturas ya la
-respetan —`GetChapterHandler` y `GetWorkHandler` la comprueban—. **Falta** la operación que
-la cambia, el hecho que publica y el aviso a quien tenga un borrador.
+**Implementación:** `PARTIAL` (2026-09-25). La operación existe, publica su hecho, y ocultar
+cierra el capítulo **para empezar y para entregar** una corrección: los dos caminos pasan por
+el mismo contrato de `Work`, así que bastó con que un capítulo oculto dejara de tener parte
+que corregir — igual que uno bloqueado.
+
+**Falta el aviso a quien tuviera un borrador en curso** (`RN-5`). Hoy lo descubre al intentar
+entregar, que es tarde y desconcertante. Es el mismo mecanismo que `FEAT-MOD-003` `RN-4`
+necesita al bloquear una obra, y entra con él.
+
+**Falta también descontar sus palabras del recuento visible de la obra** (`RN-6`): el total
+sigue contando el capítulo oculto. No afecta al precio de nadie —los precios son por
+capítulo— pero sí a lo que se enseña en la ficha de la obra.

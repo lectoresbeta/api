@@ -88,3 +88,22 @@ updateChapter:
     path: /api/v1/chapters/{chapterId}
     controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\UpdateChapterController::__invoke
     methods: [PUT]
+
+# Estructurar la obra (`FEAT-WRK-003`). La lista entera en el orden deseado,
+# no «mueve este de la 3 a la 7»: la lista completa es idempotente.
+reorderChapters:
+    path: /api/v1/works/{workId}/chapters/order
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\ReorderChaptersController::__invoke
+    methods: [PUT]
+
+# Solo capítulos que nadie ha corregido: los demás se ocultan.
+removeChapter:
+    path: /api/v1/chapters/{chapterId}
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\RemoveChapterController::__invoke
+    methods: [DELETE]
+
+# La visibilidad es **del capítulo**; la obra tiene estado (`FEAT-WRK-008`).
+setChapterVisibility:
+    path: /api/v1/chapters/{chapterId}/visibility
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\SetChapterVisibilityController::__invoke
+    methods: [PUT]

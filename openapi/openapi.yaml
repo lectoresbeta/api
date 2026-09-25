@@ -165,6 +165,12 @@ paths:
   /chapters/{chapterId}:
     $ref: './paths/works.yaml#/chapter'
 
+  /works/{workId}/chapters/order:
+    $ref: './paths/works.yaml#/chapterOrder'
+
+  /chapters/{chapterId}/visibility:
+    $ref: './paths/works.yaml#/chapterVisibility'
+
   /works/{workId}/chapters:
     $ref: './paths/works.yaml#/chapters'
 

@@ -18,14 +18,14 @@ verdad sobre el alcance.**
 | Contexto | Total | Con ficha | `APPROVED` | `REVIEW` | `DONE` | `PARTIAL` |
 |---|---|---|---|---|---|---|
 | `User` (USR) | 44 | 30 | 30 | 0 | 12 | 10 |
-| `Work` (WRK) | 17 | 12 | 12 | 0 | 1 | 9 |
+| `Work` (WRK) | 17 | 12 | 12 | 0 | 2 | 8 |
 | `Reading` (RDG) | 10 | 7 | 7 | 0 | 7 | 0 |
 | `Feedback` (FBK) | 12 | 8 | 7 | 0 | 5 | 1 |
 | `Community` (COM) | 38 | 11 | 10 | 0 | 2 | 1 |
 | `Moderation` (MOD) | 12 | 11 | 11 | 0 | 1 | 6 |
 | `Credits` (CRD) | 19 | 13 | 13 | 0 | 3 | 5 |
 | `Notification` (NOT) | 9 | 3 | 3 | 0 | 2 | 1 |
-| **Total** | **161** | **95** | **93** | **0** | **33** | **33** |
+| **Total** | **161** | **95** | **93** | **0** | **34** | **32** |
 
 `APPROVED` y `REVIEW` son estados de la **especificación**; `DONE` y `PARTIAL`, del **código**.
 Las columnas no suman entre sí a propósito: una funcionalidad aprobada y a medio implementar
@@ -169,7 +169,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 |---|---|---|---|---|---|---|
 | FEAT-WRK-001 | Crear obra con el editor WYSIWYG | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-001-create-work-with-editor.md) |
 | FEAT-WRK-002 | Crear obra subiendo un fichero (.doc, .pdf, .txt) | Writer | PENDING | TODO | P1 | — |
-| FEAT-WRK-003 | Estructurar la obra en capítulos | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-003-structure-work-in-chapters.md) |
+| FEAT-WRK-003 | Estructurar la obra en capítulos | Writer | APPROVED | DONE | P0 | [ficha](work/FEAT-WRK-003-structure-work-in-chapters.md) |
 | FEAT-WRK-004 | Ver una obra y el contenido de sus capítulos | Writer, BetaReader, User | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-004-read-a-work.md) |
 | FEAT-WRK-005 | Editar una obra o un capítulo | Writer | APPROVED | DONE | P0 | [ficha](work/FEAT-WRK-005-edit-work-and-chapter.md) |
 | FEAT-WRK-006 | Eliminar una obra con confirmación | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-006-delete-work.md) |

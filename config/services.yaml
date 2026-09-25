@@ -123,6 +123,11 @@ services:
                 # Alguien ha empezado a corregir: a partir de ahí, editar ese
                 # capítulo cuesta una copia (FEAT-WRK-005).
                 - LectoresBeta\Work\Chapter\Application\Event\CorrectionStarted
+
+                # Mover o quitar un capítulo cambia dónde acaba la obra, y con
+                # ello lo que cuesta corregir dos de ellos (FEAT-WRK-003).
+                - LectoresBeta\Credits\Pricing\Application\Event\ChaptersReordered
+                - LectoresBeta\Credits\Pricing\Application\Event\ChapterRemoved
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
                 - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordResetRequested
@@ -371,6 +376,11 @@ services:
     LectoresBeta\Credits\Pricing\Application\Handler\RepriceWorkOnQuestionnaireUpdate:
         tags:
             - { name: messenger.message_handler }
+
+    LectoresBeta\Credits\Pricing\Application\Handler\RepriceWorkOnStructureChange:
+        tags:
+            - { name: messenger.message_handler, method: reordered }
+            - { name: messenger.message_handler, method: removed }
 
     LectoresBeta\Credits\Pricing\Application\Handler\QuoteCorrectionOnStart:
         tags:

@@ -322,6 +322,14 @@ chapters:
               title:
                 type: string
                 maxLength: 180
+              position:
+                type: integer
+                minimum: 1
+                description: |
+                  Dónde intercalarlo. **Sin él va al final**, que es lo que
+                  hace quien escribe en orden — y una novela se escribe
+                  raramente en orden. Los capítulos que estén en esa posición
+                  o después se desplazan.
     responses:
       '201':
         description: Capítulo añadido.
@@ -663,6 +671,152 @@ chapter:
               $ref: '../openapi.yaml#/components/schemas/Problem'
       '422':
         description: 'El contenido queda vacío tras sanear. `code: EMPTY_CHAPTER`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Works]
+    operationId: removeChapter
+    summary: Eliminar un capítulo
+    description: |
+      Solo capítulos que **nadie ha corregido**. Los demás se ocultan con
+      `setChapterVisibility`: borrarlos destruiría el trabajo de quien los
+      corrigió y el rastro de un cobro.
+
+      Tampoco uno **bloqueado por moderación**, que sería la vía para hacer
+      desaparecer contenido reclamado, ni el último de una obra publicada —en
+      borrador sí, que ahí no hay nadie leyendo—.
+
+      Las posiciones de los que quedan se recalculan: una lista de capítulos
+      con un hueco es una lista rota.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Eliminado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suyo. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CHAPTER_HAS_CORRECTIONS`, `CHAPTER_BLOCKED` o `WORK_NEEDS_A_CHAPTER`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterOrder:
+  put:
+    tags: [Works]
+    operationId: reorderChapters
+    summary: Reordenar los capítulos
+    description: |
+      Recibe **la lista completa** de identificadores en el orden deseado, no
+      «mueve este de la 3 a la 7»: la lista entera es idempotente y sobrevive
+      a que dos pestañas hagan lo mismo a la vez.
+
+      Se rechaza **entera** si no contiene exactamente los capítulos de la
+      obra. Aplicar la mitad deja la obra en un estado que el autor no pidió y
+      no sabe leer.
+
+      **No es cosmético**: el último capítulo es el que responde las preguntas
+      de alcance `LAST_CHAPTER`, así que esto cambia lo que se pide —y lo que
+      se paga— en dos capítulos.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [order]
+            properties:
+              order:
+                type: array
+                items:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Reordenada. También cuando el orden ya era ese.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suya. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CHAPTER_ORDER_INCOMPLETE`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterVisibility:
+  put:
+    tags: [Works]
+    operationId: setChapterVisibility
+    summary: Ocultar o volver a mostrar un capítulo
+    description: |
+      **La visibilidad es del capítulo.** La obra no tiene visibilidad: tiene
+      estado, y se cambia con `changeWorkStatus`.
+
+      Un capítulo oculto **solo lo ve su autor**: para cualquier otra persona
+      responde `404`, no `403`. Y deja de admitir correcciones, ni empezarlas
+      ni entregarlas.
+
+      Ocultar **no borra nada**: las correcciones entregadas sobre él se
+      siguen leyendo por las dos partes. Es la alternativa a eliminar cuando
+      alguien ya lo corrigió.
+
+      Un capítulo **bloqueado por moderación** no cambia de visibilidad por
+      esta vía: el bloqueo lo levanta un moderador y nadie más.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [visibility]
+            properties:
+              visibility:
+                type: string
+                enum: [VISIBLE, HIDDEN]
+    responses:
+      '204':
+        description: Guardado. También cuando ya estaba así.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suyo. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CHAPTER_BLOCKED`.'
         content:
           application/problem+json:
             schema:

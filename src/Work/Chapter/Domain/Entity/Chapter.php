@@ -156,6 +156,25 @@ class Chapter
         $this->updatedAt = $now;
     }
 
+    /**
+     * Si alguien ha llegado a corregir este capítulo alguna vez.
+     *
+     * Se responde **sin salir del contexto**: la versión solo sube al
+     * archivar una que alguien leyó, así que estar por encima de la primera
+     * —o tener la actual marcada— equivale exactamente a «aquí hubo
+     * correcciones». Preguntárselo a `Feedback` daría el mismo sí con una
+     * llamada síncrona de más.
+     */
+    public function hasBeenCorrected(): bool
+    {
+        return $this->version > 1 || null !== $this->currentVersionReadAt;
+    }
+
+    public function isHidden(): bool
+    {
+        return ChapterVisibility::HIDDEN === $this->visibility;
+    }
+
     public function visibility(): ChapterVisibility
     {
         return $this->visibility;
