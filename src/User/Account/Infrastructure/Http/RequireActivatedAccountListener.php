@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\User\Account\Infrastructure\Http;
 
+use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\User\Account\Domain\Exception\AccountNotActivated;
 use LectoresBeta\User\Account\Domain\Repository\UserRepository;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
@@ -85,6 +86,7 @@ final readonly class RequireActivatedAccountListener
     public function __construct(
         private Security $security,
         private UserRepository $users,
+        private Clock $clock,
     ) {
     }
 
@@ -110,7 +112,11 @@ final readonly class RequireActivatedAccountListener
 
         $account = $this->users->ofId(UserId::fromString($user->getUserIdentifier()));
 
-        if (null === $account || !$account->status()->canWrite()) {
+        // Dos cosas impiden escribir y son distintas: no haber activado la
+        // cuenta y estar cumpliendo una suspensión parcial (`FEAT-MOD-006`).
+        // La comprobación es una sola porque el sitio donde se hace es uno
+        // solo, que es lo que impide que a la próxima escritura se le olvide.
+        if (null === $account || !$account->canWriteAt($this->clock->now())) {
             throw AccountNotActivated::create();
         }
     }

@@ -321,6 +321,12 @@ paths:
   /admin/audit-log:
     $ref: './paths/moderation.yaml#/auditLog'
 
+  /admin/sanctions:
+    $ref: './paths/moderation.yaml#/sanctions'
+
+  /admin/sanctions/{sanctionId}/lift:
+    $ref: './paths/moderation.yaml#/sanctionLift'
+
   /admin/moderation-blocks/lift:
     $ref: './paths/moderation.yaml#/blockLift'
 

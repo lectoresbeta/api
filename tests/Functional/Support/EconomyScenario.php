@@ -122,6 +122,10 @@ abstract class EconomyScenario extends WebTestCase
         'LiteraryPreferencesUpdated',
         'WorkPublished',
         'OnboardingCompleted',
+
+        // Lo que `Moderation` decide y `User` aplica (`FEAT-MOD-006`).
+        'SanctionImposed',
+        'SanctionLifted',
     ];
 
     /**

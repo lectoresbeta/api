@@ -66,6 +66,14 @@ class User
 
     private ?\DateTimeImmutable $birthDate = null;
 
+    /**
+     * Hasta cuándo no puede escribir, si cumple una suspensión parcial.
+     *
+     * Fecha y no estado de cuenta a propósito: **caduca sola** (`RN-2`), y un
+     * estado que hay que recordar apagar es un estado que alguien olvidará.
+     */
+    private ?\DateTimeImmutable $restrictedUntil = null;
+
     private ?string $avatarUrl = null;
 
     /**
@@ -262,6 +270,85 @@ class User
     public function activatedAt(): ?\DateTimeImmutable
     {
         return $this->activatedAt;
+    }
+
+    /**
+     * Si esta cuenta puede escribir **ahora mismo**.
+     *
+     * Dos cosas lo impiden y son distintas: no haber activado la cuenta
+     * ([`decision:0003`](../../../../../docs/decisions/0003-write-operations-require-activated-account.md))
+     * y estar cumpliendo una **suspensión parcial** (`FEAT-MOD-006` `MOD-27`).
+     * La segunda deja entrar y leer, que no es una concesión menor: es lo que
+     * permite a la persona leer la sanción, entender por qué la tiene y ver
+     * cuándo termina. Una suspensión que además cierra la puerta no corrige
+     * nada, solo hace que se vaya.
+     */
+    public function canWriteAt(\DateTimeImmutable $moment): bool
+    {
+        if (!$this->status->canWrite()) {
+            return false;
+        }
+
+        return null === $this->restrictedUntil || $moment >= $this->restrictedUntil;
+    }
+
+    public function restrictedUntil(): ?\DateTimeImmutable
+    {
+        return $this->restrictedUntil;
+    }
+
+    /**
+     * Aplicar lo que `Moderation` ha decidido (`FEAT-MOD-006`).
+     *
+     * **`Moderation` registra la sanción y `User` la aplica.** Si `Moderation`
+     * marcara la cuenta directamente habría dos dueños del estado del
+     * usuario, y el día que discreparan no habría forma de saber cuál manda.
+     */
+    public function restrictWritingUntil(\DateTimeImmutable $until, \DateTimeImmutable $now): void
+    {
+        $this->guardNotDeleted();
+
+        $this->restrictedUntil = $until;
+        $this->touch($now);
+    }
+
+    public function suspend(\DateTimeImmutable $now): void
+    {
+        $this->guardNotDeleted();
+
+        $this->status = AccountStatus::SUSPENDED;
+        $this->touch($now);
+    }
+
+    /**
+     * La expulsión **bloquea, no anonimiza** (`MOD-26`). Conservar el correo
+     * es lo mínimo que la hace efectiva: sin él, la persona se registra otra
+     * vez al minuto siguiente.
+     */
+    public function expel(\DateTimeImmutable $now): void
+    {
+        $this->guardNotDeleted();
+
+        $this->status = AccountStatus::BLOCKED;
+        $this->touch($now);
+    }
+
+    /**
+     * Levantar lo que hubiera. Devuelve la cuenta a `ACTIVE` **solo si la
+     * sanción era lo que la sacó de ahí**: una cuenta sin activar que cumple
+     * una sanción sigue sin activar cuando termina.
+     */
+    public function liftSanctions(\DateTimeImmutable $now): void
+    {
+        $this->guardNotDeleted();
+
+        $this->restrictedUntil = null;
+
+        if (AccountStatus::SUSPENDED === $this->status || AccountStatus::BLOCKED === $this->status) {
+            $this->status = AccountStatus::ACTIVE;
+        }
+
+        $this->touch($now);
     }
 
     public function canWrite(): bool

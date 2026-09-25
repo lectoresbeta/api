@@ -628,3 +628,171 @@ blockLift:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+SanctionType:
+  type: string
+  description: |
+    Las cuatro familias, y ninguna más. Un catálogo corto es una virtud:
+    cuantos más matices tenga, más difícil es que dos moderadores sancionen lo
+    mismo de la misma manera.
+
+    - `WARNING` no tiene efecto funcional; queda registrado, que es lo que
+      hace que la reincidencia pese.
+    - `PARTIAL_SUSPENSION` deja **entrar y leer** y cierra las escrituras
+      hasta una fecha. Que pueda entrar no es una concesión menor: es lo que
+      le permite leer la sanción y ver cuándo termina.
+    - `FULL_SUSPENSION` cierra la puerta y **no caduca sola**.
+    - `EXPULSION` deja la cuenta bloqueada y **conserva sus datos**: no se
+      puede a la vez borrar a alguien y recordarlo para impedirle volver.
+  enum:
+    - WARNING
+    - PARTIAL_SUSPENSION
+    - FULL_SUSPENSION
+    - EXPULSION
+
+SuspensionDuration:
+  type: string
+  description: Solo para la suspensión parcial, que **siempre lleva plazo**.
+  enum:
+    - THREE_DAYS
+    - ONE_WEEK
+    - ONE_MONTH
+
+sanctions:
+  post:
+    tags: [Moderation]
+    operationId: imposeSanction
+    summary: Sancionar a alguien
+    description: |
+      **`Moderation` registra la sanción; `User` la aplica.** Este contexto no
+      toca la cuenta de nadie: publica el hecho y `User` decide qué significa
+      en su modelo. Si marcara la cuenta directamente habría dos dueños del
+      estado del usuario.
+
+      El **motivo es obligatorio**: al usuario se le comunica tipo, motivo y
+      duración, y una sanción que no se entiende no corrige nada, solo hace
+      que la persona se vaya.
+
+      Una suspensión parcial **siempre lleva plazo**; las demás no lo admiten,
+      para que nadie ponga una fecha a una expulsión y crea que caduca.
+
+      **No mueve créditos.** Devolver el crédito repara al perjudicado y la
+      sanción corrige al infractor: una reclamación puede producir lo primero
+      sin lo segundo, y al revés.
+
+      Queda en el registro de auditoría con la identidad de quien la impuso.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [userId, type, reason]
+            properties:
+              userId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+              type:
+                $ref: '#/SanctionType'
+              reason:
+                type: string
+              duration:
+                $ref: '#/SuspensionDuration'
+              claimId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '201':
+        description: Impuesta.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sanctionId]
+              properties:
+                sanctionId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo moderación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: USER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNKNOWN_SANCTION_TYPE`, `SANCTION_REASON_REQUIRED`,
+          `SANCTION_DURATION_REQUIRED` o `UNKNOWN_SANCTION_DURATION`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+sanctionLift:
+  post:
+    tags: [Moderation]
+    operationId: liftSanction
+    summary: Levantar una sanción antes de tiempo
+    description: |
+      **Cualquiera se puede levantar, incluida la expulsión.** Al no
+      anonimizar, la expulsión no destruye nada que impida volver atrás: esa
+      es la otra mitad de por qué conserva los datos.
+
+      `POST` y no `DELETE` porque **no la borra, la cierra**: su rastro se
+      queda en el historial, que es lo que permite que la reincidencia pese, y
+      lleva motivo, que un `DELETE` no tendría dónde poner.
+
+      Levantar lo ya levantado **sí es un error aquí**, al revés que en otras
+      operaciones idempotentes de esta API: es un acto administrativo que se
+      registra y se comunica, y hacerlo dos veces dejaría en el historial algo
+      que no ocurrió.
+    parameters:
+      - name: sanctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [reason]
+            properties:
+              reason:
+                type: string
+    responses:
+      '204':
+        description: Levantada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo moderación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: SANCTION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: SANCTION_NOT_IN_FORCE`. Ya se levantó o ya caducó.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: SANCTION_REASON_REQUIRED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

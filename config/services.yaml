@@ -183,6 +183,10 @@ services:
                 - LectoresBeta\Community\Recommendation\Application\Event\AuthorUnsubscribed
                 - LectoresBeta\Community\Recommendation\Application\Event\WorkPublished
 
+                # Lo que `Moderation` decide y `User` aplica (FEAT-MOD-006).
+                - LectoresBeta\User\Account\Application\Event\SanctionImposed
+                - LectoresBeta\User\Account\Application\Event\SanctionLifted
+
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
                 - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordResetRequested
@@ -505,6 +509,14 @@ services:
     LectoresBeta\User\Profile\Application\Handler\TrackCreditBalance:
         tags:
             - { name: messenger.message_handler }
+
+    # Lo que una sanción significa dentro de `User` (FEAT-MOD-006).
+    # `Moderation` la registra y este contexto la aplica: dos dueños del
+    # estado de una cuenta serían uno de más.
+    LectoresBeta\User\Account\Application\Handler\ApplySanction:
+        tags:
+            - { name: messenger.message_handler, method: imposed }
+            - { name: messenger.message_handler, method: lifted }
 
     LectoresBeta\User\Privacy\Application\Handler\RememberFollower:
         tags:

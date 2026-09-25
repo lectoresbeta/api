@@ -85,3 +85,20 @@ liftModerationBlock:
     path: /api/v1/admin/moderation-blocks/lift
     controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\LiftWorkBlockController::__invoke
     methods: [POST]
+
+# El catálogo de sanciones (`FEAT-MOD-006`).
+#
+# `Moderation` registra la sanción y `User` la aplica: aquí no se toca la
+# cuenta de nadie. Si este contexto la marcara directamente habría dos dueños
+# del estado del usuario.
+imposeSanction:
+    path: /api/v1/admin/sanctions
+    controller: LectoresBeta\Moderation\Sanction\Infrastructure\Controller\ImposeSanctionController::__invoke
+    methods: [POST]
+
+# `POST` y no `DELETE`: levantar una sanción no la borra, la cierra — su
+# rastro se queda en el historial, y lleva motivo.
+liftSanction:
+    path: /api/v1/admin/sanctions/{sanctionId}/lift
+    controller: LectoresBeta\Moderation\Sanction\Infrastructure\Controller\LiftSanctionController::__invoke
+    methods: [POST]
