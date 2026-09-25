@@ -85,11 +85,11 @@ final readonly class ListPostsHandler
 
         $entries = [];
 
-        foreach ($this->posts->wallFor($reader, $followed, $hidden, $after, $limit, $only) as $post) {
+        foreach ($this->posts->wallFor($reader, $followed, $hidden, $after, $limit, $only, $query->filters) as $post) {
             $entries[] = ['post' => $post, 'repost' => null, 'at' => $post->createdAt(), 'id' => $post->id()->value()];
         }
 
-        $reposts = $this->reposts->wallFor($reader, $followed, $hidden, $after, $limit, $only);
+        $reposts = $this->reposts->wallFor($reader, $followed, $hidden, $after, $limit, $only, $query->filters);
         $reposted = $this->posts->ofIds(array_map(
             static fn (PostRepost $repost): string => $repost->postId()->value(),
             $reposts,

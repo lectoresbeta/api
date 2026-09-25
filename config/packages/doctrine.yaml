@@ -27,6 +27,14 @@ doctrine:
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
         auto_mapping: false
 
+        # Buscar texto en el muro (FEAT-COM-009). DQL no sabe de búsqueda de
+        # texto, y la alternativa era reescribir en SQL nativo la consulta del
+        # muro, cuyas reglas de audiencia, bloqueo y cursor son lo más
+        # delicado de este backend. Con esto siguen donde están.
+        dql:
+            string_functions:
+                FULLTEXT_MATCH: LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\Dql\FullTextMatch
+
         # Un mapeo por concepto de negocio, con el XML dentro de su
         # Infrastructure.
         #

@@ -9,7 +9,9 @@ use LectoresBeta\Community\Interaction\Domain\Repository\PostRepostRepository;
 use LectoresBeta\Community\Post\Domain\Entity\Post;
 use LectoresBeta\Community\Post\Domain\Enum\PostAudience;
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
+use LectoresBeta\Community\Post\Domain\ValueObject\PostFilters;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostId;
+use LectoresBeta\Community\Post\Infrastructure\Persistence\Doctrine\PostFilterClauses;
 use LectoresBeta\Shared\Domain\Pagination\Cursor;
 use LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\DoctrineRepository;
 
@@ -43,6 +45,7 @@ final class DoctrinePostRepostRepository extends DoctrineRepository implements P
         ?Cursor $after,
         int $limit,
         ?MemberId $onlyMemberId = null,
+        ?PostFilters $filters = null,
     ): array {
         // El original se une aquí y no se pide después, por dos razones: la
         // audiencia hay que comprobarla sobre él —un repost no la amplía— y
@@ -86,6 +89,13 @@ final class DoctrinePostRepostRepository extends DoctrineRepository implements P
                 ->andWhere('r.memberId NOT IN (:hidden)')
                 ->andWhere('p.authorId NOT IN (:hidden)')
                 ->setParameter('hidden', $hiddenAuthorIds);
+        }
+
+        // Los mismos filtros que la otra consulta (`FEAT-COM-009`), sobre el
+        // original salvo la fecha: esa es la del repost, que es cuando esta
+        // entrada apareció en el muro y por la que se ordena.
+        if (null !== $filters) {
+            PostFilterClauses::applyTo($query, $filters, 'p', 'r');
         }
 
         if (null !== $after) {

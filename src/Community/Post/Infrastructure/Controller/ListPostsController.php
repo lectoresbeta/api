@@ -43,6 +43,8 @@ final readonly class ListPostsController
             $user->getUserIdentifier(),
             WallBody::cursor($request),
             WallBody::limit($request),
+            null,
+            WallBody::filters($request),
         ))));
     }
 }

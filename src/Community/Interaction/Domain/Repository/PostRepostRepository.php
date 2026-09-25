@@ -6,6 +6,7 @@ namespace LectoresBeta\Community\Interaction\Domain\Repository;
 
 use LectoresBeta\Community\Interaction\Domain\Entity\PostRepost;
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
+use LectoresBeta\Community\Post\Domain\ValueObject\PostFilters;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostId;
 use LectoresBeta\Shared\Domain\Pagination\Cursor;
 
@@ -46,5 +47,6 @@ interface PostRepostRepository
         ?Cursor $after,
         int $limit,
         ?MemberId $onlyMemberId = null,
+        ?PostFilters $filters = null,
     ): array;
 }

@@ -197,7 +197,11 @@ subscriptions:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
       '422':
-        description: '`code: INVALID_CURSOR`. El cursor no lo produjo esta API.'
+        description: |
+          `code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal
+          escrito (`FEAT-COM-009` `RN-8`). Un filtro inválido **se rechaza**,
+          no se ignora: devolver el muro entero porque alguien escribió mal
+          una fecha le haría creer lo contrario de lo que ve.
         content:
           application/problem+json:
             schema:
@@ -236,7 +240,7 @@ subscribers:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
       '422':
-        description: '`code: INVALID_CURSOR`.'
+        description: '`code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal escrito.'
         content:
           application/problem+json:
             schema:
@@ -374,7 +378,7 @@ blockedUsers:
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
       '422':
-        description: '`code: INVALID_CURSOR`.'
+        description: '`code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal escrito.'
         content:
           application/problem+json:
             schema:
@@ -688,6 +692,45 @@ myPosts:
     parameters:
       - $ref: '../openapi.yaml#/components/parameters/Limit'
       - $ref: '../openapi.yaml#/components/parameters/Cursor'
+      - name: type
+        in: query
+        description: |
+          Acota por **intención** (`FEAT-COM-009`), no por formato: la
+          intención dice qué quiere quien publica, que es lo que se busca; el
+          formato dice cómo se pinta.
+        schema:
+          $ref: '#/PostType'
+      - name: q
+        in: query
+        description: |
+          Busca en el texto, con búsqueda de texto completo **en español**:
+          busca por raíz, así que «escribir» encuentra «escribiendo».
+        schema:
+          type: string
+          maxLength: 200
+      - name: authorId
+        in: query
+        description: |
+          Quien **escribió** la publicación. No es lo mismo que el muro de una
+          persona: allí un repost cuenta como de quien lo saca, aquí como de
+          quien lo escribió.
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: from
+        in: query
+        description: Desde esta fecha, **incluida**.
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: |
+          Hasta esta fecha, **incluida**. En una entrada que es un repost, la
+          fecha que cuenta es la del repost: es cuando apareció en el muro y
+          es por la que se ordena.
+        schema:
+          type: string
+          format: date-time
     responses:
       '200':
         description: Una página de mi muro.
@@ -698,7 +741,7 @@ myPosts:
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
       '422':
-        description: '`code: INVALID_CURSOR`.'
+        description: '`code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal escrito.'
         content:
           application/problem+json:
             schema:
@@ -732,6 +775,45 @@ userPosts:
           $ref: '../openapi.yaml#/components/schemas/Uuid'
       - $ref: '../openapi.yaml#/components/parameters/Limit'
       - $ref: '../openapi.yaml#/components/parameters/Cursor'
+      - name: type
+        in: query
+        description: |
+          Acota por **intención** (`FEAT-COM-009`), no por formato: la
+          intención dice qué quiere quien publica, que es lo que se busca; el
+          formato dice cómo se pinta.
+        schema:
+          $ref: '#/PostType'
+      - name: q
+        in: query
+        description: |
+          Busca en el texto, con búsqueda de texto completo **en español**:
+          busca por raíz, así que «escribir» encuentra «escribiendo».
+        schema:
+          type: string
+          maxLength: 200
+      - name: authorId
+        in: query
+        description: |
+          Quien **escribió** la publicación. No es lo mismo que el muro de una
+          persona: allí un repost cuenta como de quien lo saca, aquí como de
+          quien lo escribió.
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: from
+        in: query
+        description: Desde esta fecha, **incluida**.
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: |
+          Hasta esta fecha, **incluida**. En una entrada que es un repost, la
+          fecha que cuenta es la del repost: es cuando apareció en el muro y
+          es por la que se ordena.
+        schema:
+          type: string
+          format: date-time
     responses:
       '200':
         description: Una página de su muro, o una lista vacía.
@@ -742,7 +824,7 @@ userPosts:
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
       '422':
-        description: '`code: INVALID_CURSOR`.'
+        description: '`code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal escrito.'
         content:
           application/problem+json:
             schema:
@@ -771,6 +853,45 @@ posts:
     parameters:
       - $ref: '../openapi.yaml#/components/parameters/Limit'
       - $ref: '../openapi.yaml#/components/parameters/Cursor'
+      - name: type
+        in: query
+        description: |
+          Acota por **intención** (`FEAT-COM-009`), no por formato: la
+          intención dice qué quiere quien publica, que es lo que se busca; el
+          formato dice cómo se pinta.
+        schema:
+          $ref: '#/PostType'
+      - name: q
+        in: query
+        description: |
+          Busca en el texto, con búsqueda de texto completo **en español**:
+          busca por raíz, así que «escribir» encuentra «escribiendo».
+        schema:
+          type: string
+          maxLength: 200
+      - name: authorId
+        in: query
+        description: |
+          Quien **escribió** la publicación. No es lo mismo que el muro de una
+          persona: allí un repost cuenta como de quien lo saca, aquí como de
+          quien lo escribió.
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: from
+        in: query
+        description: Desde esta fecha, **incluida**.
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: |
+          Hasta esta fecha, **incluida**. En una entrada que es un repost, la
+          fecha que cuenta es la del repost: es cuando apareció en el muro y
+          es por la que se ordena.
+        schema:
+          type: string
+          format: date-time
     responses:
       '200':
         description: Una página del muro.
@@ -1357,7 +1478,7 @@ commentReplies:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
       '422':
-        description: '`code: INVALID_CURSOR`.'
+        description: '`code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal escrito.'
         content:
           application/problem+json:
             schema:

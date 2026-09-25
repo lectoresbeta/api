@@ -9,6 +9,7 @@ use LectoresBeta\Community\Post\Domain\Entity\PostAttachment;
 use LectoresBeta\Community\Post\Domain\Enum\PostAudience;
 use LectoresBeta\Community\Post\Domain\Repository\PostRepository;
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
+use LectoresBeta\Community\Post\Domain\ValueObject\PostFilters;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostId;
 use LectoresBeta\Shared\Domain\Pagination\Cursor;
 use LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\DoctrineRepository;
@@ -42,6 +43,7 @@ final class DoctrinePostRepository extends DoctrineRepository implements PostRep
         ?Cursor $after,
         int $limit,
         ?MemberId $onlyAuthorId = null,
+        ?PostFilters $filters = null,
     ): array {
         $query = $this->repository()->createQueryBuilder('p')
             ->where('p.deletedAt IS NULL');
@@ -76,6 +78,13 @@ final class DoctrinePostRepository extends DoctrineRepository implements PostRep
             $query
                 ->andWhere('p.authorId NOT IN (:hidden)')
                 ->setParameter('hidden', $hiddenAuthorIds);
+        }
+
+        // Lo que el usuario ha acotado (`FEAT-COM-009`). Va en la consulta y
+        // después de la visibilidad: filtrar en memoria rompería la
+        // paginación igual que la rompería filtrar la audiencia ahí.
+        if (null !== $filters) {
+            PostFilterClauses::applyTo($query, $filters, 'p', 'p');
         }
 
         if (null !== $after) {

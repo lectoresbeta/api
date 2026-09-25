@@ -130,6 +130,9 @@ services:
             # Un mensaje, no un servicio: lo construye el serializador con el
             # hecho que acaba de llegar dentro.
             - '../src/Shared/Infrastructure/Messenger/IncomingFacts.php'
+            # Funciones de DQL: las instancia el parser de Doctrine con el
+            # nombre de la función dentro, no el contenedor.
+            - '../src/Shared/Infrastructure/Persistence/Doctrine/Dql/'
             - '../src/User/Authentication/Infrastructure/Security/AuthenticatedUser.php'
             - '../src/Shared/Infrastructure/Symfony/Kernel.php'
             - '../src/Shared/Infrastructure/Symfony/PublicServicesForTestsPass.php'

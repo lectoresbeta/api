@@ -7,6 +7,7 @@ namespace LectoresBeta\Community\Post\Domain\Repository;
 use LectoresBeta\Community\Post\Domain\Entity\Post;
 use LectoresBeta\Community\Post\Domain\Entity\PostAttachment;
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
+use LectoresBeta\Community\Post\Domain\ValueObject\PostFilters;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostId;
 use LectoresBeta\Shared\Domain\Pagination\Cursor;
 
@@ -44,6 +45,9 @@ interface PostRepository
      *                                        bloqueo son exactamente las mismas, y
      *                                        escribirlas dos veces sería dejar que
      *                                        una de las dos se quedase atrás
+     * @param ?PostFilters $filters           lo que el usuario ha acotado
+     *                                        (`FEAT-COM-009`), o `null` para el muro
+     *                                        sin filtrar
      *
      * @return list<Post> con una fila de más para saber si hay página
      *                    siguiente
@@ -55,6 +59,7 @@ interface PostRepository
         ?Cursor $after,
         int $limit,
         ?MemberId $onlyAuthorId = null,
+        ?PostFilters $filters = null,
     ): array;
 
     /**

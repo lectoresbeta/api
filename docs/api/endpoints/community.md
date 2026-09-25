@@ -277,10 +277,27 @@ que es adivinar una clave, y una clave se filtra el día que aparece en un regis
 El coste, dicho: esa respuesta depende de quién pregunta, así que se sirve con
 `Cache-Control: private` y no puede ir detrás de una caché compartida.
 
+### Filtrar y buscar
+
+Las tres operaciones de muro —`listPosts`, `listMyPosts` y `listUserPosts`— aceptan los mismos
+cinco parámetros opcionales de
+[`FEAT-COM-009`](../../features/community/FEAT-COM-009-filter-and-search-posts.md): `type`,
+`q`, `authorId`, `from` y `to`. Se combinan con **Y**.
+
+Se filtra **por intención y no por formato**: la intención dice qué quiere quien publica, que
+es lo que alguien busca; el formato dice cómo se pinta.
+
+`q` es búsqueda de texto completo **en español**, así que busca por raíz: «escribir» encuentra
+«escribiendo».
+
+**Filtrar no abre nada.** Los filtros van dentro de la misma consulta y después de la
+visibilidad, así que una publicación que no te alcanza no aparece ni buscándola por su texto
+exacto. Un filtro mal escrito se rechaza con `422` en lugar de ignorarse.
+
 ### Qué no está todavía
 
-Filtrar por tipo de publicación y ordenar por relevancia son funcionalidades propias
-(`FEAT-COM-009`, `FEAT-COM-024`), y la segunda espera a que alguien defina qué es «relevante».
+Ordenar por relevancia es una funcionalidad propia (`FEAT-COM-024`) y espera a que alguien
+defina qué es «relevante».
 
 El **vídeo** queda fuera: adjuntarlo arrastra transcodificación y almacenamiento con un coste
 que no se parece al de una imagen (`FEAT-COM-037`).

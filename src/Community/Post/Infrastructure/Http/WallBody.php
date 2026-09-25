@@ -7,6 +7,7 @@ namespace LectoresBeta\Community\Post\Infrastructure\Http;
 use LectoresBeta\Community\Mention\Application\DTO\MentionView;
 use LectoresBeta\Community\Post\Application\DTO\PostCard;
 use LectoresBeta\Community\Post\Application\DTO\PostPage;
+use LectoresBeta\Community\Post\Domain\ValueObject\PostFilters;
 use LectoresBeta\Work\Manuscript\Application\Contract\WorkCard;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -47,6 +48,31 @@ final readonly class WallBody
     public static function limit(Request $request): ?int
     {
         return $request->query->has('limit') ? $request->query->getInt('limit') : null;
+    }
+
+    /**
+     * Lo que el usuario ha acotado (`FEAT-COM-009`), leído de la query string.
+     *
+     * Aquí se valida la **sintaxis** —que la fecha sea una fecha y el tipo
+     * uno de los cuatro— y ahí se acaba lo que sabe el transporte: lo que
+     * cruza a Application es un objeto con campos tipados.
+     */
+    public static function filters(Request $request): PostFilters
+    {
+        return PostFilters::of(
+            self::text($request, 'type'),
+            self::text($request, 'q'),
+            self::text($request, 'authorId'),
+            self::text($request, 'from'),
+            self::text($request, 'to'),
+        );
+    }
+
+    private static function text(Request $request, string $field): ?string
+    {
+        $value = $request->query->get($field);
+
+        return \is_string($value) && '' !== $value ? $value : null;
     }
 
     /**

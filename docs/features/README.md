@@ -316,7 +316,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-006 | Comentar una publicación | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-006-comment-on-post.md) |
 | FEAT-COM-007 | ~~Reaccionar con emoji a una publicación~~ | — | PENDING | DEPRECATED | P2 | — |
 | FEAT-COM-008 | Apoyar una publicación con un «me gusta» | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-008-like-a-post.md) |
-| FEAT-COM-009 | Filtrar y buscar publicaciones (tipo, texto, usuario, fecha) | User | PENDING | TODO | P2 | — |
+| FEAT-COM-009 | Filtrar y buscar publicaciones (tipo, texto, usuario, fecha) | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-009-filter-and-search-posts.md) |
 | FEAT-COM-010 | Suscribirse a un autor | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-010-subscribe-to-author.md) |
 | FEAT-COM-011 | Enviar un mensaje directo | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-011-send-direct-message.md) |
 | FEAT-COM-012 | Ver y gestionar conversaciones de mensajes directos | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-012-conversations.md) |

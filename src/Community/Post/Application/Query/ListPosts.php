@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Community\Post\Application\Query;
 
+use LectoresBeta\Community\Post\Domain\ValueObject\PostFilters;
+
 /**
  * El muro de quien mira (`FEAT-COM-001`), o el de una persona concreta
  * (`FEAT-COM-026`).
@@ -24,6 +26,10 @@ final readonly class ListPosts
          * mira: ese es «Mi muro».
          */
         public ?string $authorId = null,
+        /**
+         * Por qué se filtra (`FEAT-COM-009`), o `null` para el muro entero.
+         */
+        public ?PostFilters $filters = null,
     ) {
     }
 }

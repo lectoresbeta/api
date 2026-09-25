@@ -205,8 +205,10 @@ El diseño revela que una publicación tiene **dos atributos ortogonales**, no u
 
 Una publicación buscando lectores beta puede ser solo texto o llevar imagen. Mezclar ambas
 dimensiones en un único enum produciría una combinatoria que no es la que describe el
-producto. Afecta a `FEAT-COM-002` y al filtrado de `FEAT-COM-009`, que debe aclarar por cuál
-de las dos filtra.
+producto. Afecta a `FEAT-COM-002` y al filtrado de
+[`FEAT-COM-009`](../features/community/FEAT-COM-009-filter-and-search-posts.md), que **filtra
+por intención**: es la que dice qué quiere quien publica, que es lo que alguien busca. El
+formato dice cómo se pinta, y nadie entra al muro a buscar publicaciones con imagen.
 
 ## Requisitos de backend derivados
 
