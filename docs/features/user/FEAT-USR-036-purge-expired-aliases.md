@@ -5,7 +5,7 @@ context: User
 concept: Profile
 actors: []
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P2
 sources:
   - decision:0005
@@ -13,7 +13,7 @@ sources:
 endpoints: []
 events: []
 depends_on: [FEAT-USR-034]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-USR-036 — Purga programada de alias caducados
@@ -53,7 +53,17 @@ distintas según la hora del día. Ver `FEAT-USR-033` `RN-8` y `FEAT-USR-035` `R
 src/User/Profile/Infrastructure/Console/PurgeExpiredUsernameAliasesCommand.php
 ```
 
-Nombre propuesto: `app:user:purge-expired-username-aliases`.
+Nombre: `lectoresbeta:user:purge-expired-username-aliases`. La ficha proponía el prefijo
+`app:`; se usa `lectoresbeta:` para no estrenar un segundo convenio junto al que ya existe
+(`lectoresbeta:admin:grant`).
+
+La regla de qué está caducado se resuelve en `Application`, en
+`PurgeExpiredAliases`, y el comando solo la invoca:
+
+```text
+src/User/Profile/Application/Service/PurgeExpiredAliases.php
+src/User/Profile/Infrastructure/Console/PurgeExpiredUsernameAliasesCommand.php
+```
 
 | Aspecto | Comportamiento |
 |---|---|
@@ -61,7 +71,7 @@ Nombre propuesto: `app:user:purge-expired-username-aliases`.
 | Cómo borra | **Borrado real**: se elimina la fila. Ni marca de borrado, ni tabla de archivo, ni histórico |
 | Idempotencia | Ejecutarlo dos veces seguidas no tiene efecto adicional |
 | Concurrencia | Dos ejecuciones simultáneas no se corrompen; el borrado es por condición, no por lectura previa |
-| Por lotes | Borra en lotes acotados para no bloquear la tabla si hay acumulación |
+| Por lotes | Lotes de 500, confirmados uno a uno, repetidos hasta agotar con un tope de 100 rondas por ejecución. El tope no es cuántos se borran en total: lo que sobre se borra mañana |
 | Salida | Registra cuántos alias ha borrado |
 | Simulación | Admite `--dry-run` para contar sin borrar |
 | Código de salida | `0` si termina bien; distinto de `0` si falla, para que el cron pueda alertar |
@@ -76,7 +86,7 @@ Entrada de cron propuesta, a diario y en hora de poco tráfico:
 
 ```cron
 # Purga de alias de nombre de usuario caducados — a diario a las 04:15 UTC
-15 4 * * *  php /app/bin/console app:user:purge-expired-username-aliases --no-interaction
+15 4 * * *  php /app/bin/console lectoresbeta:user:purge-expired-username-aliases --no-interaction
 ```
 
 | Aspecto | Decisión |
@@ -106,20 +116,32 @@ convierte este proceso en uno que no hay que vigilar de cerca.
 
 ## Criterios de aceptación
 
-- [ ] Borra los alias caducados y deja intactos los vigentes.
-- [ ] Borra por igual los de cambio de nombre y los de cuenta eliminada.
-- [ ] Borra un alias de cuenta eliminada aunque no quede fila de usuario asociada.
-- [ ] La fila desaparece de la tabla: no queda marcada como borrada ni copiada a otro sitio.
-- [ ] Ejecutarlo dos veces seguidas no produce error ni efecto adicional.
-- [ ] No modifica ningún `username` en uso.
-- [ ] Con `--dry-run` informa de cuántos borraría y no borra ninguno.
-- [ ] Registra el recuento de filas eliminadas.
-- [ ] Devuelve código de salida distinto de `0` si falla.
-- [ ] **Antes de ejecutarlo**, un nombre con alias caducado ya está disponible.
-- [ ] **Antes de ejecutarlo**, un alias caducado ya devuelve `404` al resolver.
+- [x] Borra los alias caducados y deja intactos los vigentes.
+- [x] Borra por igual los de cambio de nombre y los de cuenta eliminada.
+- [x] Borra un alias de cuenta eliminada aunque no quede fila de usuario asociada.
+- [x] La fila desaparece de la tabla: no queda marcada como borrada ni copiada a otro sitio.
+- [x] Ejecutarlo dos veces seguidas no produce error ni efecto adicional.
+- [x] No modifica ningún `username` en uso.
+- [x] Con `--dry-run` informa de cuántos borraría y no borra ninguno.
+- [x] Registra el recuento de filas eliminadas.
+- [x] Devuelve código de salida distinto de `0` si falla. Una excepción sin capturar sale con
+      `1`, que es lo que hace falta para que el programador pueda alertar.
+- [x] **Antes de ejecutarlo**, un nombre con alias caducado ya está disponible.
+- [x] **Antes de ejecutarlo**, un alias caducado ya devuelve `404` al resolver.
 
 Los dos últimos criterios son los que demuestran que el comando no es una precondición del
-comportamiento correcto.
+comportamiento correcto. Son los dos primeros casos de
+`tests/Functional/User/PurgeExpiredAliasesTest.php`, y son los que más falta hacen: no
+comprueban lo que el comando hace, sino lo que no hace falta que haga.
+
+## Decisiones tomadas al implementar
+
+| Decisión | Por qué |
+|---|---|
+| El lote se pregunta a la entidad (`isInForceAt`) antes de borrar cada fila | La consulta ya filtra por fecha. Volver a preguntárselo al dominio no cuesta nada y protege de la única forma en que esto podría hacer daño: que la consulta y la regla dejen de decir lo mismo |
+| `--dry-run` cuenta un lote y para | Sin borrar, la ronda siguiente devolvería exactamente las mismas filas y no acabaría nunca. Con acumulación por encima de 500 informa de un mínimo, no del total |
+| Tope de 100 rondas | Para que un fallo raro no deje el comando dando vueltas. Lo que sobre se borra en la ejecución siguiente, que es inocuo |
+| El recuento se informa también cuando es cero | Un cero dice que el comando corrió, que es justo lo que alguien busca cuando sospecha que dejó de correr |
 
 ## Preguntas abiertas
 
@@ -127,7 +149,7 @@ comportamiento correcto.
 |---|---|---|
 | N-14 | ¿Se conserva algún registro histórico de los alias borrados? | **Resuelta:** no. El borrado es real y no deja rastro (`RN-4c`) |
 | N-18 | ¿Conviene una métrica de alias vigentes y caducados sin purgar? | Detectaría que la tarea dejó de ejecutarse |
-| N-15 | ¿Cómo se programa realmente: cron del sistema, Symfony Scheduler o el programador de la plataforma de despliegue? | Depende de `O-1`, aún sin decidir |
+| N-15 | ¿Cómo se programa realmente: cron del sistema, Symfony Scheduler o el programador de la plataforma de despliegue? | Sigue abierta, y a propósito: es decisión de operación, y atarla al código significaría que cambiar la hora es un despliegue. El comando queda listo para que lo llame cualquiera de las tres |
 | N-16 | ¿Hay alerta si el comando falla varios días seguidos? | No es urgente, pero la acumulación silenciosa acaba notándose |
 
 ## Estado
@@ -136,4 +158,6 @@ comportamiento correcto.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25). `N-15`, `N-16` y `N-18` siguen abiertas: las tres son
+de operación —cómo se programa, si se alerta, si se mide— y ninguna afecta al comportamiento
+del comando.

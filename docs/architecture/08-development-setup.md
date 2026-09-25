@@ -104,6 +104,14 @@ make test-unit       # solo dominio: sin Symfony, sin base de datos, en milisegu
 make docs            # validar docs/
 ```
 
+Y los del proyecto, que se lanzan a mano o desde un programador:
+
+```bash
+bin/console lectoresbeta:admin:grant <correo>                      # ver «El primer administrador»
+bin/console lectoresbeta:user:purge-expired-username-aliases       # --dry-run para mirar antes
+bin/console credits:check-invariant                                # ¿cuadra la economía?
+```
+
 `make schema-validate` merece un sitio en la cabeza: si alguna vez responde que el esquema y
 el mapeo no coinciden, o falta una migración, o alguien ha tocado la base de datos a mano.
 
@@ -241,8 +249,11 @@ los créditos de bienvenida, inicio de sesión y consulta de saldo. Lo que falta
 - No hay proveedor de correo elegido para producción (`N-3` de `FEAT-NOT-008`).
 - Cambiar contraseña o correo todavía no invalida los tokens de refresco
   (`decision:0007` `RN-3`): es trabajo de `FEAT-USR-041` y `FEAT-USR-040`.
-- Nadie purga `processed_event` ni los alias caducados: los comandos existen, la programación
-  no.
+- Nadie purga los alias caducados en un horario: el comando existe
+  (`lectoresbeta:user:purge-expired-username-aliases`), la programación no (`FEAT-USR-036`
+  `N-15`). Es inocuo — un alias caducado ya no resuelve ni ocupa su nombre, lo borre alguien
+  o no; solo se acumulan filas.
+- De `processed_event` no purga nadie, y ahí no hay comando todavía.
 - No hay entorno de producción definido (`docs/architecture/07-observability-and-operations.md`).
 
 ## El primer administrador
