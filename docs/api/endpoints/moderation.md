@@ -3,7 +3,7 @@
 La moderación de la plataforma. Ficha del contexto:
 [`moderation.md`](../../bounded-contexts/moderation.md).
 
-**Este documento cubre por ahora las sanciones.** El resto de operaciones del contexto
+**Este documento cubre por ahora las sanciones y la conversación con las partes.** El resto de operaciones del contexto
 —reclamaciones, su resolución, el rol de moderador y el registro de auditoría— tienen su
 contrato en [`openapi/paths/moderation.yaml`](../../../openapi/paths/moderation.yaml) y se
 irán trayendo aquí.
@@ -14,6 +14,9 @@ irán trayendo aquí.
 |---|---|---|---|---|
 | `POST /api/v1/admin/sanctions` | `imposeSanction` | Sancionar a alguien | FEAT-MOD-006 | **Implementado** |
 | `POST /api/v1/admin/sanctions/{sanctionId}/lift` | `liftSanction` | Levantar la sanción | FEAT-MOD-006 | **Implementado** |
+| `POST /api/v1/admin/claims/{claimId}/messages` | `writeToClaimParty` | Escribir a una parte | FEAT-MOD-009 | **Implementado** |
+| `GET /api/v1/me/claims/{claimId}/messages` | `listMyClaimThread` | Mi hilo con moderación | FEAT-MOD-009 | **Implementado** |
+| `POST /api/v1/me/claims/{claimId}/messages` | `replyToModeration` | Responder | FEAT-MOD-009 | **Implementado** |
 
 ---
 
@@ -97,3 +100,70 @@ buscándolos — un temporizador que puede no ejecutarse, para decir algo que ya
   sanción se lo impide.
 - La **cola de asuntos vivos** del backoffice, que evita que una suspensión indefinida acabe
   siendo una expulsión que nadie decidió.
+
+
+---
+
+## La conversación con las partes
+
+**`operationId`:** `writeToClaimParty`, `listMyClaimThread`, `replyToModeration` ·
+**Funcionalidad:** [`FEAT-MOD-009`](../../features/moderation/FEAT-MOD-009-moderator-conversation.md)
+
+### Propósito
+
+Antes de decidir, el moderador puede hablar con cada parte **por separado**: pedir aclaraciones
+al reclamante, dar al reclamado la oportunidad de explicarse.
+
+### Tiene forma de estrella, no de sala
+
+```text
+        Reclamante
+             │  (hilo privado)
+             ▼
+        MODERACIÓN  ◄──── ve los dos hilos
+             ▲
+             │  (hilo privado)
+        Reclamado
+```
+
+Las partes **nunca se ven entre sí**, y no saben qué dice la otra ni siquiera si hay otra. No
+es una restricción técnica: poner a denunciante y denunciado a discutir crearía el conflicto
+que la moderación existe para evitar. El moderador media; no organiza un careo.
+
+### Dónde descansa la privacidad
+
+**En cómo está preguntada la consulta**, no en un filtro. La parte no pide «este hilo» sino
+«el mío», y cuál es el suyo lo deduce el servidor de quién es: por eso la ruta del usuario no
+lleva identificador de hilo. Con uno, leer el de la otra parte sería cambiar una palabra en la
+dirección.
+
+El hilo tampoco se filtra después de traerlo: va dentro de la consulta. Traer los dos y
+quedarse con uno dejaría el mensaje ajeno viajando por dentro del servidor.
+
+Para quien no es parte, la reclamación **no existe** (`404`). Un permiso denegado le
+confirmaría que hay un expediente abierto, que ya es información sobre otras personas.
+
+### Reglas aplicadas
+
+- **Solo el moderador abre conversación.** Si una parte pudiera, la cola se llenaría de
+  alegatos no solicitados y el expediente dejaría de ser un procedimiento para convertirse en
+  una bandeja de entrada.
+- Los mensajes son **inmutables**: no hay operación que los edite ni los borre. Si alguien
+  pudiera reescribir lo que dijo, el expediente dejaría de ser prueba de nada.
+- La conversación **no revela la identidad del moderador**: firma como «Moderación». Le protege
+  de represalias y permite que la decisión se discuta por su contenido.
+- El hilo se **cierra al resolverse** la reclamación. Se puede leer —es la única constancia que
+  le queda a la parte— pero no continuar: seguir escribiendo sería alegar ante quien ya decidió.
+- Una reclamación que **no señala a nadie** no tiene segundo hilo, y se dice por su nombre.
+
+### Efectos
+
+Cada mensaje del moderador queda en el **registro de auditoría con el hilo y sin el cuerpo**.
+Lo que hay que poder revisar después es que habló con una parte; copiar el mensaje reproduciría
+el expediente en un segundo sitio, con su propio control de acceso que mantener.
+
+### Qué no está todavía
+
+El **aviso** al destinatario de cada mensaje, que es de `Notification`. Sin él, la parte tiene
+que entrar a mirar para enterarse de que moderación le ha escrito, que es lo que un expediente
+no debería exigir.

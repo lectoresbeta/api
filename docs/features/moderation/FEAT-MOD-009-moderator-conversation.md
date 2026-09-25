@@ -5,7 +5,7 @@ context: Moderation
 concept: Review
 actors: [Moderator, User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-23 (comunicación en las reclamaciones)
@@ -15,7 +15,7 @@ endpoints:
   - POST /me/claims/{claimId}/messages
 events: [ClaimMessageSent]
 depends_on: [FEAT-MOD-002, FEAT-MOD-010]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-MOD-009 — Conversación con el moderador
@@ -112,14 +112,14 @@ intenten leer el hilo ajeno.
 
 ## Criterios de aceptación
 
-- [ ] Una parte no puede leer el hilo de la otra por ninguna vía de la API.
-- [ ] Una parte no puede abrir conversación si el moderador no lo ha hecho.
-- [ ] Los mensajes no se editan ni se borran.
-- [ ] El usuario nunca ve la identidad del moderador ni la de la otra parte.
-- [ ] Al resolverse la reclamación, los hilos quedan en solo lectura.
-- [ ] Un invitado sin cuenta no tiene hilo.
-- [ ] El moderador puede decidir sin esperar respuesta.
-- [ ] Todo mensaje queda en el registro de auditoría.
+- [x] Una parte no puede leer el hilo de la otra por ninguna vía de la API.
+- [x] Una parte no puede abrir conversación si el moderador no lo ha hecho.
+- [x] Los mensajes no se editan ni se borran: no hay operación que lo permita.
+- [x] El usuario nunca ve la identidad del moderador ni la de la otra parte.
+- [x] Al resolverse la reclamación, los hilos quedan en solo lectura.
+- [x] Un invitado sin cuenta no tiene hilo: la ruta exige sesión.
+- [x] El moderador puede decidir sin esperar respuesta: nada del expediente depende del hilo.
+- [x] Todo mensaje del moderador queda en el registro de auditoría, **con el hilo y sin el cuerpo**.
 
 ## Preguntas abiertas
 
@@ -127,7 +127,7 @@ intenten leer el hilo ajeno.
 |---|---|---|
 | MOD-23 | ¿Cuánto espera el moderador antes de decidir sin respuesta? | Una parte que calla no puede congelar el expediente |
 | MOD-29 | ¿Puede el usuario adjuntar archivos? | Útil para probar un plagio; abre una vía de subida sin moderar |
-| MOD-30 | ¿Puede la parte leer su hilo después de resuelto y de sancionado? | Es su única constancia de lo ocurrido |
+| ~~MOD-30~~ | ¿Puede la parte leer su hilo después de resuelto? | Resuelta: **sí**. Es su única constancia de lo ocurrido |
 
 ## Estado
 
@@ -135,4 +135,28 @@ intenten leer el hilo ajeno.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). Los dos hilos, abrirlos, responder y leerlos, con
+el cierre al resolverse.
+
+La privacidad no descansa en un filtro sino en **cómo está preguntada la consulta**: la parte
+no pide «este hilo» sino «el mío», y cuál es el suyo lo deduce el servidor de quién es. Con un
+identificador de hilo en la ruta, leer el de la otra parte sería cambiar una palabra en la
+dirección. El hilo tampoco se filtra después de traerlo: va en la consulta, porque traer los
+dos y quedarse con uno dejaría el mensaje ajeno viajando por dentro del servidor.
+
+Dos decisiones que la ficha no fijaba:
+
+- **el registro de auditoría guarda el hilo y no el cuerpo** (`RN-8`). Lo que hay que poder
+  revisar después es que el moderador habló con una parte; copiar el mensaje reproduciría el
+  expediente en un segundo sitio, con su propio control de acceso que mantener;
+- **una reclamación que no señala a nadie no tiene segundo hilo**, y se dice por su nombre.
+  Pasa con un capítulo o una publicación, que viven en otro contexto sin contrato todavía que
+  diga de quién son. Abrir un hilo que nadie va a leer sería peor que negarlo.
+
+**Falta el aviso** al destinatario de cada mensaje (`RN-7`), que es de `Notification` y no
+escucha nada de esto todavía. Sin él, la parte tiene que entrar a mirar para enterarse de que
+moderación le ha escrito — que es exactamente lo que un expediente no debería exigir.
+
+Y queda `MOD-23` sin decidir: cuánto espera el moderador antes de decidir sin respuesta. Hoy no
+espera nada, porque nada del expediente depende del hilo; lo que falta es la política, no el
+mecanismo.

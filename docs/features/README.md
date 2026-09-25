@@ -368,7 +368,7 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 | FEAT-MOD-006 | Catálogo de sanciones | Moderator | APPROVED | PARTIAL | P2 | [ficha](moderation/FEAT-MOD-006-sanctions.md) |
 | FEAT-MOD-007 | Registro de auditoría de acciones administrativas | Admin | APPROVED | DONE | P1 | [ficha](moderation/FEAT-MOD-007-audit-log.md) |
 | FEAT-MOD-008 | Cola de reclamaciones con filtros y prioridad | Moderator | PENDING | TODO | P2 | — |
-| FEAT-MOD-009 | Conversación entre el moderador y las partes | Moderator, User | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-009-moderator-conversation.md) |
+| FEAT-MOD-009 | Conversación entre el moderador y las partes | Moderator, User | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-009-moderator-conversation.md) |
 | FEAT-MOD-010 | Mis reclamaciones — sección del usuario | User | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-010-my-claims.md) |
 | FEAT-MOD-011 | Revisión automática de contenido | — (sistema) | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-011-automated-content-review.md) |
 | FEAT-MOD-012 | Comando de creación del primer administrador | Admin | APPROVED | DONE | P1 | [ficha](moderation/FEAT-MOD-012-bootstrap-admin.md) |

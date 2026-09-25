@@ -796,3 +796,207 @@ sanctionLift:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+ClaimIdParam:
+  name: claimId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+claimMessages:
+  post:
+    tags: [Moderation]
+    operationId: writeToClaimParty
+    summary: Escribir a una de las partes
+    description: |
+      Antes de decidir, el moderador puede hablar con cada parte **por
+      separado**: pedir aclaraciones al reclamante, dar al reclamado la
+      oportunidad de explicarse.
+
+      **La conversación tiene forma de estrella, no de sala.** Las partes
+      nunca se ven entre sí, y no saben qué dice la otra ni siquiera si hay
+      otra. No es una restricción técnica: poner a denunciante y denunciado a
+      discutir crearía el conflicto que la moderación existe para evitar.
+
+      Esta ruta indica **a qué parte** se escribe; la de la parte no lo
+      necesita, porque solo tiene un hilo.
+
+      El mensaje es **inmutable**: no se edita ni se borra. Si alguien pudiera
+      reescribir lo que dijo, el expediente dejaría de ser prueba de nada.
+    parameters:
+      - $ref: '#/ClaimIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [party, body]
+            properties:
+              party:
+                type: string
+                enum: [REPORTER, SUBJECT]
+              body:
+                type: string
+    responses:
+      '201':
+        description: Enviado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messageId]
+              properties:
+                messageId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo moderación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: CLAIM_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: CLAIM_ALREADY_RESOLVED` si el expediente está cerrado, o
+          `CLAIM_HAS_NO_SUBJECT` si lo reclamado era una obra y no señala a
+          nadie con quien abrir el segundo hilo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: EMPTY_MESSAGE` o `UNKNOWN_THREAD_PARTY`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+myClaimThread:
+  get:
+    tags: [Moderation]
+    operationId: listMyClaimThread
+    summary: Mi conversación con moderación
+    description: |
+      **Solo el hilo propio**, y no hay forma de pedir otro: se deduce de
+      quién pregunta. Con un identificador de hilo en la ruta, leer el de la
+      otra parte sería cambiar una palabra en la dirección.
+
+      Los mensajes llegan **sin identidad de quien escribe**: solo si vinieron
+      de moderación o de uno mismo. Protege al moderador de represalias, y es
+      lo que permite que la decisión se discuta por su contenido y no por
+      quién la tomó.
+
+      Un hilo vacío es una respuesta legítima: significa que moderación no ha
+      abierto conversación, no que algo haya fallado.
+
+      Quien no es parte recibe `404`: un permiso denegado le confirmaría que
+      hay un expediente abierto, que ya es información sobre otras personas.
+    parameters:
+      - $ref: '#/ClaimIdParam'
+    responses:
+      '200':
+        description: El hilo, del mensaje más antiguo al más reciente.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messages]
+              properties:
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    required: [messageId, from, body, sentAt]
+                    properties:
+                      messageId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      from:
+                        type: string
+                        enum: [MODERATION, ME]
+                      body:
+                        type: string
+                      sentAt:
+                        type: string
+                        format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CLAIM_NOT_FOUND`. No existe, **o no eres parte**.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  post:
+    tags: [Moderation]
+    operationId: replyToModeration
+    summary: Responder a moderación
+    description: |
+      **Solo se puede responder, no iniciar.** Una parte no abre conversación
+      por su cuenta: si pudiera, la cola del moderador se llenaría de alegatos
+      no solicitados y el expediente dejaría de ser un procedimiento para
+      convertirse en una bandeja de entrada.
+
+      El hilo se **cierra al resolverse** la reclamación. Se puede leer, no
+      continuar: seguir escribiendo en un expediente cerrado sería alegar ante
+      quien ya decidió.
+    parameters:
+      - $ref: '#/ClaimIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+    responses:
+      '201':
+        description: Enviado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messageId]
+              properties:
+                messageId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: CLAIM_NOT_FOUND`. No existe, o no eres parte.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: THREAD_NOT_OPEN` si moderación no ha escrito todavía, o
+          `CLAIM_ALREADY_RESOLVED` si el expediente ya se cerró.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: EMPTY_MESSAGE`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

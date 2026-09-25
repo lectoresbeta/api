@@ -102,3 +102,25 @@ liftSanction:
     path: /api/v1/admin/sanctions/{sanctionId}/lift
     controller: LectoresBeta\Moderation\Sanction\Infrastructure\Controller\LiftSanctionController::__invoke
     methods: [POST]
+
+# La conversación con las partes (`FEAT-MOD-009`).
+#
+# Tiene forma de estrella, no de sala: cada parte tiene un hilo privado con
+# moderación y no sabe qué dice la otra, ni siquiera si hay otra. Poner a
+# denunciante y denunciado a discutir crearía el conflicto que la moderación
+# existe para evitar.
+writeToClaimParty:
+    path: /api/v1/admin/claims/{claimId}/messages
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\WriteToClaimPartyController::__invoke
+    methods: [POST]
+
+# La ruta de la parte **no elige hilo**: el suyo se deduce de quién pregunta.
+listMyClaimThread:
+    path: /api/v1/me/claims/{claimId}/messages
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\MyClaimThreadController::__invoke
+    methods: [GET]
+
+replyToModeration:
+    path: /api/v1/me/claims/{claimId}/messages
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\MyClaimThreadController::__invoke
+    methods: [POST]

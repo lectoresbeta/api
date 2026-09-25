@@ -321,6 +321,12 @@ paths:
   /admin/audit-log:
     $ref: './paths/moderation.yaml#/auditLog'
 
+  /admin/claims/{claimId}/messages:
+    $ref: './paths/moderation.yaml#/claimMessages'
+
+  /me/claims/{claimId}/messages:
+    $ref: './paths/moderation.yaml#/myClaimThread'
+
   /admin/sanctions:
     $ref: './paths/moderation.yaml#/sanctions'
 
