@@ -21,6 +21,7 @@ use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
+use LectoresBeta\User\Account\Application\Contract\ReaderMaturity;
 use LectoresBeta\User\Account\Application\Contract\RegisteredUsers;
 use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
 
@@ -50,6 +51,7 @@ final readonly class InviteBetaReaderHandler
     public function __construct(
         private WorkAccessBriefs $works,
         private RegisteredUsers $users,
+        private ReaderMaturity $maturity,
         private AccessInvitationRepository $invitations,
         private AccessRequestRepository $requests,
         private BetaReaderAccessRepository $accesses,
@@ -70,6 +72,15 @@ final readonly class InviteBetaReaderHandler
         }
 
         $inviteeId = $this->invitee($command->inviteeId, $command->authorId);
+
+        // La edad se comprueba **al invitar** y no solo al leer
+        // (`FEAT-USR-044` `U-22`). Antes la invitación se cursaba y la
+        // lectura fallaba después: el autor veía a alguien aceptar y no poder
+        // entrar, sin ninguna explicación.
+        if ($work->adultsOnly && !$this->maturity->isOfAge($inviteeId->value())) {
+            throw InvitationRefused::readerCannotSeeThisWork();
+        }
+
         $workId = WorkId::fromString($command->workId);
 
         if (null !== $this->accesses->liveFor($inviteeId, $workId)) {

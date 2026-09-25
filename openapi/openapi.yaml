@@ -132,6 +132,9 @@ paths:
   /media/{key}:
     $ref: './paths/health.yaml#/media'
 
+  /me/content-preferences:
+    $ref: './paths/settings.yaml#/contentPreferences'
+
   /me/privacy-settings:
     $ref: './paths/settings.yaml#/privacySettings'
 

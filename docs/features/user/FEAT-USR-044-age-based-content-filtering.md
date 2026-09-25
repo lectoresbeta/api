@@ -44,6 +44,7 @@ saltarse el filtro, y sería además la forma más fácil: no contestar.
 | Pedir el cuestionario | `404` |
 | Empezar una corrección | Se rechaza |
 | Solicitar acceso de lector beta | Se rechaza |
+| **Invitar** a alguien a leerla | Se rechaza (`RN-10`) |
 
 El `404` en lugar del `403` es el criterio general de la plataforma
 ([`errores`](../../api/conventions/errors.md)): si alguien no debería saber siquiera que el
@@ -68,7 +69,8 @@ que es además lo que hace que cumplir años tenga efecto el mismo día.
   contexto lo conoce.
 - `RN-2` Quien **no ha declarado** fecha de nacimiento **no es mayor de edad**.
 - `RN-3` Quien **no tiene sesión** no es mayor de edad. Un visitante anónimo nunca ve contenido
-  `ADULTS_ONLY`.
+  `ADULTS_ONLY`. Hoy la respuesta es más rotunda que un `404` —ninguna de estas operaciones
+  se sirve sin sesión—, y el día que alguna lo haga habrá que decidirlo (`U-23`).
 - `RN-4` El filtro **no se puede desactivar**. No es una preferencia ni un ajuste.
 - `RN-5` Se aplica en **todos** los puntos de la tabla anterior, y la comprobación es del lado
   del servidor siempre. Que la interfaz no enseñe un botón no es una comprobación.
@@ -79,6 +81,11 @@ que es además lo que hace que cumplir años tenga efecto el mismo día.
   tenga edad, incluidos los lectores beta que ya tuvieran acceso concedido.
 - `RN-9` La fecha de nacimiento, una vez declarada, **no se cambia libremente**: el camino es
   una solicitud a soporte. Un campo editable es el segundo modo de saltarse el filtro.
+- `RN-10` La edad se comprueba **al invitar**, no solo al leer. Una invitación que se cursa y
+  falla después deja al autor viendo a alguien aceptar y no poder entrar, sin explicación. El
+  rechazo **no dice por qué**: la edad de otra persona no es asunto de quien invita, y un
+  mensaje que lo insinuara convertiría el botón de invitar en un comprobador de quién es
+  menor.
 
 ## Flujos alternativos y errores
 
@@ -86,9 +93,10 @@ que es además lo que hace que cumplir años tenga efecto el mismo día.
 |---|---|---|
 | Menor pide una obra `ADULTS_ONLY` | No existe para él | `404` |
 | Usuario sin fecha de nacimiento declarada | Igual que un menor | `404` |
-| Visitante sin sesión | Igual | `404` |
+| Visitante sin sesión | Igual | `401`: hoy ninguna de estas operaciones tiene superficie anónima |
 | El autor, menor de edad, pide su propia obra | La ve | `200` |
 | Menor intenta empezar una corrección | Se rechaza | `404` |
+| El autor invita a alguien menor | Se rechaza, **sin decir por qué** | `409 READER_CANNOT_SEE_THIS_WORK` |
 
 ## Contrato de API
 
@@ -106,24 +114,24 @@ Ninguno nuevo. `User` ya guarda la fecha de nacimiento y `Work` la clasificació
 
 ## Criterios de aceptación
 
-- [ ] Una obra `ADULTS_ONLY` no aparece en el catálogo de quien no es mayor de edad.
-- [ ] Abrirla directamente por su identificador responde `404`.
-- [ ] Un capítulo suyo responde `404`.
-- [ ] El cuestionario responde `404`.
-- [ ] No se puede empezar una corrección sobre ella.
-- [ ] No se puede solicitar acceso de lector beta.
-- [ ] Quien no ha declarado fecha de nacimiento recibe el mismo trato que un menor.
-- [ ] Un visitante sin sesión, también.
-- [ ] El autor ve su propia obra aunque sea menor.
-- [ ] Marcar una obra como `ADULTS_ONLY` la retira de inmediato a los lectores beta menores.
-- [ ] Ningún endpoint devuelve la fecha de nacimiento de otra persona.
-- [ ] Ninguna respuesta de error revela que la obra existe.
+- [x] Una obra `ADULTS_ONLY` no aparece en el catálogo de quien no es mayor de edad.
+- [x] Abrirla directamente por su identificador responde `404`.
+- [x] Un capítulo suyo responde `404`.
+- [x] El cuestionario responde `404`.
+- [x] No se puede empezar una corrección sobre ella.
+- [x] No se puede solicitar acceso de lector beta.
+- [x] **No se puede invitar a alguien menor a leerla** (`U-22`).
+- [x] Quien no ha declarado fecha de nacimiento recibe el mismo trato que un menor.
+- [x] Un visitante sin sesión, también.
+- [x] El autor ve su propia obra aunque sea menor.
+- [x] Marcar una obra como `ADULTS_ONLY` la retira de inmediato a los lectores beta menores.
+- [x] Ningún endpoint devuelve la fecha de nacimiento de otra persona.
+- [x] Ninguna respuesta de error revela que la obra existe.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| U-22 | **Invitar a alguien menor a ser lector beta de una obra `ADULTS_ONLY`.** ¿Se impide al invitar, o solo al leer? | Hoy la invitación se cursa y la lectura falla después: el autor no entiende por qué |
 | U-23 | Un **enlace público** (`FEAT-WRK-010`) no tiene sesión detrás. ¿Puede servir una obra `ADULTS_ONLY`? | Sería el agujero más grande del filtro |
 | U-24 | ¿Se verifica la edad de alguna forma, o basta con declararla? | Declararla es un trámite de diez segundos para quien quiera saltárselo |
 | U-25 | ¿Hay jurisdicciones donde el umbral no sean 18 años? | El umbral está en un sitio, pero es uno solo |
@@ -132,14 +140,21 @@ Ninguno nuevo. `User` ya guarda la fecha de nacimiento y `Work` la clasificació
 
 **Especificación:** `APPROVED` (2026-09-25).
 
-**Implementación:** `PARTIAL`. El filtro se aplica ya en seis sitios —catálogo, obra,
-capítulo, cuestionario, panel de corrección y solicitud de acceso— a través del contrato
-`ReaderMaturity`, que también existe y responde lo que debe.
+**Implementación:** `PARTIAL` (2026-09-25). El filtro se aplica en siete sitios —catálogo,
+obra, capítulo, cuestionario, panel de corrección, solicitud de acceso e **invitación**— a
+través del contrato `ReaderMaturity`, que responde **un booleano y nada más**: `Work` tiene
+que decidir si sirve un texto y para eso no necesita saber cuándo nació nadie.
 
-**Falta**, y son los tres agujeros conocidos:
+La **invitación** ya lo comprueba (`U-22`, cerrada): antes se cursaba y la lectura fallaba
+después. Y existe la **prueba funcional** que recorre las seis puertas a la vez, que es lo que
+impide que una séptima se escriba sin el filtro — con su control, una adulta que pasa por
+todas, porque sin él la prueba pasaría igual con una obra que no puede abrir nadie.
 
-- la **invitación** a ser lector beta no lo comprueba (`U-22`);
-- el **enlace público** no tiene forma de comprobarlo (`U-23`), y hoy la funcionalidad no está
-  implementada, así que el agujero todavía no está abierto;
-- no hay **prueba funcional** que fije el comportamiento en los seis puntos a la vez, que es
-  lo que impide que uno nuevo se escriba sin el filtro.
+Algo que la prueba dejó dicho y la ficha no preveía: hoy **ninguna de las seis puertas tiene
+superficie anónima**, así que un visitante recibe `401` y no `404`. Se afirma así a propósito;
+el día que alguna la tenga, la prueba falla y obliga a decidir qué se sirve sin sesión. Que es
+exactamente lo que hay que decidir en `U-23`.
+
+**Falta** el **enlace público** (`U-23`): no tiene sesión detrás y no hay forma de comprobar
+la edad. Hoy la funcionalidad no está implementada, así que el agujero todavía no está
+abierto, y esa es la razón para decidirlo antes de abrirlo y no después.

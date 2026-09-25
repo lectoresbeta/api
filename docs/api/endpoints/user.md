@@ -43,6 +43,8 @@
 | `GET /me/settings` | `getAccountSettings` | Ajustes de cuenta | FEAT-USR-010/011 | PENDING |
 | `GET /api/v1/me/privacy-settings` | `getMyPrivacySettings` | Ajustes de privacidad | FEAT-USR-038 | **Implementado** |
 | `PUT /api/v1/me/privacy-settings` | `updateMyPrivacySettings` | Modificarlos | FEAT-USR-038 | **Implementado** |
+| `GET /api/v1/me/content-preferences` | `getMyContentPreferences` | Qué he decidido no ver | FEAT-USR-043 | **Implementado** |
+| `PUT /api/v1/me/content-preferences` | `updateMyContentPreferences` | Cambiarlo | FEAT-USR-043 | **Implementado** |
 | `GET /me/notification-preferences` | `getMyNotificationPreferences` | Preferencias de aviso por canal | FEAT-USR-039 | DRAFT |
 | `PUT /me/notification-preferences` | `updateMyNotificationPreferences` | Modificarlas | FEAT-USR-039 | DRAFT |
 | `PATCH /me/settings` | `updateAccountSettings` | MD y propuestas de LB | FEAT-USR-010/011 | PENDING |
@@ -366,6 +368,7 @@ conviene que la API lo refleje:
 | Cuenta → eliminar | `DELETE /me` | Proceso asíncrono entre contextos |
 | Notificaciones | `/me/notification-preferences` | Preferencias, sin efecto en autorización |
 | Privacidad | `/me/privacy-settings` | **Reglas de autorización** |
+| Contenido sensible | `/me/content-preferences` | Qué no se quiere ver; **no** quién puede hacer qué |
 
 Un único `PATCH /me/settings` para todo sería más cómodo y ocultaría que **cambiar quién
 puede ver tu perfil no se parece en nada a cambiar si quieres correos**: una afecta a lo que
@@ -424,6 +427,58 @@ y un interruptor que nada lee es peor que ninguno.
 
 Publica `PrivacySettingsChanged` con los tres ajustes y **nada del perfil**.
 
+
+---
+
+## `GET` y `PUT /api/v1/me/content-preferences`
+
+**`operationId`:** `getMyContentPreferences`, `updateMyContentPreferences` · **Funcionalidad:**
+[`FEAT-USR-043`](../../features/user/FEAT-USR-043-content-preferences.md)
+
+### Propósito
+
+Qué contenidos sensibles **no quiere ver** esta persona. Es la otra mitad de
+[`FEAT-WRK-017`](../../features/work/FEAT-WRK-017-content-rating.md): el autor declara qué hay
+y el lector decide qué quiere.
+
+No confundir con el **filtro de edad**
+([`FEAT-USR-044`](../../features/user/FEAT-USR-044-age-based-content-filtering.md)): lo no apto
+para menores se filtra con independencia de lo que haya aquí, y no se desactiva. Eso no es una
+preferencia, es una regla, y por eso `ADULTS_ONLY` no está entre los valores admitidos.
+
+### Autorización
+
+Solo el titular, y **no hay forma de preguntar por las de otro**. No es un olvido: si un autor
+pudiera saber cuánta gente ha excluido su obra sabría cuánta audiencia pierde por etiquetar
+bien, y con ese número tendría un incentivo directo para etiquetar mal (`RN-7`).
+
+### Reglas aplicadas
+
+- El `PUT` **sustituye la lista entera**, como la clasificación de una obra: lo que se envía
+  es cómo queda.
+- Los valores son los del catálogo cerrado de `FEAT-WRK-017`. Uno que no esté devuelve
+  `422 UNKNOWN_CONTENT_WARNING` con `unknownWarnings`, y **no se guarda nada**: una exclusión
+  a medias deja a alguien creyendo que ha filtrado más de lo que ha filtrado.
+- Una lista vacía es una decisión válida y es además el estado por defecto: **no se filtra
+  nada** mientras nadie elija (`RN-3`).
+- El filtrado **lo hace el servidor** en cada consulta (`RN-2`). Un filtro de cliente
+  significaría que el contenido viaja hasta el navegador de quien pidió no verlo.
+- Lo excluido **no cuenta en el total** de un listado: no se esconde una tarjeta, se devuelve
+  una lista distinta.
+
+### Qué no está todavía
+
+Se aplica en el **catálogo**. El muro, las recomendaciones, «también te puede interesar» y el
+perfil de un autor lo heredarán cuando existan: la exclusión ya está guardada y disponible por
+contrato, así que lo que falta es cada pantalla, no la decisión.
+
+El **enlace directo** (`RN-5`) —advertir y pedir confirmación en vez de ocultar— espera a que
+existan los enlaces públicos.
+
+### Efectos
+
+Ninguno fuera de `User`. `ContentPreferencesChanged` no se publica: nadie lo necesita todavía
+y un hecho que nadie escucha es un contrato que hay que mantener a cambio de nada.
 
 ---
 

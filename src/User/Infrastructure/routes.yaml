@@ -198,3 +198,17 @@ getMyAvatarOriginal:
     path: /api/v1/me/profile/avatar/original
     controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetMyAvatarOriginalController::__invoke
     methods: [GET]
+
+# Preferencias de contenido sensible (`FEAT-USR-043`). El autor declara qué
+# hay y el lector decide qué quiere; el filtrado lo hace el servidor, porque
+# un filtro de cliente significa que el contenido viaja hasta el navegador de
+# quien pidió no verlo.
+getMyContentPreferences:
+    path: /api/v1/me/content-preferences
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\ContentPreferencesController::__invoke
+    methods: [GET]
+
+updateMyContentPreferences:
+    path: /api/v1/me/content-preferences
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\ContentPreferencesController::__invoke
+    methods: [PUT]

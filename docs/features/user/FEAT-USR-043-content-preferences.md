@@ -5,7 +5,7 @@ context: User
 concept: Preferences
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-23 (filtros de contenido sensible en el perfil)
@@ -14,7 +14,7 @@ endpoints:
   - PUT /me/content-preferences
 events: [ContentPreferencesChanged]
 depends_on: [FEAT-WRK-017]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-USR-043 — Preferencias de contenido sensible
@@ -78,13 +78,14 @@ real lo hace el servidor** en cada consulta.
 
 ## Criterios de aceptación
 
-- [ ] El usuario puede excluir etiquetas del catálogo cerrado.
-- [ ] El filtro se aplica en catálogo, muro, recomendaciones y perfiles ajenos.
-- [ ] El contenido excluido no llega al cliente.
+- [x] El usuario puede excluir etiquetas del catálogo cerrado.
+- [ ] El filtro se aplica en catálogo, muro, recomendaciones y perfiles ajenos. **Solo el
+  catálogo**: las otras tres pantallas no existen.
+- [x] El contenido excluido no llega al cliente.
 - [ ] Un enlace directo muestra advertencia y pide confirmación en vez de ocultar.
-- [ ] El contenido no apto para menores se filtra por edad aunque el usuario no lo excluya.
-- [ ] Un autor no puede saber cuántos usuarios han excluido su obra.
-- [ ] Por defecto no se filtra nada.
+- [x] El contenido no apto para menores se filtra por edad aunque el usuario no lo excluya.
+- [x] Un autor no puede saber cuántos usuarios han excluido su obra.
+- [x] Por defecto no se filtra nada.
 
 ## Preguntas abiertas
 
@@ -101,4 +102,25 @@ real lo hace el servidor** en cada consulta.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). Las dos operaciones, el catálogo cerrado
+comprobado al guardar y el filtrado en el catálogo de obras, que se aplica **sin que la
+petición lo pida**: es lo que esta persona decidió hace tiempo en su configuración.
+
+Lo que atraviesa la frontera es `ReaderContentPreferences`, un contrato publicado de `User`
+que responde **una lista de códigos y nada más**. En particular no existe la pregunta al
+revés —cuánta gente excluye una etiqueta—, que es `RN-7` hecha imposible en vez de prohibida.
+
+Dos decisiones que la ficha no traía:
+
+- **Cada contexto tiene su propia enumeración de etiquetas**, y no se comparte: en `Work` los
+  cinco valores dicen qué contiene una obra y en `User` dicen qué no quiere ver alguien, que
+  son preguntas distintas. Lo que no puede pasar es que **diverjan**, porque una divergencia
+  no rompe nada visiblemente —deja una etiqueta que se puede declarar y no se puede excluir—,
+  así que hay una prueba que las mira a la vez.
+- **`ContentPreferencesChanged` no se publica.** Nadie lo escucha, y un hecho que nadie
+  escucha es un contrato que hay que mantener a cambio de nada. Entra el día que algo tenga
+  que reaccionar.
+
+**Faltan** las tres pantallas que no existen —muro, recomendaciones y perfil de un autor—, que
+heredarán el filtro cuando se escriban, y el aviso con confirmación del **enlace directo**
+(`RN-5`), que espera a que existan los enlaces públicos.

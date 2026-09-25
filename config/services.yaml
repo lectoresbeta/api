@@ -323,6 +323,12 @@ services:
     LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs:
         alias: LectoresBeta\Work\Manuscript\Application\Service\ResolveWorkAccessBriefs
 
+    # La otra mitad del contenido sensible (FEAT-WRK-017, FEAT-USR-043): el
+    # autor declara qué hay y el lector decide qué quiere, así que quien
+    # construye una lista de obras necesita saber qué ha excluido.
+    LectoresBeta\User\Preferences\Application\Contract\ReaderContentPreferences:
+        alias: LectoresBeta\User\Preferences\Application\Service\ResolveContentPreferences
+
     LectoresBeta\User\Profile\Application\Contract\GenreCatalogue:
         alias: LectoresBeta\User\Profile\Application\Service\CheckGenreCatalogue
 

@@ -111,7 +111,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-040 | Cambiar el correo de la cuenta | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-040-change-email.md) |
 | FEAT-USR-041 | Cambiar o establecer la contraseña | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-041-change-password.md) |
 | FEAT-USR-042 | Preferencias de apariencia (tema) | User | PENDING | TODO | P3 | — *(sin captura)* |
-| FEAT-USR-043 | Preferencias de contenido sensible | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-043-content-preferences.md) |
+| FEAT-USR-043 | Preferencias de contenido sensible | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-043-content-preferences.md) |
 | FEAT-USR-044 | Filtrado automático de contenido por edad | User, Guest | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-044-age-based-content-filtering.md) |
 
 > **`FEAT-USR-013`: eliminar una cuenta la anonimiza** (`S-32`, decidida). Se suprime todo

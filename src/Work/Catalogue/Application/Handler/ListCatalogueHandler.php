@@ -6,6 +6,7 @@ namespace LectoresBeta\Work\Catalogue\Application\Handler;
 
 use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\User\Account\Application\Contract\ReaderMaturity;
+use LectoresBeta\User\Preferences\Application\Contract\ReaderContentPreferences;
 use LectoresBeta\Work\Catalogue\Application\DTO\CatalogueCriteria;
 use LectoresBeta\Work\Catalogue\Application\DTO\CataloguePage;
 use LectoresBeta\Work\Catalogue\Application\Port\CatalogueQuery;
@@ -52,6 +53,7 @@ final readonly class ListCatalogueHandler
     public function __construct(
         private CatalogueQuery $catalogue,
         private ReaderMaturity $maturity,
+        private ReaderContentPreferences $preferences,
         private Clock $clock,
     ) {
     }
@@ -70,7 +72,14 @@ final readonly class ListCatalogueHandler
             $query->readerId,
             $this->maturity->isOfAge($query->readerId),
             array_values(array_unique(array_map(strtoupper(...), $query->genres))),
-            self::excluded($query->excludedWarnings),
+            // Lo que pide la petición **y** lo que esta persona tiene
+            // excluido de antes (`FEAT-USR-043` `RN-2`). El filtrado ocurre
+            // aquí y no en el cliente: un filtro de cliente significa que el
+            // contenido viaja hasta el navegador de quien pidió no verlo.
+            self::excluded([
+                ...$query->excludedWarnings,
+                ...$this->preferences->excludedBy($query->readerId),
+            ]),
             self::status($query->status),
             'relevance' === $query->sort,
             $query->page,

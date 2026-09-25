@@ -923,3 +923,91 @@ sessionContext:
                     type: string
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
+# Lo que una persona ha decidido no ver (FEAT-USR-043).
+#
+# La lista vacía es el estado normal de quien nunca ha entrado aquí: por
+# defecto no se filtra nada. No es «no ha contestado» — no hay nada que
+# contestar hasta que alguien quiera excluir algo.
+#
+# Lo no apto para menores no aparece aquí: eso no es una preferencia, es una
+# regla, y se aplica aunque esta lista esté vacía (FEAT-USR-044).
+ContentPreferences:
+  type: object
+  required: [excludedWarnings]
+  properties:
+    excludedWarnings:
+      type: array
+      items:
+        $ref: './works.yaml#/ContentWarning'
+
+contentPreferences:
+  get:
+    tags: [Settings]
+    operationId: getMyContentPreferences
+    summary: Qué contenidos he decidido no ver
+    description: |
+      La otra mitad de la clasificación de contenido
+      ([`FEAT-WRK-017`](../../docs/features/work/FEAT-WRK-017-content-rating.md)):
+      el autor declara qué hay, el lector decide qué quiere.
+
+      **Por defecto no se filtra nada**, así que una lista vacía es el estado
+      normal de quien nunca ha entrado aquí — no un dato que falte.
+
+      Lo que la edad impone **no sale por aquí y no se puede desactivar**: eso
+      no es una preferencia, es una regla
+      ([`FEAT-USR-044`](../../docs/features/user/FEAT-USR-044-age-based-content-filtering.md)).
+    responses:
+      '200':
+        description: Las etiquetas excluidas.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ContentPreferences'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+  put:
+    tags: [Settings]
+    operationId: updateMyContentPreferences
+    summary: Elegir qué no ver
+    description: |
+      Sustituye la lista entera, que es como se ve en pantalla.
+
+      **El filtrado lo hace el servidor** en cada consulta: un filtro de
+      cliente significaría que el contenido viaja hasta el navegador de quien
+      pidió no verlo, y para material sensible eso no sirve de nada.
+
+      Una etiqueta que no está en el catálogo se **rechaza** en vez de
+      guardarse: una exclusión que no coincide con ninguna real no filtra nada
+      y parece que sí, que es la peor manera de fallar en algo que la gente
+      configura precisamente para no llevarse un disgusto.
+
+      Un **enlace directo** a una obra excluida no la oculta: advierte y pide
+      confirmación. Filtrar no es censurar, y ocultarla sin explicación haría
+      pensar que la obra no existe.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [excludedWarnings]
+            properties:
+              excludedWarnings:
+                type: array
+                items:
+                  $ref: './works.yaml#/ContentWarning'
+    responses:
+      '200':
+        description: Las etiquetas excluidas, ya guardadas.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ContentPreferences'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_CONTENT_WARNING`. Lleva `unknownWarnings`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

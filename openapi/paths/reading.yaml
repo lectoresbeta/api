@@ -543,6 +543,15 @@ invitations:
           `REQUEST_ALREADY_PENDING` si esa persona ya pidió acceso — ahí lo
           que toca es aceptar su solicitud, no crear un segundo objeto que
           significa lo mismo.
+
+          `READER_CANNOT_SEE_THIS_WORK` si esa persona no podría abrirla: hoy,
+          una obra no apta para menores y alguien que no es mayor de edad
+          ([`FEAT-USR-044`](../../docs/features/user/FEAT-USR-044-age-based-content-filtering.md)).
+          Se comprueba **al invitar** y no solo al leer, porque una invitación
+          que se cursa y falla después deja al autor viendo a alguien aceptar
+          y no poder entrar. **No dice por qué**: la edad de otra persona no
+          es asunto de quien invita, y un mensaje que lo insinuara convertiría
+          el botón de invitar en un comprobador de quién es menor.
         content:
           application/problem+json:
             schema:

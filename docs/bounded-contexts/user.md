@@ -44,7 +44,7 @@ preferencias y presencia pública como autor.
 | `Invitation` | Invitaciones por email y su seguimiento |
 | `Legal` | Documentos legales vigentes y el registro de aceptaciones |
 | `Privacy` | Quién puede ver el perfil, comentar los textos y mandar mensajes. **Reglas de autorización**, no preferencias |
-| `Preferences` | Qué avisos recibe el usuario y por qué canal; apariencia |
+| `Preferences` | Qué avisos recibe el usuario y por qué canal; apariencia; **qué contenidos sensibles ha decidido no ver** |
 
 > El nombre de usuario y sus alias sobreviven al borrado de la cuenta durante 30 días, así
 > que `username_alias` no puede depender de que la fila de `user` siga existiendo: lleva
@@ -74,7 +74,8 @@ preferencias y presencia pública como autor.
 | `Name` | **Dato público.** Nombre visible de la persona. No es el identificador técnico: ese sigue siendo `UserId` |
 | `Description` | Dato público. Texto libre saneado |
 | `AvatarUrl`, `CoverUrl` | Datos públicos. Imágenes sin metadatos EXIF |
-| `BirthDate` | Fecha real y pasada. **Dato privado**: no se expone en la API pública |
+| `BirthDate` | Fecha real y pasada. **Dato privado**: no se expone en la API pública. Sale de aquí como **un booleano** —`ReaderMaturity`—, nunca como fecha ni como edad |
+| `ContentWarning` | Las cinco etiquetas del catálogo cerrado, **como este contexto las lee**: qué no quiere ver alguien. `Work` tiene su propia copia, donde las mismas cinco dicen qué contiene una obra. Duplicadas a propósito; lo que no pueden es divergir |
 | `LiteraryPreferences` | Conjunto de `Genre`, **mínimo tres**, tanto al completar el onboarding como al editarlas después: un mínimo que solo rigiera el primer día no sería un mínimo. Un género retirado del catálogo no se puede elegir, pero quien ya lo tenía lo conserva |
 | `AccountStatus` | `PENDING_ACTIVATION`, `ACTIVE`, `DELETED` |
 | `OnboardingStatus` | `PROFILE_PENDING`, `GENRES_PENDING`, `SUGGESTIONS_PENDING`, `COMPLETED` |
