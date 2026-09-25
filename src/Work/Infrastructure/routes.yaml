@@ -163,3 +163,21 @@ getPublicChapter:
     path: /api/v1/public/{token}/chapters/{chapterId}
     controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\GetPublicChapterController::__invoke
     methods: [GET]
+
+# Crear una obra subiendo un fichero (`FEAT-WRK-002`).
+#
+# **Dos pasos, y es la respuesta a `W-4`**: el servidor lee el fichero y
+# propone dónde acaba cada capítulo; el autor lo revisa y confirma. La obra
+# nace en el segundo, y sale igual que la de `FEAT-WRK-001`.
+#
+# El fichero original **no se guarda**: se extrae el texto y se descarta.
+
+uploadManuscript:
+    path: /api/v1/manuscript-uploads
+    controller: LectoresBeta\Work\Ingest\Infrastructure\Controller\UploadManuscriptController::__invoke
+    methods: [POST]
+
+confirmManuscript:
+    path: /api/v1/manuscript-uploads/{uploadId}/work
+    controller: LectoresBeta\Work\Ingest\Infrastructure\Controller\ConfirmManuscriptController::__invoke
+    methods: [POST]

@@ -43,7 +43,7 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | `Questionnaire` | Preguntas que dirigen el feedback. **Versionado**: una corrección responde siempre a la versión con la que empezó. Su configuración determina el precio (`FEAT-CRD-016`) |
 | `Authorship` | Registro de autoría inmutable |
 | `PublicLink` | Acceso sin sesión a una obra |
-| `Ingestion` | Importación desde `.doc`, `.docx`, `.pdf`, `.txt` |
+| `Ingest` | Importación desde `.txt` y `.docx` (`FEAT-WRK-002`). El troceado se **propone** y el autor confirma; el fichero original no se guarda |
 | `Catalog` | Búsqueda y listado de obras |
 
 ## Agregados
@@ -159,7 +159,7 @@ tiene que viajar con la oferta.
 | W-1 | ¿En qué momentos se genera el registro de autoría? ¿En cada edición, al publicar, o cuando lo decide el autor? | **El documento de origen deja esta pregunta abierta explícitamente** |
 | W-2 | ¿Se versiona el contenido al editar o se sobrescribe? (`D-4`, `P-3`) | Afecta a autoría y a la validez del feedback previo |
 | W-3 | ¿Qué formatos exactos se aceptan? El documento dice `.doc`, `.pdf`, `.txt`; ¿también `.docx`, `.odt`, `.epub`? | Adaptadores de ingesta |
-| W-4 | ¿Cómo se dividen en fragmentos los ficheros subidos: automáticamente por capítulos, o a mano? | Complejidad de la ingesta |
+| ~~W-4~~ | ~~¿Cómo se dividen en fragmentos los ficheros subidos?~~ | **Resuelta** (`FEAT-WRK-002`): el servidor **propone** por los estilos de título del documento y el autor confirma. Como hay alguien revisando, el troceador puede permitirse ser simple |
 | W-5 | ¿Existe un estado de publicación además de la visibilidad? | **Resuelta:** sí, `WorkStatus` con tres valores (`FEAT-WRK-016`) |
 | **W-9** | ¿`WorkStatus` sustituye a `Visibility` en la obra? | Modelo de `Work` |
 | W-10 | ¿Qué transiciones de estado son legales? ¿Se puede despublicar? | Máquina de estados |

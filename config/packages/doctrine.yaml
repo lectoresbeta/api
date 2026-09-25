@@ -306,6 +306,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Work/Questionnaire/Infrastructure/Persistence/Doctrine/Mapping'
                 prefix: 'LectoresBeta\Work\Questionnaire\Domain\Entity'
                 alias: WorkQuestionnaire
+            WorkIngest:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work/Ingest/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Work\Ingest\Domain\Entity'
+                alias: WorkIngest
 
 when@test:
     doctrine:

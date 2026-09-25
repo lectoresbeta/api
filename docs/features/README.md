@@ -168,7 +168,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
 | FEAT-WRK-001 | Crear obra con el editor WYSIWYG | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-001-create-work-with-editor.md) |
-| FEAT-WRK-002 | Crear obra subiendo un fichero (.doc, .pdf, .txt) | Writer | PENDING | TODO | P1 | — |
+| FEAT-WRK-002 | Crear obra subiendo un fichero (.txt, .docx) | Writer | APPROVED | DONE | P1 | [ficha](work/FEAT-WRK-002-upload-a-manuscript.md) |
 | FEAT-WRK-003 | Estructurar la obra en capítulos | Writer | APPROVED | DONE | P0 | [ficha](work/FEAT-WRK-003-structure-work-in-chapters.md) |
 | FEAT-WRK-004 | Ver una obra y el contenido de sus capítulos | Writer, BetaReader, User | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-004-read-a-work.md) |
 | FEAT-WRK-005 | Editar una obra o un capítulo | Writer | APPROVED | DONE | P0 | [ficha](work/FEAT-WRK-005-edit-work-and-chapter.md) |

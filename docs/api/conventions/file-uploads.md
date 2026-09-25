@@ -1,6 +1,8 @@
 # Subida de ficheros
 
-> Estado: `DRAFT` en lo que falta. **La foto de perfil ya funciona**
+> Estado: `DRAFT` en lo que falta. **El manuscrito ya funciona**
+> ([`FEAT-WRK-002`](../../features/work/FEAT-WRK-002-upload-a-manuscript.md)), en `.txt` y
+> `.docx`. **La foto de perfil ya funciona**
 > ([`FEAT-USR-037`](../../features/user/FEAT-USR-037-upload-profile-photo.md)) y con ella
 > existen el puerto `FileStorage`, el normalizador de imágenes y
 > `GET /api/v1/media/{key}`. **La portada de una obra publicada también**
@@ -12,26 +14,32 @@
 
 | Uso | Formatos | Funcionalidad |
 |---|---|---|
-| Manuscrito | `.doc`, `.pdf`, `.txt` (¿y `.docx`?, ver `W-3`) | `FEAT-WRK-002` |
+| Manuscrito | **`.txt` y `.docx`** (`W-3`, resuelta) | `FEAT-WRK-002` |
 | Foto de perfil (avatar) | `.jpg`, `.png`, `.webp`. ¿HEIC? ver `F-3` | `FEAT-USR-037` |
 | Portada del perfil | `.jpg`, `.png`, `.webp` | `FEAT-USR-028` |
 | Portada de una obra publicada | `.jpg`, `.png`, `.webp`. Proporción de libro (2:3) **recomendada, no impuesta** | `FEAT-USR-029` |
 | Fondos de la página de autor | `.jpg`, `.png`, `.webp` | `FEAT-USR-016` |
 
-El documento de origen dice `.doc`; conviene confirmar si incluye `.docx`, que es lo que
-realmente produce Word hoy.
+**`W-3` resuelta**: `.docx`, que es lo que Word produce hoy, y `.txt`. El `.doc` binario es un
+formato OLE de los noventa que casi nadie produce ya, y el `.pdf` describe dónde va cada letra
+y no dónde acaba una idea, así que los párrafos salen mal — además de ser el formato con
+capacidad de ejecución que este mismo documento dice que no se trate como texto inofensivo.
+Los dos se pueden añadir escribiendo otro adaptador detrás de `DocumentTextExtractor`, que es
+para lo que está el puerto.
 
 ## Proceso de un manuscrito
 
 1. El escritor sube el fichero.
 2. El sistema valida tipo y tamaño.
 3. Se extrae el texto plano mediante el puerto `DocumentTextExtractor`.
-4. Se propone una división en fragmentos (pendiente: automática o manual, `W-4`).
+4. Se propone una división en fragmentos a partir de **los estilos de título que el autor ya
+   había puesto** (`W-4`, resuelta: el servidor propone y el autor confirma).
 5. El escritor revisa y confirma.
 6. Se crea la obra como en `FEAT-WRK-001`.
 
-La extracción puede ser lenta para una novela. Si se hace de forma asíncrona, el endpoint
-devuelve `202 Accepted` y el cliente consulta el estado del procesamiento.
+**Es síncrono**: leer un `.docx` es abrir un zip y recorrer un XML, y el tope de tamaño acota
+el peor caso. Una cola y un endpoint de estado para eso sería complejidad sin nada al otro
+lado; el día que entre el `.pdf`, se revisa.
 
 ## Validación
 
@@ -44,7 +52,7 @@ devuelve `202 Accepted` y el cliente consulta el estado del procesamiento.
 | Foto de perfil | **2 MB** | Anunciado en el propio modal (`FEAT-USR-037`) |
 | Portada del perfil | Por definir | — |
 | Portada de obra publicada | **2 MB** | `FEAT-USR-029` `P-18` |
-| Manuscrito | Por definir. Referencia: una novela media de 75.000 palabras en `.docx` con imágenes puede superar varios megabytes | — |
+| Manuscrito | **10 MB** | `FEAT-WRK-002` `RN-9`. Una novela de 75.000 palabras en `.docx` ocupa uno o dos; el margen es para las imágenes pegadas |
 
 El límite lo aplica **el servidor**. Que el cliente lo anuncie es una cortesía, no un control.
 La proporción de la portada de una obra publicada es una recomendación de diseño y **no se
@@ -69,9 +77,16 @@ conservando su proporción.
   ahí aunque se conozca su clave. Una frontera que se lee de un vistazo es mejor que un
   secreto que se mantiene por costumbre.
 
-Pendiente: si el fichero original se conserva tras extraer el texto. Conservarlo tiene valor
-probatorio para el registro de autoría, pero multiplica el almacenamiento y la superficie de
-exposición del contenido inédito.
+**El fichero original no se conserva** (`FEAT-WRK-002`): se extrae el texto y se descarta.
+Conservarlo tenía valor probatorio para el registro de autoría, pero ese registro
+(`FEAT-WRK-009`) sigue bloqueado por `W-1` y, cuando se desbloquee, podrá pedir lo que
+necesite. Mientras tanto guardaría una copia más de obra inédita a cambio de algo que hoy
+nadie usa.
+
+Un zip pequeño puede descomprimirse en gigabytes, así que el tamaño **se vuelve a comprobar
+por dentro**: el límite de arriba se mide antes de descomprimir y no protege de eso. Y al leer
+el XML de un `.docx` no se expanden entidades ni se abren conexiones, que es la forma clásica
+de leer un fichero del servidor a través de un documento subido.
 
 ## Imágenes
 

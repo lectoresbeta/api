@@ -1690,3 +1690,198 @@ PublicLink:
     usable:
       type: boolean
       description: Ni revocado, ni caducado, ni de una obra bloqueada.
+
+# Crear una obra subiendo un fichero (`FEAT-WRK-002`).
+
+manuscriptUploads:
+  post:
+    tags: [Work]
+    operationId: uploadManuscript
+    summary: Subir un manuscrito y ver cómo se trocearía
+    description: |
+      **Aquí no se crea ninguna obra.** Se lee el fichero, se propone dónde
+      acaba cada capítulo y se devuelve para que el autor lo revise; la obra
+      nace al confirmar. Esa es la respuesta a `W-4`: el servidor propone y el
+      autor decide.
+
+      **Formatos: `.txt` y `.docx`** (`W-3`, resuelta). `.docx` es lo que Word
+      produce hoy; el `.doc` binario es heredado, y un PDF describe dónde va
+      cada letra y no dónde acaba una idea, así que los párrafos salen mal —
+      además de ser un formato con capacidad de ejecución. Añadir cualquiera
+      de los dos es escribir otro adaptador detrás del mismo puerto.
+
+      **El tipo lo decide el contenido**, nunca la extensión ni el
+      `Content-Type` declarado: renombrar algo a `.docx` es lo primero que
+      prueba quien quiere colar otra cosa.
+
+      El troceado sale de **los estilos de título que el autor ya había
+      puesto** en su documento, que es información suya y no una heurística.
+      Un `.txt` no tiene ninguno, así que se propone un solo capítulo: fingir
+      que se distingue un título de una frase corta sería inventarse
+      capítulos.
+
+      **El fichero original no se guarda.** Se extrae el texto y se descarta.
+
+      Síncrono y no `202`: leer un `.docx` es abrir un zip y recorrer un XML,
+      y el tope de 10 MB acota el peor caso.
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [file]
+            properties:
+              file:
+                type: string
+                format: binary
+                description: '`.txt` o `.docx`, hasta 10 MB.'
+    responses:
+      '201':
+        description: |
+          La propuesta, con un extracto por capítulo. **Sin el texto
+          completo**: devolver una novela entera para pintar una lista de
+          treinta filas sería mandar el manuscrito de vuelta por el gusto de
+          enseñar su primer renglón.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [uploadId, filename, wordCount, chapters, expiresAt]
+              properties:
+                uploadId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                filename:
+                  type: string
+                wordCount:
+                  type: integer
+                chapters:
+                  type: array
+                  items:
+                    type: object
+                    required: [position, title, wordCount, preview]
+                    properties:
+                      position:
+                        type: integer
+                      title:
+                        type: [string, 'null']
+                      wordCount:
+                        type: integer
+                      preview:
+                        type: string
+                expiresAt:
+                  type: string
+                  format: date-time
+                  description: |
+                    Una subida sin confirmar caduca a las 24 horas. Después
+                    no se puede confirmar y se retira sola.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`. Subir es escribir.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '413':
+        description: '`code: FILE_TOO_LARGE`. Más de 10 MB.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNSUPPORTED_FILE_TYPE` si no es `.txt` ni `.docx`,
+          `FILE_NOT_READABLE` si está dañado o no es lo que su nombre dice, o
+          `FILE_HAS_NO_TEXT` si dentro no hay texto.
+
+          Los tres se distinguen a propósito, al revés que casi todo en esta
+          API: quien pregunta es el dueño del fichero, no hay nada que
+          proteger, y lo único que le sirve es saber qué arreglar.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+manuscriptUploadWork:
+  post:
+    tags: [Work]
+    operationId: confirmManuscript
+    summary: Confirmar el troceado y crear la obra
+    description: |
+      La segunda mitad: aquí nace la obra, y sale **exactamente igual que la
+      de `FEAT-WRK-001`** —con sus capítulos, sus temáticas y sus hechos—,
+      porque un manuscrito subido no es una obra de segunda clase.
+
+      El texto pasa por **el mismo saneador que el editor**: un `.docx` es
+      literalmente lo que se pega desde Word, y no merece más confianza por
+      venir en un fichero.
+
+      Se pueden **corregir los títulos** propuestos y nada más. Reordenar o
+      partir capítulos se hace después con `FEAT-WRK-003` y `FEAT-WRK-005`,
+      que ya existen: reimplementarlos aquí sería tener dos editores.
+
+      **La subida se borra al confirmar**, así que confirmar dos veces no crea
+      dos obras.
+    parameters:
+      - name: uploadId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title:
+                type: [string, 'null']
+                description: |
+                  Si falta, se usa el nombre del fichero sin extensión. Nadie
+                  quiere una obra llamada «documento (3)», pero es mejor que
+                  rechazar la subida por un campo que se cambia en cualquier
+                  momento.
+              synopsis:
+                type: [string, 'null']
+              genres:
+                type: array
+                items:
+                  type: string
+              chapterTitles:
+                type: array
+                description: |
+                  Los títulos corregidos, **en el orden propuesto**. Una
+                  cadena vacía deja el que se propuso, así que corregir el
+                  primero de treinta no obliga a reenviar los treinta.
+                items:
+                  type: string
+    responses:
+      '201':
+        description: La obra, ya creada y en borrador.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workId]
+              properties:
+                workId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: MANUSCRIPT_UPLOAD_NOT_FOUND`. No existe, es de otra persona,
+          ha caducado o ya se confirmó: los cuatro responden igual, porque que
+          exista es información sobre lo que alguien está escribiendo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

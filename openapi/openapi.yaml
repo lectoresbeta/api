@@ -270,6 +270,15 @@ paths:
   /chapter-comments/{commentId}:
     $ref: './paths/community.yaml#/chapterComment'
 
+  # Crear una obra subiendo un fichero (FEAT-WRK-002). Dos pasos: el servidor
+  # propone el troceado y el autor lo confirma.
+
+  /manuscript-uploads:
+    $ref: './paths/works.yaml#/manuscriptUploads'
+
+  /manuscript-uploads/{uploadId}/work:
+    $ref: './paths/works.yaml#/manuscriptUploadWork'
+
   /works:
     $ref: './paths/works.yaml#/collection'
 
