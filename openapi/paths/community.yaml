@@ -670,6 +670,189 @@ PostIdParam:
   schema:
     $ref: '../openapi.yaml#/components/schemas/Uuid'
 
+RecommendedWorkCard:
+  type: object
+  required: [workId, title, status, chapterCount, readingMinutes, adultsOnly, contentWarnings, genres, credits, correctionsReceived]
+  description: |
+    Una obra del carrusel de la Home (`FEAT-COM-017`).
+
+    **Metadatos y ni una palabra del texto.** Que una obra salga aquí no
+    significa que quien la ve pueda abrirla: eso se decide al intentarlo.
+  properties:
+    workId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    title:
+      type: string
+    synopsis:
+      type: [string, 'null']
+      description: Recortada a 280 caracteres. Cuánto cabe en una tarjeta es cosa de la pantalla.
+    status:
+      type: string
+      description: Siempre `IN_CORRECTION`; el carrusel solo propone lo que se puede corregir.
+    chapterCount:
+      type: integer
+    readingMinutes:
+      type: integer
+      description: |
+        Derivado del número de palabras a 200 por minuto (`FEAT-WRK-013`). No
+        lo introduce el autor.
+    adultsOnly:
+      type: boolean
+    contentWarnings:
+      type: array
+      items:
+        type: string
+    genres:
+      type: array
+      items:
+        type: string
+    credits:
+      type: integer
+      description: |
+        La insignia de `FEAT-CRD-013`: **el mínimo** de lo que pagan sus
+        capítulos corregibles, no la media. Una tarjeta que promete más de lo
+        que luego se abona es peor que no enseñar nada. Cero significa que
+        ahora mismo no se puede corregir.
+    correctionsReceived:
+      type: integer
+
+platformPosts:
+  post:
+    tags: [Community]
+    operationId: publishPlatformPost
+    summary: Publicar en nombre de la plataforma
+    description: |
+      La cuenta «Lectores Beta», con la que habla el producto (`FEAT-COM-038`).
+
+      **Es una cuenta normal con una marca**, no un tipo de publicación
+      aparte, y de ahí sale todo lo demás: la publicación llega a todo el
+      mundo sin seguir a nadie porque su audiencia es `EVERYONE` y el muro lo
+      compone la audiencia, no el seguimiento. Se comenta, se apoya y se
+      repostea como cualquier otra, sin una sola rama nueva.
+
+      **Quien administra firma la acción; quien aparece en la tarjeta es la
+      cuenta institucional**, y la publicación no sale en el muro propio de
+      quien la publicó.
+
+      La audiencia **no se acepta del cuerpo**: un anuncio de la plataforma
+      para seguidores no significa nada, porque a la cuenta institucional no
+      se la sigue para enterarse.
+
+      Exige `ROLE_ADMIN` y no `ROLE_MODERATOR`: hablar con la voz de la
+      plataforma no es moderar. La cuenta se designa por consola
+      (`lectoresbeta:platform:account`), nunca desde la API.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              body:
+                type: string
+                maxLength: 5000
+              type:
+                $ref: '#/PostType'
+              linkUrl:
+                type: string
+                format: uri
+              workId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '201':
+        description: Publicada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [postId]
+              properties:
+                postId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Sin `ROLE_ADMIN`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: NO_PLATFORM_ACCOUNT`. Nadie ha designado todavía la cuenta
+          con la que habla la plataforma. Es un estado normal de una
+          instalación recién puesta en marcha, no una avería: falta ejecutar
+          el comando de consola.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: Validación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+recommendedWorks:
+  get:
+    tags: [Community]
+    operationId: listRecommendedWorks
+    summary: El carrusel de obras recomendadas de la Home
+    description: |
+      Lo primero que se ve al entrar, y la vía principal para empezar a
+      corregir (`FEAT-COM-017`).
+
+      Son obras de los géneros que esa persona eligió, **abiertas a
+      corrección** y ordenadas por la fórmula de reparto de `decision:0008`:
+      capacidad de pago × desatención × frescura. No es popularidad, y es
+      deliberado — aparecer arriba consume lo que te puso arriba, así que las
+      correcciones se reparten en vez de concentrarse.
+
+      Nunca incluye obras propias, ni borradores, ni obras bloqueadas: la
+      visibilidad la resuelve `Work` y no se vuelve a resolver aquí.
+
+      **`shouldDisplay` lo decide el servidor.** Por debajo de un mínimo se
+      rellena con obras de cualquier género, y si aun así no hay ninguna la
+      sección no se enseña y la Home empieza por el muro. Si lo decidiera el
+      cliente, el umbral viviría en dos sitios y uno se quedaría atrás.
+
+      **Funciona con la cuenta sin activar**: es solo lectura.
+    parameters:
+      - name: howMany
+        in: query
+        required: false
+        description: Cuántas pedir. El servidor acota el máximo.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 24
+    responses:
+      '200':
+        description: El carrusel, o la decisión de no enseñarlo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shouldDisplay, reason, works]
+              properties:
+                shouldDisplay:
+                  type: boolean
+                reason:
+                  type: [string, 'null']
+                  enum: [NOTHING_TO_CORRECT_YET, null]
+                  description: |
+                    Por qué no hay carrusel, cuando no lo hay. Un solo valor:
+                    al llegar ahí ya se ha mirado el catálogo entero, así que
+                    decir que el problema son los géneros de esa persona sería
+                    culparla de una plataforma vacía.
+                works:
+                  type: array
+                  items:
+                    $ref: '#/RecommendedWorkCard'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
 myPosts:
   get:
     tags: [Community]

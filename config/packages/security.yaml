@@ -56,6 +56,8 @@ security:
         # El registro de auditoría también (FEAT-MOD-007 RN-1): un moderador
         # no audita a sus compañeros, y saberse observado por los iguales
         # cambia cómo se decide.
+        # Hablar con la voz de la plataforma no es moderar (FEAT-COM-038).
+        - { path: '^/api/v1/admin/platform-posts$', roles: ROLE_ADMIN }
         - { path: '^/api/v1/admin/audit-log$', roles: ROLE_ADMIN }
         # Y mover créditos a mano (FEAT-MOD-005 RN-6): es la única acción del
         # backoffice que crea o destruye valor de la nada, y la invariante

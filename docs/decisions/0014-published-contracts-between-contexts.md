@@ -42,12 +42,14 @@ Los publicados hasta ahora:
 |---|---|---|
 | `ActivationLinkProvider` | `User` | El enlace de activación, en el momento de enviar el correo |
 | `InvitationLinkProvider` | `User` | El enlace de invitación, en el momento de enviar el correo |
+| `PlatformAccount` | `User` | Un identificador: con qué cuenta habla la plataforma |
 | `ReaderMaturity` | `User` | Un booleano: ¿tiene edad? |
 | `GenreCatalogue` | `User` | Cuáles de estos códigos de temática **no** existen |
 | `CorrectionBriefs` | `Work` | Qué se pregunta en un capítulo, de quién es la obra y si admite correcciones |
 | `BetaReaderAccessCheck` | `Reading` | Un booleano: ¿es lector beta de esta obra? |
 | `WorkAccessBriefs` | `Work` | De quién es una obra, cómo está abierta, qué declara contener y si existe para quien pregunta |
 | `WorkCards` | `Work` | Los metadatos con los que se pinta una obra fuera de `Work`, y **solo de las visibles para cualquiera** |
+| `RecommendedWorks` | `Work` | Qué obras merece la pena poner delante de alguien, y en qué orden |
 | `RegisteredUsers` | `User` | Un booleano: ¿existe este usuario? |
 | `ReaderDirectory` | `User` | Las personas cuyo nombre o `@usuario` encajan con un texto |
 | `AuthorAudience` | `User` | Un booleano: ¿acepta este autor comentarios de esta persona? |

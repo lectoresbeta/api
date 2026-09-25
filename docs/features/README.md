@@ -324,7 +324,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-014 | Ver y filtrar el ranking de obras | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-015 | Ver y filtrar el ranking de lectores | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-016 | Onboarding paso 3 — sugerencias de autores a seguir | User | APPROVED | PARTIAL | P1 | [ficha](community/FEAT-COM-016-onboarding-author-suggestions.md) |
-| FEAT-COM-017 | Home — carrusel de obras recomendadas | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-017-home-work-recommendations.md) |
+| FEAT-COM-017 | Home — carrusel de obras recomendadas | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-017-home-work-recommendations.md) |
 | FEAT-COM-018 | Home — sugerencias de autores en el muro | User | APPROVED | PARTIAL | P1 | [ficha](community/FEAT-COM-018-home-author-suggestions.md) |
 | FEAT-COM-019 | Repostear una publicación | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-019-repost.md) |
 | FEAT-COM-020 | Compartir una publicación fuera de la plataforma | User | PENDING | TODO | P2 | — |
@@ -345,7 +345,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-035 | Denunciar a un usuario → `FEAT-MOD-001` | User | PENDING | TODO | P2 | — |
 | FEAT-COM-036 | Interacciones sociales sobre un capítulo (like y comentario) | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-036-chapter-interactions.md) |
 | FEAT-COM-037 | Adjuntar vídeo a una publicación | User | PENDING | DEFERRED | P3 | — |
-| FEAT-COM-038 | Publicaciones de la plataforma (cuenta institucional) | Admin | PENDING | TODO | P2 | — |
+| FEAT-COM-038 | Publicaciones de la plataforma (cuenta institucional) | Admin | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-038-platform-account.md) |
 
 > Los tres rankings están `BLOCKED` por `CM-4`: el material de partida dice "mejor valorados"
 > pero no define la fórmula de puntuación. Sin ella no hay especificación posible.

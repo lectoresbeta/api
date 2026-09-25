@@ -34,6 +34,14 @@ final class DoctrineUserRepository extends DoctrineRepository implements UserRep
         return $this->repository()->findOneBy(['email' => $email->value()]);
     }
 
+    public function institutional(): ?User
+    {
+        // La más antigua si hubiera varias: dos cuentas marcadas no rompen
+        // ninguna invariante —publicarían las dos— y hacer fallar la llamada
+        // por eso convertiría un descuido de operación en una caída.
+        return $this->repository()->findOneBy(['institutional' => true], ['registeredAt' => 'ASC']);
+    }
+
     public function ofUsername(Username $username): ?User
     {
         return $this->repository()->findOneBy(['username' => $username->value()]);

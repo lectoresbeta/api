@@ -25,6 +25,15 @@ interface UserRepository
 
     public function ofEmail(Email $email): ?User;
 
+    /**
+     * La cuenta con la que habla la plataforma (`FEAT-COM-038`), si hay
+     * alguna designada.
+     *
+     * La ausencia es un estado normal: una instalación recién puesta en
+     * marcha no tiene ninguna hasta que alguien la designa por consola.
+     */
+    public function institutional(): ?User;
+
     public function ofUsername(Username $username): ?User;
 
     /**

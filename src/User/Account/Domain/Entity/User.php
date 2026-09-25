@@ -94,6 +94,20 @@ class User
      */
     private ?string $invitedBy = null;
 
+    /**
+     * La cuenta con la que habla la plataforma (`FEAT-COM-038`).
+     *
+     * Es una cuenta normal con una marca, y no un tipo de publicación sin
+     * autor: así sus mensajes se pintan, se comentan, se apoyan y se
+     * repostean como cualquier otro, sin una rama nueva en cada consulta del
+     * muro.
+     *
+     * La marca no da ningún privilegio. Lo único que cambia es que la
+     * interfaz puede distinguirla, y que quien administra puede publicar en
+     * su nombre.
+     */
+    private bool $institutional = false;
+
     private \DateTimeImmutable $registeredAt;
 
     private ?\DateTimeImmutable $activatedAt = null;
@@ -226,6 +240,32 @@ class User
     public function lastSignedInAt(): ?\DateTimeImmutable
     {
         return $this->lastSignedInAt;
+    }
+
+    public function isInstitutional(): bool
+    {
+        return $this->institutional;
+    }
+
+    /**
+     * Designa esta cuenta como la de la plataforma, o deja de hacerlo
+     * (`FEAT-COM-038` `RN-2`).
+     *
+     * **No crea nada.** Quien va a hablar en nombre de la plataforma se
+     * registra y activa su cuenta como todo el mundo; esto solo la marca. Una
+     * cuenta que existe sin que nadie la haya dado de alta es una cuenta que
+     * nadie vigila.
+     */
+    public function beInstitutional(bool $institutional, \DateTimeImmutable $now): void
+    {
+        $this->guardNotDeleted();
+
+        if ($institutional === $this->institutional) {
+            return;
+        }
+
+        $this->institutional = $institutional;
+        $this->touch($now);
     }
 
     public function id(): UserId

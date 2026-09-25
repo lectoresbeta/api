@@ -12,6 +12,12 @@ parameters:
     # que es cuando el invitado entrega su primera corrección.
     app.invitation_reward: 5
 
+    # Cuántas obras enseña el carrusel de la Home (FEAT-COM-017), y por
+    # debajo de cuántas no se enseña. Una fila con dos tarjetas parece una
+    # pantalla rota; sin ninguna, la Home empieza por el muro y ya está.
+    app.recommended_works.minimum: 3
+    app.recommended_works.maximum: 12
+
     # Y cuántas se pagan por persona. El tope no está por el gasto —cada alta
     # genera la bonificación una sola vez, así que el total está acotado— sino
     # para que nadie construya su saldo reclutando en lugar de corrigiendo.
@@ -158,6 +164,14 @@ services:
         arguments:
             $minimum: '%app.suggestions.minimum%'
             $maximum: '%app.suggestions.maximum%'
+
+    # El carrusel de la Home (FEAT-COM-017). Mismo patrón que las sugerencias
+    # de autor: por debajo del mínimo, el servidor decide no enseñar la
+    # sección en vez de pintar una fila con dos tarjetas.
+    LectoresBeta\Community\Recommendation\Application\Handler\ListRecommendedWorksHandler:
+        arguments:
+            $minimum: '%app.recommended_works.minimum%'
+            $maximum: '%app.recommended_works.maximum%'
 
     # La copia local de qué le interesa a cada persona: `Community` no
     # consulta la tabla de géneros de `User`, recibe el hecho (FEAT-COM-016).
@@ -554,6 +568,20 @@ services:
     # leer todo el que pase por el muro.
     LectoresBeta\Work\Manuscript\Application\Contract\WorkCards:
         alias: LectoresBeta\Work\Manuscript\Application\Service\ResolveWorkCards
+
+    # El carrusel de la Home (FEAT-COM-017). `Community` sabe qué le gusta a
+    # cada persona; qué obras merece la pena poner delante, y en qué orden, lo
+    # sabe el catálogo, que ya resuelve las cinco puertas de visibilidad y la
+    # fórmula de reparto de decision:0008.
+    LectoresBeta\Work\Catalogue\Application\Contract\RecommendedWorks:
+        alias: LectoresBeta\Work\Catalogue\Application\Service\ResolveRecommendedWorks
+
+    # Con qué cuenta habla la plataforma (FEAT-COM-038). Devuelve un
+    # identificador y nada más: quien quiera pintarla usa las tarjetas de
+    # perfil, como con cualquier persona, que es la gracia de que sea una
+    # cuenta normal.
+    LectoresBeta\User\Account\Application\Contract\PlatformAccount:
+        alias: LectoresBeta\User\Account\Application\Service\ResolvePlatformAccount
 
     # La otra mitad del contenido sensible (FEAT-WRK-017, FEAT-USR-043): el
     # autor declara qué hay y el lector decide qué quiere, así que quien

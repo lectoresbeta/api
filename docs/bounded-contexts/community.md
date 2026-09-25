@@ -111,6 +111,8 @@ la lista.
 | `VisibleProfiles`, `ProfileCards` | `User` | Pintar quién dice cada cosa, y filtrar por privacidad de perfil |
 | `ReadableChapters` | `Work` | Saber si alguien puede comentar un capítulo (`FEAT-COM-036`) |
 | `WorkCards` | `Work` | Pintar la obra que cita una publicación, **viva** (`FEAT-COM-028`). Lo que no es visible para cualquiera no vuelve, así que la tarjeta se cae sola y este contexto no tiene que saber por qué |
+| `RecommendedWorks` | `Work` | Llenar el carrusel de la Home (`FEAT-COM-017`). `Community` sabe qué le gusta a cada persona; qué merece la pena poner delante lo sabe el catálogo |
+| `PlatformAccount` | `User` | En nombre de quién publica un anuncio de la plataforma (`FEAT-COM-038`) |
 | `MessageAudience` | `User` | Saber si alguien admite que le abran una conversación |
 | `ProposalRecipients` | `User` | Saber si quien publica tiene abierta la puerta que está pidiendo en el muro (`FEAT-COM-004`, `FEAT-COM-005`) |
 

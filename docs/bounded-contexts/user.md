@@ -117,6 +117,7 @@ preferencias y presencia pública como autor.
 |---|---|---|
 | `ActivationLinkProvider` | El enlace de activación, en el momento de enviar el correo | `Notification` |
 | `InvitationLinkProvider` | El enlace de invitación, en el momento de enviar el correo, con la dirección invitada y quién invita. **Emite un token nuevo cada vez**, que invalida el anterior | `Notification` |
+| `PlatformAccount` | **Un identificador**: con qué cuenta habla la plataforma, o ninguna. Nada más de ella (`FEAT-COM-038`) | `Community` |
 | `ReaderMaturity` | **Un booleano**: ¿tiene edad? Ni la fecha de nacimiento ni la edad | `Work`, `Feedback` |
 | `GenreCatalogue` | Cuáles de estos códigos de temática **no** existen | `Work` |
 | `RegisteredUsers` | **Un booleano**: ¿existe este usuario? Nada más de él | `Reading`, `Community` |

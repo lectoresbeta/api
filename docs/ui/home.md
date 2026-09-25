@@ -169,8 +169,11 @@ autores, o el usuario lo salta, la Home lo recupera**. Backend y contrato deben 
 mismos que los de `FEAT-COM-016`; solo cambia dónde se pinta.
 
 El muro no está vacío aunque no siga a nadie: sigue mostrando publicaciones de la propia
-plataforma (la cuenta «Lectores Beta»). Qué compone exactamente el muro de alguien que no
-sigue a nadie está sin definir (`H-8`).
+plataforma (la cuenta «Lectores Beta»), que es
+[`FEAT-COM-038`](../features/community/FEAT-COM-038-platform-account.md). Con ella y con el
+carrusel de [`FEAT-COM-017`](../features/community/FEAT-COM-017-home-work-recommendations.md),
+`H-8` queda respondida: quien no sigue a nadie ve obras que puede corregir, autores que puede
+seguir y lo que diga la plataforma.
 
 ## 5. Tour de bienvenida
 

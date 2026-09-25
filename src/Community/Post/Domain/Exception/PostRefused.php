@@ -115,6 +115,22 @@ final class PostRefused extends \DomainException implements BusinessFailure
         );
     }
 
+    /**
+     * Nadie ha designado la cuenta institucional (`FEAT-COM-038` `RN-3`).
+     *
+     * Es un estado normal de una instalación recién puesta en marcha, no una
+     * avería, y por eso se dice con claridad: a quien opera le falta ejecutar
+     * un comando, y un error genérico le haría buscar en el sitio equivocado.
+     */
+    public static function withoutAPlatformAccount(): self
+    {
+        return new self(
+            'NO_PLATFORM_ACCOUNT',
+            FailureKind::CONFLICT,
+            'No account has been designated to speak for the platform yet.',
+        );
+    }
+
     public static function tooManyAttachments(): self
     {
         return new self(

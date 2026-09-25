@@ -172,6 +172,11 @@ final class InMemoryUsers implements UserRepository
         return $this->user;
     }
 
+    public function institutional(): ?User
+    {
+        return null;
+    }
+
     public function ofUsername(Username $username): ?User
     {
         return $this->user;

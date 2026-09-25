@@ -70,6 +70,10 @@
              one account never cascades into another. -->
         <field name="invitedBy" column="invited_by" type="guid" nullable="true"/>
 
+        <!-- La cuenta con la que habla la plataforma (`FEAT-COM-038`). Una
+             cuenta normal con una marca, no un tipo de publicación aparte. -->
+        <field name="institutional" column="institutional" type="boolean"/>
+
         <field name="registeredAt" column="registered_at" type="datetime_immutable"/>
         <field name="activatedAt" column="activated_at" type="datetime_immutable" nullable="true"/>
         <field name="lastSignedInAt" column="last_signed_in_at" type="datetime_immutable" nullable="true"/>

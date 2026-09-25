@@ -107,6 +107,7 @@ dinero — `affordableCorrections` es una conclusión acotada a diez, no un sald
 | `AuthoredWorkCount` | **Una cifra**: cuántas obras tiene ese autor. Nunca la lista | `User` |
 | `ReadableChapters` | **Un booleano**: ¿puede esta persona leer este capítulo? Y en qué obra está, para poder preguntar por el acceso de lector beta | `Community` |
 | `WorkCards` | Los metadatos con los que se pinta una obra fuera de `Work` —título, sinopsis, capítulos, minutos, temáticas, advertencias—, y **solo de las visibles para cualquiera**. Nunca la modalidad de acceso, que es la respuesta a otra pregunta | `Community` |
+| `RecommendedWorks` | Qué obras merece la pena poner delante de alguien, y **en qué orden**. Es el catálogo acotado: la misma fórmula de `decision:0008` y el mismo filtro de visibilidad, sin una segunda copia de ninguno | `Community` |
 
 `ReadableChapters` es el único que **devuelve el veredicto ya dado** en vez de los hechos para
 darlo, y la razón es el peso de la regla: la de lectura tiene cinco puertas, custodia obra
