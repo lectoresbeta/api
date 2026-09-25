@@ -19,13 +19,19 @@ use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
  * la corrección no se entera de que se ha leído: sería una confirmación de
  * lectura entre dos personas que no han elegido tener una conversación
  * (`F-14`).
+ *
+ * Lo que sí lleva es **quién la ha abierto, que es el autor**. El campo se
+ * llamó `readerId` en su día y llevaba dentro el identificador del autor:
+ * quien lo consumía acertaba —el aviso que hay que retirar es el suyo— pero
+ * por un nombre que decía lo contrario. Corregido en `FEAT-NOT-006`, antes de
+ * que un segundo consumidor se lo creyera.
  */
 final readonly class CorrectionRead implements IntegrationEvent
 {
     public function __construct(
         private EventId $eventId,
         private string $correctionId,
-        private string $readerId,
+        private string $authorId,
         private \DateTimeImmutable $readAt,
     ) {
     }
@@ -49,7 +55,7 @@ final readonly class CorrectionRead implements IntegrationEvent
     {
         return [
             'correctionId' => $this->correctionId,
-            'readerId' => $this->readerId,
+            'authorId' => $this->authorId,
             'readAt' => $this->readAt->format(\DATE_ATOM),
         ];
     }

@@ -18,6 +18,9 @@ use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
  * Es idempotente sin necesitar registro de eventos procesados: marcar como
  * leído algo que ya lo está no cambia nada, porque la sentencia solo toca las
  * filas con `read_at IS NULL`.
+ *
+ * El destinatario es **el autor**, que es quien recibió el aviso de que había
+ * una corrección y quien acaba de abrirla.
  */
 final readonly class RetireTheCorrectionNotice
 {
@@ -31,7 +34,7 @@ final readonly class RetireTheCorrectionNotice
     public function __invoke(CorrectionRead $event): void
     {
         try {
-            $recipient = RecipientId::fromString($event->readerId);
+            $recipient = RecipientId::fromString($event->authorId);
         } catch (InvalidValue) {
             return;
         }

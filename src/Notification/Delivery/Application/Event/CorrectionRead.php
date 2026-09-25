@@ -14,12 +14,18 @@ use LectoresBeta\Shared\Domain\Event\IncomingIntegrationEvent;
  * contexto hace sin crear nada. Un centro de notificaciones que sigue
  * marcando como nuevo algo que ya se ha leído deja de significar nada, y
  * entonces la gente deja de mirarlo.
+ *
+ * Quien abre la corrección es **el autor**, y el aviso que se retira es el
+ * suyo. El campo se llamó `readerId` hasta `FEAT-NOT-006` llevando dentro el
+ * identificador del autor; se sigue aceptando el nombre viejo para no perder
+ * lo que estuviera en la cola durante el despliegue, y se puede quitar en
+ * cuanto no quede nada de antes ahí dentro.
  */
 final readonly class CorrectionRead implements IncomingIntegrationEvent
 {
     private function __construct(
         public string $correctionId,
-        public string $readerId,
+        public string $authorId,
         private string $eventId,
         private \DateTimeImmutable $readAt,
     ) {
@@ -33,13 +39,13 @@ final readonly class CorrectionRead implements IncomingIntegrationEvent
     public static function fromPayload(string $eventId, \DateTimeImmutable $occurredAt, array $payload): self
     {
         $correctionId = $payload['correctionId'] ?? null;
-        $readerId = $payload['readerId'] ?? null;
+        $authorId = $payload['authorId'] ?? $payload['readerId'] ?? null;
 
-        if (!\is_string($correctionId) || !\is_string($readerId)) {
-            throw new \InvalidArgumentException('CorrectionRead carries no correction or reader.');
+        if (!\is_string($correctionId) || !\is_string($authorId)) {
+            throw new \InvalidArgumentException('CorrectionRead carries no correction or author.');
         }
 
-        return new self($correctionId, $readerId, $eventId, $occurredAt);
+        return new self($correctionId, $authorId, $eventId, $occurredAt);
     }
 
     public function eventId(): string
@@ -61,7 +67,7 @@ final readonly class CorrectionRead implements IncomingIntegrationEvent
     {
         return [
             'correctionId' => $this->correctionId,
-            'readerId' => $this->readerId,
+            'authorId' => $this->authorId,
             'readAt' => $this->readAt->format(\DATE_ATOM),
         ];
     }
