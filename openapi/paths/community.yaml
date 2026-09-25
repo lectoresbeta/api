@@ -657,6 +657,14 @@ posts:
       El **formato no se envía**: se deriva del adjunto. El **autor tampoco**:
       es quien tiene la sesión, aunque el cuerpo diga otra cosa.
 
+      **`type: LOOKING_FOR_BETA_READERS` exige una obra** (`FEAT-COM-003`),
+      tuya y ya publicada. Es la única intención que impone algo, y por lo que
+      significa: las otras tres describen lo que alguien quiere; esta pide
+      algo concreto sobre un texto concreto, y sin él nadie puede atenderla.
+      Anunciar un borrador mandaría a quien responda a una puerta cerrada —
+      para él la obra no existe—, y reclutar para lo que escribió otro sería
+      decidir por él a quién enseña su texto.
+
       Dos sobres para el mismo comando: `multipart/form-data` cuando hay
       imagen, JSON cuando no.
 
@@ -723,7 +731,10 @@ posts:
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
       '403':
-        description: '`code: ACCOUNT_NOT_ACTIVATED`. Publicar es escribir.'
+        description: |
+          `code: ACCOUNT_NOT_ACTIVATED` —publicar es escribir— o
+          `NOT_YOUR_WORK` si buscas lectores beta para la obra de otra
+          persona.
         content:
           application/problem+json:
             schema:
@@ -744,14 +755,23 @@ posts:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: WORK_NOT_VISIBLE`. Buscas lectores beta para una obra que
+          todavía no se puede ver: publícala primero.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
       '422':
         description: |
           `code: EMPTY_POST` si no lleva ni texto ni adjunto,
           `TOO_MANY_ATTACHMENTS` si lleva dos, `UNSUPPORTED_FILE_TYPE` si el
           fichero no es una imagen legible, `INVALID_VALUE` si el texto pasa
           del máximo o el enlace no es `http`/`https`,
-          `MENTIONED_USER_NOT_FOUND` si se nombra a alguien que no existe, o
-          `TOO_MANY_MENTIONS`.
+          `MENTIONED_USER_NOT_FOUND` si se nombra a alguien que no existe,
+          `TOO_MANY_MENTIONS`, o `WORK_REQUIRED` si buscas lectores beta sin
+          decir para qué obra.
         content:
           application/problem+json:
             schema:

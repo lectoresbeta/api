@@ -48,6 +48,54 @@ final class PostRefused extends \DomainException implements BusinessFailure
      * va a publicar dos, y elegir por él le enseñaría el resultado cuando ya
      * no puede cambiarlo.
      */
+    /**
+     * Una publicación que busca lectores beta **sin obra** (`FEAT-COM-003`
+     * `RN-1`).
+     *
+     * «Busco lectores» sin decir para qué es una petición que nadie puede
+     * atender: quien la lee no sabe qué se le ofrece, y quien la escribe no
+     * recibe a nadie.
+     */
+    public static function withoutAWorkToRead(): self
+    {
+        return new self(
+            'WORK_REQUIRED',
+            FailureKind::INVALID,
+            'A post looking for beta readers has to say which work.',
+        );
+    }
+
+    /**
+     * La obra es de otra persona (`FEAT-COM-003` `RN-2`).
+     *
+     * Reclutar lectores para lo que escribió otro es decidir por él a quién
+     * enseña su texto, que es justo lo que la modalidad de acceso existe para
+     * que decida su autor.
+     */
+    public static function forSomebodyElsesWork(): self
+    {
+        return new self(
+            'NOT_YOUR_WORK',
+            FailureKind::FORBIDDEN,
+            'You can only look for beta readers for your own work.',
+        );
+    }
+
+    /**
+     * La obra no se puede ver todavía (`FEAT-COM-003` `RN-3`).
+     *
+     * Anunciar un borrador manda a quien responda a una puerta cerrada: no
+     * puede leerlo ni solicitar acceso, porque para él la obra no existe.
+     */
+    public static function forAWorkNobodyCanSeeYet(): self
+    {
+        return new self(
+            'WORK_NOT_VISIBLE',
+            FailureKind::CONFLICT,
+            'Publish the work before looking for beta readers for it.',
+        );
+    }
+
     public static function tooManyAttachments(): self
     {
         return new self(

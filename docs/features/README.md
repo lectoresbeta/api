@@ -310,7 +310,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 |---|---|---|---|---|---|---|
 | FEAT-COM-001 | Ver las publicaciones del muro principal | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-001-main-wall.md) |
 | FEAT-COM-002 | Crear una publicación (texto, imagen, vídeo, enlace o relato) | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-002-create-post.md) |
-| FEAT-COM-003 | Publicar buscando lectores beta para una obra | Writer | PENDING | TODO | P1 | — |
+| FEAT-COM-003 | Publicar buscando lectores beta para una obra | Writer | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-003-looking-for-beta-readers.md) |
 | FEAT-COM-004 | Publicar buscando writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | PENDING | TODO | P2 | — |
 | FEAT-COM-006 | Comentar una publicación | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-006-comment-on-post.md) |

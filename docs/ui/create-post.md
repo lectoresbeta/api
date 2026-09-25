@@ -94,6 +94,7 @@ De aquí salen dos preguntas de modelo, `C-3` y `C-4`.
 | 3 | Adjuntar un **vídeo** | `FEAT-COM-002`, `C-2` |
 | 4 | Adjuntar un **enlace** con previsualización | `FEAT-COM-002` |
 | 5 | Incluir un **relato** de la plataforma | `FEAT-COM-028` |
+| 5b | Exigir el relato cuando la intención es buscar lectores beta | `FEAT-COM-003` |
 | 6 | Audiencia de la publicación, y filtrado del muro por ella | `FEAT-COM-029` |
 | 7 | Repostear y servir el original embebido | `FEAT-COM-019` |
 | 8 | El muro propio, paginado | `FEAT-COM-026` |

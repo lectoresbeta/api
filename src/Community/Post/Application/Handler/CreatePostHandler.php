@@ -46,6 +46,11 @@ use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
  *   con el primero: quien manda dos cree que va a publicar dos;
  * - **la imagen se reescribe siempre**, como el avatar. Un reencodificado no
  *   puede arrastrar metadatos, y los de una foto llevan dónde se tomó.
+ *
+ * **Buscar lectores beta exige una obra** (`FEAT-COM-003`), tuya y publicada.
+ * Es la única intención que impone algo, y por lo que significa: las otras
+ * tres describen lo que alguien quiere; esta pide algo concreto sobre un
+ * texto concreto, y sin él nadie puede atenderla.
  */
 final readonly class CreatePostHandler
 {
@@ -66,7 +71,8 @@ final readonly class CreatePostHandler
         $authorId = MemberId::fromString($command->authorId);
         $body = PostBody::fromString($command->body);
         $link = PostLink::fromString($command->linkUrl);
-        $work = $this->work($command->workId, $command->authorId);
+        $type = self::type($command->type);
+        $work = $this->work($command->workId, $command->authorId, $type);
         $image = null === $command->image || '' === $command->image ? null : $command->image;
 
         $attachments = array_filter([$image, $link, $work], static fn (mixed $one): bool => null !== $one);
@@ -86,7 +92,7 @@ final readonly class CreatePostHandler
             $postId,
             $authorId,
             $body?->value() ?? '',
-            self::type($command->type),
+            $type,
             self::format($image, $link, $work),
             self::audience($command->audience),
             $now,
@@ -158,16 +164,33 @@ final readonly class CreatePostHandler
      * `Work` y de nadie más, y rehacer esa regla aquí la dejaría escrita dos
      * veces.
      */
-    private function work(?string $workId, string $authorId): ?WorkId
+    private function work(?string $workId, string $authorId, PostType $type): ?WorkId
     {
+        $recruiting = PostType::LOOKING_FOR_BETA_READERS === $type;
+
         if (null === $workId || '' === $workId) {
-            return null;
+            // «Busco lectores» sin decir para qué es una petición que nadie
+            // puede atender (`FEAT-COM-003` `RN-1`).
+            return $recruiting ? throw PostRefused::withoutAWorkToRead() : null;
         }
 
         $brief = $this->works->ofWork($workId);
 
         if (null === $brief || (!$brief->visibleToOthers && $brief->authorId !== $authorId)) {
             throw PostNotFound::work();
+        }
+
+        if ($recruiting) {
+            // Reclutar para lo que escribió otro sería decidir por él a quién
+            // enseña su texto (`RN-2`), y anunciar un borrador mandaría a
+            // quien responda a una puerta cerrada (`RN-3`).
+            if ($brief->authorId !== $authorId) {
+                throw PostRefused::forSomebodyElsesWork();
+            }
+
+            if (!$brief->visibleToOthers) {
+                throw PostRefused::forAWorkNobodyCanSeeYet();
+            }
         }
 
         return WorkId::fromString($workId);

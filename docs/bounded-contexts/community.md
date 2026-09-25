@@ -137,6 +137,11 @@ la lista.
   **El diseño de la Home solo muestra el apoyo**, así que la coexistencia está en duda (`H-5`).
 - `RN-5` `PostType`, `PostFormat` y `PostAudience` son dimensiones **independientes**: una
   publicación buscando lectores beta puede llevar cualquier formato y cualquier audiencia.
+- `RN-5b` **`LOOKING_FOR_BETA_READERS` exige una obra** (`FEAT-COM-003`), propia y publicada.
+  Es la única intención que impone algo, y no contradice a `RN-5`: lo que exige es el adjunto,
+  no el formato ni la audiencia. Sin obra nadie puede atender la petición; con la de otro se
+  estaría decidiendo por él a quién enseña su texto; con un borrador se manda a quien responda
+  a una puerta cerrada.
 - `RN-7` El muro **filtra por audiencia en servidor**. No se sirve una publicación que el
   lector no debe ver confiando en que el cliente la oculte.
 - `RN-8` Un repost **no amplía la audiencia** del original: quien no podía verlo sigue sin
