@@ -28,6 +28,8 @@ sitio donde leer lo escrito.
 | `POST /api/v1/posts/{postId}/comments` | `createPostComment` | Comentar | FEAT-COM-006 | **Implementado** |
 | `PATCH /api/v1/comments/{commentId}` | `editPostComment` | Editar el propio | FEAT-COM-006 | **Implementado** |
 | `DELETE /api/v1/comments/{commentId}` | `deletePostComment` | Retirar el propio | FEAT-COM-006 | **Implementado** |
+| `GET /api/v1/comments/{commentId}/replies` | `listCommentReplies` | El hilo de un comentario | FEAT-COM-031 | **Implementado** |
+| `POST /api/v1/comments/{commentId}/replies` | `replyToComment` | Responder | FEAT-COM-031 | **Implementado** |
 
 ---
 
@@ -391,3 +393,47 @@ sobre contenido que no debería conocer.
 
 La comprobación se hace en `Community`, que es quien conoce la audiencia, y no se delega en
 quien envía el aviso: el hecho que no debe existir no llega a la cola.
+
+
+---
+
+## `GET` y `POST /api/v1/comments/{commentId}/replies`
+
+**`operationId`:** `listCommentReplies`, `replyToComment` · **Funcionalidad:**
+[`FEAT-COM-031`](../../features/community/FEAT-COM-031-reply-to-comment.md)
+
+### Propósito
+
+El hilo que cuelga de un comentario.
+
+### La invariante
+
+**Los hilos son planos.** Una respuesta cuelga siempre del comentario raíz, nunca de otra
+respuesta, y si `commentId` es una respuesta el servidor resuelve al raíz por su cuenta. El
+cliente responde a lo que tiene delante.
+
+No es un detalle de modelo: un hilo plano se pagina y uno arbitrariamente profundo no, y cada
+nivel de más convierte leer una conversación en una consulta recursiva. Lo que sustituye a la
+profundidad es la **mención** a quien se responde, que dice lo mismo sin anidar.
+
+Por eso pedir «las respuestas de esta respuesta» devuelve las del hilo entero: es la misma
+conversación.
+
+### Autorización
+
+Las mismas reglas que comentar. Un comentario **no tiene audiencia propia**: hereda entera la
+de su publicación, así que responder no es una puerta trasera a una conversación ajena.
+
+### Reglas aplicadas
+
+- El hilo se lee **de la más antigua a la más reciente**, sin desplegable que lo cambie: del
+  revés obligaría a leer hacia arriba para entender a qué contesta cada cosa.
+- La **mención precargada** a quien se responde la manda el cliente como cualquier otra, y se
+  puede borrar antes de enviar: es una comodidad del compositor, no una obligación.
+- Retirar el comentario raíz **se lleva sus respuestas**, y el contador de la publicación baja
+  por todas.
+
+### Qué no está todavía
+
+El **«me gusta» de una respuesta** (`FEAT-COM-030`), que es la misma ausencia que impide
+ordenar los comentarios por relevancia.

@@ -1107,3 +1107,112 @@ comment:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+commentReplies:
+  get:
+    tags: [Community]
+    operationId: listCommentReplies
+    summary: Las respuestas de un comentario
+    description: |
+      **Siempre de la más antigua a la más reciente**, sin desplegable que lo
+      cambie: un hilo se lee en el orden en que se dijo, y del revés obligaría
+      a leer hacia arriba para entender a qué contesta cada cosa.
+
+      Si `commentId` es una respuesta, el servidor **resuelve al comentario
+      raíz**: los hilos son planos, así que «las respuestas de esta respuesta»
+      son las del hilo entero. El cliente no necesita saber cuál es el raíz.
+    parameters:
+      - $ref: '#/CommentIdParam'
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Una página de respuestas.
+        content:
+          application/json:
+            schema:
+              $ref: '#/CommentsPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: COMMENT_NOT_FOUND` o `POST_NOT_FOUND`. Un comentario no tiene
+          audiencia propia: hereda entera la de su publicación, así que si esa
+          no existe para quien pregunta, el comentario tampoco.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  post:
+    tags: [Community]
+    operationId: replyToComment
+    summary: Responder a un comentario
+    description: |
+      La respuesta **cuelga siempre del comentario raíz**, nunca de otra
+      respuesta. Es una invariante y no un detalle: un hilo plano se pagina y
+      uno arbitrariamente profundo, no.
+
+      La **mención precargada** a quien se responde la manda el cliente como
+      cualquier otra: es una comodidad del compositor, no una obligación, y se
+      puede borrar antes de enviar.
+
+      Valen las mismas reglas que comentar: audiencia, saneado, cuenta
+      activada y ningún efecto en créditos.
+    parameters:
+      - $ref: '#/CommentIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                maxLength: 1000
+              mentions:
+                type: array
+                maxItems: 10
+                items:
+                  $ref: '#/MentionInput'
+    responses:
+      '201':
+        description: Respondido.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [commentId]
+              properties:
+                commentId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: COMMENT_NOT_FOUND` o `POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: INVALID_VALUE`, `MENTIONED_USER_NOT_FOUND` o
+          `TOO_MANY_MENTIONS`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

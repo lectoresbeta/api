@@ -319,7 +319,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-028 | Incluir un relato de la plataforma en una publicación | User | PENDING | TODO | P2 | — |
 | FEAT-COM-029 | Audiencia de una publicación | User | PENDING | BLOCKED | P1 | — |
 | FEAT-COM-030 | Me gusta en un comentario o respuesta | User | PENDING | TODO | P2 | — |
-| FEAT-COM-031 | Responder a un comentario | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-031-reply-to-comment.md) |
+| FEAT-COM-031 | Responder a un comentario | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-031-reply-to-comment.md) |
 | FEAT-COM-032 | Menciones a usuarios | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-032-mentions.md) |
 | FEAT-COM-033 | Silenciar a un usuario | User | PENDING | TODO | P3 | — |
 | FEAT-COM-034 | Bloquear a un usuario | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-034-block-user.md) |

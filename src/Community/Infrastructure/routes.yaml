@@ -132,3 +132,17 @@ deletePostComment:
     path: /api/v1/comments/{commentId}
     controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\DeletePostCommentController::__invoke
     methods: [DELETE]
+
+# Las respuestas de un comentario (`FEAT-COM-031`).
+#
+# Los hilos son planos: si `commentId` es una respuesta, el servidor resuelve
+# al comentario raíz. El cliente no necesita saber cuál es.
+listCommentReplies:
+    path: /api/v1/comments/{commentId}/replies
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\ListCommentRepliesController::__invoke
+    methods: [GET]
+
+replyToComment:
+    path: /api/v1/comments/{commentId}/replies
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\ReplyToCommentController::__invoke
+    methods: [POST]

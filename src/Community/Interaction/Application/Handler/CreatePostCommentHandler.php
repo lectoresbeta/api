@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace LectoresBeta\Community\Interaction\Application\Handler;
 
 use LectoresBeta\Community\Interaction\Application\Command\CreatePostComment;
+use LectoresBeta\Community\Interaction\Application\Service\ReachableComment;
 use LectoresBeta\Community\Interaction\Domain\Entity\PostComment;
 use LectoresBeta\Community\Interaction\Domain\Event\PostCommented;
-use LectoresBeta\Community\Interaction\Domain\Exception\CommentNotFound;
 use LectoresBeta\Community\Interaction\Domain\Repository\PostCommentRepository;
 use LectoresBeta\Community\Interaction\Domain\ValueObject\CommentBody;
 use LectoresBeta\Community\Interaction\Domain\ValueObject\PostCommentId;
@@ -19,7 +19,6 @@ use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
 use LectoresBeta\Shared\Application\Event\EventPublisher;
 use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\Shared\Domain\Event\EventId;
-use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 
 /**
@@ -47,6 +46,7 @@ final readonly class CreatePostCommentHandler
         private PostRepository $posts,
         private PostCommentRepository $comments,
         private RecordMentions $mentions,
+        private ReachableComment $reachable,
         private TransactionalSession $session,
         private EventPublisher $events,
         private Clock $clock,
@@ -59,7 +59,9 @@ final readonly class CreatePostCommentHandler
         $body = CommentBody::fromString($command->body);
         $author = MemberId::fromString($command->authorId);
 
-        $parent = $this->root($command->parentCommentId, $command->postId);
+        $parent = null === $command->parentCommentId || '' === $command->parentCommentId
+            ? null
+            : $this->reachable->rootWithin($command->parentCommentId, $post->id());
 
         $comment = new PostComment(
             PostCommentId::generate(),
@@ -106,37 +108,5 @@ final readonly class CreatePostCommentHandler
         $this->mentions->announce($mentions, $post, $author, $now);
 
         return $comment->id()->value();
-    }
-
-    /**
-     * El comentario del que cuelga la respuesta, **siempre de primer nivel**.
-     *
-     * Si lo que llega es una respuesta, se sube a su raíz. Es lo que mantiene
-     * la invariante sin pedirle al cliente que sepa cuál es, y lo que hace que
-     * un hilo se pueda paginar.
-     */
-    private function root(?string $parentCommentId, string $postId): ?PostComment
-    {
-        if (null === $parentCommentId || '' === $parentCommentId) {
-            return null;
-        }
-
-        try {
-            $parent = $this->comments->ofId(PostCommentId::fromString($parentCommentId));
-        } catch (InvalidValue) {
-            throw CommentNotFound::create();
-        }
-
-        if (null === $parent || $parent->postId()->value() !== $postId) {
-            throw CommentNotFound::create();
-        }
-
-        if (!$parent->isReply()) {
-            return $parent;
-        }
-
-        $root = $this->comments->ofId($parent->parentCommentId() ?? throw CommentNotFound::create());
-
-        return $root ?? throw CommentNotFound::create();
     }
 }

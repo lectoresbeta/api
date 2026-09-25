@@ -5,7 +5,7 @@ context: Community
 concept: Interaction
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P2
 sources:
   - conversation:2026-09-22 (secuencia de interacciones)
@@ -13,7 +13,7 @@ sources:
 endpoints: [POST /comments/{commentId}/replies, GET /comments/{commentId}/replies]
 events: [PostCommented]
 depends_on: [FEAT-COM-006, FEAT-COM-032]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-COM-031 — Responder a un comentario
@@ -33,7 +33,7 @@ Es la decisión de diseño de esta ficha.
 | **A. Un solo nivel** | Toda respuesta cuelga del comentario raíz. Responder a una respuesta añade otra al mismo hilo, con una mención a quien se responde |
 | B. Anidamiento libre | Hilos arbitrariamente profundos |
 
-**Propuesta: A.** Tres razones:
+**Decidido: A** (`I-2`, resuelta). Tres razones:
 
 1. El diseño muestra **un único nivel**.
 2. La **mención automática** del compositor es justo el mecanismo que sustituye a la
@@ -43,7 +43,7 @@ Es la decisión de diseño de esta ficha.
 Con la opción A, `parent_comment_id` apunta **siempre al comentario raíz**, nunca a otra
 respuesta. Es una invariante sencilla de comprobar y fácil de romper si no se declara.
 
-Ver `I-2`.
+
 
 ## Reglas de negocio
 
@@ -81,15 +81,19 @@ cliente no necesita saber cuál es: lo resuelve el backend.
 
 ## Criterios de aceptación
 
-- [ ] Responder crea la respuesta anidada bajo el comentario.
-- [ ] El contador de respuestas sube.
-- [ ] Responder a una respuesta la cuelga **del mismo comentario raíz**, no de la respuesta.
-- [ ] Ninguna respuesta tiene como padre otra respuesta.
-- [ ] La mención precargada se puede borrar antes de enviar.
-- [ ] No se puede responder en una publicación cuya audiencia excluye al usuario.
-- [ ] Eliminar el comentario raíz elimina sus respuestas.
-- [ ] Una respuesta se puede valorar con «me gusta».
-- [ ] Con la cuenta sin activar devuelve `403`.
+- [x] Responder crea la respuesta anidada bajo el comentario.
+- [x] El contador de respuestas sube, y baja al retirarla.
+- [x] Responder a una respuesta la cuelga **del mismo comentario raíz**, no de la respuesta.
+- [x] Ninguna respuesta tiene como padre otra respuesta.
+- [x] Pedir las respuestas de una respuesta devuelve las del hilo entero.
+- [x] El hilo se lee de la más antigua a la más reciente, y se pagina.
+- [x] La mención precargada se puede borrar antes de enviar.
+- [x] No se puede responder en una publicación cuya audiencia excluye al usuario.
+- [x] Tampoco leer el hilo.
+- [x] Eliminar el comentario raíz elimina sus respuestas, y el contador de la publicación baja
+  por todas.
+- [ ] Una respuesta se puede valorar con «me gusta». **Es `FEAT-COM-030`**, que no existe.
+- [x] Con la cuenta sin activar devuelve `403`.
 
 El tercer y cuarto criterio son los que sostienen la invariante de `RN-2`.
 
@@ -97,8 +101,8 @@ El tercer y cuarto criterio son los que sostienen la invariante de `RN-2`.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| I-2 | ¿Se confirma el anidamiento de un solo nivel? | Define el modelo |
-| I-4 | ¿Se cargan las respuestas de inicio o bajo demanda? | Con hilos largos importa |
+| ~~I-2~~ | ¿Se confirma el anidamiento de un solo nivel? | Resuelta: sí |
+| I-4 | ¿Se cargan las respuestas de inicio o bajo demanda? | Con hilos largos importa; es de cliente, el endpoint pagina |
 | I-9 | ¿El autor de la publicación puede eliminar respuestas ajenas en su publicación? | Moderación propia, sin diseño |
 
 ## Estado
@@ -107,4 +111,13 @@ El tercer y cuarto criterio son los que sostienen la invariante de `RN-2`.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). El hilo entero: responder, leerlo paginado,
+retirar una respuesta y retirar el raíz con todo lo que cuelga.
+
+La invariante de `RN-2` —ninguna respuesta cuelga de otra respuesta— vive en un solo sitio,
+`ReachableComment`, que usan las tres operaciones del hilo. Es fácil de romper si no se
+declara: basta con que alguien guarde el `commentId` que le llegó sin subir al raíz, y a
+partir de ahí leer un hilo es una consulta recursiva.
+
+**Falta el «me gusta» de una respuesta**, que es [`FEAT-COM-030`](../README.md) y no existe —
+la misma ausencia que impide ordenar los comentarios por relevancia.
