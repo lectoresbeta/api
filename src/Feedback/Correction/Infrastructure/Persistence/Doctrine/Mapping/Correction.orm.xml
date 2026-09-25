@@ -62,6 +62,7 @@
         <field name="tipAmount" column="tip_amount" type="smallint" nullable="true"/>
         <field name="tippedAt" column="tipped_at" type="datetime_immutable" nullable="true"/>
         <field name="readAt" column="read_at" type="datetime_immutable" nullable="true"/>
+        <field name="withdrawalNoticedAt" column="withdrawal_noticed_at" type="datetime_immutable" nullable="true"/>
         <field name="startedAt" column="started_at" type="datetime_immutable"/>
         <field name="submittedAt" column="submitted_at" type="datetime_immutable" nullable="true"/>
         <field name="updatedAt" column="updated_at" type="datetime_immutable"/>

@@ -456,3 +456,175 @@ claimReview:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+auditLog:
+  get:
+    tags: [Moderation]
+    operationId: listAuditLog
+    summary: El registro de auditoría
+    description: |
+      Toda acción administrativa, con **quién, qué, sobre qué, cuándo y por
+      qué**, de lo más reciente a lo más antiguo.
+
+      **Solo un `ADMIN`.** Un moderador no audita a sus compañeros: el
+      registro existe para que el poder que se ejerce sobre los usuarios sea
+      revisable por quien responde de la plataforma, no para vigilancia
+      horizontal dentro del equipo — saberse observado por los iguales cambia
+      cómo se decide, y lo cambia hacia decidir lo que no genera preguntas en
+      vez de lo correcto.
+
+      Lleva la **motivación** de cada decisión, que es material interno del
+      expediente y **no sale por ninguna otra puerta**: ningún evento la
+      transporta y las partes no la ven.
+
+      El `payload` nunca contiene contenido: ni texto de obras, ni de
+      correcciones, ni de mensajes. El registro dice qué se hizo, no qué
+      estaba escrito.
+
+      **Es de solo lectura, y consultarlo no se anota**: anotar cada lectura
+      convertiría el registro en su propio ruido.
+    parameters:
+      - name: actorId
+        in: query
+        required: false
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: action
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: targetType
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: targetId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Las entradas del registro.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [entries]
+              properties:
+                entries:
+                  type: array
+                  items:
+                    type: object
+                    required: [entryId, actorId, action, targetType, targetId, payload, occurredAt]
+                    properties:
+                      entryId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      actorId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      action:
+                        type: string
+                      targetType:
+                        type: string
+                      targetId:
+                        type: string
+                      reason:
+                        type: [string, 'null']
+                        description: La motivación escrita, cuando la hubo.
+                      payload:
+                        type: object
+                        additionalProperties: true
+                      occurredAt:
+                        type: string
+                        format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: No es administrador.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+blockLift:
+  post:
+    tags: [Moderation]
+    operationId: liftModerationBlock
+    summary: Levantar un bloqueo
+    description: |
+      El bloqueo por reclamación estimada es **indefinido y solo lo revoca un
+      moderador** ([`FEAT-MOD-003`](../../docs/features/moderation/FEAT-MOD-003-block-work.md)
+      `RN-7`). Hasta esta operación era definitivo **de hecho**: la regla
+      decía que se podía revocar y no había por dónde pedirlo, así que un
+      error no tenía arreglo.
+
+      Lleva **motivación escrita**, como la decisión que lo impuso: deshacer
+      una decisión necesita explicarse todavía más que tomarla, y va al
+      registro de auditoría.
+
+      `Moderation` **no toca el estado de la obra**: publica que el bloqueo se
+      ha levantado y `Work` lo aplica, igual que al bloquear.
+
+      Desbloquear un capítulo **no desbloquea la obra** si la obra tiene su
+      propio bloqueo (`RN-10`).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [targetType, targetId, motivation]
+            properties:
+              targetType:
+                type: string
+                enum: [WORK, CHAPTER]
+              targetId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+              motivation:
+                type: string
+                minLength: 1
+    responses:
+      '204':
+        description: Levantado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: No modera.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CLAIM_MOTIVATION_REQUIRED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

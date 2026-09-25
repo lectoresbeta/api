@@ -5,7 +5,7 @@ context: Work
 concept: Manuscript
 actors: [Writer]
 spec_status: APPROVED
-impl_status: PARTIAL
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-25 (bloque de ciclo de vida de la obra)
@@ -127,7 +127,7 @@ que ya añaden `blocked_at IS NULL`.
 - [x] El autor la sigue viendo, marcada como archivada.
 - [x] Sin confirmación explícita no se archiva.
 - [x] Los accesos de lector beta quedan revocados.
-- [ ] Quien tenía un borrador de corrección recibe aviso y no puede entregarlo.
+- [x] Quien tenía un borrador de corrección recibe aviso y no puede entregarlo.
 - [x] Las correcciones entregadas se siguen leyendo por las dos partes.
 - [x] Los créditos no se devuelven.
 - [x] El autor la restaura y vuelve a `DRAFT`, nunca publicada.
@@ -147,15 +147,17 @@ que ya añaden `blocked_at IS NULL`.
 **Especificación:** `APPROVED` (2026-09-25). La decisión de archivar en
 lugar de borrar se tomó el 2026-09-25.
 
-**Implementación:** `PARTIAL` (2026-09-25). Archivar y restaurar funcionan, con la
+**Implementación:** `DONE` (2026-09-25). Archivar y restaurar funcionan, con la
 confirmación comprobada en el servidor, los accesos revocados por `Reading` —que es quien sabe
 qué es un acceso, no quien publica el hecho—, la obra fuera del catálogo, del contador público
 y de las lecturas ajenas, y las correcciones pagadas intactas para las dos partes.
 
-**Falta el aviso a quien estuviera corrigiendo** (`RN-4`). Hoy pierde el acceso y lo descubre
-al volver. Es el mismo mecanismo que `FEAT-WRK-008` `RN-5` y que
-[`FEAT-MOD-003`](../moderation/FEAT-MOD-003-block-work.md) `RN-4` necesitan, y los tres entran
-juntos: un aviso a quien tiene trabajo a medias sobre algo que acaba de cerrarse.
+El **aviso a quien estuviera corrigiendo** (`RN-4`) entró con
+[`FEAT-MOD-003`](../moderation/FEAT-MOD-003-block-work.md) `RN-4`: un solo mecanismo para las
+tres causas que dejan a alguien con trabajo a medias —la obra se bloquea, su autor la retira o
+le oculta un capítulo—, porque para quien escribía son la misma cosa. Su borrador se conserva.
+
+Con eso, esta ficha queda **entera salvo por lo que nunca fue suyo**: las preguntas abiertas.
 
 `W-31`, `W-32` y `W-33` siguen abiertas. `W-31` —si el archivado caduca— gana peso ahora que
 existe: sin caducidad, el archivo crece para siempre.

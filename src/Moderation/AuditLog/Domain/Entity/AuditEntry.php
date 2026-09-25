@@ -78,4 +78,31 @@ class AuditEntry
     {
         return $this->occurredAt;
     }
+
+    public function targetType(): string
+    {
+        return $this->targetType;
+    }
+
+    public function targetId(): string
+    {
+        return $this->targetId;
+    }
+
+    /**
+     * La motivación de la decisión, cuando la hubo. Sale **solo aquí**: es
+     * material interno del expediente y no viaja en ningún evento.
+     */
+    public function reason(): ?string
+    {
+        return $this->reason;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function payload(): array
+    {
+        return $this->payload;
+    }
 }

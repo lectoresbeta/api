@@ -5,7 +5,7 @@ context: Moderation
 concept: AuditLog
 actors: [Admin]
 spec_status: APPROVED
-impl_status: PARTIAL
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-25 (bloque de deudas y transparencia)
@@ -108,13 +108,13 @@ Hacen falta índices para los filtros: `(occurred_at DESC)`, `(actor_id, occurre
 
 ## Criterios de aceptación
 
-- [ ] Un `ADMIN` consulta el registro y ve las entradas más recientes primero.
-- [ ] Un moderador que no es `ADMIN` recibe `403`.
-- [ ] Filtra por actor, por objeto, por acción y por fechas.
-- [ ] Una decisión sobre una reclamación aparece con su motivación escrita.
-- [ ] Ninguna entrada contiene texto de una obra, de una corrección o de un mensaje.
-- [ ] No existe ninguna operación que edite o borre una entrada.
-- [ ] Consultar el registro no genera entradas nuevas.
+- [x] Un `ADMIN` consulta el registro y ve las entradas más recientes primero.
+- [x] Un moderador que no es `ADMIN` recibe `403`.
+- [x] Filtra por actor, por objeto, por acción y por fechas.
+- [x] Una decisión sobre una reclamación aparece con su motivación escrita.
+- [x] Ninguna entrada contiene texto de una obra, de una corrección o de un mensaje.
+- [x] No existe ninguna operación que edite o borre una entrada.
+- [x] Consultar el registro no genera entradas nuevas.
 
 ## Preguntas abiertas
 
@@ -128,6 +128,12 @@ Hacen falta índices para los filtros: `(occurred_at DESC)`, `(actor_id, occurre
 
 **Especificación:** `APPROVED` (2026-09-25).
 
-**Implementación:** `PARTIAL`. El registro se escribe desde `FEAT-MOD-004` y `FEAT-MOD-002`,
-con su entidad, su repositorio y su servicio de aplicación. **Falta** poder leerlo: la
-consulta, los filtros, los índices y el endpoint restringido a `ADMIN`.
+**Implementación:** `DONE` (2026-09-25). La consulta con sus cuatro filtros, restringida a
+`ADMIN` por `security.yaml` —la misma vía que ya protege la concesión de roles, y antes de la
+regla general que solo exige `ROLE_MODERATOR`—.
+
+Los índices que la ficha pedía **ya existían** desde que se creó la tabla: `(actor_id,
+occurred_at)`, `(target_type, target_id, occurred_at)` y `(action, occurred_at)`. Se
+escribieron pensando en esta consulta y llevaban meses sin usarse.
+
+`MOD-48`, `MOD-49` y `MOD-50` siguen abiertas.

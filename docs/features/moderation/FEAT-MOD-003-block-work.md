@@ -121,13 +121,13 @@ sabe dónde presentar no existe**.
 - [x] La obra desaparece del catálogo, del perfil y de las búsquedas.
 - [x] El autor la sigue viendo, marcada como bloqueada, con el motivo.
 - [ ] Sus enlaces públicos dejan de servir contenido.
-- [ ] Las correcciones en curso se cancelan sin cargo, y se avisa a quien las escribía.
+- [x] Las correcciones en curso se cancelan sin cargo, y se avisa a quien las escribía.
 - [x] Las correcciones ya pagadas **no** se revierten.
 - [x] El contenido no se borra.
 - [x] `BLOCKED` no se abandona por ninguna transición ordinaria.
 - [x] Una reclamación sobre un capítulo bloquea ese capítulo, no la obra.
 - [x] Al tercer capítulo bloqueado, la obra entera queda bloqueada.
-- [ ] Un moderador puede revocar un bloqueo.
+- [x] Un moderador puede revocar un bloqueo.
 - [x] No existe ningún endpoint de recurso: el recurso es por correo.
 - [x] El correo de bloqueo indica qué, por qué y **a qué dirección recurrir**.
 - [x] Ese correo se envía aunque el usuario tenga las notificaciones desactivadas.
@@ -168,15 +168,27 @@ Dos detalles de implementación que conviene dejar escritos:
   idempotente, así que lo que decide si se publica el hecho es si el estado cambió de verdad:
   un correo de bloqueo repetido es, para quien lo recibe, un segundo bloqueo.
 
-**Lo que no está:**
+**`RN-4` y `RN-7` quedaron cerradas el 2026-09-25.**
 
-- **`RN-4`: cancelar las correcciones en curso** sobre la obra bloqueada, sin cargo y
-  avisando a quien las escribía. Hoy quien estuviera corrigiendo descubre el bloqueo al
-  intentar entregar. Es la deuda más incómoda de las tres, porque la ficha subraya que a esa
-  persona hay que avisarla y que el mensaje no la haga pensar que hizo algo mal;
-- **`RN-7`: revocar un bloqueo.** Solo un moderador puede, dice la regla, y todavía no hay
-  por dónde: el modelo lo admite (`unblock()`), falta el endpoint y su registro de auditoría.
-  Mientras tanto, un bloqueo es definitivo de hecho, no solo de derecho;
+El aviso a quien tenía trabajo a medias es **un solo mecanismo para tres causas** —la obra se
+bloquea, su autor la retira ([`FEAT-WRK-006`](../work/FEAT-WRK-006-delete-work.md) `RN-4`) o
+le oculta un capítulo ([`FEAT-WRK-008`](../work/FEAT-WRK-008-work-and-chapter-visibility.md)
+`RN-5`)—, porque para quien estaba escribiendo son la misma cosa: su corrección ya no se puede
+entregar. **El borrador no se borra**: es texto suyo, y si el contenido vuelve, se entrega
+igual.
+
+Ese aviso llega **una sola vez por borrador**, y hace falta una marca en la base de datos para
+conseguirlo. Sin ella, cada reentrega del hecho publicaba otro aviso y la cascada no paraba
+nunca — lo encontró la prueba, no el razonamiento. Tiene un límite conocido: si el mismo
+borrador se ve afectado dos veces (bloqueo, levantamiento, bloqueo otra vez) solo se avisa la
+primera.
+
+Levantar un bloqueo exige **motivación escrita** y queda en el registro de auditoría: deshacer
+una decisión necesita explicarse todavía más que tomarla. Y lo ejecuta `Work`, igual que el
+bloqueo: `Moderation` publica lo que se ha decidido y nada más.
+
+**Lo que sigue faltando:**
+
 - **`RN-3`: los enlaces públicos.** No dejan de servir contenido porque todavía no sirven
   ninguno: `PublicLink` existe como entidad y no tiene endpoint. Cuando lo tenga, tendrá que
   mirar `blocked_at` como ya hace el catálogo;

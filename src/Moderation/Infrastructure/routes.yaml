@@ -68,3 +68,20 @@ reviewClaim:
     path: /api/v1/admin/claims/{claimId}/review
     controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\ReviewClaimController::__invoke
     methods: [POST]
+
+# El registro de auditoría (`FEAT-MOD-007`). **Solo `ADMIN`**: un moderador no
+# audita a sus compañeros. Se escribía desde el primer día y nadie podía
+# leerlo, que es la peor forma de tener un registro — invita a confiar en que
+# hay control sin que lo haya.
+listAuditLog:
+    path: /api/v1/admin/audit-log
+    controller: LectoresBeta\Moderation\AuditLog\Infrastructure\Controller\ListAuditLogController::__invoke
+    methods: [GET]
+
+# Levantar un bloqueo (`FEAT-MOD-003` `RN-7`). Hasta aquí un bloqueo era
+# definitivo **de hecho**: la regla decía que un moderador podía revocarlo y
+# no había por dónde pedirlo.
+liftModerationBlock:
+    path: /api/v1/admin/moderation-blocks/lift
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\LiftWorkBlockController::__invoke
+    methods: [POST]

@@ -49,6 +49,10 @@ security:
         # cualquier moderador (FEAT-MOD-004 RN-1). Va antes de la regla
         # general porque `access_control` se queda con la primera que encaja.
         - { path: '^/api/v1/admin/users/[^/]+/moderator-role$', roles: ROLE_ADMIN }
+        # El registro de auditoría también (FEAT-MOD-007 RN-1): un moderador
+        # no audita a sus compañeros, y saberse observado por los iguales
+        # cambia cómo se decide.
+        - { path: '^/api/v1/admin/audit-log$', roles: ROLE_ADMIN }
         - { path: '^/api/v1/admin(/|$)', roles: ROLE_MODERATOR }
 
         # El perfil ajeno se abre sin sesión (FEAT-USR-014, FEAT-USR-035): es

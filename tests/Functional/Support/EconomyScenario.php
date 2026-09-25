@@ -110,6 +110,11 @@ abstract class EconomyScenario extends WebTestCase
         // Y lo que retirar una obra significa para quien la estaba leyendo
         // (`FEAT-WRK-006`).
         'WorkArchived',
+
+        // Y el aviso a quien tenía trabajo a medias, con el bloqueo que un
+        // moderador levanta (`FEAT-MOD-003` `RN-4`, `RN-7`).
+        'CorrectionClosed',
+        'ModerationBlockLifted',
     ];
 
     /**

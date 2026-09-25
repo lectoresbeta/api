@@ -285,6 +285,12 @@ paths:
   /admin/claims/{claimId}/review:
     $ref: './paths/moderation.yaml#/claimReview'
 
+  /admin/audit-log:
+    $ref: './paths/moderation.yaml#/auditLog'
+
+  /admin/moderation-blocks/lift:
+    $ref: './paths/moderation.yaml#/blockLift'
+
   /admin/moderators:
     $ref: './paths/moderation.yaml#/moderators'
 

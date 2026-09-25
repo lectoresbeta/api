@@ -133,6 +133,18 @@ services:
                 # los accesos de lector beta dejan de tener objeto
                 # (FEAT-WRK-006).
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\WorkArchived
+
+                # Quien tenía trabajo a medias sobre algo que acaba de
+                # cerrarse: tres causas, un aviso (FEAT-MOD-003 RN-4,
+                # FEAT-WRK-006 RN-4, FEAT-WRK-008 RN-5).
+                - LectoresBeta\Feedback\Correction\Application\Event\WorkBlockedByModeration
+                - LectoresBeta\Feedback\Correction\Application\Event\WorkArchived
+                - LectoresBeta\Feedback\Correction\Application\Event\ChapterVisibilityChanged
+                - LectoresBeta\Notification\Delivery\Application\Event\CorrectionClosed
+
+                # Y el bloqueo que un moderador levanta, que ejecuta `Work`
+                # igual que el que impone (FEAT-MOD-003 RN-7).
+                - LectoresBeta\Work\Manuscript\Application\Event\ModerationBlockLifted
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
                 - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordResetRequested
@@ -407,6 +419,14 @@ services:
     # siempre, y lo que se retiene es la lectura de lo entregado, no el pago.
     # Dos hechos, un trabajo: lo que se cobró por una corrección y lo que una
     # reclamación estimada retira después.
+    # Tres hechos, un trabajo: avisar a quien tenía una corrección a medias
+    # sobre algo que acaba de dejar de estar disponible.
+    LectoresBeta\Feedback\Correction\Application\Handler\CloseDraftsOnContentWithdrawn:
+        tags:
+            - { name: messenger.message_handler, method: blocked }
+            - { name: messenger.message_handler, method: archived }
+            - { name: messenger.message_handler, method: hidden }
+
     LectoresBeta\Feedback\Correction\Application\Handler\TrackCorrectionEarnings:
         tags:
             - { name: messenger.message_handler, method: earned }
@@ -478,6 +498,10 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    LectoresBeta\Work\Manuscript\Application\Handler\UnblockContentOnBlockLifted:
+        tags:
+            - { name: messenger.message_handler }
+
     # Y qué significa esa misma decisión para el saldo, que lo decide
     # `Credits` a solas: el hecho no lleva importes.
     LectoresBeta\Credits\Account\Application\Handler\ReverseCorrectionOnClaimUpheld:
@@ -509,6 +533,10 @@ services:
     LectoresBeta\Notification\Delivery\Application\Handler\SendWorkBlockedNotice:
         arguments:
             $appealsAddress: '%env(MODERATION_APPEALS_EMAIL)%'
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheReaderOfAClosedCorrection:
         tags:
             - { name: messenger.message_handler }
 

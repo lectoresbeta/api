@@ -85,5 +85,16 @@ interface CorrectionRepository
      */
     public function lockedFor(AuthorId $ownerId): array;
 
+    /**
+     * Los borradores vivos sobre esa obra, o sobre ese capítulo.
+     *
+     * Existe para avisar a quien tiene trabajo a medias cuando el autor
+     * retira, bloquea u oculta lo que estaba corrigiendo: lo descubre al
+     * intentar entregar, que es tarde y desconcertante.
+     *
+     * @return list<Correction>
+     */
+    public function draftsOn(?WorkId $workId, ?ChapterId $chapterId): array;
+
     public function discardDraft(Correction $correction): void;
 }

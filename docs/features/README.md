@@ -18,14 +18,14 @@ verdad sobre el alcance.**
 | Contexto | Total | Con ficha | `APPROVED` | `REVIEW` | `DONE` | `PARTIAL` |
 |---|---|---|---|---|---|---|
 | `User` (USR) | 44 | 30 | 30 | 0 | 12 | 10 |
-| `Work` (WRK) | 17 | 12 | 12 | 0 | 2 | 10 |
+| `Work` (WRK) | 17 | 12 | 12 | 0 | 3 | 9 |
 | `Reading` (RDG) | 10 | 7 | 7 | 0 | 7 | 0 |
 | `Feedback` (FBK) | 12 | 8 | 7 | 0 | 5 | 1 |
 | `Community` (COM) | 38 | 11 | 10 | 0 | 2 | 1 |
-| `Moderation` (MOD) | 12 | 11 | 11 | 0 | 1 | 6 |
+| `Moderation` (MOD) | 12 | 11 | 11 | 0 | 2 | 5 |
 | `Credits` (CRD) | 19 | 13 | 13 | 0 | 4 | 5 |
 | `Notification` (NOT) | 9 | 3 | 3 | 0 | 2 | 1 |
-| **Total** | **161** | **95** | **93** | **0** | **35** | **34** |
+| **Total** | **161** | **95** | **93** | **0** | **37** | **32** |
 
 `APPROVED` y `REVIEW` son estados de la **especificación**; `DONE` y `PARTIAL`, del **código**.
 Las columnas no suman entre sí a propósito: una funcionalidad aprobada y a medio implementar
@@ -172,7 +172,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-003 | Estructurar la obra en capítulos | Writer | APPROVED | DONE | P0 | [ficha](work/FEAT-WRK-003-structure-work-in-chapters.md) |
 | FEAT-WRK-004 | Ver una obra y el contenido de sus capítulos | Writer, BetaReader, User | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-004-read-a-work.md) |
 | FEAT-WRK-005 | Editar una obra o un capítulo | Writer | APPROVED | DONE | P0 | [ficha](work/FEAT-WRK-005-edit-work-and-chapter.md) |
-| FEAT-WRK-006 | Eliminar una obra con confirmación | Writer | APPROVED | PARTIAL | P1 | [ficha](work/FEAT-WRK-006-delete-work.md) |
+| FEAT-WRK-006 | Eliminar una obra con confirmación | Writer | APPROVED | DONE | P1 | [ficha](work/FEAT-WRK-006-delete-work.md) |
 | FEAT-WRK-007 | Configurar la modalidad de acceso de lectores beta | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-007-configure-access-mode.md) |
 | FEAT-WRK-008 | Configurar la visibilidad de obra y capítulos | Writer | APPROVED | PARTIAL | P1 | [ficha](work/FEAT-WRK-008-work-and-chapter-visibility.md) |
 | FEAT-WRK-009 | Generar el registro de autoría | Writer | PENDING | BLOCKED | P1 | — |
@@ -366,7 +366,7 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 | FEAT-MOD-004 | Rol de moderador y aviso de reclamaciones | Admin, Moderator | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-004-moderator-role.md) |
 | FEAT-MOD-005 | Gestión de usuarios desde el backoffice | Admin, Moderator | APPROVED | TODO | P2 | [ficha](moderation/FEAT-MOD-005-user-management.md) |
 | FEAT-MOD-006 | Catálogo de sanciones | Moderator | APPROVED | TODO | P2 | [ficha](moderation/FEAT-MOD-006-sanctions.md) |
-| FEAT-MOD-007 | Registro de auditoría de acciones administrativas | Admin | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-007-audit-log.md) |
+| FEAT-MOD-007 | Registro de auditoría de acciones administrativas | Admin | APPROVED | DONE | P1 | [ficha](moderation/FEAT-MOD-007-audit-log.md) |
 | FEAT-MOD-008 | Cola de reclamaciones con filtros y prioridad | Moderator | PENDING | TODO | P2 | — |
 | FEAT-MOD-009 | Conversación entre el moderador y las partes | Moderator, User | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-009-moderator-conversation.md) |
 | FEAT-MOD-010 | Mis reclamaciones — sección del usuario | User | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-010-my-claims.md) |

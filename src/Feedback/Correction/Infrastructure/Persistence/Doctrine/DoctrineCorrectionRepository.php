@@ -139,6 +139,27 @@ final class DoctrineCorrectionRepository extends DoctrineRepository implements C
         ]));
     }
 
+    public function draftsOn(?WorkId $workId, ?ChapterId $chapterId): array
+    {
+        if (null === $workId && null === $chapterId) {
+            return [];
+        }
+
+        $query = $this->repository()->createQueryBuilder('c')
+            ->where('c.status = :draft')
+            ->setParameter('draft', CorrectionStatus::DRAFT);
+
+        if (null !== $workId) {
+            $query->andWhere('c.workId = :work')->setParameter('work', $workId->value());
+        }
+
+        if (null !== $chapterId) {
+            $query->andWhere('c.chapterId = :chapter')->setParameter('chapter', $chapterId->value());
+        }
+
+        return array_values($query->getQuery()->getResult());
+    }
+
     public function discardDraft(Correction $correction): void
     {
         if (!$correction->isDraft()) {

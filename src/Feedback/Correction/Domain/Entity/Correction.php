@@ -90,6 +90,17 @@ class Correction
      */
     private ?\DateTimeImmutable $readAt = null;
 
+    /**
+     * Cuándo se avisó a quien lo escribía de que lo que estaba corrigiendo
+     * había dejado de estar disponible.
+     *
+     * **Es una marca de aviso, no de estado.** Si el contenido vuelve, el
+     * borrador se entrega igual: quién puede corregir lo decide `Work` cada
+     * vez que se pregunta. Esto solo impide avisar dos veces de lo mismo, que
+     * es lo que ocurriría en cuanto la cola reentregase el hecho.
+     */
+    private ?\DateTimeImmutable $withdrawalNoticedAt = null;
+
     private \DateTimeImmutable $startedAt;
 
     private ?\DateTimeImmutable $submittedAt = null;
@@ -279,6 +290,24 @@ class Correction
         }
 
         $this->readAt = $now;
+        $this->updatedAt = $now;
+
+        return true;
+    }
+
+    /**
+     * Avisa una vez y solo una. Devuelve si este aviso es el primero, que es
+     * lo que decide si el hecho llega a publicarse: el transporte entrega al
+     * menos una vez, y un segundo «has perdido tu trabajo» por el mismo
+     * motivo es gratuito y cruel.
+     */
+    public function noteWithdrawalNotice(\DateTimeImmutable $now): bool
+    {
+        if (null !== $this->withdrawalNoticedAt) {
+            return false;
+        }
+
+        $this->withdrawalNoticedAt = $now;
         $this->updatedAt = $now;
 
         return true;

@@ -107,7 +107,7 @@ avisa a quien tuviera un borrador en curso.
 - [x] Un capítulo oculto responde `404` a cualquiera que no sea su autor.
 - [x] Un capítulo oculto no admite empezar una corrección.
 - [x] Las correcciones entregadas sobre un capítulo oculto se siguen leyendo por las dos partes.
-- [ ] Quien tenía un borrador sobre él recibe aviso y no puede entregarlo.
+- [x] Quien tenía un borrador sobre él recibe aviso y no puede entregarlo.
 - [ ] Las palabras del capítulo oculto no cuentan en el recuento visible de la obra.
 - [x] Un capítulo bloqueado por moderación no cambia de visibilidad por esta vía.
 - [x] Una obra con todos los capítulos ocultos sigue publicada.
@@ -129,10 +129,10 @@ cierra el capítulo **para empezar y para entregar** una corrección: los dos ca
 el mismo contrato de `Work`, así que bastó con que un capítulo oculto dejara de tener parte
 que corregir — igual que uno bloqueado.
 
-**Falta el aviso a quien tuviera un borrador en curso** (`RN-5`). Hoy lo descubre al intentar
-entregar, que es tarde y desconcertante. Es el mismo mecanismo que `FEAT-MOD-003` `RN-4`
-necesita al bloquear una obra, y entra con él.
+El **aviso a quien tuviera un borrador en curso** (`RN-5`) entró con
+[`FEAT-MOD-003`](../moderation/FEAT-MOD-003-block-work.md) `RN-4`, que necesitaba el mismo
+mecanismo: un solo aviso para las tres causas que dejan a alguien con trabajo a medias.
 
-**Falta también descontar sus palabras del recuento visible de la obra** (`RN-6`): el total
-sigue contando el capítulo oculto. No afecta al precio de nadie —los precios son por
-capítulo— pero sí a lo que se enseña en la ficha de la obra.
+**Falta descontar las palabras del capítulo oculto del recuento visible de la obra** (`RN-6`):
+el total sigue contándolas. No afecta al precio de nadie —los precios son por capítulo— pero
+sí a lo que se enseña en la ficha de la obra.
