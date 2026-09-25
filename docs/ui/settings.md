@@ -453,7 +453,7 @@ lo primero tiene valor real. Ver `S-17`.
 | S-17 | ¿Las preferencias de apariencia se guardan en el servidor? | Decide si hay endpoint |
 | S-19 | ¿Y la configuración de propuestas de LB y *writing buddy* (`FEAT-USR-011`)? | No es una preferencia de aviso sino de recepción |
 | S-27 | ¿Se puede corregir la fecha de nacimiento? | Se pide en el onboarding y no reaparece |
-| S-5 | ¿La «página de autor» de `FEAT-USR-015` tiene un texto aparte de la biografía? | Si lo tiene, son dos campos y deben llamarse distinto |
+| S-5 | ¿La «página de autor» de `FEAT-USR-015` tiene un texto aparte de la biografía? | **Resuelta: no.** La página de autor es el perfil, así que la bio es esta descripción: un campo y un límite |
 
 **Resueltas el 2026-09-23:**
 

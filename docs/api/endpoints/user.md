@@ -66,8 +66,7 @@
 | `PUT /api/v1/me/published-books/{publishedBookId}/cover` | `updatePublishedBookCover` | Subir su portada | FEAT-USR-029 | **Implementado** |
 | `DELETE /api/v1/me/published-books/{publishedBookId}/cover` | `deletePublishedBookCover` | Quitar su portada | FEAT-USR-029 | **Implementado** |
 | `GET /api/v1/authors` | `searchAuthors` | Buscar personas por nombre o temática | FEAT-USR-017 | **Implementado** |
-| `GET /authors/{userId}/page` | `getAuthorPage` | Página pública de autor | FEAT-USR-015 | PENDING |
-| `PUT /me/author-page` | `updateAuthorPage` | Información de la página de autor | FEAT-USR-015 | PENDING |
+| `PUT /api/v1/me/author-links` | `updateAuthorLinks` | Las referencias de la página de autor | FEAT-USR-015 | **Implementado** |
 | `PUT /me/author-page/theme` | `updateAuthorPageTheme` | Personalización visual | FEAT-USR-016 | PENDING |
 | `POST /api/v1/invitations` | `sendPlatformInvitation` | Invitar por email | FEAT-USR-018 | **Implementado** |
 | `GET /api/v1/me/invitations` | `listMyInvitations` | Invitaciones enviadas y su estado | FEAT-USR-018 | **Implementado** |
@@ -1047,3 +1046,35 @@ De la más reciente a la más antigua, con la dirección, la fecha y si fue acep
 **No dice si se cobró por ella** —eso es del saldo— ni **quién se registró**: el invitador
 tiene derecho a saber que su invitación fue aceptada, no a que le entreguen la cuenta de esa
 persona.
+
+---
+
+## `PUT /api/v1/me/author-links`
+
+**`operationId`:** `updateAuthorLinks` · **Funcionalidad:** [`FEAT-USR-015`](../../features/user/FEAT-USR-015-author-page-information.md)
+
+### Propósito
+
+Las referencias de la página de autor: su web, su cuenta en otra red, su blog.
+
+### Autorización
+
+Sesión. Cada quien edita las suyas, y por eso la ruta cuelga de `/me`.
+
+### Semántica
+
+**No hay un `GET` hermano, y esa ausencia es la funcionalidad.** La página de autor **es** el
+perfil (`P-5`, resuelta), así que las referencias se leen en `GET /api/v1/users/{userId}` con
+todo lo demás de esa persona. Un endpoint aparte habría sido el primer paso hacia dos perfiles
+que mantener y que se contradicen.
+
+`PUT` y la lista entera: lo que el formulario manda es «estas son mis referencias», con su
+orden, que es del usuario. La lista vacía las quita todas.
+
+**Solo `http` y `https`**, y el servidor no visita la dirección. Es una regla de seguridad: la
+escribe un usuario y la pulsa cualquiera que abra su perfil. La comparte con el enlace de
+compra de `FEAT-USR-029` y vive en un solo sitio.
+
+Una referencia **sin etiqueta se rechaza** en vez de rellenarse con su dirección: un enlace
+que no dice a dónde lleva es el que se pulsa por error, y poner la URL como texto visible
+invita a disfrazar el destino.

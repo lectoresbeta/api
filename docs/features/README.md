@@ -83,7 +83,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-012 | ~~Configurar notificaciones por email~~ → `FEAT-USR-039` | User | PENDING | DEPRECATED | P3 | — |
 | FEAT-USR-013 | Eliminar la cuenta — anonimización | User | APPROVED | BLOCKED | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
 | FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-014-view-public-profile.md) |
-| FEAT-USR-015 | Configurar información de la página de autor (bio, foto, referencias) | Writer | PENDING | TODO | P2 | — |
+| FEAT-USR-015 | Configurar información de la página de autor (bio, foto, referencias) | Writer | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-015-author-page-information.md) |
 | FEAT-USR-016 | Personalizar página de autor (fuentes, colores, fondos) | Writer | PENDING | TODO | P3 | — |
 | FEAT-USR-017 | Buscar autores por nombre o temática | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-017-search-authors.md) |
 | FEAT-USR-018 | Invitar a personas a la plataforma por email | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-018-invite-people-to-the-platform.md) |

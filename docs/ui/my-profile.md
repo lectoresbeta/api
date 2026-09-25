@@ -237,7 +237,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | FEAT-COM-027 | **Nueva** — seguidos y seguidores | `APPROVED`, implementada |
 | FEAT-FBK-010 | **Nueva** — mis correcciones | `PENDING` |
 | FEAT-USR-014 | Ver perfil público: esta es su variante propia y editable | `DRAFT` |
-| FEAT-USR-015 | Página de autor: puede ser esta misma pantalla | `PENDING`, ver `P-5` |
+| FEAT-USR-015 | Página de autor: **es** esta misma pantalla | `APPROVED`, implementada |
 | FEAT-WRK-004 | «Mis relatos» es una vista de las obras propias | `PENDING` |
 
 ## Preguntas abiertas
@@ -248,7 +248,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | **P-2** | ¿Se confirma que una «obra publicada» es un concepto aparte de `Work`? | Modelo de datos. Mezclarlos sería un error caro |
 | P-3 | ¿«Obra en corrección» es un estado del ciclo de vida de `Work`? | **Resuelta:** sí. Ver [`FEAT-WRK-016`](../features/work/FEAT-WRK-016-work-status.md) |
 | P-4 | ¿Qué es «0 Level»? | **Resuelta:** error del diseño. Se retira de la pantalla y de los modales de foto |
-| P-5 | ¿«Mi perfil» y la «página de autor» de `FEAT-USR-015` son la misma pantalla? | Si no, hay dos perfiles que mantener |
+| P-5 | ¿«Mi perfil» y la «página de autor» de `FEAT-USR-015` son la misma pantalla? | **Resuelta: sí.** Dos pantallas habrían sido dos textos que envejecen por separado y dos sitios donde la misma persona se describe distinto |
 | P-6 | ¿Sigue en alcance la personalización visual de `FEAT-USR-016`? | No aparece en estas capturas |
 | P-7 | Textos por unificar: «Enviar» frente a «Publicar»; el vacío de «Seguidos» describe también a los seguidores | Coherencia |
 | P-8 | ¿«Mis Amigos» es el nombre correcto? | Capturas posteriores lo escriben «Mis amigos», corrigiendo la mayúscula. El nombre sigue sugiriendo reciprocidad donde no la hay |

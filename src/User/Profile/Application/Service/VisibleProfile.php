@@ -7,6 +7,9 @@ namespace LectoresBeta\User\Profile\Application\Service;
 use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\User\Account\Domain\Entity\User;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
+use LectoresBeta\User\AuthorPage\Application\DTO\AuthorLinkView;
+use LectoresBeta\User\AuthorPage\Domain\Entity\AuthorLink;
+use LectoresBeta\User\AuthorPage\Domain\Repository\AuthorLinkRepository;
 use LectoresBeta\User\Privacy\Domain\Enum\PrivacyAudience;
 use LectoresBeta\User\Privacy\Domain\Repository\AuthorFollowerRepository;
 use LectoresBeta\User\Privacy\Domain\Repository\BlockedPairRepository;
@@ -53,6 +56,7 @@ final readonly class VisibleProfile
         private UserPrivacySettingsRepository $privacy,
         private AuthorFollowerRepository $followers,
         private BlockedPairRepository $blocks,
+        private AuthorLinkRepository $links,
     ) {
     }
 
@@ -82,6 +86,13 @@ final readonly class VisibleProfile
             null === $viewer ? null : $this->followers->follows($viewer, $user->id()),
             null === $viewer ? null : $this->followers->follows($user->id(), $viewer),
             null === $viewer ? null : $this->blocks->exists($viewer, $user->id()),
+            // Las referencias de su página de autor (`FEAT-USR-015`). Se
+            // leen aquí y no en un endpoint propio porque la página de autor
+            // **es** este perfil.
+            array_map(
+                static fn (AuthorLink $link): AuthorLinkView => new AuthorLinkView($link->label(), $link->url()),
+                $this->links->of($user->id()),
+            ),
         );
     }
 

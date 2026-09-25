@@ -37,6 +37,16 @@ PublicProfile:
       type: [string, 'null']
     coverUrl:
       type: [string, 'null']
+    links:
+      type: array
+      description: |
+        Las referencias de su página de autor (`FEAT-USR-015`): su web, su
+        cuenta en otra red, su blog.
+
+        Van aquí y no en un endpoint propio porque **la página de autor es
+        este perfil**.
+      items:
+        $ref: '#/AuthorLink'
     counters:
       $ref: '#/ProfileCounters'
     isFollowing:
@@ -266,3 +276,88 @@ search:
                       avatarUrl: { type: [string, 'null'] }
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+authorLinks:
+  put:
+    tags: [User]
+    operationId: updateAuthorLinks
+    summary: Las referencias de mi página de autor
+    description: |
+      Su web, su cuenta en otra red, su blog (`FEAT-USR-015`).
+
+      **No hay un `GET` hermano, y esa ausencia es la funcionalidad.** La
+      página de autor **es** el perfil, así que las referencias se leen en
+      `GET /users/{userId}` con todo lo demás de esa persona. Un endpoint
+      aparte habría sido el primer paso hacia dos perfiles que mantener y que
+      se contradicen.
+
+      `PUT` y la lista entera: lo que el formulario manda es «estas son mis
+      referencias», con su orden, que es del usuario. La lista vacía las quita
+      todas.
+
+      **Solo `http` y `https`**, y el servidor no visita la dirección: es una
+      regla de seguridad, porque la escribe un usuario y la pulsa cualquiera
+      que abra su perfil.
+
+      Una referencia **sin etiqueta se rechaza** en vez de rellenarse con su
+      dirección: un enlace que no dice a dónde lleva es el que se pulsa por
+      error, y poner la URL como texto visible invita a disfrazar el destino.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [links]
+            properties:
+              links:
+                type: array
+                maxItems: 6
+                description: |
+                  Hasta seis. Un perfil con veinte enlaces deja de ser una
+                  página de autor y pasa a ser un directorio de enlaces.
+                items:
+                  type: object
+                  required: [label, url]
+                  properties:
+                    label:
+                      type: string
+                      maxLength: 60
+                      description: Se sanea; el marcado se retira en vez de rechazarse.
+                    url:
+                      type: string
+                      format: uri
+                      maxLength: 512
+    responses:
+      '200':
+        description: Las referencias guardadas, en su orden.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [links]
+              properties:
+                links:
+                  type: array
+                  items:
+                    $ref: '#/AuthorLink'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: |
+          `code: INVALID_AUTHOR_LINK`, `AUTHOR_LINK_WITHOUT_LABEL` o
+          `TOO_MANY_AUTHOR_LINKS`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+AuthorLink:
+  type: object
+  required: [label, url]
+  properties:
+    label:
+      type: string
+    url:
+      type: string
+      format: uri

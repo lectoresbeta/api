@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace LectoresBeta\User\Profile\Application\DTO;
 
+use LectoresBeta\User\AuthorPage\Application\DTO\AuthorLinkView;
+
 /**
  * Un perfil ajeno, visto desde fuera (`FEAT-USR-014`).
  *
@@ -25,6 +27,14 @@ namespace LectoresBeta\User\Profile\Application\DTO;
  */
 final readonly class PublicProfile
 {
+    /**
+     * @param list<AuthorLinkView> $links las referencias de la página de
+     *                                    autor (`FEAT-USR-015`). Van aquí
+     *                                    porque **la página de autor es el
+     *                                    perfil** (`P-5`): un endpoint aparte
+     *                                    habría sido el primer paso hacia dos
+     *                                    perfiles que mantener
+     */
     public function __construct(
         public string $userId,
         public string $username,
@@ -37,6 +47,7 @@ final readonly class PublicProfile
         public ?bool $isFollowing = null,
         public ?bool $isFollowedBy = null,
         public ?bool $isBlocked = null,
+        public array $links = [],
     ) {
     }
 }

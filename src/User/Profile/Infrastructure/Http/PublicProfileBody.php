@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LectoresBeta\User\Profile\Infrastructure\Http;
 
 use LectoresBeta\Shared\Application\Storage\MediaUrl;
+use LectoresBeta\User\AuthorPage\Application\DTO\AuthorLinkView;
 use LectoresBeta\User\Profile\Application\DTO\PublicProfile;
 
 /**
@@ -38,6 +39,13 @@ final readonly class PublicProfileBody
             'description' => $profile->description,
             'avatarUrl' => MediaUrl::of($profile->avatarUrl),
             'coverUrl' => $profile->coverUrl,
+            // Las referencias de su página de autor (`FEAT-USR-015`): su web,
+            // su cuenta en otra red, su blog. Van aquí y no en un endpoint
+            // propio porque **la página de autor es este perfil**.
+            'links' => array_map(
+                static fn (AuthorLinkView $link): array => ['label' => $link->label, 'url' => $link->url],
+                $profile->links,
+            ),
             'counters' => $counters,
             // Nulos sin sesión: quien los reciba así no tiene ningún botón de
             // relación que pintar, porque no hay nadie de quien hablar.

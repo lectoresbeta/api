@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\User\AuthorPage\Domain\ValueObject;
 
+use LectoresBeta\Shared\Domain\ValueObject\WebAddress;
 use LectoresBeta\User\AuthorPage\Domain\Exception\PublishedBookRefused;
 
 /**
@@ -13,19 +14,15 @@ use LectoresBeta\User\AuthorPage\Domain\Exception\PublishedBookRefused;
  * que el cliente lo pinte con cuidado: lo escribe un usuario y lo pulsa
  * cualquiera que abra su perfil.
  *
- * Solo `http` y `https`. Cualquier otro esquema —`javascript:`, `data:`,
- * `file:`— convierte lo que parece un enlace en un botón que alguien ajeno
- * escribió.
- *
- * El servidor **no lo visita**: comprobar que la página existe convertiría
- * cada guardado en una petición saliente hacia donde diga quien la escribe.
+ * Solo `http` y `https`, y el servidor **no la visita**. Las dos reglas están
+ * en `WebAddress`, compartidas con las referencias de la página de autor
+ * (`FEAT-USR-015`): son de seguridad, y una regla de seguridad escrita dos
+ * veces acaba teniendo una copia vieja.
  */
 final readonly class PurchaseLink implements \Stringable
 {
     /** Lo que cabe en la columna. Una dirección de compra real es mucho más corta. */
     public const MAX_LENGTH = 512;
-
-    private const ALLOWED_SCHEMES = ['http', 'https'];
 
     private function __construct(private string $value)
     {
@@ -52,16 +49,11 @@ final readonly class PurchaseLink implements \Stringable
             throw PublishedBookRefused::invalidPurchaseUrl();
         }
 
-        $scheme = parse_url($trimmed, \PHP_URL_SCHEME);
-
-        if (!\is_string($scheme) || !\in_array(strtolower($scheme), self::ALLOWED_SCHEMES, true)) {
-            throw PublishedBookRefused::invalidPurchaseUrl();
-        }
-
-        // `parse_url` acepta cosas que no son direcciones alcanzables, como
-        // `http://`, así que el filtro va después del esquema y no en su
-        // lugar: cada uno atrapa lo que el otro deja pasar.
-        if (false === filter_var($trimmed, \FILTER_VALIDATE_URL)) {
+        // La regla vive en `WebAddress` porque se aplica también a las
+        // referencias de la página de autor (`FEAT-USR-015`), y es de
+        // seguridad: escrita dos veces, una de las dos copias se queda sin el
+        // día que alguien toque los esquemas permitidos.
+        if (!WebAddress::isSafe($trimmed)) {
             throw PublishedBookRefused::invalidPurchaseUrl();
         }
 

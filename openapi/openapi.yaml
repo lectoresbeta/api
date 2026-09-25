@@ -189,6 +189,11 @@ paths:
   /authors:
     $ref: './paths/profiles.yaml#/search'
 
+  # Las referencias de la página de autor (FEAT-USR-015). No hay un `GET`
+  # hermano: la página de autor **es** el perfil, y se leen con él.
+  /me/author-links:
+    $ref: './paths/profiles.yaml#/authorLinks'
+
   # La bibliografía del autor (FEAT-USR-029). Una obra publicada **no es una
   # `Work`**: está editada y a la venta fuera, no tiene contenido aquí y no
   # cuenta como «Relato» en ningún contador.

@@ -363,3 +363,18 @@ completeTour:
     path: /api/v1/me/tour/completion
     controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\CompleteTourController::__invoke
     methods: [POST]
+
+# Las referencias de la página de autor (FEAT-USR-015): su web, su cuenta en
+# otra red, su blog.
+#
+# **No hay un `GET` hermano**, y esa ausencia es la ficha: la página de autor
+# **es** el perfil (`P-5`), así que las referencias se leen donde se lee todo
+# lo demás de esa persona. Un endpoint aparte habría sido el primer paso hacia
+# dos perfiles que mantener y que se contradicen.
+#
+# `PUT` y la lista entera: lo que el formulario manda es «estas son mis
+# referencias», con su orden, que es del usuario.
+updateAuthorLinks:
+    path: /api/v1/me/author-links
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\UpdateAuthorLinksController::__invoke
+    methods: [PUT]
