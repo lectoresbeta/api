@@ -6,6 +6,7 @@ namespace LectoresBeta\User\Profile\Infrastructure\Controller;
 
 use LectoresBeta\User\Profile\Application\Handler\GetProfileByUserIdHandler;
 use LectoresBeta\User\Profile\Application\Query\GetProfileByUserId;
+use LectoresBeta\User\Profile\Infrastructure\Composition\ProfileCounters;
 use LectoresBeta\User\Profile\Infrastructure\Http\PublicProfileBody;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,15 +29,21 @@ final readonly class GetUserProfileController
 {
     public function __construct(
         private GetProfileByUserIdHandler $profile,
+        private ProfileCounters $counters,
         private Security $security,
     ) {
     }
 
     public function __invoke(string $userId): Response
     {
-        return new JsonResponse(PublicProfileBody::of(($this->profile)(new GetProfileByUserId(
+        $profile = ($this->profile)(new GetProfileByUserId(
             $userId,
             $this->security->getUser()?->getUserIdentifier(),
-        ))));
+        ));
+
+        // Los contadores se piden **después** de resolver el perfil, y el
+        // orden importa: si no hay perfil que enseñar no hay nada que contar,
+        // y preguntarlo antes gastaría tres llamadas para tirarlas.
+        return new JsonResponse(PublicProfileBody::of($profile, $this->counters->of($profile->userId)));
     }
 }

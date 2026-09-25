@@ -24,7 +24,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class ProfileCountersTest extends EconomyScenario
 {
-    public function testANewAccountHasFourZeroes(): void
+    public function testANewAccountHasNothingCountedYet(): void
     {
         $person = $this->activatedPerson('persona');
 
@@ -32,7 +32,7 @@ final class ProfileCountersTest extends EconomyScenario
 
         self::assertResponseIsSuccessful();
         self::assertSame(
-            ['following' => 0, 'followers' => 0, 'works' => 0, 'corrections' => 0],
+            ['following' => 0, 'followers' => 0, 'works' => 0, 'corrections' => 0, 'tips' => 0],
             $this->payload()['counters'],
             'Cero, no nulo: se sabe, y es cero.',
         );

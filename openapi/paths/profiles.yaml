@@ -37,14 +37,63 @@ PublicProfile:
       type: [string, 'null']
     coverUrl:
       type: [string, 'null']
+    counters:
+      $ref: '#/ProfileCounters'
+    isFollowing:
+      type: [boolean, 'null']
+      description: Si quien pregunta le sigue. **Nulo sin sesión.**
+    isFollowedBy:
+      type: [boolean, 'null']
+      description: |
+        Si le sigue a quien pregunta — el «Te sigue» de la cabecera. Seguir es
+        **unilateral**, así que esto y `isFollowing` son preguntas distintas.
+    isBlocked:
+      type: [boolean, 'null']
+      description: Si hay un bloqueo entre los dos. **Nulo sin sesión.**
   description: |
     Lo que importa de esta respuesta es **lo que no lleva**: ni correo ni
     fecha de nacimiento, nunca. Son datos privados y no salen de su contexto.
 
-    Tampoco lleva contadores ni el estado de la relación —si le sigo, si me
-    sigue, si hay bloqueo—, porque esos datos son de `Community`, que todavía
-    no existe. Devolver ceros habría sido peor: un contador a cero se lee como
-    «no ha hecho nada», no como «aún no se sabe».
+    Tampoco lleva la **lista** de correcciones, aunque sí su contador: cuántas
+    ha hecho alguien funciona como reputación, y cuáles revelaría qué está
+    leyendo y, con ello, qué obras hay en corrección y quién las está
+    criticando.
+
+    Los tres campos de relación son **nulos sin sesión**, que no es lo mismo
+    que falsos: no hay relación que contar con un visitante anónimo.
+
+ProfileCounters:
+  type: object
+  required: [following, followers, works, corrections, tips]
+  description: |
+    Las cifras de la cabecera. **Ninguna es de `User`**: seguidos y seguidores
+    son de `Community`, los relatos de `Work`, las correcciones de `Feedback`
+    y las propinas recibidas también de `Community`, que las proyecta desde
+    los hechos de `Credits`.
+
+    **Un `null` significa «no se ha podido saber», y no es lo mismo que
+    cero.** Si un contexto no contesta, su cifra viaja nula y el perfil se
+    pinta igual; un cliente que los trate igual enseñará un 0 donde debería
+    enseñar un hueco.
+  properties:
+    following:
+      type: [integer, 'null']
+    followers:
+      type: [integer, 'null']
+    works:
+      type: [integer, 'null']
+    corrections:
+      type: [integer, 'null']
+      description: |
+        Solo las **entregadas**, y nunca las que llegan por enlace público:
+        quien tenga una agenda grande parecería mucho más corregido que quien
+        no la tiene.
+    tips:
+      type: [integer, 'null']
+      description: |
+        Créditos recibidos en propinas, **agregados**. Nunca corrección a
+        corrección: exponer quién recibe reconocimiento y quién no desanima al
+        corrector novato.
 
 byUserId:
   get:

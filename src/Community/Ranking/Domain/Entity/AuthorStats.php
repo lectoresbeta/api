@@ -64,6 +64,17 @@ class AuthorStats
         return $this->publishedWorks;
     }
 
+    /**
+     * Créditos recibidos en propinas (`FEAT-CRD-017` `RN-3c`).
+     *
+     * **Agregados y no corrección a corrección**: exponer quién recibe
+     * reconocimiento y quién no desanima al corrector novato.
+     */
+    public function tipsReceived(): int
+    {
+        return $this->tipsReceived;
+    }
+
     public function describe(?string $displayName, ?string $avatarUrl, \DateTimeImmutable $now): void
     {
         $this->displayName = $displayName;

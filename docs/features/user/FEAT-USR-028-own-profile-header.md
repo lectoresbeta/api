@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /me/profile, PATCH /me/profile, PUT /me/profile/avatar, PUT /me/profile/cover]
 events: [UserProfileUpdated]
 depends_on: [FEAT-USR-022]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-USR-028 — Mi perfil: cabecera, datos y contadores
@@ -136,6 +136,10 @@ Las imágenes se guardan con el puerto `FileStorage`, nunca en la base de datos.
 **Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
+
+**Los contadores son cinco desde 2026-09-25**, no cuatro: se añade «recibidos en propinas»
+([`FEAT-CRD-017`](../credits/FEAT-CRD-017-author-tip.md) `RN-3c`), que contesta `Community`
+porque `Credits` no publica contratos. Todo lo que sigue vale igual para la quinta.
 
 **Implementación:** `PARTIAL` (2026-09-24). **Los cuatro contadores**, sobre el `GET` y el
 `PATCH /me/profile` que ya existían. Sin tabla nueva y sin migración.

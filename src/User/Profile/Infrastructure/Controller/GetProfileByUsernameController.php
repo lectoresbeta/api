@@ -6,6 +6,7 @@ namespace LectoresBeta\User\Profile\Infrastructure\Controller;
 
 use LectoresBeta\User\Profile\Application\Handler\GetProfileByUsernameHandler;
 use LectoresBeta\User\Profile\Application\Query\GetProfileByUsername;
+use LectoresBeta\User\Profile\Infrastructure\Composition\ProfileCounters;
 use LectoresBeta\User\Profile\Infrastructure\Http\PublicProfileBody;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -29,15 +30,18 @@ final readonly class GetProfileByUsernameController
 {
     public function __construct(
         private GetProfileByUsernameHandler $profile,
+        private ProfileCounters $counters,
         private Security $security,
     ) {
     }
 
     public function __invoke(string $username): Response
     {
-        return new JsonResponse(PublicProfileBody::of(($this->profile)(new GetProfileByUsername(
+        $profile = ($this->profile)(new GetProfileByUsername(
             $username,
             $this->security->getUser()?->getUserIdentifier(),
-        ))));
+        ));
+
+        return new JsonResponse(PublicProfileBody::of($profile, $this->counters->of($profile->userId)));
     }
 }

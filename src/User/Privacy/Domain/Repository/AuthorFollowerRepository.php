@@ -36,4 +36,15 @@ interface AuthorFollowerRepository
     public function save(AuthorFollower $follower): void;
 
     public function remove(AuthorFollower $follower): void;
+
+    /**
+     * Cuántas personas siguen a alguien, y a cuántas sigue (`FEAT-USR-014`).
+     *
+     * Se cuentan aquí y no se proyectan en un contador aparte porque este
+     * contexto ya tiene el grafo entero: un número copiado de algo que ya se
+     * tiene solo puede desviarse.
+     */
+    public function countFollowersOf(UserId $authorId): int;
+
+    public function countFollowedBy(UserId $followerId): int;
 }

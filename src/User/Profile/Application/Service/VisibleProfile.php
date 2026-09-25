@@ -9,6 +9,7 @@ use LectoresBeta\User\Account\Domain\Entity\User;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Privacy\Domain\Enum\PrivacyAudience;
 use LectoresBeta\User\Privacy\Domain\Repository\AuthorFollowerRepository;
+use LectoresBeta\User\Privacy\Domain\Repository\BlockedPairRepository;
 use LectoresBeta\User\Privacy\Domain\Repository\UserPrivacySettingsRepository;
 use LectoresBeta\User\Profile\Application\DTO\PublicProfile;
 use LectoresBeta\User\Profile\Domain\Enum\ProfileResolution;
@@ -40,12 +41,18 @@ use LectoresBeta\User\Profile\Domain\Exception\ProfileNotFound;
  * **unilateral**: «solo mis seguidores» es, en la práctica, «cualquiera que
  * pulse Seguir». Está anotado como `C-22` y lo decide producto; mientras
  * tanto el ajuste hace literalmente lo que dice.
+ *
+ * El estado de la relación que devuelve sale de esa misma copia local, y eso
+ * es deliberado: es la que esta petición ya está usando para decidir si
+ * enseña el perfil, así que preguntar en otro sitio podría dar dos respuestas
+ * distintas sobre lo mismo dentro de una sola respuesta HTTP.
  */
 final readonly class VisibleProfile
 {
     public function __construct(
         private UserPrivacySettingsRepository $privacy,
         private AuthorFollowerRepository $followers,
+        private BlockedPairRepository $blocks,
     ) {
     }
 
@@ -59,6 +66,8 @@ final readonly class VisibleProfile
             throw ProfileNotFound::create();
         }
 
+        $viewer = $this->identify($viewerId);
+
         return new PublicProfile(
             $user->id()->value(),
             $asked,
@@ -68,7 +77,25 @@ final readonly class VisibleProfile
             $user->description(),
             $user->avatarUrl(),
             $user->coverUrl(),
+            // Nulos sin sesión: no hay relación que contar con un visitante
+            // anónimo, y un `false` diría que no le sigue, que es otra cosa.
+            null === $viewer ? null : $this->followers->follows($viewer, $user->id()),
+            null === $viewer ? null : $this->followers->follows($user->id(), $viewer),
+            null === $viewer ? null : $this->blocks->exists($viewer, $user->id()),
         );
+    }
+
+    private function identify(?string $viewerId): ?UserId
+    {
+        if (null === $viewerId) {
+            return null;
+        }
+
+        try {
+            return UserId::fromString($viewerId);
+        } catch (InvalidValue) {
+            return null;
+        }
     }
 
     private function isVisibleTo(User $user, ?string $viewerId): bool

@@ -14,7 +14,7 @@ sources:
 endpoints: [GET /users/{userId}, GET /profiles/{username}]
 events: []
 depends_on: [FEAT-USR-028, FEAT-USR-035]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-USR-014 — Ver el perfil público de un usuario
@@ -95,20 +95,27 @@ le sigues.
 
 Ambas devuelven lo mismo. La segunda resuelve además alias (`FEAT-USR-035`).
 
-La respuesta incluye la relación: `isFollowing`, `isFollowedBy`, `isBlocked`, `isMuted`. Sin
-ella el cliente no puede decidir qué botón pintar sin una segunda petición.
+La respuesta incluye la relación: `isFollowing`, `isFollowedBy`, `isBlocked`. Sin ella el
+cliente no puede decidir qué botón pintar sin una segunda petición.
+
+**`isMuted` no está**, y no por olvido: silenciar es
+`FEAT-COM-033`, cuya especificación sigue `PENDING`.
+Un campo que siempre valiera `false` sería una promesa que el backend no puede cumplir.
+
+Los tres son **nulos sin sesión**, que no es lo mismo que falsos: no hay relación que contar
+con un visitante anónimo.
 
 Las pestañas se piden aparte y paginadas.
 
 ## Criterios de aceptación
 
-- [x] El perfil devuelve nombre, `@usuario`, avatar, portada y descripción. *Los contadores no: son de `Community`, que no existe. Ver abajo.*
+- [x] El perfil devuelve nombre, `@usuario`, avatar, portada y descripción, **y los contadores**.
 - [x] **No devuelve email ni fecha de nacimiento.**
 - [ ] **La pestaña de relatos no incluye borradores ajenos.** *Las pestañas se piden aparte y todavía no existen.*
 - [ ] Los relatos ajenos no muestran la insignia de estado. *Misma pestaña.*
 - [ ] No existe forma de listar el feedback que otro usuario ha dado. *Se cumple por construcción —no hay endpoint— pero no hay nada que probar hasta que existan las pestañas.*
-- [ ] El contador de correcciones sí se devuelve. *Es de `Feedback` y llegará con los contadores.*
-- [ ] La respuesta indica si le sigo y si me sigue. *Sigue sin llevarla: «si le sigo» ya se puede preguntar aparte, con `getAuthorSubscription` ([`FEAT-COM-010`](../community/FEAT-COM-010-subscribe-to-author.md)); «si me sigue» no tiene todavía quien lo responda, y meter la relación en el perfil obligaría a `User` a proyectar las dos direcciones para pintarlas.*
+- [x] El contador de correcciones sí se devuelve.
+- [x] La respuesta indica si le sigo y si me sigue.
 - [x] El perfil de una cuenta eliminada devuelve `404`.
 - [x] Una cuenta sin activar puede consultar perfiles.
 - [x] Editar el perfil de otro usuario se rechaza, aunque la interfaz muestre los lápices. *Se cumple por construcción: [`FEAT-USR-008`](FEAT-USR-008-edit-profile.md) edita `/me/profile` y no admite decir de quién.*
@@ -159,12 +166,40 @@ efecto un ajuste cuya razón de ser es **no ser encontrado**.
 Cinco situaciones responden lo mismo: no existe, el identificador está mal escrito, el alias
 caducó, la cuenta está eliminada, o su titular ha restringido el perfil.
 
+### Los contadores y la relación, completados (2026-09-25)
+
+**Los contadores se componen, no se proyectan.** Cada uno responde por el contrato publicado de
+su contexto —`Community` los seguidos y seguidores, `Work` los relatos, `Feedback` las
+correcciones—, exactamente igual que en el perfil propio
+([`FEAT-USR-028`](FEAT-USR-028-own-profile-header.md)). Un `null` sigue significando «no se ha
+podido saber», que no es lo mismo que cero.
+
+Se consideró y se descartó una proyección en `User` alimentada por eventos, que habría evitado
+tres llamadas síncronas en la página más visitada de la plataforma. Se descartó porque
+`FEAT-USR-028` `P-12` ya decidió lo contrario **a propósito**: el read model llegará cuando las
+cifras digan que hace falta, no antes, porque trae su propia deuda —un contador que puede
+quedarse atrás—. Construirlo aquí habría dejado dos verdades sobre los mismos números, una por
+endpoint.
+
+**Las propinas recibidas** se añaden como quinta cifra ([`FEAT-CRD-017`](../credits/FEAT-CRD-017-author-tip.md)
+`RN-3c`), y quien las contesta es **`Community` y no `Credits`**. Los créditos son de `Credits`,
+pero ese contexto no publica contratos ([`decision:0002`](../../decisions/0002-credits-as-isolated-bounded-context.md)):
+narra sus hechos, y `Community` ya mantenía esa cifra desde `CorrectionTipped` para su propia
+reputación. La puerta se abre donde ya está el dato y no donde está su origen.
+
+**La relación sale del grafo local de `User`**, no de un contrato. Es la misma copia que esta
+petición ya está usando para decidir si enseña el perfil, así que preguntar en otro sitio podría
+dar dos respuestas distintas sobre lo mismo dentro de una sola respuesta HTTP. Va en diferido,
+como esa copia.
+
 ### Qué falta
 
-- **Los contadores** —seguidos, seguidores, relatos, correcciones— y **el estado de la
-  relación**. Son de `Community` y de `Feedback`. Devolver ceros habría sido peor que no
-  devolverlos: un contador a cero se lee como «no ha hecho nada», no como «aún no se sabe».
 - **Las pestañas** (muro, relatos, amigos, obras publicadas), que la propia ficha dice que se
-  piden aparte y paginadas.
+  piden aparte y paginadas. Las obras publicadas son
+  [`FEAT-USR-029`](FEAT-USR-029-published-books.md).
+- **`isMuted`**, que espera a `FEAT-COM-033`.
 - `U-17` sigue abierta, y ahora importa menos de lo que parecía: **no hay pestaña de
   correcciones ni forma de listarlas**, que es lo que la ficha pedía garantizar.
+- `B-1` sigue abierta. Hoy un bloqueo **no esconde el perfil**: la respuesta lo dice con
+  `isBlocked` y el cliente retira las acciones. Esconderlo del todo es una decisión de
+  `FEAT-COM-034` y no de esta ficha.

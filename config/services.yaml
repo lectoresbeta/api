@@ -339,6 +339,13 @@ services:
     LectoresBeta\Work\PublicLink\Application\Contract\PublicLinkAccess:
         alias: LectoresBeta\Work\PublicLink\Application\Service\ResolvePublicLinkAccess
 
+    # Las propinas recibidas, para el contador del perfil (FEAT-CRD-017
+    # RN-3c). Lo contesta `Community` y no `Credits`, que no publica
+    # contratos: la puerta se abre donde ya está el dato, no donde está su
+    # origen.
+    LectoresBeta\Community\Recommendation\Application\Contract\TipsReceived:
+        alias: LectoresBeta\Community\Recommendation\Application\Service\CountTipsReceived
+
     # Si una corrección se puede reclamar, y por quién (FEAT-MOD-001 RN-4,
     # RN-5). No lleva su texto: autorizar no necesita leerla.
     LectoresBeta\Feedback\Correction\Application\Contract\ClaimableCorrections:
