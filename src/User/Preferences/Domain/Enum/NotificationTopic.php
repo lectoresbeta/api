@@ -51,6 +51,16 @@ enum NotificationTopic: string
     case CREDITS_SPENT = 'CREDITS_SPENT';
     case BALANCE_WENT_NEGATIVE = 'BALANCE_WENT_NEGATIVE';
 
+    /**
+     * El gancho de reactivación (`FEAT-CRD-019`).
+     *
+     * **Apagarlo es renunciar al mecanismo entero** (`RN-2d`, `RN-8`), no
+     * solo al correo: sin aviso, un descubierto no es un gancho sino deuda a
+     * espaldas de alguien. `Credits` escucha este ajuste y deja de
+     * seleccionar a quien lo apaga.
+     */
+    case REACTIVATION_OFFER = 'REACTIVATION_OFFER';
+
     // Divulgación. No existen en la plataforma: no son actividad.
     case PLATFORM_UPDATES = 'PLATFORM_UPDATES';
     case USAGE_TIPS = 'USAGE_TIPS';
@@ -77,6 +87,13 @@ enum NotificationTopic: string
 
             // Y la divulgación es lo contrario: se lee en el buzón, no es
             // actividad que mirar en una campana.
+            //
+            // El gancho de reactivación va aquí por el mismo motivo y por uno
+            // más: se le tiende a quien lleva meses sin entrar, así que una
+            // campana que no va a mirar no es un aviso. Un solo canal hace
+            // además que apagarlo sea inequívoco, que es lo que `Credits`
+            // necesita para dejar de seleccionar a esa persona.
+            self::REACTIVATION_OFFER,
             self::PLATFORM_UPDATES,
             self::USAGE_TIPS => [NotificationChannel::EMAIL],
 

@@ -63,6 +63,7 @@ enum NotificationKind: string
     case CREDITS_SPENT = 'CREDITS_SPENT';
     case BALANCE_WENT_NEGATIVE = 'BALANCE_WENT_NEGATIVE';
     case CORRECTION_UNLOCKED = 'CORRECTION_UNLOCKED';
+    case REACTIVATION_OFFER = 'REACTIVATION_OFFER';
     case CORRECTION_CLOSED = 'CORRECTION_CLOSED';
     case CLAIM_RESOLVED = 'CLAIM_RESOLVED';
     case WORK_BLOCKED = 'WORK_BLOCKED';
@@ -107,7 +108,12 @@ enum NotificationKind: string
             self::BALANCE_WENT_NEGATIVE,
             self::CORRECTION_UNLOCKED,
             self::CORRECTION_CLOSED,
-            self::CLAIM_RESOLVED => false,
+            self::CLAIM_RESOLVED,
+            // Silenciable, y es justo el punto: apagarlo renuncia al
+            // mecanismo entero (`FEAT-CRD-019` `RN-2d`, `RN-8`), porque un
+            // descubierto sin aviso no es un gancho sino deuda a espaldas de
+            // alguien.
+            self::REACTIVATION_OFFER => false,
         };
     }
 }

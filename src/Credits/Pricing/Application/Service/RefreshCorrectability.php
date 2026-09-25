@@ -6,6 +6,7 @@ namespace LectoresBeta\Credits\Pricing\Application\Service;
 
 use LectoresBeta\Credits\Account\Domain\Repository\CreditAccountRepository;
 use LectoresBeta\Credits\Account\Domain\ValueObject\UserId;
+use LectoresBeta\Credits\Overdraft\Domain\Repository\OverdraftGrantRepository;
 use LectoresBeta\Credits\Pricing\Domain\Entity\ChapterPrice;
 use LectoresBeta\Credits\Pricing\Domain\Event\ChapterCorrectabilityChanged;
 use LectoresBeta\Credits\Pricing\Domain\Repository\ChapterPriceRepository;
@@ -48,6 +49,7 @@ final readonly class RefreshCorrectability
         private ChapterPriceRepository $prices,
         private CorrectionPriceRepository $quotations,
         private CreditAccountRepository $accounts,
+        private OverdraftGrantRepository $overdrafts,
         private CorrectabilityPolicy $policy,
         private TransactionalSession $session,
         private EventPublisher $events,
@@ -83,6 +85,7 @@ final readonly class RefreshCorrectability
 
         $now = $this->clock->now();
         $balances = [];
+        $overdrafts = [];
         $changed = [];
 
         foreach ($chapters as $chapter) {
@@ -90,11 +93,17 @@ final readonly class RefreshCorrectability
             // One lookup per author and not one per chapter: a novel of forty
             // chapters has one balance.
             $balances[$author] ??= $this->accounts->ofUser($chapter->authorId())?->balance() ?? 0;
+            // Y a lo sumo un capítulo suyo tiene descubierto concedido
+            // (`FEAT-CRD-019`), así que también es una consulta por autor.
+            // La cadena vacía significa «ninguno», que no es un identificador
+            // posible y permite cachear la ausencia igual que la presencia.
+            $overdrafts[$author] ??= $this->overdrafts->usableOf($chapter->authorId(), $now)?->chapterId()->value() ?? '';
 
             $correctable = $this->policy->allows(
                 $balances[$author],
                 $chapter->price(),
                 $this->quotations->openCorrectionsOn($chapter->chapterId()),
+                $overdrafts[$author] === $chapter->chapterId()->value(),
             );
 
             $affordable = $this->policy->affordableCorrections($balances[$author], $chapter->price());

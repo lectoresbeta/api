@@ -6,13 +6,10 @@ namespace LectoresBeta\Tests\Unit\Credits;
 
 use LectoresBeta\Credits\Account\Application\Event\FeedbackSubmitted;
 use LectoresBeta\Credits\Account\Application\Handler\ChargeCorrectionOnFeedbackSubmitted;
-use LectoresBeta\Credits\Account\Application\Service\AnnounceMovement;
-use LectoresBeta\Credits\Account\Application\Service\WatchDeepDebt;
 use LectoresBeta\Credits\Account\Domain\Entity\CreditAccount;
 use LectoresBeta\Credits\Account\Domain\Enum\CreditTransactionReason;
 use LectoresBeta\Credits\Account\Domain\ValueObject\CreditTransactionId;
 use LectoresBeta\Credits\Account\Domain\ValueObject\UserId;
-use LectoresBeta\Credits\Account\Infrastructure\Logging\PsrEconomyAlert;
 use LectoresBeta\Credits\Pricing\Domain\Entity\ChapterPrice;
 use LectoresBeta\Credits\Pricing\Domain\Entity\CorrectionPrice;
 use LectoresBeta\Credits\Pricing\Domain\Service\ChapterPricing;
@@ -21,7 +18,6 @@ use LectoresBeta\Credits\Pricing\Domain\ValueObject\WorkId;
 use LectoresBeta\Tests\Unit\Shared\FrozenClock;
 use LectoresBeta\Tests\Unit\Shared\RecordingEventPublisher;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 /**
  * El único momento en que los créditos se mueven (`FEAT-CRD-006`).
@@ -229,7 +225,7 @@ final class ChargeCorrectionTest extends TestCase
             $this->quotations,
             $this->prices,
             $this->processed,
-            new AnnounceMovement($this->published, new WatchDeepDebt(new PsrEconomyAlert(new NullLogger()))),
+            CreditsFixture::announcements($this->published),
             CreditsFixture::correctability($this->published, $this->prices, $this->quotations, $this->accounts),
             new ChapterPricing(),
             new ImmediateSession(),

@@ -58,8 +58,22 @@ final class CorrectabilityPolicy
         return min(intdiv($authorBalance, $price), self::MAX_AFFORDABLE_CORRECTIONS);
     }
 
-    public function allows(int $authorBalance, int $price, int $openCorrections): bool
+    /**
+     * `$overdraftGranted` es la excepción deliberada de `FEAT-CRD-019`: a un
+     * autor dormido y elegido por cupo se le abre **un** capítulo que no
+     * puede pagar, a sabiendas de que quedará en negativo.
+     *
+     * El tope de correcciones simultáneas sigue aplicándose, y es lo que
+     * impide que la excepción se convierta en un agujero: tres lectores
+     * llegando a la vez sobre un descubierto multiplicarían por tres la deuda
+     * que el cupo acotaba.
+     */
+    public function allows(int $authorBalance, int $price, int $openCorrections, bool $overdraftGranted = false): bool
     {
-        return $authorBalance >= $price && $openCorrections < self::MAX_OPEN_CORRECTIONS;
+        if ($openCorrections >= self::MAX_OPEN_CORRECTIONS) {
+            return false;
+        }
+
+        return $overdraftGranted || $authorBalance >= $price;
     }
 }

@@ -10,6 +10,7 @@ use LectoresBeta\Credits\Account\Domain\Event\CreditBalanceWentNegative;
 use LectoresBeta\Credits\Account\Domain\Event\CreditDebtCleared;
 use LectoresBeta\Credits\Account\Domain\Event\CreditsAdded;
 use LectoresBeta\Credits\Account\Domain\Event\CreditsSpent;
+use LectoresBeta\Credits\Overdraft\Application\Service\TrackOverdraftUse;
 use LectoresBeta\Shared\Application\Event\EventPublisher;
 use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
@@ -33,6 +34,7 @@ final readonly class AnnounceMovement
     public function __construct(
         private EventPublisher $events,
         private WatchDeepDebt $deepDebt,
+        private TrackOverdraftUse $overdrafts,
     ) {
     }
 
@@ -77,6 +79,18 @@ final readonly class AnnounceMovement
         // Una deuda mucho más honda de lo que el diseño predice no cambia
         // nada para quien la tiene: es una señal para quien opera.
         $this->deepDebt->check($movement->userId(), $balanceAfter);
+
+        // Y los dos cruces vuelven a mirarse aquí, no porque anunciar y
+        // apuntar sean lo mismo, sino porque **este es el único sitio que
+        // sabe el antes y el después** (`FEAT-CRD-019`). Detectarlos en otro
+        // lado sería escribir dos veces la misma comparación.
+        if ($balanceBefore >= 0 && $balanceAfter < 0) {
+            $this->overdrafts->crossedIntoDebt($movement, $balanceAfter);
+        }
+
+        if ($balanceBefore < 0 && $balanceAfter >= 0) {
+            $this->overdrafts->debtCleared($movement->userId());
+        }
     }
 
     /**

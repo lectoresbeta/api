@@ -242,6 +242,14 @@ posible `RN-2`.
 Resueltas: `S-9` (**sí, la asimetría es deliberada**, y el modelo es una lista de pares y no
 una matriz) y `S-10` (**suspende**, como proponía `RN-2`).
 
+## Añadido después
+
+`REACTIVATION_OFFER` entra en el catálogo con `FEAT-CRD-019`, y **solo por correo**. Es el
+único tipo cuyo interruptor hace algo más que callar un aviso: apagarlo renuncia al mecanismo
+entero, porque un descubierto sin aviso no es un gancho sino deuda a espaldas de alguien. La
+decisión viaja a `Credits` como hecho propio (`ReactivationOfferChoiceChanged`), no como una
+lectura de estas preferencias: `Credits` no puede preguntar por este contexto.
+
 ## Estado
 
 **Especificación:** `APPROVED` (2026-09-24). `S-11` y `S-12` resueltas: el catálogo de avisos está

@@ -5,15 +5,15 @@ context: Credits
 concept: Reservation
 actors: []
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P2
 sources:
   - conversation:2026-09-23 (rediseño del sistema de créditos)
   - docs/decisions/0006-credit-system.md
 endpoints: []
-events: [OverdraftCorrectionGranted, CorrectionUnlocked]
+events: [OverdraftCorrectionGranted, ReactivationOfferChoiceChanged]
 depends_on: [FEAT-CRD-009, FEAT-CRD-018]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-CRD-019 — Corrección en descubierto
@@ -160,8 +160,26 @@ esto sigue encendido:
 
 | Evento | Cuándo | Consumidores |
 |---|---|---|
-| `OverdraftCorrectionGranted` | Se concede la retención en descubierto | `Feedback` (marca la corrección como bloqueada), `Notification` (el correo gancho) |
-| `CorrectionUnlocked` | El autor vuelve a saldo ≥ 0 | `Feedback`, `Notification` |
+| `OverdraftCorrectionGranted` | Alguien **ha corregido** un capítulo que su autor no podía pagar | `Notification` (el correo gancho) |
+
+**Dice que se ha usado, no que se haya concedido.** Conceder la elegibilidad no mueve un
+crédito, y anunciarlo produciría un correo por algo que puede no llegar a ocurrir nunca: la
+mayoría de las veces nadie corregirá a ese autor esa semana.
+
+Dos hechos que la ficha proponía y que **no existen**, cada uno por la misma razón:
+
+| Propuesto | Por qué no está |
+|---|---|
+| `Feedback` consumiendo `OverdraftCorrectionGranted` para bloquear | El bloqueo ya lo dispara `CreditBalanceWentNegative` (`FEAT-CRD-018`). Dos hechos que bloquean la misma corrección son dos verdades sobre lo mismo, y el día que una se retrase la corrección quedará medio bloqueada |
+| `CorrectionUnlocked` | `CreditDebtCleared` ya desbloquea, y por lo mismo |
+
+Esto es lo que la ficha prometía en su resumen —«no añade mecánica»— llevado hasta el final:
+lo único que hacía falta publicar era lo que nadie sabía todavía.
+
+**Y uno que no estaba:** `ReactivationOfferChoiceChanged`, que publica `User` cuando alguien
+acepta o rechaza el mecanismo. `Credits` no puede preguntárselo a nadie
+([`decision:0002`](../../decisions/0002-credits-as-isolated-bounded-context.md)), así que la
+renuncia tiene que llegarle por la cola y quedarse en una proyección suya.
 
 **Quién bloquea el contenido es `Feedback`, no `Credits`.** `Credits` publica el hecho
 económico; `Feedback`, que es quien posee la corrección, decide qué enseña. Si `Credits`
@@ -169,27 +187,56 @@ controlara la visibilidad del texto, estaría gobernando el modelo de otro conte
 
 ## Criterios de aceptación
 
-- [ ] Solo se concede a autores que cumplen las tres condiciones.
-- [ ] Nunca hay dos correcciones en descubierto del mismo autor.
-- [ ] El corrector cobra íntegro y no ve nada distinto.
-- [ ] El autor ve metadatos y no el contenido.
-- [ ] Al reponer saldo, la corrección se desbloquea sin intervención.
-- [ ] Una corrección bloqueada no se borra aunque pasen meses.
-- [ ] No se selecciona a quien tiene las notificaciones desactivadas.
-- [ ] El mecanismo se desactiva globalmente por configuración.
-- [ ] La tasa de recuperación es consultable.
-- [ ] En un periodo nunca se conceden más descubiertos que el cupo.
-- [ ] La elegibilidad no usada no se acumula al periodo siguiente.
-- [ ] Quien dejó una deuda sin saldar no vuelve a ser seleccionado.
-- [ ] Poner el cupo a 0 desactiva el mecanismo sin efectos colaterales.
+- [x] Solo se concede a autores que cumplen las tres condiciones.
+- [x] Nunca hay dos correcciones en descubierto del mismo autor.
+- [x] El corrector cobra íntegro y no ve nada distinto.
+- [x] El autor ve metadatos y no el contenido.
+- [x] Al reponer saldo, la corrección se desbloquea sin intervención.
+- [x] Una corrección bloqueada no se borra aunque pasen meses.
+- [x] No se selecciona a quien tiene las notificaciones desactivadas.
+- [x] El mecanismo se desactiva globalmente por configuración.
+- [x] La tasa de recuperación es consultable.
+- [x] En un periodo nunca se conceden más descubiertos que el cupo.
+- [x] La elegibilidad no usada no se acumula al periodo siguiente.
+- [x] Quien dejó una deuda sin saldar no vuelve a ser seleccionado.
+- [x] Poner el cupo a 0 desactiva el mecanismo sin efectos colaterales.
+
+Los cinco que empiezan por «al reponer», «una corrección bloqueada», «el corrector cobra» y
+«el autor ve» los cubría ya `FEAT-CRD-018`, y esta ficha los hereda sin tocarlos, que era
+exactamente la promesa de su resumen. Los demás están en
+`tests/Functional/Credits/OverdraftReactivationTest.php`.
+
+## Cómo se reparte el cupo
+
+Un comando, `lectoresbeta:credits:grant-overdrafts`, que se programa con la periodicidad del
+cupo. Con qué se programa es decisión de operación, igual que la purga de alias
+(`FEAT-USR-036` `N-15`): atarlo al código significaría que cambiar el día es un despliegue.
+
+Admite `--dry-run`, que enseña a quién elegiría sin conceder nada. No es una cortesía: este
+comando genera deuda, y mirar antes de tocar la primera vez es lo mínimo.
+
+La consulta que elige vive en `Credits` y **no pregunta a ningún otro contexto**. Todo lo que
+hace falta ya estaba aquí: el saldo, el precio de cada capítulo y el historial de movimientos.
+Lo único que llega de fuera es la renuncia, y llega por la cola.
+
+## Decisiones tomadas al implementar
+
+| Decisión | Por qué |
+|---|---|
+| Elegible y usado son **dos estados distintos** de la misma fila | Es lo que sostiene la ficha entera: el cupo limita a cuánta gente se le abre la puerta, no cuánta deuda aparece. Y la tasa de recuperación solo cuenta lo usado, porque una elegibilidad que nadie aprovechó no emitió un solo crédito |
+| Un descubierto **por persona, para siempre** | `RN-1` y `RN-6b` juntas. Más estricto que la lectura literal de la ficha —que permitiría otro a quien sí volvió— y a cambio no hay forma de que el mecanismo insista con la misma persona semana tras semana. Queda anotado como `C-50` |
+| El tope de tres correcciones simultáneas **sigue aplicándose** sobre un capítulo con descubierto | Sin él, tres lectores llegando a la vez multiplicarían por tres la deuda que el cupo acotaba. La excepción es «puede pagar», no «no hay límite» |
+| Renunciar es apagar el aviso `REACTIVATION_OFFER`, y solo existe por correo | `RN-2d` y `RN-8` son la misma decisión vista dos veces: sin aviso no hay gancho, solo deuda. Un único canal hace además que apagarlo sea inequívoco, que es lo que `Credits` necesita para dejar de seleccionar |
+| El uso y el saldado se detectan junto al aviso de movimientos | Es el único sitio que sabe el saldo de antes y el de después. Detectar los cruces en otro lado sería escribir dos veces la misma comparación |
+| El tercer criterio de orden —el interés que despierta la obra— **no se aplica** | Se mide en lecturas y seguidores, que viven en `Community`. Traerlo costaría una dependencia entre contextos que este mecanismo no justifica. Se ordena por correcciones dadas y por lo reciente de la última actividad |
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| # | Pregunta | Impacto |
-|---|---|---|
-| C-28 | ¿Se avisa al autor **en el momento** de dejar la obra abierta, o basta con las condiciones generales? | Decide si es un trato aceptado o una sorpresa |
+| C-28 | ¿Se avisa al autor **en el momento** de dejar la obra abierta, o basta con las condiciones generales? | Decide si es un trato aceptado o una sorpresa. Sigue abierta, y es la única de las tres condiciones obligatorias que el backend no puede garantizar solo |
+| C-50 | ¿Debería poder concederse un segundo descubierto a quien sí volvió con el primero? | Hoy no: uno por persona. Cuando haya datos de recuperación se sabrá si merece la pena |
+| C-51 | ¿Debería pesar el interés que despierta la obra en el orden de los candidatos? | Lo pide la ficha y no se aplica: vive en `Community`. Haría falta un hecho que `Credits` pudiera proyectar |
 
 Resueltas: `C-42` (**3 por semana**), `C-43` (**30 a 180 días** de inactividad), `C-29` (**sí,
 renunciable** desde Configuración), `C-30` (**no se desbloquea** por el paso del tiempo) y
@@ -207,5 +254,12 @@ acumulan correcciones perdidas.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`. Es lo último que conviene construir: no aporta nada hasta que haya
-usuarios dormidos que reactivar.
+**Implementación:** `DONE` (2026-09-25). Nace **encendido con cupo 3**
+(`app.overdraft.weekly_quota`), pero no concede nada hasta que exista gente que lleve entre 30
+y 180 días sin mover un crédito, que hoy no existe: era lo último que convenía construir
+precisamente por eso.
+
+`C-28` sigue abierta y conviene no perderla de vista: es la única de las tres condiciones que
+separan esto de un patrón oscuro que el backend **no puede garantizar por su cuenta**. Las
+otras dos —que el texto siguiera abierto y que la persona haya corregido antes— están en la
+consulta que elige.

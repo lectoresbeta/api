@@ -155,6 +155,12 @@ abstract class EconomyScenario extends WebTestCase
         // escucha `Notification`: que `Credits` **no** lo consuma es la forma
         // más clara de decir que está fuera de la economía.
         'PublicCorrectionSubmitted',
+
+        // El gancho de reactivación (`FEAT-CRD-019`): `Credits` se entera de
+        // quién ha renunciado, y `Notification` manda el correo que es la
+        // mitad del mecanismo.
+        'ReactivationOfferChoiceChanged',
+        'OverdraftCorrectionGranted',
     ];
 
     /**

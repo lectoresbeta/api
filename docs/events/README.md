@@ -64,6 +64,7 @@ decisión sobre agrupación (`N-2`).
 | `PasswordChanged` | Se cambia la contraseña, **desde dentro o restableciéndola** | `Notification` ✅ | `userId`, `viaReset`, `changedAt`. **Nunca la contraseña ni su hash**. `viaReset` no decide si se avisa, decide qué dice el aviso |
 | `PrivacySettingsChanged` | Cambian los ajustes de privacidad | `Community`, read models de visibilidad | `userId`, `profileVisibility`, `commentPermission`, `messagePermission`, `changedAt`. **Nada del perfil** |
 | `NotificationPreferencesChanged` | Cambian las preferencias de aviso | **Nadie, hoy**: `Notification` las **pregunta al entregar** y no las proyecta, que es lo que hace que un cambio surta efecto en el acto. Se publica como traza de qué cambió y cuándo | `userId`, `changedTopics`, `allMuted?`, `changedAt`. **Nunca la configuración entera**: los ajustes de una persona no viajan por una cola para decir que cambiaron |
+| `ReactivationOfferChoiceChanged` | Alguien decide si acepta el gancho de reactivación (`FEAT-CRD-019` `RN-2d`, `RN-8`) | **`Credits`** ✅ (deja de seleccionarlo) | `userId`, `accepted`, `changedAt`. La respuesta **efectiva**, con el interruptor general ya aplicado |
 | `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt`. En `User` convierte su nombre de usuario en alias bloqueado 30 días |
 | `InvitedUserParticipated` | Un invitado deja su primer comentario | `Credits` | `inviterId`, `invitedUserId` |
 
@@ -196,9 +197,15 @@ es de la obra entera.
 | `CreditBalanceChanged` | Cambia el saldo | `User` ✅ (copia el número para el menú lateral), `Notification` | `userId`, `balance`, `changedAt` |
 | `CreditBalanceWentNegative` | El saldo **cruza** a negativo | `Notification` ✅, `Feedback` ✅ | `userId`, `balance`, `crossedAt`, `subjectId`. Lo último dice de qué era el movimiento: es lo que permite bloquear esa corrección y no las ya leídas |
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback` ✅, `Notification` ✅ | `userId`, `balance`, `clearedAt`. Desbloquea **todas** las correcciones retenidas a la vez |
-| `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback`, `Notification` | `holdId`, `userId`, `chapterId`, `amount` |
-| `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` | `userId`, `correctionId` |
+| `OverdraftCorrectionGranted` | Alguien **ha corregido** un capítulo que su autor no podía pagar (`FEAT-CRD-019`) | `Notification` ✅ | `authorId`, `readerId`, `correctionId`, `chapterId`, `workId`, `amount`, `creditsNeeded`, `grantedAt` |
 | `CorrectionTipped` | El autor propina una corrección recibida | **`Feedback`** ✅ (la corrección muestra que fue propinada), `Community` ✅ (reputación del corrector), `Notification` | `correctionId`, `authorId`, `readerId`, `amount`, `tippedAt` |
+
+`OverdraftCorrectionGranted` dice **que se ha usado un descubierto**, no que se haya
+concedido la elegibilidad: conceder no mueve un crédito, y anunciarlo produciría un correo
+por algo que puede no llegar a ocurrir nunca. `Feedback` **no lo consume**, aunque la ficha lo
+propusiera: el bloqueo de esa corrección ya lo dispara `CreditBalanceWentNegative`, y dos
+hechos que bloquean lo mismo son dos verdades sobre lo mismo. Por lo mismo no existe
+`CorrectionUnlocked`: `CreditDebtCleared` ya desbloquea.
 
 **Ningún evento de `Credits` bloquea a otro contexto.** Como no se retiene nada, `Feedback`
 abre el panel de corrección contra su propia proyección de `ChapterCorrectabilityChanged`, sin

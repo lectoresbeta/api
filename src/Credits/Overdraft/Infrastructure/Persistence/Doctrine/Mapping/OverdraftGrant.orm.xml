@@ -11,6 +11,9 @@
             <!-- Counting the quota of a week is an equality on this pair. -->
             <index name="idx_overdraft_quota" columns="quota_period,author_id"/>
             <index name="idx_overdraft_unsettled" columns="settled_at"/>
+            <!-- Una elegibilidad viva de un autor concreto, que es lo que se
+                 pregunta al cobrar una corrección. -->
+            <index name="idx_overdraft_author" columns="author_id,expires_at"/>
         </indexes>
 
         <id name="id" type="guid" column="id">
@@ -22,6 +25,8 @@
         <field name="quotaPeriod" column="quota_period" type="string" length="8"/>
         <field name="amount" type="smallint"/>
         <field name="grantedAt" column="granted_at" type="datetime_immutable"/>
+        <field name="expiresAt" column="expires_at" type="datetime_immutable"/>
+        <field name="usedAt" column="used_at" type="datetime_immutable" nullable="true"/>
         <field name="settledAt" column="settled_at" type="datetime_immutable" nullable="true"/>
 
     </entity>

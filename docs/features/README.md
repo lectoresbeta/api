@@ -440,7 +440,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-016 | Precio de una corrección según el esfuerzo | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-016-effort-based-pricing.md) |
 | FEAT-CRD-017 | Propina del autor a una buena corrección | Writer | APPROVED | DONE | P2 | [ficha](credits/FEAT-CRD-017-author-tip.md) |
 | FEAT-CRD-018 | Saldo negativo y correcciones bloqueadas | — (sistema) | APPROVED | DONE | P0 | [ficha](credits/FEAT-CRD-018-negative-balance.md) |
-| FEAT-CRD-019 | Corrección en descubierto como gancho de reactivación | — (sistema) | APPROVED | TODO | P2 | [ficha](credits/FEAT-CRD-019-overdraft-correction.md) |
+| FEAT-CRD-019 | Corrección en descubierto como gancho de reactivación | — (sistema) | APPROVED | DONE | P2 | [ficha](credits/FEAT-CRD-019-overdraft-correction.md) |
 
 > **El sistema de créditos se ha rediseñado de cero**
 > ([`decision:0006`](../decisions/0006-credit-system.md)). Nueve reglas:
@@ -524,7 +524,7 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
 | **FEAT-FBK-012** | `AF-1`, `AF-2` | Qué mecanismo antifraude, y si actúa antes o después del abono |
 | ~~FEAT-WRK-014~~ | ~~`W-17`~~ | **Resuelto:** cada pregunta declara su alcance, `EVERY_CHAPTER` o `LAST_CHAPTER`, y el precio de un capítulo cuenta solo las que aplican en él |
 | FEAT-WRK-012 | `L-9` | Cómo llega la insignia de créditos al catálogo sin acoplar `Work` con `Credits` |
-| FEAT-CRD-019 | `C-42`, `C-28` | Qué cupo de descubierto por periodo, y cómo se avisa al autor de que puede quedar en deuda |
+| FEAT-CRD-019 | `C-28` | `C-42` resuelta (3 por semana). Queda cómo se avisa al autor de que puede quedar en deuda: es la única de las tres condiciones obligatorias que el backend no garantiza solo |
 | **FEAT-MOD-001, FEAT-MOD-002** | **`MOD-2`** | Límite de reclamaciones y consecuencia de reclamar en falso. Sin ello, reclamar es una forma gratuita de no pagar una corrección |
 | FEAT-MOD-005, FEAT-MOD-006 | `MOD-1` | Catálogo de sanciones: qué existe y con qué gravedad |
 | FEAT-MOD-004 | `MOD-6` | Cómo se crea el primer `Admin`. Sin él no hay forma de arrancar el backoffice |

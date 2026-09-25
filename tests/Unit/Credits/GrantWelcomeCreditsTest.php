@@ -6,15 +6,11 @@ namespace LectoresBeta\Tests\Unit\Credits;
 
 use LectoresBeta\Credits\Account\Application\Event\AccountActivated;
 use LectoresBeta\Credits\Account\Application\Handler\GrantWelcomeCredits;
-use LectoresBeta\Credits\Account\Application\Service\AnnounceMovement;
-use LectoresBeta\Credits\Account\Application\Service\WatchDeepDebt;
 use LectoresBeta\Credits\Account\Domain\Enum\CreditTransactionReason;
 use LectoresBeta\Credits\Account\Domain\ValueObject\UserId;
-use LectoresBeta\Credits\Account\Infrastructure\Logging\PsrEconomyAlert;
 use LectoresBeta\Tests\Unit\Shared\FrozenClock;
 use LectoresBeta\Tests\Unit\Shared\RecordingEventPublisher;
 use PHPUnit\Framework\TestCase;
-use Psr\Log\NullLogger;
 
 /**
  * El abono de bienvenida (`FEAT-CRD-002`).
@@ -130,7 +126,7 @@ final class GrantWelcomeCreditsTest extends TestCase
             $this->accounts,
             $this->transactions,
             $this->processed,
-            new AnnounceMovement($this->published, new WatchDeepDebt(new PsrEconomyAlert(new NullLogger()))),
+            CreditsFixture::announcements($this->published),
             CreditsFixture::correctability($this->published),
             new ImmediateSession(),
             FrozenClock::at('2026-09-23T10:00:00+00:00'),

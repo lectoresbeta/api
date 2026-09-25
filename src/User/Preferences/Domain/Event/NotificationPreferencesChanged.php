@@ -18,6 +18,11 @@ use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
  *
  * Lleva **qué se tocó, no la configuración entera**: los ajustes de una
  * persona no tienen por qué viajar por una cola para decir que cambiaron.
+ *
+ * Lo que sí consume alguien es el hecho hermano y mucho más estrecho,
+ * [`ReactivationOfferChoiceChanged`](ReactivationOfferChoiceChanged.php): un
+ * contexto que necesita una respuesta concreta no debería tener que
+ * interpretar la lista de lo que alguien tocó en una pantalla.
  */
 final readonly class NotificationPreferencesChanged implements IntegrationEvent
 {

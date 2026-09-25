@@ -58,7 +58,7 @@ Work      ──▶ Credits\Application\...             PROHIBIDO
 |---|---|
 | `Account` | Saldo y movimientos de un usuario. **Un solo saldo**, que puede ser negativo |
 | `Pricing` | El precio de cada capítulo y el precio anotado de cada corrección en curso |
-| `Overdraft` | Cupo periódico de correcciones en descubierto y selección de candidatos |
+| `Overdraft` | Cupo periódico de correcciones en descubierto y selección de candidatos. La elegibilidad concedida y su uso son **dos estados distintos**: el cupo limita a cuánta gente se le abre la puerta, no cuánta deuda aparece |
 | `EventProcessing` | Deduplicación e idempotencia de los eventos recibidos |
 
 ## Agregados
@@ -67,6 +67,7 @@ Work      ──▶ Credits\Application\...             PROHIBIDO
 |---|---|---|
 | `CreditAccount` | `UserId` | El saldo es siempre la suma de sus movimientos. Un movimiento nunca se modifica ni se borra. **Admite valores negativos.** |
 | `ProcessedEvent` | `eventId` | Un `eventId` se aplica como máximo una vez. |
+| `OverdraftGrant` | `OverdraftGrantId` | Uno por autor. Caduca con su periodo y no se acumula. **Concedido y usado son estados distintos**, y solo lo usado cuenta en la tasa de recuperación |
 
 ### Un solo saldo
 
@@ -210,8 +211,7 @@ público está fuera de la economía.
 | `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` |
 | `CreditBalanceWentNegative` | El saldo cruza a negativo | `Notification` (avisa y **explica la salida**) |
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` |
-| `OverdraftCorrectionGranted` | Se concede un descubierto | `Feedback` (bloquea el contenido), `Notification` |
-| `CorrectionUnlocked` | El autor repone saldo | `Feedback`, `Notification` |
+| `OverdraftCorrectionGranted` | Alguien **ha corregido** un capítulo que su autor no podía pagar | `Notification` (el correo gancho) |
 | `CorrectionTipped` | El autor propina una corrección recibida | `Feedback` (la marca como propinada), `Community` (reputación del corrector), `Notification` |
 
 **Ningún contexto espera a `Credits` para dejar trabajar.** Como no hay nada que reservar,
@@ -228,7 +228,13 @@ ya ha decidido no es lo que `decision:0002` prohíbe; lo prohibido es que otro l
 
 Nótese que **`Credits` nunca oculta ni enseña el texto de una corrección**. En el descubierto
 publica el hecho económico; quien decide qué se ve es `Feedback`, que es quien posee la
-corrección.
+corrección. Y lo hace desde `CreditBalanceWentNegative`, no desde
+`OverdraftCorrectionGranted`: dos hechos que bloqueen la misma corrección son dos verdades
+sobre lo mismo.
+
+`Credits` **consume** además un hecho de `User`, `ReactivationOfferChoiceChanged`, y es el
+único que consume de ese contexto. Es la forma de que la renuncia al gancho de reactivación
+llegue aquí sin que este contexto pregunte nada (`FEAT-CRD-019` `RN-2d`, `RN-8`).
 
 ## Idempotencia
 
@@ -288,7 +294,7 @@ créditos que nadie pagó.
 | C-44 | ¿Son 25 palabras el suelo adecuado para una pregunta sin mínimo? | Con 25, diez preguntas sin mínimo suman 3 créditos de escritura |
 | C-39 | ¿Se avisa al autor de que alguien ha empezado a corregirle? | Le permitiría reponer saldo y evitar que la corrección llegue bloqueada |
 | C-41 | ¿Cuántas correcciones simultáneas admite un capítulo? | Es la palanca para acotar el descubierto por carrera **sin apartar créditos** |
-| C-42 | ¿Qué cupo de descubierto y con qué periodicidad? Propuesta: 3 por semana | Es el presupuesto de emisión |
+| ~~C-42~~ | ¿Qué cupo de descubierto y con qué periodicidad? | **Resuelta:** 3 por semana, en `app.overdraft.weekly_quota`. A cero apaga el mecanismo entero |
 | C-13 | ¿Cómo se cuentan las palabras de un texto con formato enriquecido? | Debe coincidir con lo que ve el lector |
 | C-15 | ¿Qué se hace con un `FeedbackSubmitted` sin retención asociada? | `FEAT-CRD-006` |
 | C-3 | ¿Las cantidades son configurables en caliente o van en el código? | La bienvenida y las dos constantes del precio son las palancas del sistema |

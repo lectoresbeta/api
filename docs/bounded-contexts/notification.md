@@ -70,6 +70,7 @@ el resto es el catálogo previsto.
 | `CORRECTION_RATED` | `Feedback` | Autor de la corrección | |
 | `CREDITS_ADDED` / `CREDITS_SPENT` | `Credits` | Titular de la cuenta | |
 | `BALANCE_WENT_NEGATIVE` | `Credits` | Autor de la obra | |
+| `REACTIVATION_OFFER` | `OverdraftCorrectionGranted` (`Credits`) | Autor dormido al que alguien acaba de corregir | Silenciable, y apagarlo renuncia al mecanismo entero (`FEAT-CRD-019`) |
 | `SUBSCRIBED_AUTHOR_PUBLISHED` | `Work` / `Community` | Suscriptores | |
 | `DIRECT_MESSAGE_RECEIVED` | `Community` | Destinatario | |
 | `PLATFORM_INVITATION` | `User` | Persona invitada (solo email; aún no es usuaria) | |

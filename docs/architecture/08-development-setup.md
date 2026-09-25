@@ -110,6 +110,7 @@ Y los del proyecto, que se lanzan a mano o desde un programador:
 bin/console lectoresbeta:admin:grant <correo>                      # ver «El primer administrador»
 bin/console lectoresbeta:user:purge-expired-username-aliases       # --dry-run para mirar antes
 bin/console credits:check-invariant                                # ¿cuadra la economía?
+bin/console lectoresbeta:credits:grant-overdrafts                  # el cupo de la semana; --dry-run
 ```
 
 `make schema-validate` merece un sitio en la cabeza: si alguna vez responde que el esquema y
@@ -260,6 +261,9 @@ los créditos de bienvenida, inicio de sesión y consulta de saldo. Lo que falta
   `N-15`). Es inocuo — un alias caducado ya no resuelve ni ocupa su nombre, lo borre alguien
   o no; solo se acumulan filas.
 - De `processed_event` no purga nadie, y ahí no hay comando todavía.
+- El cupo de descubiertos (`FEAT-CRD-019`) tampoco tiene programación: el comando existe
+  (`lectoresbeta:credits:grant-overdrafts`) y nadie lo llama. Nace con cupo 3 por semana y
+  `app.overdraft.weekly_quota: 0` lo apaga entero.
 - No hay entorno de producción definido (`docs/architecture/07-observability-and-operations.md`).
 
 ## El primer administrador

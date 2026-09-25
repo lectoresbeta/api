@@ -40,6 +40,19 @@ parameters:
     # emitió.
     app.content_review.enabled: true
 
+    # Cuántas correcciones en descubierto se conceden por semana
+    # (FEAT-CRD-019 RN-2b, C-42).
+    #
+    # **Es el interruptor del mecanismo entero** (RN-7): a cero no se concede
+    # nada, así que no hay elegibilidad que caduque, ni deuda que aparezca, ni
+    # correo que salga.
+    #
+    # Con 3 y un precio máximo de 20, la emisión no puede pasar de 60 créditos
+    # semanales. Esa es la diferencia entre un mecanismo con presupuesto y uno
+    # con disparador: el segundo se dispara cuando le toca, el primero cuando
+    # tú decides y hasta donde tú decides.
+    app.overdraft.weekly_quota: 3
+
     app.economy.debt_alert_threshold: -40
     app.economy.zero_balance_alert_share: 0.5
     app.economy.overdraft_recovery_alert_rate: 0.5
@@ -222,6 +235,13 @@ services:
                 # escucha lo que el revisor marca y lo retira.
                 - LectoresBeta\Moderation\ContentReview\Application\Event\ChapterContentUpdated
                 - LectoresBeta\Work\Manuscript\Application\Event\ContentReviewFlagged
+
+                # El gancho de reactivación (FEAT-CRD-019). `Credits` se
+                # entera por la cola de quién ha renunciado, porque no puede
+                # preguntárselo a `User` (decision:0002); `Notification`
+                # recibe el hecho económico y manda el correo.
+                - LectoresBeta\Credits\Overdraft\Application\Event\ReactivationOfferChoiceChanged
+                - LectoresBeta\Notification\Delivery\Application\Event\OverdraftCorrectionGranted
 
                 # Lo que `Moderation` decide y `User` aplica (FEAT-MOD-006).
                 - LectoresBeta\User\Account\Application\Event\SanctionImposed
@@ -789,6 +809,26 @@ services:
         tags:
             - { name: messenger.message_handler, method: wentNegative }
             - { name: messenger.message_handler, method: debtCleared }
+
+    # El gancho de reactivación (FEAT-CRD-019). El aviso es la mitad del
+    # mecanismo: sin él lo que queda es una deuda que su dueño descubre por
+    # casualidad.
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorAboutTheOverdraftCorrection:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Y quién ha renunciado a que se lo tiendan (RN-2d, RN-8). `Credits` lo
+    # sabe porque se lo cuentan, no porque pregunte.
+    LectoresBeta\Credits\Overdraft\Application\Handler\TrackReactivationChoice:
+        tags:
+            - { name: messenger.message_handler }
+
+    # El cupo del periodo, que es lo que hace controlable este mecanismo: el
+    # techo de emisión se sabe de antemano —cupo x precio maximo— y apagarlo
+    # es poner un numero a cero.
+    LectoresBeta\Credits\Overdraft\Application\Service\GrantOverdrafts:
+        arguments:
+            $quota: '%app.overdraft.weekly_quota%'
 
     # El DSN del transporte es configuración, y traducirla a una dependencia
     # tipada es trabajo de Infrastructure: ni Domain ni Application leen

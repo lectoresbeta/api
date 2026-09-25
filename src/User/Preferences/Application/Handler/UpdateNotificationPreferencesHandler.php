@@ -11,11 +11,13 @@ use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Preferences\Application\Command\UpdateNotificationPreferences;
+use LectoresBeta\User\Preferences\Application\Contract\NotificationChoices;
 use LectoresBeta\User\Preferences\Domain\Entity\NotificationPreference;
 use LectoresBeta\User\Preferences\Domain\Entity\UserNotificationSettings;
 use LectoresBeta\User\Preferences\Domain\Enum\NotificationChannel;
 use LectoresBeta\User\Preferences\Domain\Enum\NotificationTopic;
 use LectoresBeta\User\Preferences\Domain\Event\NotificationPreferencesChanged;
+use LectoresBeta\User\Preferences\Domain\Event\ReactivationOfferChoiceChanged;
 use LectoresBeta\User\Preferences\Domain\Exception\NotificationPreferenceRefused;
 use LectoresBeta\User\Preferences\Domain\Repository\NotificationPreferenceRepository;
 use LectoresBeta\User\Profile\Domain\Exception\ProfileNotFound;
@@ -41,6 +43,7 @@ final readonly class UpdateNotificationPreferencesHandler
 {
     public function __construct(
         private NotificationPreferenceRepository $preferences,
+        private NotificationChoices $choices,
         private TransactionalSession $session,
         private EventPublisher $events,
         private Clock $clock,
@@ -109,6 +112,41 @@ final readonly class UpdateNotificationPreferencesHandler
             $owner->value(),
             array_values(array_unique($changed)),
             $command->allMuted,
+            $now,
+        ));
+
+        $this->announceReactivationChoice($owner, $changed, null !== $command->allMuted, $now);
+    }
+
+    /**
+     * El gancho de reactivación se apaga desde esta misma pantalla, y
+     * apagarlo renuncia al mecanismo entero y no solo al correo
+     * (`FEAT-CRD-019` `RN-2d`, `RN-8`).
+     *
+     * Se anuncia **la respuesta efectiva**, no la casilla: quien silencia
+     * todo ha renunciado aunque la casilla siga marcada, y hacérselo deducir
+     * a `Credits` sería repartir esta regla entre dos contextos.
+     *
+     * @param list<string> $changed
+     */
+    private function announceReactivationChoice(
+        UserId $owner,
+        array $changed,
+        bool $touchedMute,
+        \DateTimeImmutable $now,
+    ): void {
+        if (!$touchedMute && !\in_array(NotificationTopic::REACTIVATION_OFFER->value, $changed, true)) {
+            return;
+        }
+
+        $this->events->publish(new ReactivationOfferChoiceChanged(
+            EventId::generate(),
+            $owner->value(),
+            $this->choices->allows(
+                $owner->value(),
+                NotificationTopic::REACTIVATION_OFFER->value,
+                NotificationChannel::EMAIL->value,
+            ),
             $now,
         ));
     }

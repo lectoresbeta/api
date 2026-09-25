@@ -19,12 +19,32 @@ final class DoctrineOverdraftGrantRepository extends DoctrineRepository implemen
         $this->register($grant);
     }
 
-    public function countInPeriod(UserId $authorId, string $quotaPeriod): int
+    public function countInPeriod(string $quotaPeriod): int
     {
-        return $this->repository()->count([
-            'authorId' => $authorId->value(),
-            'quotaPeriod' => $quotaPeriod,
-        ]);
+        return $this->repository()->count(['quotaPeriod' => $quotaPeriod]);
+    }
+
+    public function hasGrantFor(UserId $authorId): bool
+    {
+        return $this->repository()->count(['authorId' => $authorId->value()]) > 0;
+    }
+
+    public function usableOf(UserId $authorId, \DateTimeImmutable $moment): ?OverdraftGrant
+    {
+        /** @var list<OverdraftGrant> $grants */
+        $grants = $this->entityManager->createQueryBuilder()
+            ->select('g')
+            ->from(OverdraftGrant::class, 'g')
+            ->where('g.authorId = :author')
+            ->andWhere('g.usedAt IS NULL')
+            ->andWhere('g.expiresAt > :moment')
+            ->setParameter('author', $authorId->value())
+            ->setParameter('moment', $moment)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getResult();
+
+        return $grants[0] ?? null;
     }
 
     public function unsettledOf(UserId $authorId): array
@@ -41,6 +61,10 @@ final class DoctrineOverdraftGrantRepository extends DoctrineRepository implemen
         $row = $this->entityManager->createQueryBuilder()
             ->select('COUNT(g.id) AS granted', 'SUM(CASE WHEN g.settledAt IS NULL THEN 0 ELSE 1 END) AS settled')
             ->from(OverdraftGrant::class, 'g')
+            // Solo lo que llegó a usarse: una elegibilidad que nadie
+            // aprovechó no emitió nada, y contarla hundiría la tasa sin que
+            // se hubiera regalado un solo crédito.
+            ->where('g.usedAt IS NOT NULL')
             ->getQuery()
             ->getSingleResult();
 
