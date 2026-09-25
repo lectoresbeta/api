@@ -123,7 +123,7 @@ preferencias y presencia pública como autor.
 | `ReaderDirectory` | Hasta N personas cuyo nombre o `@usuario` encajan, como tarjeta de perfil | `Reading` |
 | `AuthorAudience` | **Un booleano**: ¿acepta este autor comentarios de esta persona? Nunca el ajuste | `Feedback` |
 | `MessageAudience` | **Un booleano**: ¿admite esta persona que aquella le abra una conversación? Nunca el ajuste | `Community` |
-| `ProposalRecipients` | **Dos booleanos**: ¿admite que le inviten a leer? ¿y que le propongan ser writing buddy? Nunca el ajuste | `Reading` |
+| `ProposalRecipients` | **Dos booleanos**: ¿admite que le inviten a leer? ¿y que le propongan ser writing buddy? Nunca el ajuste. Y, sobre uno mismo, si esas puertas están abiertas, para no dejar publicar lo que se tiene cerrado | `Reading`, `Community` |
 | `VisibleProfiles` | De estas personas, **las que quien pregunta puede ver**, como tarjeta de perfil | `Community` |
 | `ProfileCards` | Lo mismo **sin filtrar**, y con un solo uso legítimo: la lista de a quién has bloqueado | `Community` |
 

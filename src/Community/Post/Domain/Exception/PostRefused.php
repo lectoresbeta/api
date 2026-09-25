@@ -96,6 +96,25 @@ final class PostRefused extends \DomainException implements BusinessFailure
         );
     }
 
+    /**
+     * Se busca lo que se tiene cerrado (`FEAT-COM-004` `RN-2`,
+     * `FEAT-COM-005` `RN-2`).
+     *
+     * Publicar «busco writing buddy» con las propuestas cerradas manda a todo
+     * el que responda contra una puerta cerrada, y quien publicó no se entera
+     * nunca de por qué no le escribe nadie. Se rechaza aquí y no se abre el
+     * ajuste solo: publicar no es consentir, y un ajuste de recepción que se
+     * abre sin pedirlo deja de ser un ajuste.
+     */
+    public static function whileTheDoorIsShut(string $setting): self
+    {
+        return new self(
+            'RECEPTION_CLOSED',
+            FailureKind::CONFLICT,
+            \sprintf('Open %s in your settings before asking for it on the wall.', $setting),
+        );
+    }
+
     public static function tooManyAttachments(): self
     {
         return new self(

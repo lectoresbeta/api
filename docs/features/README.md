@@ -311,8 +311,8 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-001 | Ver las publicaciones del muro principal | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-001-main-wall.md) |
 | FEAT-COM-002 | Crear una publicación (texto, imagen, vídeo, enlace o relato) | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-002-create-post.md) |
 | FEAT-COM-003 | Publicar buscando lectores beta para una obra | Writer | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-003-looking-for-beta-readers.md) |
-| FEAT-COM-004 | Publicar buscando writing buddy | Writer | PENDING | TODO | P2 | — |
-| FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | PENDING | TODO | P2 | — |
+| FEAT-COM-004 | Publicar buscando writing buddy | Writer | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-004-looking-for-a-writing-buddy.md) |
+| FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-005-offering-as-a-beta-reader.md) |
 | FEAT-COM-006 | Comentar una publicación | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-006-comment-on-post.md) |
 | FEAT-COM-007 | ~~Reaccionar con emoji a una publicación~~ | — | PENDING | DEPRECATED | P2 | — |
 | FEAT-COM-008 | Apoyar una publicación con un «me gusta» | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-008-like-a-post.md) |

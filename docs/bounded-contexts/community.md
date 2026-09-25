@@ -112,6 +112,7 @@ la lista.
 | `ReadableChapters` | `Work` | Saber si alguien puede comentar un capítulo (`FEAT-COM-036`) |
 | `WorkCards` | `Work` | Pintar la obra que cita una publicación, **viva** (`FEAT-COM-028`). Lo que no es visible para cualquiera no vuelve, así que la tarjeta se cae sola y este contexto no tiene que saber por qué |
 | `MessageAudience` | `User` | Saber si alguien admite que le abran una conversación |
+| `ProposalRecipients` | `User` | Saber si quien publica tiene abierta la puerta que está pidiendo en el muro (`FEAT-COM-004`, `FEAT-COM-005`) |
 
 ## Eventos consumidos
 

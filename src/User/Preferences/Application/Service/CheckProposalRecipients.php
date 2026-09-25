@@ -52,6 +52,22 @@ final readonly class CheckProposalRecipients implements ProposalRecipients
         );
     }
 
+    public function openDoorsOf(string $userId): array
+    {
+        try {
+            $user = UserId::fromString($userId);
+        } catch (InvalidValue) {
+            return ['betaReaderInvitations' => false, 'writingBuddyProposals' => false];
+        }
+
+        $settings = $this->settings->ofUser($user);
+
+        return [
+            'betaReaderInvitations' => $settings?->acceptsBetaReaderInvitations() ?? true,
+            'writingBuddyProposals' => $settings?->acceptsWritingBuddyProposals() ?? true,
+        ];
+    }
+
     /**
      * @param callable(bool, bool): bool $door cuál de las dos se pregunta
      */

@@ -43,4 +43,26 @@ interface ProposalRecipients
      * Si admite que le propongan ser writing buddy (`FEAT-RDG-008`).
      */
     public function acceptsWritingBuddyProposals(string $recipientId, string $proposerId): bool;
+
+    /**
+     * Lo mismo, **preguntado sobre uno mismo**: ¿tiene esta persona abierta
+     * esa puerta, para quien sea? (`FEAT-COM-004`, `FEAT-COM-005`).
+     *
+     * Es un método aparte y no los de arriba con el mismo identificador dos
+     * veces, porque esos responderían `false`: nadie se propone nada a sí
+     * mismo, y esa comprobación es correcta para lo que preguntan. Aquí la
+     * pregunta es otra — no «¿puede este abordar a aquel?» sino «¿está esta
+     * puerta abierta?»— y la hace quien está a punto de dejar que alguien
+     * publique que la busca.
+     *
+     * No lleva bloqueo, y no es un olvido: un bloqueo es contra una persona
+     * concreta y aquí no hay segunda persona.
+     *
+     * Las dos puertas juntas y no una consulta por puerta: se guardan en la
+     * misma fila y quien pregunta solo necesita una de ellas, pero cuál
+     * depende de lo que se esté publicando.
+     *
+     * @return array{betaReaderInvitations: bool, writingBuddyProposals: bool}
+     */
+    public function openDoorsOf(string $userId): array;
 }

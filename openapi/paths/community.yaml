@@ -823,6 +823,17 @@ posts:
         description: |
           `code: WORK_NOT_VISIBLE`. Buscas lectores beta para una obra que
           todavía no se puede ver: publícala primero.
+
+          O `code: RECEPTION_CLOSED` (`FEAT-COM-004`, `FEAT-COM-005`): pides
+          en el muro lo que tienes cerrado en `PUT /me/reception-settings`.
+          `LOOKING_FOR_WRITING_BUDDY` exige `writingBuddyProposals` abierto y
+          `OFFERING_AS_BETA_READER` exige `betaReaderInvitations`.
+
+          Publicar una petición que nadie puede atender manda contra un muro a
+          todo el que responda, y quien publicó no se entera nunca de por qué
+          no le escribe nadie. **El ajuste no se abre solo**: publicar no es
+          consentir. Se comprueba al publicar, así que cerrar la recepción
+          después no retira lo publicado.
         content:
           application/problem+json:
             schema:

@@ -31,6 +31,7 @@ use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
+use LectoresBeta\User\Preferences\Application\Contract\ProposalRecipients;
 use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
 
 /**
@@ -48,9 +49,15 @@ use LectoresBeta\Work\Manuscript\Application\Contract\WorkAccessBriefs;
  *   puede arrastrar metadatos, y los de una foto llevan dónde se tomó.
  *
  * **Buscar lectores beta exige una obra** (`FEAT-COM-003`), tuya y publicada.
- * Es la única intención que impone algo, y por lo que significa: las otras
- * tres describen lo que alguien quiere; esta pide algo concreto sobre un
- * texto concreto, y sin él nadie puede atenderla.
+ * Es la única intención que impone un adjunto, y por lo que significa: las
+ * otras tres describen lo que alguien quiere; esta pide algo concreto sobre
+ * un texto concreto, y sin él nadie puede atenderla.
+ *
+ * **Y las dos que piden que te aborden exigen tener la puerta abierta**
+ * (`FEAT-COM-004`, `FEAT-COM-005`). Publicar «busco writing buddy» con las
+ * propuestas cerradas en los ajustes manda contra un muro a todo el que
+ * responda, y quien publicó no se entera nunca de por qué no le escribe
+ * nadie.
  */
 final readonly class CreatePostHandler
 {
@@ -58,6 +65,7 @@ final readonly class CreatePostHandler
         private PostRepository $posts,
         private RecordMentions $mentions,
         private WorkAccessBriefs $works,
+        private ProposalRecipients $reception,
         private ImageProcessor $images,
         private FileStorage $storage,
         private TransactionalSession $session,
@@ -72,6 +80,9 @@ final readonly class CreatePostHandler
         $body = PostBody::fromString($command->body);
         $link = PostLink::fromString($command->linkUrl);
         $type = self::type($command->type);
+
+        $this->doorHasToBeOpen($type, $command->authorId);
+
         $work = $this->work($command->workId, $command->authorId, $type);
         $image = null === $command->image || '' === $command->image ? null : $command->image;
 
@@ -154,6 +165,37 @@ final readonly class CreatePostHandler
         $this->mentions->announce($mentions, $post, $authorId, $now);
 
         return $postId->value();
+    }
+
+    /**
+     * No se pide en el muro lo que se tiene cerrado en los ajustes
+     * (`FEAT-COM-004` `RN-2`, `FEAT-COM-005` `RN-2`).
+     *
+     * Se comprueba **al publicar y solo al publicar**: cerrar la recepción
+     * después no retira la publicación. Una es un acto con fecha y la otra un
+     * ajuste que cambia cuando quiera su dueño, y hacer desaparecer textos
+     * viejos al tocar un interruptor sorprendería a cualquiera.
+     *
+     * Las otras dos intenciones no comprueban nada. `GENERAL` no pide que te
+     * aborden, y `LOOKING_FOR_BETA_READERS` pide que **te lean**, que es una
+     * solicitud de acceso y no una propuesta: tiene sus propias reglas en
+     * `FEAT-COM-003` y ninguna de estas dos puertas la gobierna.
+     */
+    private function doorHasToBeOpen(PostType $type, string $authorId): void
+    {
+        $door = match ($type) {
+            PostType::LOOKING_FOR_WRITING_BUDDY => 'writingBuddyProposals',
+            PostType::OFFERING_AS_BETA_READER => 'betaReaderInvitations',
+            default => null,
+        };
+
+        if (null === $door) {
+            return;
+        }
+
+        if (true !== ($this->reception->openDoorsOf($authorId)[$door] ?? false)) {
+            throw PostRefused::whileTheDoorIsShut($door);
+        }
     }
 
     /**
