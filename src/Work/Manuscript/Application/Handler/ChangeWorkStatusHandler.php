@@ -44,6 +44,13 @@ use LectoresBeta\Work\Manuscript\Domain\ValueObject\WorkId;
  * work, and with corrections in flight it is worse: a reader who has spent
  * hours on a chapter cannot have it vanish. That one is still `W-10`'s to
  * decide, and until it does, the honest answer is «no».
+ *
+ * **Pedir el estado que ya se tiene no anuncia nada.** La llamada sigue
+ * respondiendo bien —fija un estado, y ese estado queda— pero un hecho es
+ * algo que ha pasado, y aquí no ha pasado nada. Importa desde
+ * `FEAT-NOT-004`: con `WorkPublished` escuchado por quien avisa a los
+ * seguidores, pulsar «Publicar» dos veces les avisaría dos veces de la misma
+ * obra, que es la forma más rápida de que dejen de mirar la campana.
  */
 final readonly class ChangeWorkStatusHandler
 {
@@ -79,14 +86,23 @@ final readonly class ChangeWorkStatusHandler
             $this->works->save($work);
         });
 
-        $this->events->publish($event);
+        if (null !== $event) {
+            $this->events->publish($event);
+        }
 
         return $work->status()->value;
     }
 
-    private function apply(Work $work, WorkStatus $target, \DateTimeImmutable $now): IntegrationEvent
+    /**
+     * El hecho que corresponde a la transición, o `null` si no hubo ninguna.
+     */
+    private function apply(Work $work, WorkStatus $target, \DateTimeImmutable $now): ?IntegrationEvent
     {
         $from = $work->status();
+
+        if ($from === $target) {
+            return null;
+        }
 
         return match ($target) {
             WorkStatus::PUBLISHED => $this->toPublished($work, $from, $now),

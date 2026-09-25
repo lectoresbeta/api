@@ -84,7 +84,7 @@ decisión sobre agrupación (`N-2`).
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
 | `WorkCreated` | Se crea la obra | `Reading`, `Notification` | `workId`, `authorId`, `title`, `accessMode`, `status`, `createdAt` |
-| `WorkPublished` | La obra pasa a `PUBLISHED` | `Reading`, `Community`, `Notification` | `workId`, `authorId`, `title`, `wordCount`, `chapterCount`, `publishedAt` |
+| `WorkPublished` | La obra pasa a `PUBLISHED`, **y solo la primera vez** (`FEAT-WRK-016`): pedir el estado que ya se tiene no anuncia nada | `Reading`, `Community`, `Notification` ✅ (avisa a los seguidores) | `workId`, `authorId`, `title`, `wordCount`, `chapterCount`, `genres`, `publishedAt` |
 | `WorkOpenedForCorrection` | La obra pasa a `IN_CORRECTION` | `Reading`, **`Credits`** | `workId`, `authorId`, `openedAt` |
 | `WorkClosedForCorrection` | La obra vuelve a `PUBLISHED` | `Reading`, **`Credits`** | `workId`, `authorId`, `closedAt` |
 | `ChapterContentUpdated` | Cambia el texto de un capítulo | `Feedback`, **`Credits`** ✅ | `chapterId`, `workId`, `authorId`, `position`, `wordCount`, `version`, `updatedAt`. `version` la añade `FEAT-WRK-005` |
@@ -260,8 +260,8 @@ hecho económico; qué se ve lo decide `Feedback`, que es quien posee la correcc
 
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
-| `AuthorSubscribed` | Alguien empieza a seguir a un autor | **`User`** (proyección de audiencias), `Notification` | `subscriberId`, `authorId`, `subscribedAt` |
-| `AuthorUnsubscribed` | Alguien deja de seguir a un autor | **`User`** | `subscriberId`, `authorId`, `unsubscribedAt` |
+| `AuthorSubscribed` | Alguien empieza a seguir a un autor | **`User`** (proyección de audiencias), **`Community`** (sugerencias), **`Notification`** ✅ (a quién avisar de una obra nueva) | `subscriberId`, `authorId`, `subscribedAt` |
+| `AuthorUnsubscribed` | Alguien deja de seguir a un autor | **`User`**, **`Community`**, **`Notification`** ✅ | `subscriberId`, `authorId`, `unsubscribedAt` |
 | `UserBlocked` | Alguien bloquea a alguien | **`User`** (deja de aceptar comentarios entre ambos), **`Reading`** (retira el acceso de lector beta), y `Feedback`, `Credits` y `Notification` cuando existan | `blockerId`, `blockedId`, `blockedAt` |
 | `UserUnblocked` | Se levanta un bloqueo | **`User`**. `Reading` **no** lo consume: devolver un acceso revocado es una decisión del autor, no un efecto secundario | `blockerId`, `blockedId`, `unblockedAt` |
 | `DirectMessageSent` | Alguien le escribe a alguien (`FEAT-COM-011`) | **`Notification`** ✅ (`DIRECT_MESSAGE_RECEIVED`) | `conversationId`, `senderId`, `recipientId`, `sentAt`. **Sin el cuerpo, ni una línea** |

@@ -138,8 +138,10 @@ hay nadie esperando al otro lado.
 ## Reglas de negocio
 
 - `RN-1` Una notificación se entrega solo por los canales que el usuario ha aceptado.
-- `RN-2` El canal in-app siempre está disponible; solo el email es configurable.
-  *(Pendiente de confirmar: `N-1`.)*
+- `RN-2` **Los dos canales son configurables** por tipo (`FEAT-USR-039`, `FEAT-NOT-003`),
+  salvo los avisos **operativos** —activación, restablecimiento de contraseña, avisos de
+  seguridad, obra bloqueada—, que ignoran cualquier preferencia. `N-1` resuelta: si el
+  interruptor general alcanzara a esos, dejaría a alguien sin poder recuperar su cuenta.
 - `RN-3` La entrega es idempotente: un mismo evento no genera dos avisos iguales. Lo garantiza
   el índice único `(destinatario, tipo, evento de origen)`, no solo la comprobación previa:
   la cola no promete entrega única y dos consumidores pueden correr a la vez.
@@ -149,21 +151,25 @@ hay nadie esperando al otro lado.
   aviso: ya sabe lo que ha hecho, y un aviso propio es ruido que enseña a ignorar la campana.
 - `RN-6` Un hecho cuyo destinatario no se puede resolver **se descarta sin error**. Una cuenta
   eliminada no recibe avisos, y reintentar no la va a resucitar.
+- `RN-7` Un hecho puede alcanzar a **muchos destinatarios** (`FEAT-NOT-004`). El reparto va
+  por páginas y cada destinatario tiene su propia fila, con sus propias preferencias
+  aplicadas: un aviso repartido no es un aviso con varios dueños.
 
 `RN-4` no es una preferencia de estilo: es protección del contenido inédito, que no debe
 salir de la plataforma por correo. Se aplica igual al canal in-app, que sí se queda dentro,
 **porque la regla es del aviso y no del canal**: un aviso dice que hay algo que leer, y se lee
 donde vive.
 
-Mientras `N-1` siga abierta, los avisos in-app **no se filtran por preferencias**: el canal
-entrega siempre. Cuando se decida, se aplica aquí.
+Silenciar un tipo **no borra su rastro**: la fila se crea igual, fuera de la bandeja
+(`FEAT-NOT-002`). Hacen falta dos canales independientes y una fila que registre qué se hizo
+con el hecho — «no hay fila» no puede significar a la vez «no lo quiere» y «no ha pasado».
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| N-1 | ¿Se pueden desactivar también las notificaciones in-app o solo las de email? | El documento habla solo del correo |
-| N-2 | ¿Se agrupan las notificaciones (resumen diario) o se envían una a una? | Volumen de correo |
+| ~~N-1~~ | ~~¿Se pueden desactivar también las in-app?~~ | **Resuelta** (`FEAT-NOT-003`): los dos canales son configurables, salvo los operativos |
+| ~~N-2~~ | ~~¿Se agrupan en un resumen diario?~~ | **Resuelta** (`FEAT-NOT-002`): inmediatos y uno por aviso |
 | N-3 | ¿Qué proveedor de email se usa? | Integración externa |
 | N-4 | ¿Hay notificaciones push o solo in-app y email? | Alcance |
 | N-5 | ¿Cuánto tiempo se conservan las notificaciones leídas? | Retención |

@@ -52,9 +52,11 @@ final class NotificationPhrase
             NotificationKind::BETA_READER_INVITATION => 'Te han invitado a leer una obra',
             NotificationKind::BETA_READER_ACCESS_REVOKED => 'Se ha retirado tu acceso a una obra',
             NotificationKind::WRITING_BUDDY_PROPOSED => 'Te proponen ser writing buddy',
-            NotificationKind::SUBSCRIBED_AUTHOR_PUBLISHED => null === $who
-                ? 'Hay algo nuevo de alguien a quien sigues'
-                : \sprintf('%s ha publicado algo nuevo', $who),
+            NotificationKind::SUBSCRIBED_AUTHOR_PUBLISHED => match (true) {
+                null !== $who && null !== $work => \sprintf('%s ha publicado «%s»', $who, $work),
+                null !== $who => \sprintf('%s ha publicado algo nuevo', $who),
+                default => 'Hay algo nuevo de alguien a quien sigues',
+            },
             NotificationKind::BALANCE_WENT_NEGATIVE => 'Tu saldo de créditos está en negativo',
             NotificationKind::CLAIM_RESOLVED => 'Hay resolución de tu reclamación',
             NotificationKind::REACTIVATION_OFFER => 'Han corregido un texto tuyo',
