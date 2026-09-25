@@ -40,6 +40,16 @@ final readonly class PostCard
         public bool $edited,
         public \DateTimeImmutable $createdAt,
         /**
+         * Quién lo ha vuelto a sacar, cuando la entrada es un repost.
+         *
+         * El resto de la tarjeta sigue siendo **del original**: su autor, su
+         * texto, sus contadores. Un repost es una referencia, no una
+         * publicación aparte, así que lo único que añade es la cabecera.
+         */
+        public ?DirectoryEntry $repostedBy = null,
+        public ?string $repostComment = null,
+        public ?\DateTimeImmutable $repostedAt = null,
+        /**
          * Aparte del texto, y no incrustadas en él: que cliente y servidor
          * tengan que coincidir en cómo se parsea una cadena es una fuente
          * clásica de discrepancias, y aquí la discrepancia sería un enlace

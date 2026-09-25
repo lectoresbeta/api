@@ -225,4 +225,9 @@ class Post
     {
         ++$this->repostCount;
     }
+
+    public function repostUndone(): void
+    {
+        $this->repostCount = max(0, $this->repostCount - 1);
+    }
 }

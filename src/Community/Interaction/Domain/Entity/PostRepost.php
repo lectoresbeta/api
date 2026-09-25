@@ -9,11 +9,18 @@ use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostId;
 
 /**
- * Somebody resharing a post (`FEAT-COM-019`).
+ * Alguien que vuelve a sacar la publicación de otro (`FEAT-COM-019`).
  *
- * A repost **does not widen the audience** of the original (`RN-8`): whoever
- * could not see it still cannot. The check is on the original post, not on
- * this row, which is why no audience is copied here.
+ * **Es una referencia, no una publicación aparte** (`C-3`). Los contadores y
+ * la conversación son los del original, que es lo que enseña el diseño, y
+ * así no hay cadenas de reposts anidados que mostrar ni que moderar.
+ *
+ * Un repost **no amplía la audiencia** del original (`RN-5`): quien no podía
+ * verlo sigue sin poder. Por eso aquí no se copia ninguna audiencia — la
+ * comprobación se hace siempre sobre el original, y copiarla sería crear una
+ * segunda verdad que puede quedarse vieja.
+ *
+ * Lleva texto propio opcional, que es lo que separa reenviar de citar.
  */
 class PostRepost
 {
@@ -54,5 +61,15 @@ class PostRepost
     public function memberId(): MemberId
     {
         return MemberId::fromString($this->memberId);
+    }
+
+    public function comment(): ?string
+    {
+        return $this->comment;
+    }
+
+    public function createdAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
     }
 }

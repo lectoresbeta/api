@@ -50,6 +50,18 @@ interface PostRepository
     ): array;
 
     /**
+     * Estas publicaciones, indexadas por identificador.
+     *
+     * Las eliminadas simplemente no están, que es lo mismo que responde
+     * `ofId`.
+     *
+     * @param list<string> $postIds
+     *
+     * @return array<string, Post>
+     */
+    public function ofIds(array $postIds): array;
+
+    /**
      * Los adjuntos de estas publicaciones, indexados por publicación.
      *
      * Por lotes porque se pinta una página entera: uno por tarjeta sería un

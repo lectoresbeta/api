@@ -30,6 +30,8 @@ sitio donde leer lo escrito.
 | `DELETE /api/v1/comments/{commentId}` | `deletePostComment` | Retirar el propio | FEAT-COM-006 | **Implementado** |
 | `GET /api/v1/comments/{commentId}/replies` | `listCommentReplies` | El hilo de un comentario | FEAT-COM-031 | **Implementado** |
 | `POST /api/v1/comments/{commentId}/replies` | `replyToComment` | Responder | FEAT-COM-031 | **Implementado** |
+| `POST /api/v1/posts/{postId}/repost` | `repostPost` | Repostear, o deshacerlo | FEAT-COM-019 | **Implementado** |
+| `DELETE /api/v1/posts/{postId}/repost` | `undoRepost` | Retirar el repost propio | FEAT-COM-019 | **Implementado** |
 
 ---
 
@@ -437,3 +439,61 @@ de su publicación, así que responder no es una puerta trasera a una conversaci
 
 El **«me gusta» de una respuesta** (`FEAT-COM-030`), que es la misma ausencia que impide
 ordenar los comentarios por relevancia.
+
+
+---
+
+## `POST` y `DELETE /api/v1/posts/{postId}/repost`
+
+**`operationId`:** `repostPost`, `undoRepost` · **Funcionalidad:**
+[`FEAT-COM-019`](../../features/community/FEAT-COM-019-repost.md)
+
+### Propósito
+
+Volver a sacar la publicación de otra persona en el propio muro.
+
+### Qué es un repost
+
+**Una referencia, no una publicación aparte.** Los contadores y la conversación son los del
+original —que es lo que enseña el diseño— y así no hay cadenas de reposts anidados que mostrar
+ni que moderar. Puede llevar texto propio, que es lo que separa reenviar de citar.
+
+Si el original se edita, el repost muestra la versión de ahora; si se elimina, el repost
+desaparece con él. Las dos cosas son lo que significa ser una referencia.
+
+### La regla que hay que vigilar
+
+**Un repost no amplía la audiencia del original.** Quien no podía verlo sigue sin poder, y el
+muro lo garantiza comprobando siempre el original y no la referencia.
+
+Es la regla más fácil de romper de esta funcionalidad: basta con servir los reposts sin volver
+a mirar el original para publicar contenido restringido.
+
+Tampoco se repostea lo que no se puede ver, y un original invisible responde igual que uno
+inexistente: distinguirlos revelaría que existe una publicación que esa persona no debería
+conocer.
+
+### El botón alterna
+
+`POST` repostea, y **volver a llamarlo lo deshace**. Responde `200` con `reposted`, no `201`,
+porque la misma llamada puede dejar las dos cosas.
+
+`DELETE` existe además porque dicen cosas distintas: aquél es «cambia lo que haya», este es
+«quítalo». Y **no comprueba la audiencia del original**: deshacer algo propio tiene que
+funcionar aunque el autor lo haya restringido después, o quedaría un repost que su dueño no
+puede quitar.
+
+Se puede repostear lo propio: sirve para volver a sacar algo antiguo.
+
+### Una vez por página
+
+Una publicación aparece **una sola vez** aunque llegue por dos caminos —como ella misma y como
+repost de alguien—. Se queda la entrada más reciente. Ver la misma tarjeta dos veces seguidas
+parece un error de la plataforma.
+
+Es por página y no global: recordar entre páginas lo ya enseñado exigiría un cursor que llevara
+esa lista dentro.
+
+### Efectos
+
+Publica `PostReposted`, que avisará al autor original. Todavía no lo escucha nadie.

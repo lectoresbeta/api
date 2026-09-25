@@ -171,6 +171,9 @@ paths:
   /posts/{postId}/comments:
     $ref: './paths/community.yaml#/postComments'
 
+  /posts/{postId}/repost:
+    $ref: './paths/community.yaml#/repost'
+
   /comments/{commentId}:
     $ref: './paths/community.yaml#/comment'
 

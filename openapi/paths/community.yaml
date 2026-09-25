@@ -493,6 +493,29 @@ PostCard:
     createdAt:
       type: string
       format: date-time
+    repostedBy:
+      type: [object, 'null']
+      description: |
+        Quién ha vuelto a sacarla, cuando la entrada es un repost. **El resto
+        de la tarjeta sigue siendo del original**: su autor, su texto y sus
+        contadores. Un repost es una referencia, no una publicación aparte,
+        así que lo único que añade es esta cabecera.
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    repostComment:
+      type: [string, 'null']
+      description: El texto que añadió quien reposteó, si añadió alguno.
+    repostedAt:
+      type: [string, 'null']
+      format: date-time
+      description: La entrada se ordena por esta fecha, no por la del original.
     mentions:
       type: array
       items:
@@ -1212,6 +1235,93 @@ commentReplies:
         description: |
           `code: INVALID_VALUE`, `MENTIONED_USER_NOT_FOUND` o
           `TOO_MANY_MENTIONS`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+repost:
+  post:
+    tags: [Community]
+    operationId: repostPost
+    summary: Volver a sacar una publicación
+    description: |
+      **El botón alterna**: volver a pulsarlo deshace el repost, como un «me
+      gusta». Responde `200` con el estado en que queda, y no `201`, porque la
+      misma llamada puede dejar las dos cosas y un código que diga «creado»
+      estaría mintiendo la mitad de las veces.
+
+      **No se repostea lo que no se puede ver**, y un original invisible
+      responde igual que uno inexistente: distinguirlos revelaría que existe
+      una publicación que esa persona no debería conocer.
+
+      Repostear **no amplía la audiencia del original**. Quien no podía verlo
+      sigue sin poder, porque el muro comprueba siempre el original y no la
+      referencia.
+
+      Se puede repostear lo propio: sirve para volver a sacar algo antiguo.
+    parameters:
+      - $ref: '#/PostIdParam'
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              comment:
+                type: string
+                maxLength: 5000
+                description: Texto propio opcional, que es lo que separa reenviar de citar.
+    responses:
+      '200':
+        description: Si ha quedado reposteada o si el mismo gesto la ha deshecho.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reposted]
+              properties:
+                reposted:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: POST_NOT_FOUND`. No existe, o su audiencia excluye a quien pregunta.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: undoRepost
+    summary: Retirar un repost propio
+    description: |
+      Existe además del botón que alterna porque dicen cosas distintas: aquél
+      es «cambia lo que haya», este es «quítalo».
+
+      **No comprueba la audiencia del original**, a diferencia de repostear:
+      deshacer algo propio tiene que funcionar aunque el autor haya
+      restringido el original después, o quedaría un repost que su dueño no
+      puede quitar.
+
+      Deshacer lo ya deshecho no es un error.
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '204':
+        description: Retirado, o ya no estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
         content:
           application/problem+json:
             schema:

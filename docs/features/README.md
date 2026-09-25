@@ -307,7 +307,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-016 | Onboarding paso 3 — sugerencias de autores a seguir | User | APPROVED | TODO | P1 | [ficha](community/FEAT-COM-016-onboarding-author-suggestions.md) |
 | FEAT-COM-017 | Home — carrusel de obras recomendadas | User | DRAFT | TODO | P1 | [ficha](community/FEAT-COM-017-home-work-recommendations.md) |
 | FEAT-COM-018 | Home — sugerencias de autores en el muro | User | APPROVED | TODO | P1 | [ficha](community/FEAT-COM-018-home-author-suggestions.md) |
-| FEAT-COM-019 | Repostear una publicación | User | APPROVED | TODO | P2 | [ficha](community/FEAT-COM-019-repost.md) |
+| FEAT-COM-019 | Repostear una publicación | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-019-repost.md) |
 | FEAT-COM-020 | Compartir una publicación fuera de la plataforma | User | PENDING | TODO | P2 | — |
 | FEAT-COM-021 | Guardar una publicación | User | PENDING | TODO | P3 | — |
 | FEAT-COM-022 | Ocultar una publicación del muro | User | PENDING | TODO | P3 | — |

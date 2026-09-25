@@ -146,3 +146,15 @@ replyToComment:
     path: /api/v1/comments/{commentId}/replies
     controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\ReplyToCommentController::__invoke
     methods: [POST]
+
+# Repostear (`FEAT-COM-019`). El `POST` alterna y el `DELETE` quita: dicen
+# cosas distintas, y por eso están los dos.
+repostPost:
+    path: /api/v1/posts/{postId}/repost
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\RepostPostController::__invoke
+    methods: [POST]
+
+undoRepost:
+    path: /api/v1/posts/{postId}/repost
+    controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\UndoRepostController::__invoke
+    methods: [DELETE]

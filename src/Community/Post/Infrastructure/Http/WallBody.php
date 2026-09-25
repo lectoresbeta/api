@@ -73,6 +73,14 @@ final readonly class WallBody
             'repostCount' => $post->repostCount,
             'edited' => $post->edited,
             'createdAt' => $post->createdAt->format(\DATE_ATOM),
+            'repostedBy' => null === $post->repostedBy ? null : [
+                'userId' => $post->repostedBy->userId,
+                'username' => $post->repostedBy->username,
+                'name' => $post->repostedBy->name,
+                'avatarUrl' => $post->repostedBy->avatarUrl,
+            ],
+            'repostComment' => $post->repostComment,
+            'repostedAt' => $post->repostedAt?->format(\DATE_ATOM),
             'mentions' => array_map(
                 static fn (MentionView $mention): array => [
                     'userId' => $mention->userId,

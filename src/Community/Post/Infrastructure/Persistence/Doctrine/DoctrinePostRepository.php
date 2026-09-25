@@ -85,6 +85,29 @@ final class DoctrinePostRepository extends DoctrineRepository implements PostRep
         return $found;
     }
 
+    public function ofIds(array $postIds): array
+    {
+        if ([] === $postIds) {
+            return [];
+        }
+
+        /** @var list<Post> $rows */
+        $rows = $this->repository()->createQueryBuilder('p')
+            ->where('p.id IN (:posts)')
+            ->andWhere('p.deletedAt IS NULL')
+            ->setParameter('posts', $postIds)
+            ->getQuery()
+            ->getResult();
+
+        $byId = [];
+
+        foreach ($rows as $row) {
+            $byId[$row->id()->value()] = $row;
+        }
+
+        return $byId;
+    }
+
     public function attachmentsOf(array $postIds): array
     {
         if ([] === $postIds) {
