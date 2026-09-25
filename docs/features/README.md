@@ -78,7 +78,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-007 | Recuperar la contraseña | Guest | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-007-recover-password.md) |
 | FEAT-USR-008 | Editar el perfil — nombre, usuario, biografía, géneros y foto | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-008-edit-profile.md) |
 | FEAT-USR-009 | Editar preferencias literarias | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-009-literary-preferences.md) |
-| FEAT-USR-010 | Configurar recepción de mensajes directos | User | PENDING | TODO | P2 | — |
+| FEAT-USR-010 | Configurar recepción de mensajes directos | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-010-who-can-message-me.md) |
 | FEAT-USR-011 | Configurar recepción de propuestas de LB y writing buddy | User | PENDING | TODO | P2 | — |
 | FEAT-USR-012 | ~~Configurar notificaciones por email~~ → `FEAT-USR-039` | User | PENDING | DEPRECATED | P3 | — |
 | FEAT-USR-013 | Eliminar la cuenta — anonimización | User | APPROVED | BLOCKED | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
@@ -299,8 +299,8 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-008 | Apoyar una publicación con un «me gusta» | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-008-like-a-post.md) |
 | FEAT-COM-009 | Filtrar y buscar publicaciones (tipo, texto, usuario, fecha) | User | PENDING | TODO | P2 | — |
 | FEAT-COM-010 | Suscribirse a un autor | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-010-subscribe-to-author.md) |
-| FEAT-COM-011 | Enviar un mensaje directo | User | PENDING | TODO | P2 | — |
-| FEAT-COM-012 | Ver y gestionar conversaciones de mensajes directos | User | PENDING | TODO | P2 | — |
+| FEAT-COM-011 | Enviar un mensaje directo | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-011-send-direct-message.md) |
+| FEAT-COM-012 | Ver y gestionar conversaciones de mensajes directos | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-012-conversations.md) |
 | FEAT-COM-013 | Ver y filtrar el ranking de escritores | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-014 | Ver y filtrar el ranking de obras | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-015 | Ver y filtrar el ranking de lectores | User | PENDING | BLOCKED | P2 | — |

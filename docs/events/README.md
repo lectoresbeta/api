@@ -264,6 +264,7 @@ hecho económico; qué se ve lo decide `Feedback`, que es quien posee la correcc
 | `AuthorUnsubscribed` | Alguien deja de seguir a un autor | **`User`** | `subscriberId`, `authorId`, `unsubscribedAt` |
 | `UserBlocked` | Alguien bloquea a alguien | **`User`** (deja de aceptar comentarios entre ambos), **`Reading`** (retira el acceso de lector beta), y `Feedback`, `Credits` y `Notification` cuando existan | `blockerId`, `blockedId`, `blockedAt` |
 | `UserUnblocked` | Se levanta un bloqueo | **`User`**. `Reading` **no** lo consume: devolver un acceso revocado es una decisión del autor, no un efecto secundario | `blockerId`, `blockedId`, `unblockedAt` |
+| `DirectMessageSent` | Alguien le escribe a alguien (`FEAT-COM-011`) | **`Notification`** ✅ (`DIRECT_MESSAGE_RECEIVED`) | `conversationId`, `senderId`, `recipientId`, `sentAt`. **Sin el cuerpo, ni una línea** |
 
 Los dos llevan **los dos identificadores y nada más**. Ni nombres ni perfiles: quien los
 consume tiene su propia copia de las personas, y copiar un nombre aquí solo añadiría un sitio
@@ -282,6 +283,13 @@ aprenderlo para que bloquear funcione.
 Al deshacer los seguimientos, el bloqueo publica además un `AuthorUnsubscribed` por cada uno.
 Quien proyecta el grafo se entera de lo que le importa —esa relación ya no está— sin aprender
 que detrás había un bloqueo.
+
+`DirectMessageSent` **no lleva el mensaje**, y no es una precaución genérica. Quien lo
+consume es el contexto que escribe correos: un hecho que trajera el cuerpo sacaría una
+conversación privada de la plataforma por un canal que su remitente no eligió —una cola que
+persiste, reintenta y aparca mensajes— y acabaría en un buzón de correo el día que alguien
+clasificara ese aviso como de los que salen por ahí. Lo que viaja es quién escribió y a qué
+conversación entrar, que es todo lo que hace falta para pintar el aviso y su enlace.
 
 Que `User` consuma estos dos hechos es lo que hace verdad `FOLLOWERS` en
 [`FEAT-USR-038`](../features/user/FEAT-USR-038-privacy-settings.md) sin que `User` llame a

@@ -8,8 +8,10 @@
             table="conversation" schema="community_ctx">
 
         <indexes>
-            <index name="idx_conversation_one" columns="member_one,last_message_at"/>
-            <index name="idx_conversation_two" columns="member_two,last_message_at"/>
+            <!-- El orden de la lista, con su desempate dentro: la consulta
+                 ordena por los dos, así que el índice los lleva los dos. -->
+            <index name="idx_conversation_one" columns="member_one,last_message_at,last_message_id"/>
+            <index name="idx_conversation_two" columns="member_two,last_message_at,last_message_id"/>
         </indexes>
 
         <unique-constraints>
@@ -24,6 +26,7 @@
         <field name="memberTwo" column="member_two" type="guid"/>
         <field name="startedAt" column="started_at" type="datetime_immutable"/>
         <field name="lastMessageAt" column="last_message_at" type="datetime_immutable"/>
+        <field name="lastMessageId" column="last_message_id" type="guid" nullable="true"/>
 
     </entity>
 

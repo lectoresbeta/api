@@ -117,6 +117,7 @@ preferencias y presencia pública como autor.
 | `RegisteredUsers` | **Un booleano**: ¿existe este usuario? Nada más de él | `Reading`, `Community` |
 | `ReaderDirectory` | Hasta N personas cuyo nombre o `@usuario` encajan, como tarjeta de perfil | `Reading` |
 | `AuthorAudience` | **Un booleano**: ¿acepta este autor comentarios de esta persona? Nunca el ajuste | `Feedback` |
+| `MessageAudience` | **Un booleano**: ¿admite esta persona que aquella le abra una conversación? Nunca el ajuste | `Community` |
 | `VisibleProfiles` | De estas personas, **las que quien pregunta puede ver**, como tarjeta de perfil | `Community` |
 | `ProfileCards` | Lo mismo **sin filtrar**, y con un solo uso legítimo: la lista de a quién has bloqueado | `Community` |
 
@@ -189,6 +190,15 @@ contrato en sentido contrario cerraría el ciclo de llamadas que esa regla evita
 El precio es que las audiencias `FOLLOWERS` son **consistentes en diferido**: entre seguir a
 alguien y entrar en su audiencia pasa lo que tarde la cola. Al revés no, y por eso el hecho de
 dejar de seguir viaja por el mismo camino y no se olvida nunca.
+
+La misma copia responde `MessageAudience` ([`FEAT-USR-010`](../features/user/FEAT-USR-010-who-can-message-me.md)),
+y por la misma razón. Son dos contratos y no uno aunque salgan del mismo ajuste: aquel habla
+de la audiencia de los **textos** de un autor y este de su **buzón**. Un contrato que
+respondiera las dos cosas obligaría a quien solo necesita una a depender también de la otra.
+
+`MessageAudience` responde sobre **abrir** una conversación, no sobre continuarla. Endurecer
+el ajuste no cierra los hilos ya abiertos, y quien aplica eso es `Community`: aquí no se sabe
+si esos dos ya se hablaban.
 
 ## Contratos que consulta
 

@@ -11,8 +11,9 @@ use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
 /**
  * One message in a conversation.
  *
- * The body stays here and never travels in a notification email (`RN-4` of
- * `Notification`): the email carries a notice and a link, nothing else.
+ * El cuerpo se queda aquí y no viaja en el hecho que se publica
+ * (`FEAT-COM-011` `RN-9`): el aviso dice que hay algo que leer, y se lee
+ * entrando en la conversación, que es donde se comprueba quién puede.
  */
 class DirectMessage
 {
@@ -60,6 +61,16 @@ class DirectMessage
     public function body(): string
     {
         return $this->body;
+    }
+
+    public function sentAt(): \DateTimeImmutable
+    {
+        return $this->sentAt;
+    }
+
+    public function isRead(): bool
+    {
+        return null !== $this->readAt;
     }
 
     public function markRead(\DateTimeImmutable $now): void

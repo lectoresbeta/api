@@ -45,7 +45,7 @@ seguimiento de autores, los mensajes directos y los rankings.
 |---|---|---|
 | `Post` | `PostId` | Tiene autor, tipo, formato y audiencia. Contiene sus comentarios, reacciones y apoyos. |
 | `PostComment` | `PostCommentId` | De primer nivel o respuesta (`parentCommentId`). **Una respuesta nunca cuelga de otra respuesta**: se aplana al comentario raíz. |
-| `Conversation` | `ConversationId` | Entre dos usuarios. Requiere que el destinatario acepte mensajes directos. |
+| `Conversation` | `ConversationId` | Entre dos usuarios, **una por par**: el par se guarda ordenado, así que (A,B) y (B,A) son la misma fila. Abrirla requiere que el destinatario acepte mensajes directos; continuarla, no. |
 | `AuthorSubscription` | `AuthorSubscriptionId` | Una por par (suscriptor, autor). Un usuario no se suscribe a sí mismo. |
 
 ### Enums
@@ -112,7 +112,15 @@ la lista.
 
 ## Reglas de negocio
 
-- `RN-1` Un mensaje directo solo se entrega si el destinatario los tiene habilitados.
+- `RN-1` El ajuste de privacidad del destinatario gobierna **abrir** una conversación, no
+  continuarla (`FEAT-COM-011` `RN-3`, `RN-4`). Endurecerlo no cierra los hilos abiertos: si lo
+  hiciera, «prefiero que no me escriba cualquiera» significaría «desaparezco de conversaciones
+  que estaba teniendo». Lo responde `User` por contrato (`MessageAudience`), con un booleano:
+  este contexto no ve nunca el valor del ajuste.
+- `RN-1b` Un **bloqueo** sí corta siempre, en los dos sentidos y esté la conversación abierta o
+  no. Es la diferencia entre una preferencia y una regla de acceso contra una persona concreta.
+- `RN-1c` El hecho que se publica al enviar **no lleva el cuerpo del mensaje**
+  (`FEAT-COM-011` `RN-9`). Quien lo consume es el contexto que escribe correos.
 - `RN-2` Un usuario no se suscribe a sí mismo.
 - `RN-2b` Seguir y dejar de seguir son **idempotentes**, y seguir **no concede acceso a nada**
   (`FEAT-COM-010`). Lo que cambia son los avisos y qué audiencias incluyen a esa persona; qué

@@ -205,3 +205,32 @@ unlikePostComment:
     path: /api/v1/comments/{commentId}/like
     controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\UnlikePostCommentController::__invoke
     methods: [DELETE]
+
+# Mensajes directos (`FEAT-COM-011`, `FEAT-COM-012`).
+#
+# Se escribe **a una persona** y no a una conversación: quien pulsa «Enviar
+# mensaje» en un perfil no sabe si ya hay hilo, y abrir o continuar es la
+# misma operación vista desde fuera.
+sendDirectMessage:
+    path: /api/v1/users/{userId}/messages
+    controller: LectoresBeta\Community\Messaging\Infrastructure\Controller\SendDirectMessageController::__invoke
+    methods: [POST]
+
+# Bajo `/me/` porque no existe la versión de otra persona: con quién habla
+# alguien no es una lista que se pueda pedir.
+listMyConversations:
+    path: /api/v1/me/conversations
+    controller: LectoresBeta\Community\Messaging\Infrastructure\Controller\ListMyConversationsController::__invoke
+    methods: [GET]
+
+listConversationMessages:
+    path: /api/v1/conversations/{conversationId}/messages
+    controller: LectoresBeta\Community\Messaging\Infrastructure\Controller\ListConversationMessagesController::__invoke
+    methods: [GET]
+
+# `PUT` y no `POST`: fija un estado, y la pantalla marca al abrir y también
+# con un gesto, así que la segunda llamada llega sola.
+markConversationRead:
+    path: /api/v1/conversations/{conversationId}/read
+    controller: LectoresBeta\Community\Messaging\Infrastructure\Controller\MarkConversationReadController::__invoke
+    methods: [PUT]

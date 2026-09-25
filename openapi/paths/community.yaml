@@ -1577,3 +1577,279 @@ LikeState:
       type: boolean
     likeCount:
       type: integer
+
+# Mensajes directos (`FEAT-COM-011`, `FEAT-COM-012`).
+
+ConversationCard:
+  type: object
+  required: [conversationId, other, lastMessage, lastMessageAt, lastMessageIsMine, unreadCount]
+  description: |
+    Una fila de «Mensajes». `lastMessage` es **un extracto de 140 caracteres**,
+    no el mensaje entero: la lista enseña una línea, y mandar cuatro mil
+    caracteres por fila para recortarlos en el cliente sería mandar una
+    conversación entera por una lista.
+  properties:
+    conversationId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    other:
+      type: [object, 'null']
+      description: |
+        Con quién es la conversación. **Nulo cuando esa cuenta ya no existe**:
+        el hilo sigue, porque borrarlo reescribiría una conversación que su
+        dueño sí tuvo.
+      required: [userId, username]
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    lastMessage:
+      type: [string, 'null']
+    lastMessageAt:
+      type: [string, 'null']
+      format: date-time
+    lastMessageIsMine:
+      type: boolean
+      description: Para pintar el «Tú:» delante del extracto.
+    unreadCount:
+      type: integer
+
+MessageCard:
+  type: object
+  required: [messageId, senderId, mine, body, sentAt, read]
+  properties:
+    messageId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    senderId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    mine:
+      type: boolean
+    body:
+      type: string
+      description: Texto plano, sin marcado.
+    sentAt:
+      type: string
+      format: date-time
+    read:
+      type: boolean
+      description: |
+        Si el destinatario lo ha leído. En un mensaje propio es el acuse; en
+        uno recibido, si ya se abrió el hilo.
+
+directMessages:
+  post:
+    tags: [Community]
+    operationId: sendDirectMessage
+    summary: Escribir a una persona
+    description: |
+      **Se escribe a una persona, no a una conversación.** Quien pulsa «Enviar
+      mensaje» en un perfil no sabe si ya hay hilo abierto, y abrir o
+      continuar es la misma operación vista desde fuera: el servidor devuelve
+      el `conversationId`, sea el de siempre o uno nuevo.
+
+      Dos puertas, y significan cosas distintas. El ajuste de privacidad
+      (`FEAT-USR-010`) gobierna **abrir** una conversación; endurecerlo no
+      cierra los hilos ya abiertos. El bloqueo corta siempre, en los dos
+      sentidos y esté la conversación abierta o no.
+
+      `MESSAGES_NOT_ACCEPTED` **no dice por qué**. Si distinguiera «lo tiene
+      en solo seguidores» de «lo tiene cerrado» de «te ha bloqueado»,
+      cualquiera podría averiguar los ajustes de privacidad de otro probando a
+      escribirle.
+    parameters:
+      - $ref: '#/UserIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                maxLength: 4000
+                description: Texto plano. Se recortan los espacios de los extremos.
+    responses:
+      '201':
+        description: Enviado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [conversationId, messageId, sentAt]
+              properties:
+                conversationId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                messageId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                sentAt:
+                  type: string
+                  format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: MESSAGES_NOT_ACCEPTED`. Esa persona no admite que le
+          escribas, y no se dice por qué.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: CONVERSATION_NOT_FOUND`. Ese destinatario no existe o no está
+          activado, y **no se distingue cuál de las dos**: distinguirlo
+          confirmaría quién está en la plataforma.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: VALIDATION_FAILED` si el mensaje viene vacío o pasa de 4000
+          caracteres; `code: CANNOT_MESSAGE_YOURSELF` si el destinatario eres
+          tú.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+myConversations:
+  get:
+    tags: [Community]
+    operationId: listMyConversations
+    summary: Mis conversaciones
+    description: |
+      Bajo `/me/` porque **no existe la versión de otra persona**: con quién
+      habla alguien no es una lista que se pueda pedir.
+
+      De la conversación con actividad más reciente hacia atrás. Con quien hay
+      bloqueo no aparece, en ninguno de los dos sentidos, y **no se borra**:
+      el bloqueo se puede deshacer y el hilo vuelve entero.
+    parameters:
+      - name: cursor
+        in: query
+        required: false
+        description: |
+          Opaco, como el resto del proyecto. Lleva fecha **e identificador**:
+          dos conversaciones pueden tener su último mensaje en el mismo
+          instante, y ordenar solo por él dejaría el desempate al azar — entre
+          dos páginas, eso es una conversación repetida o una que desaparece.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Las conversaciones de quien pregunta.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/ConversationCard'
+                pageInfo:
+                  $ref: '../openapi.yaml#/components/schemas/PageInfo'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+conversationMessages:
+  get:
+    tags: [Community]
+    operationId: listConversationMessages
+    summary: Los mensajes de una conversación
+    description: |
+      Del más reciente hacia atrás, que es como se lee una conversación: al
+      abrirla hace falta lo último, no lo primero.
+
+      Una conversación ajena responde `404` igual que una que no existe: un
+      `403` confirmaría que existe, y con ella que esas dos personas hablan.
+    parameters:
+      - $ref: '#/ConversationIdParam'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Los mensajes, del más reciente hacia atrás.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/MessageCard'
+                pageInfo:
+                  $ref: '../openapi.yaml#/components/schemas/PageInfo'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es tuya. `code: CONVERSATION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+conversationRead:
+  put:
+    tags: [Community]
+    operationId: markConversationRead
+    summary: Marcar una conversación como leída
+    description: |
+      **Lo recibido, nunca lo enviado.** Marcar como leído lo propio no
+      significa nada, y contarlo haría que el contador de quien escribe bajara
+      al abrir su propio hilo.
+
+      `PUT` porque fija un estado: la pantalla marca al abrir y también con un
+      gesto, así que la segunda llamada llega sola y no debe significar nada
+      distinto. No mueve la fecha de lo que ya estaba leído.
+    parameters:
+      - $ref: '#/ConversationIdParam'
+    responses:
+      '200':
+        description: Leída. `unreadCount` es cero.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [unreadCount]
+              properties:
+                unreadCount:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es tuya. `code: CONVERSATION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+ConversationIdParam:
+  name: conversationId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'

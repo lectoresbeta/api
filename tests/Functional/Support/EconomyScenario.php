@@ -161,6 +161,12 @@ abstract class EconomyScenario extends WebTestCase
         // mitad del mecanismo.
         'ReactivationOfferChoiceChanged',
         'OverdraftCorrectionGranted',
+
+        // «Tienes un mensaje» (`FEAT-COM-011`). El hecho **no lleva el
+        // cuerpo**, y quien lo escucha es el contexto que escribe correos:
+        // por eso importa que aquí se entregue de verdad y el test pueda
+        // comprobar qué llega y qué no.
+        'DirectMessageSent',
     ];
 
     /**

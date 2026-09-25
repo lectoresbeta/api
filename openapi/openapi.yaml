@@ -231,6 +231,22 @@ paths:
   /comments/{commentId}/replies:
     $ref: './paths/community.yaml#/commentReplies'
 
+  # Mensajes directos (FEAT-COM-011, FEAT-COM-012). Se escribe a una persona
+  # y no a una conversación: abrir o continuar es la misma operación vista
+  # desde fuera.
+
+  /users/{userId}/messages:
+    $ref: './paths/community.yaml#/directMessages'
+
+  /me/conversations:
+    $ref: './paths/community.yaml#/myConversations'
+
+  /conversations/{conversationId}/messages:
+    $ref: './paths/community.yaml#/conversationMessages'
+
+  /conversations/{conversationId}/read:
+    $ref: './paths/community.yaml#/conversationRead'
+
   /works:
     $ref: './paths/works.yaml#/collection'
 
