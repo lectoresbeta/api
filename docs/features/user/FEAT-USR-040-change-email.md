@@ -5,7 +5,7 @@ context: User
 concept: Account
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-22 (pestaña «Cuenta» de Configuración)
@@ -138,16 +138,16 @@ garantizar `RN-6` bajo concurrencia.
 
 ## Criterios de aceptación
 
-- [ ] El correo no cambia hasta que se confirma desde el correo nuevo.
-- [ ] Mientras hay una solicitud pendiente, se sigue pudiendo iniciar sesión con el anterior.
-- [ ] El correo anterior recibe aviso de la solicitud.
-- [ ] Ese aviso se envía **aunque el usuario tenga todas las notificaciones desactivadas**.
-- [ ] Sin la contraseña actual, la solicitud se rechaza.
-- [ ] Al confirmar se invalidan los tokens de refresco de las demás sesiones.
-- [ ] El nombre de usuario no cambia.
-- [ ] Un correo ya registrado no se revela como tal.
-- [ ] El token está hasheado en base de datos, caduca y es de un solo uso.
-- [ ] Una segunda solicitud invalida la primera.
+- [x] El correo no cambia hasta que se confirma desde el correo nuevo.
+- [x] Mientras hay una solicitud pendiente, se sigue pudiendo iniciar sesión con el anterior.
+- [x] El correo anterior recibe aviso de la solicitud.
+- [x] Ese aviso se envía **aunque el usuario tenga todas las notificaciones desactivadas**.
+- [x] Sin la contraseña actual, la solicitud se rechaza.
+- [x] Al confirmar se invalidan los tokens de refresco de las demás sesiones.
+- [x] El nombre de usuario no cambia.
+- [x] Un correo ya registrado no se revela como tal.
+- [x] El token está hasheado en base de datos, caduca y es de un solo uso.
+- [x] Una segunda solicitud invalida la primera.
 
 ## Preguntas abiertas
 
@@ -168,4 +168,32 @@ pero no puede hacer nada por sí mismo.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25), con una excepción declarada.
+
+**`S-8` sigue abierta, así que este camino está cerrado para las cuentas sin contraseña.** Una
+creada con Google no tiene contraseña actual que aportar, y abrirle el paso sin nada que
+demostrar convertiría una sesión robada en un cambio de dueño — que es justo lo que `RN-1`
+existe para impedir. Responde `CURRENT_PASSWORD_REQUIRED` hasta que se decida qué sustituye a
+la contraseña.
+
+`S-22` resuelta: el enlace dura lo mismo que el de activación, dos días. Confirmar una
+dirección nueva es la misma clase de prueba, y quien pide el cambio puede no mirar ese buzón
+hasta el día siguiente.
+
+`RN-8` se implementa cerrando **todas** las sesiones y no solo «las demás», por lo mismo que
+en [`FEAT-USR-041`](FEAT-USR-041-change-password.md): la petición no trae nada que identifique
+la sesión desde la que llega. Aquí además importa menos, porque quien confirma suele estar en
+otro dispositivo.
+
+**El aviso a la dirección anterior lleva la nueva enmascarada** (`a****@ejemplo.com`). Quien
+lo recibe necesita reconocerla o no reconocerla, y para eso no hace falta escribirla entera;
+si ese aviso acaba en un buzón ajeno, tampoco hace falta regalar la dirección a la que están
+intentando llevarse la cuenta.
+
+Detalle de implementación que conviene conocer: **anular la solicitud anterior y crear la
+nueva van en dos transacciones**. El índice único parcial solo admite una viva por cuenta, y
+en una sola transacción Doctrine puede insertar antes de actualizar y chocar consigo mismo. El
+hueco es inocuo: lo peor es quedarse sin ninguna solicitud viva, y pedirlo otra vez lo
+arregla.
+
+`S-23` —revertir desde el aviso— y `S-24` —limitar la frecuencia— siguen abiertas.

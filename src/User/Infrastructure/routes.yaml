@@ -41,6 +41,20 @@ changeMyPassword:
     controller: LectoresBeta\User\Account\Infrastructure\Controller\ChangeMyPasswordController::__invoke
     methods: [PUT]
 
+# Cambiar el correo es un flujo en dos pasos y no una edición: es la identidad
+# de la cuenta (`FEAT-USR-040`).
+requestEmailChange:
+    path: /api/v1/me/email-change
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\RequestEmailChangeController::__invoke
+    methods: [POST]
+
+# Sin sesión aunque cuelgue de `/me`: el enlace se abre donde esté abierto el
+# buzón nuevo, que muchas veces es otro dispositivo. Autoriza el token.
+confirmEmailChange:
+    path: /api/v1/me/email-change/confirm
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\ConfirmEmailChangeController::__invoke
+    methods: [POST]
+
 login:
     path: /api/v1/auth/login
     controller: LectoresBeta\User\Authentication\Infrastructure\Controller\LogInController::__invoke

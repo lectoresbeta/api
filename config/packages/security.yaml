@@ -65,6 +65,11 @@ security:
         # Qué es público lo decide el controlador por la carpeta, no esta
         # línea: la original vive en otra y no se sirve por aquí.
         - { path: '^/api/v1/media/', methods: [GET], roles: PUBLIC_ACCESS }
+
+        # Confirmar un cambio de correo (FEAT-USR-040): el enlace se abre
+        # donde esté abierto el buzón nuevo, que muchas veces es otro
+        # dispositivo. Lo que autoriza es el token, de un solo uso.
+        - { path: '^/api/v1/me/email-change/confirm$', methods: [POST], roles: PUBLIC_ACCESS }
         - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:

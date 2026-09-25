@@ -103,6 +103,12 @@ paths:
   /me/password:
     $ref: './paths/settings.yaml#/password'
 
+  /me/email-change:
+    $ref: './paths/settings.yaml#/emailChange'
+
+  /me/email-change/confirm:
+    $ref: './paths/settings.yaml#/emailChangeConfirm'
+
   /me/literary-preferences:
     $ref: './paths/settings.yaml#/literaryPreferences'
 

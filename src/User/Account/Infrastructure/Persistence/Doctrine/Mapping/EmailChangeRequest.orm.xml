@@ -35,7 +35,8 @@
 
         <field name="userId" column="user_id" type="guid"/>
         <field name="newEmail" column="new_email" type="string" length="254"/>
-        <field name="tokenHash" column="token_hash" type="string" length="64"/>
+        <!-- Nulo hasta que el correo sale: el secreto se acuña al enviar. -->
+        <field name="tokenHash" column="token_hash" type="string" length="64" nullable="true"/>
         <field name="requestedAt" column="requested_at" type="datetime_immutable"/>
         <field name="expiresAt" column="expires_at" type="datetime_immutable"/>
         <field name="consumedAt" column="consumed_at" type="datetime_immutable" nullable="true"/>

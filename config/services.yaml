@@ -116,6 +116,7 @@ services:
                 - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordResetRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordChanged
+                - LectoresBeta\Notification\Delivery\Application\Event\EmailChangeRequested
                 - LectoresBeta\User\Privacy\Application\Event\AuthorSubscribed
                 - LectoresBeta\User\Privacy\Application\Event\AuthorUnsubscribed
                 - LectoresBeta\User\Privacy\Application\Event\UserBlocked
@@ -184,6 +185,9 @@ services:
     # porque el correo operativo *es* la defensa de la cuenta.
     LectoresBeta\User\Account\Application\Contract\MailingAddresses:
         alias: LectoresBeta\User\Account\Application\Service\ResolveMailingAddress
+
+    LectoresBeta\User\Account\Application\Contract\EmailChangeLinkProvider:
+        alias: LectoresBeta\User\Account\Application\Service\IssueEmailChangeLink
 
     LectoresBeta\User\Account\Application\Contract\VisibleProfiles:
         alias: LectoresBeta\User\Account\Application\Service\ShowVisibleProfiles
@@ -256,6 +260,15 @@ services:
     # caminos —cambio desde dentro y restablecimiento— porque quien no hizo
     # ninguna de las dos cosas necesita enterarse en los dos casos.
     LectoresBeta\Notification\Delivery\Application\Handler\SendPasswordChangedNotice:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Los dos correos de un cambio de dirección: el enlace a la nueva y el
+    # aviso a la anterior, que es la única defensa de quien ha perdido el
+    # control de su sesión.
+    LectoresBeta\Notification\Delivery\Application\Handler\SendEmailChangeEmails:
+        arguments:
+            $confirmUrlTemplate: '%env(EMAIL_CHANGE_URL_TEMPLATE)%'
         tags:
             - { name: messenger.message_handler }
 

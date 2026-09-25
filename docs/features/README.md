@@ -96,7 +96,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-037 | Gestionar la foto de perfil — subir, editar y eliminar | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-037-upload-profile-photo.md) |
 | FEAT-USR-038 | Ajustes de privacidad del usuario | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-038-privacy-settings.md) |
 | FEAT-USR-039 | Preferencias de notificación por canal | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-039-notification-preferences.md) |
-| FEAT-USR-040 | Cambiar el correo de la cuenta | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-040-change-email.md) |
+| FEAT-USR-040 | Cambiar el correo de la cuenta | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-040-change-email.md) |
 | FEAT-USR-041 | Cambiar o establecer la contraseña | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-041-change-password.md) |
 | FEAT-USR-042 | Preferencias de apariencia (tema) | User | PENDING | TODO | P3 | — *(sin captura)* |
 | FEAT-USR-043 | Preferencias de contenido sensible | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-043-content-preferences.md) |

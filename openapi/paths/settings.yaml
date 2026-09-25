@@ -747,3 +747,114 @@ password:
               $ref: '../openapi.yaml#/components/schemas/Problem'
       '429':
         $ref: '../openapi.yaml#/components/responses/TooManyRequests'
+
+emailChange:
+  post:
+    tags: [Account]
+    operationId: requestEmailChange
+    summary: Pedir el cambio de correo
+    description: |
+      **Cambiar el correo no es editar un campo.** Es la identidad de la
+      cuenta: con él se inicia sesión, por él se recupera la contraseña y de
+      él salió el nombre de usuario. Por eso son dos pasos con verificación.
+
+      Exige la **contraseña actual**: sin ella, quien se siente ante una
+      sesión ajena apunta la cuenta a su propio buzón y se queda con ella vía
+      «he olvidado mi contraseña».
+
+      Salen **dos correos**: el enlace de confirmación a la dirección nueva y
+      un **aviso a la anterior**, que es la única defensa de quien ha perdido
+      el control de su sesión. Ninguno de los dos se puede desactivar.
+
+      **La dirección no cambia todavía**: hasta confirmar, la válida sigue
+      siendo la anterior, y la cuenta funciona con normalidad. Una segunda
+      solicitud anula la primera.
+
+      El nombre de usuario **no cambia** y la cuenta **no vuelve a estar sin
+      activar**.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email, currentPassword]
+            properties:
+              email:
+                type: string
+                format: email
+              currentPassword:
+                type: string
+                format: password
+    responses:
+      '202':
+        description: Solicitud registrada. Los dos correos salen después.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: INCORRECT_PASSWORD`, o `code: CURRENT_PASSWORD_REQUIRED` en
+          una cuenta sin contraseña — para esas, `S-8` sigue sin decidir qué
+          sustituye a la contraseña actual, así que este camino está cerrado.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: EMAIL_CHANGE_REFUSED`. **Un solo código para dos casos a
+          propósito**: que la dirección ya la tenga otra cuenta y que sea la
+          que ya tienes. Decir cuál convertiría esto en un comprobador de
+          quién tiene cuenta.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+emailChangeConfirm:
+  post:
+    tags: [Account]
+    operationId: confirmEmailChange
+    summary: Confirmar el cambio de correo
+    description: |
+      **No requiere sesión**, aunque cuelgue de `/me`: el enlace se abre donde
+      esté abierto el buzón nuevo, que muchas veces es otro dispositivo. Lo
+      que autoriza es el token, de un solo uso y atado a esa solicitud.
+
+      Al confirmar se **cierran todas las sesiones**, así que después hay que
+      entrar otra vez, ya con la dirección nueva.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [token]
+            properties:
+              token:
+                type: string
+    responses:
+      '204':
+        description: Correo cambiado. Hay que iniciar sesión.
+      '404':
+        description: '`code: INVALID_EMAIL_CHANGE_TOKEN`. Ese enlace no existe.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '410':
+        description: |
+          `code: EMAIL_CHANGE_LINK_NO_LONGER_VALID`. Usado, caducado o anulado
+          por una solicitud posterior: para quien está delante los tres
+          significan lo mismo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: EMAIL_CHANGE_REFUSED`. La dirección se ocupó entre pedir y confirmar.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

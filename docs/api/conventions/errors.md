@@ -137,6 +137,9 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `INCORRECT_PASSWORD` | 403 | La contraseña actual no coincide (`FEAT-USR-041`) |
 | `CURRENT_PASSWORD_REQUIRED` | 403 | Se dejó vacía en una cuenta que sí tiene contraseña. Solo puede faltar en una que no la tenga |
 | `PASSWORD_UNCHANGED` | 422 | La nueva es la que ya había. Se rechaza porque un cambio cierra sesiones y manda un aviso |
+| `EMAIL_CHANGE_REFUSED` | 422 | La dirección ya la tiene otra cuenta **o** es la que ya tienes. Un solo código a propósito: decir cuál convertiría el formulario en un comprobador de quién tiene cuenta (`FEAT-USR-040`) |
+| `INVALID_EMAIL_CHANGE_TOKEN` | 404 | Ese enlace de confirmación no existe |
+| `EMAIL_CHANGE_LINK_NO_LONGER_VALID` | 410 | Usado, caducado o anulado por una solicitud posterior: los tres significan «pídelo otra vez» |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |
