@@ -12,6 +12,8 @@
 | `POST /auth/oauth/{provider}/callback` | `completeOAuth` | Completar autenticación externa | FEAT-USR-002/005 | PENDING |
 | `POST /api/v1/auth/activate` | `activateAccount` | Activar la cuenta con el token del correo | FEAT-USR-020 | **Implementado** |
 | `POST /api/v1/auth/activation/resend` | `resendActivationEmail` | Reenviar el correo de activación | FEAT-USR-021 | **Implementado** |
+| `POST /api/v1/auth/password/forgotten` | `requestPasswordReset` | Pedir el enlace de recuperación | FEAT-USR-007 | **Implementado** |
+| `POST /api/v1/auth/password/reset` | `resetPassword` | Fijar la contraseña con ese enlace | FEAT-USR-007 | **Implementado** |
 | `POST /api/v1/auth/login` | `login` | Login con email y contraseña | FEAT-USR-004 | **Implementado** |
 | `POST /api/v1/auth/refresh` | `refreshSession` | Renovar la sesión. El refresco **rota** | FEAT-USR-004 | **Implementado** |
 | `POST /api/v1/auth/logout` | `logout` | Cerrar sesión | FEAT-USR-004 | **Implementado** |

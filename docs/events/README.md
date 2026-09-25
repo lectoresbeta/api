@@ -54,13 +54,14 @@ decisión sobre agrupación (`N-2`).
 | `UserRegistered` | Se crea una cuenta | `Credits` ✅ (crea cuenta con saldo 0), `Notification` ✅ | `userId`, `username`, `authProvider`, `status`, `invitedBy?` |
 | `AccountActivated` | El usuario activa su cuenta desde el correo | **`Credits`** (+10), `Notification`, `Feedback` | `userId`, `activatedAt` |
 | `ActivationEmailRequested` | Se pide reenviar el correo de activación | `Notification` ✅ | `userId`, `requestedAt`. **Ni el correo ni el token**: el token es una credencial viva y la dirección se obtiene por el contrato al enviar |
+| `PasswordResetRequested` | Se pide el enlace de «he olvidado mi contraseña» (`FEAT-USR-007`) | `Notification` ✅ | `userId`, `requestedAt`. **Ni el correo ni el token**: el token es una credencial viva y se pide por contrato al enviar |
 | `LiteraryPreferencesUpdated` | El usuario fija sus géneros en el onboarding **o los cambia después** (`FEAT-USR-009`) | `Community` | `userId`, `genres`. **La selección entera, no lo que cambió**: aplicar diferencias daría un conjunto equivocado el primer día que se pierda un mensaje |
 | `OnboardingCompleted` | Termina el onboarding | `Notification`, read models | `userId`, `completedAt` |
 | `UserProfileUpdated` | Cambian datos públicos, **la foto incluida** | `Community` | `userId`, `name`, `description`, `avatarUrl`, `updatedAt`. **Los valores nuevos, no un diff**: quien lo consume quiere con qué quedarse. `avatarUrl` es la recortada, **nunca la original**, y viaja como dirección y no como clave: un consumidor no tiene por qué aprender cómo se construye una URL de este sistema |
 | `UsernameChanged` | El usuario cambia su nombre de usuario, **o recupera uno suyo** | `Community` (read models con el `@`) | `userId`, `previousUsername`, `newUsername`, `aliasExpiresAt`, `changedAt`. El viejo para encontrar qué actualizar, el nuevo para escribirlo, y la fecha para saber hasta cuándo un enlace antiguo sigue llevando a alguna parte |
 | `EmailChangeRequested` | Se pide cambiar el correo | `Notification` | `userId`, `requestId`, `expiresAt` |
 | `EmailChanged` | Se confirma el cambio de correo | `Notification`, read models | `userId`, `changedAt` |
-| `PasswordChanged` | Se cambia la contraseña | `Notification` | `userId`, `changedAt` |
+| `PasswordChanged` | Se cambia la contraseña, **desde dentro o restableciéndola** | `Notification` ✅ | `userId`, `viaReset`, `changedAt`. **Nunca la contraseña ni su hash**. `viaReset` no decide si se avisa, decide qué dice el aviso |
 | `PrivacySettingsChanged` | Cambian los ajustes de privacidad | `Community`, read models de visibilidad | `userId`, `profileVisibility`, `commentPermission`, `messagePermission`, `changedAt`. **Nada del perfil** |
 | `NotificationPreferencesChanged` | Cambian las preferencias de aviso | `Notification` | `userId`, preferencias modificadas |
 | `UserDeleted` | Se elimina la cuenta | Todos | `userId`, `deletedAt`. En `User` convierte su nombre de usuario en alias bloqueado 30 días |

@@ -62,7 +62,9 @@ el resto es el catálogo previsto.
 | `BETA_READER_INVITATION` | `BetaReaderInvited` (`Reading`) | Usuario invitado | ✅ |
 | `BETA_READER_ACCESS_REVOKED` | `BetaReaderAccessRevoked` (`Reading`) | Lector que lo pierde | ✅ |
 | `CORRECTION_RECEIVED` | `FeedbackSubmitted` (`Feedback`) | Autor de la obra | ✅ |
-| `ACCOUNT_ACTIVATION` | `UserRegistered` (`User`) | Titular de la cuenta | ✅ (solo email) |
+| `ACCOUNT_ACTIVATION` | `UserRegistered` / `ActivationEmailRequested` (`User`) | Titular de la cuenta | ✅ (solo email) |
+| `PASSWORD_RESET_REQUESTED` | `PasswordResetRequested` (`User`) | Titular de la cuenta | ✅ (solo email) |
+| `PASSWORD_CHANGED` | `PasswordChanged` (`User`) | Titular de la cuenta | ✅ (solo email) |
 | `WRITING_BUDDY_PROPOSED` | `Reading` | Usuario propuesto | |
 | `CORRECTION_REPLIED` | `Feedback` | Autor de la corrección | |
 | `CORRECTION_RATED` | `Feedback` | Autor de la corrección | |

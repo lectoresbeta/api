@@ -19,6 +19,11 @@ namespace LectoresBeta\Notification\Delivery\Domain\Enum;
  * neither will silently behave as a notification, which is the wrong default
  * for anything to do with security.
  *
+ * `PASSWORD_RESET_REQUESTED` is operational for the starkest reason of all
+ * (`FEAT-USR-007`): somebody who had unsubscribed from it could never
+ * recover their account. `PASSWORD_CHANGED` likewise — it is the only thing
+ * that tells a person their account has just been taken.
+ *
  * `BETA_READER_ACCESS_REVOKED` arrived with `FEAT-NOT-001` and is the one
  * that saldó a debt two features had written down: somebody who loses access
  * to a work **stops being able to deliver what they were writing**, and until
@@ -28,6 +33,7 @@ namespace LectoresBeta\Notification\Delivery\Domain\Enum;
 enum NotificationKind: string
 {
     case ACCOUNT_ACTIVATION = 'ACCOUNT_ACTIVATION';
+    case PASSWORD_RESET_REQUESTED = 'PASSWORD_RESET_REQUESTED';
     case PASSWORD_CHANGED = 'PASSWORD_CHANGED';
     case EMAIL_CHANGE_REQUESTED = 'EMAIL_CHANGE_REQUESTED';
     case EMAIL_CHANGED = 'EMAIL_CHANGED';
@@ -58,6 +64,7 @@ enum NotificationKind: string
     {
         return match ($this) {
             self::ACCOUNT_ACTIVATION,
+            self::PASSWORD_RESET_REQUESTED,
             self::PASSWORD_CHANGED,
             self::EMAIL_CHANGE_REQUESTED,
             self::EMAIL_CHANGED,

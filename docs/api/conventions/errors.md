@@ -130,6 +130,10 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `USERNAME_CHANGE_TOO_SOON` | 429 | El nombre de usuario se cambió hace menos de 30 días. Lleva `availableOn` |
 | `RESEND_TOO_SOON` | 429 | Se ha pedido el correo de activación hace menos de un minuto (`FEAT-USR-021`). Lleva `retryAfterSeconds` y `Retry-After` |
 | `RESEND_LIMIT_REACHED` | 429 | Se ha agotado el máximo de reenvíos del periodo. Se distingue del anterior porque significa «vuelve mañana» y no «espera un minuto» |
+| `INVALID_PASSWORD_RESET_TOKEN` | 404 | El enlace de recuperación no existe, ya se usó o quedó invalidado. Los tres responden igual a propósito (`FEAT-USR-007`) |
+| `PASSWORD_RESET_TOKEN_EXPIRED` | 410 | El enlace caducó. Es el único caso que se distingue: es el único que quien está delante puede resolver |
+| `PASSWORD_RESET_TOO_SOON` | 429 | Se pidió el enlace hace menos de un minuto |
+| `PASSWORD_RESET_LIMIT_REACHED` | 429 | Se ha agotado el máximo de enlaces del periodo |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |

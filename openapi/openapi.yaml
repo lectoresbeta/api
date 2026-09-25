@@ -70,6 +70,12 @@ paths:
   /auth/login:
     $ref: './paths/auth.yaml#/login'
 
+  /auth/password/forgotten:
+    $ref: './paths/auth.yaml#/passwordForgotten'
+
+  /auth/password/reset:
+    $ref: './paths/auth.yaml#/passwordReset'
+
   /auth/refresh:
     $ref: './paths/auth.yaml#/refresh'
 

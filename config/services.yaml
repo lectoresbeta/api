@@ -114,6 +114,8 @@ services:
                 - LectoresBeta\Work\Catalogue\Application\Event\FeedbackSubmitted
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
                 - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
+                - LectoresBeta\Notification\Delivery\Application\Event\PasswordResetRequested
+                - LectoresBeta\Notification\Delivery\Application\Event\PasswordChanged
                 - LectoresBeta\User\Privacy\Application\Event\AuthorSubscribed
                 - LectoresBeta\User\Privacy\Application\Event\AuthorUnsubscribed
                 - LectoresBeta\User\Privacy\Application\Event\UserBlocked
@@ -150,6 +152,12 @@ services:
             $byDay: '@limiter.resend_activation_daily'
             $byAddress: '@limiter.resend_activation_by_ip'
 
+    LectoresBeta\User\Account\Infrastructure\Security\PasswordResetThrottle:
+        arguments:
+            $byInterval: '@limiter.password_reset_interval'
+            $byDay: '@limiter.password_reset_daily'
+            $byAddress: '@limiter.password_reset_by_ip'
+
     LectoresBeta\User\Authentication\Infrastructure\Security\LexikAccessTokenIssuer:
         arguments:
             $lifetimeInSeconds: '%app.jwt_ttl%'
@@ -160,6 +168,18 @@ services:
     # cambio visible aquí, y no el efecto lateral de crear una clase.
     LectoresBeta\User\Account\Application\Contract\ActivationLinkProvider:
         alias: LectoresBeta\User\Account\Application\Service\IssueActivationLink
+
+    # El mismo patrón para el enlace de recuperación (FEAT-USR-007): el token
+    # es una credencial viva y no viaja por la cola; se pide al enviar.
+    LectoresBeta\User\Account\Application\Contract\PasswordResetLinkProvider:
+        alias: LectoresBeta\User\Account\Application\Service\IssuePasswordResetLink
+
+    # A qué dirección escribir cuando el aviso no lleva enlace: contraseña
+    # cambiada, y más adelante correo cambiado o cuenta bloqueada. Es la
+    # puerta más delicada de `User` —reparte direcciones de correo— y se abre
+    # porque el correo operativo *es* la defensa de la cuenta.
+    LectoresBeta\User\Account\Application\Contract\MailingAddresses:
+        alias: LectoresBeta\User\Account\Application\Service\ResolveMailingAddress
 
     LectoresBeta\User\Account\Application\Contract\VisibleProfiles:
         alias: LectoresBeta\User\Account\Application\Service\ShowVisibleProfiles
@@ -219,6 +239,21 @@ services:
             # (FEAT-USR-021) significan lo mismo para este contexto.
             - { name: messenger.message_handler, method: registered }
             - { name: messenger.message_handler, method: requested }
+
+    LectoresBeta\Notification\Delivery\Application\Handler\SendPasswordResetEmail:
+        arguments:
+            # La página que recoge el token y lo manda en el cuerpo, para que
+            # no quede en los logs del servidor ni en el historial.
+            $resetUrlTemplate: '%env(PASSWORD_RESET_URL_TEMPLATE)%'
+        tags:
+            - { name: messenger.message_handler }
+
+    # El aviso que hace que robar una cuenta se note. Llega por los dos
+    # caminos —cambio desde dentro y restablecimiento— porque quien no hizo
+    # ninguna de las dos cosas necesita enterarse en los dos casos.
+    LectoresBeta\Notification\Delivery\Application\Handler\SendPasswordChangedNotice:
+        tags:
+            - { name: messenger.message_handler }
 
     LectoresBeta\Shared\Infrastructure\Storage\LocalFileStorage:
         arguments:

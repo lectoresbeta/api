@@ -315,3 +315,132 @@ logout:
     responses:
       '204':
         description: Sesión cerrada.
+
+# —— «He olvidado mi contraseña» (FEAT-USR-007) ——————————————————————————
+# Dos operaciones, y conviene no confundirlas: pedir el enlace, que no exige
+# nada, y usarlo, que fija la contraseña nueva.
+
+passwordForgotten:
+  post:
+    tags: [Auth]
+    operationId: requestPasswordReset
+    summary: Pedir el enlace para restablecer la contraseña
+    description: |
+      **No requiere sesión, y no puede requerirla**: quien no recuerda su
+      contraseña no puede iniciarla.
+
+      La respuesta es **idéntica** exista o no esa cuenta, esté eliminada, o
+      venga el correo mal escrito. Cualquier diferencia observable convertiría
+      este formulario en un comprobador de qué direcciones tienen cuenta — que
+      es justo la lista que busca quien prepara un engaño.
+
+      Cada petición **invalida el enlace anterior**: solo vale el del último
+      correo. El enlace **caduca en una hora**, mucho menos que el de
+      activación: aquel abre una cuenta recién creada y vacía, y este se queda
+      con una que ya tiene historial, créditos y obra inédita.
+
+      El `429` distingue dos casos, con `Retry-After` en los dos:
+      `PASSWORD_RESET_TOO_SOON` y `PASSWORD_RESET_LIMIT_REACHED`. No filtra
+      nada, porque los contadores se consumen en cada petición exista o no la
+      cuenta.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email]
+            properties:
+              email:
+                type: string
+                format: email
+    responses:
+      '202':
+        description: Solicitud aceptada. Si procedía, se ha enviado el correo.
+      '429':
+        description: |
+          `code: PASSWORD_RESET_TOO_SOON` o `code: PASSWORD_RESET_LIMIT_REACHED`.
+        headers:
+          Retry-After:
+            schema:
+              type: integer
+        content:
+          application/problem+json:
+            schema:
+              allOf:
+                - $ref: '../openapi.yaml#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    retryAfterSeconds:
+                      type: integer
+                      minimum: 0
+
+passwordReset:
+  post:
+    tags: [Auth]
+    operationId: resetPassword
+    summary: Fijar la contraseña con el enlace del correo
+    description: |
+      Fija la contraseña nueva, **consume el enlace** —es de un solo uso— y
+      **cierra todas las sesiones**. Lo último no es opcional: quien recupera
+      su contraseña muchas veces lo hace porque sospecha que alguien más
+      entró, y dejar viva esa sesión sería dejar dentro justo a quien se
+      quiere echar.
+
+      Si la cuenta estaba **sin activar, queda activada**. Activar sirve para
+      demostrar que el buzón es tuyo, y usar un enlace mandado a ese buzón
+      demuestra lo mismo; pedir después el otro enlace sería exigir dos veces
+      la misma prueba.
+
+      Una cuenta creada con Google puede usar este camino para **establecer**
+      su primera contraseña, y no se desvincula de Google: quedan dos formas
+      de entrar.
+
+      **No devuelve una sesión.** Sería cómodo y convertiría un enlace de
+      correo en un inicio de sesión completo, de forma que quien lo
+      interceptase entraría sin escribir nada.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [token, password]
+            properties:
+              token:
+                type: string
+              password:
+                type: string
+                format: password
+                minLength: 8
+    responses:
+      '204':
+        description: Contraseña fijada. Hay que iniciar sesión.
+      '404':
+        description: |
+          `code: INVALID_PASSWORD_RESET_TOKEN`. No existe, ya se usó o quedó
+          invalidado por una petición posterior: los tres responden igual.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '410':
+        description: |
+          `code: PASSWORD_RESET_TOKEN_EXPIRED`. Es el único caso que se
+          distingue, porque es el único que quien está delante puede
+          resolver: pedir otro.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: WEAK_PASSWORD`, con los requisitos incumplidos. **No consume
+          el enlace**: quien se equivoca escribiendo la nueva vuelve a
+          intentarlo con el mismo correo delante.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

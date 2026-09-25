@@ -117,9 +117,11 @@ Las que el código exige. `.env` trae un valor de desarrollo para cada una.
 | `MESSENGER_TRANSPORT_DSN` | RabbitMQ. En tests, `in-memory://` |
 | `MAILER_DSN` | Proveedor de correo. Sin decidir (`FEAT-NOT-008` `N-3`) |
 | `MAILER_SENDER` | Remitente de los correos transaccionales |
-| `ACTIVATION_URL_TEMPLATE` | Página **del frontend** que recoge el token. `{token}` se sustituye al generar el correo |
+| `ACTIVATION_URL_TEMPLATE` | Página **del frontend** que recoge el token de activación. `{token}` se sustituye al generar el correo |
+| `PASSWORD_RESET_URL_TEMPLATE` | Lo mismo para el enlace de «he olvidado mi contraseña» (`FEAT-USR-007`) |
+| `APP_STORAGE_DIR` | Dónde se guardan los ficheros subidos (`FEAT-USR-037`) |
 
-`ACTIVATION_URL_TEMPLATE` apunta al frontend y no a la API a propósito: el enlace abre una
+Las dos plantillas de URL apuntan al frontend y no a la API a propósito: el enlace abre una
 página que extrae el token y lo envía en el cuerpo de la petición, de modo que no quede en los
 logs del servidor ni en el historial del navegador.
 
