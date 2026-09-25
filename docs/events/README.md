@@ -90,9 +90,9 @@ decisión sobre agrupación (`N-2`).
 | `WorkAccessModeChanged` | Cambia la modalidad | `Reading` | `workId`, `authorId`, `accessMode`, `changedAt` |
 | `WorkUpdated` | Cambian el título o la sinopsis (`FEAT-WRK-005`) | `Community`, `Reading` | `workId`, `authorId`, `updatedAt`. **Sin el texto** |
 | `ChaptersReordered` | Cambia el orden (`FEAT-WRK-003`) | **`Credits`** ✅ | `workId`, `authorId`, `order`. Importa porque el último capítulo puede ser otro, y con él las preguntas que se cobran |
-| `ChapterRemoved` | Se elimina un capítulo, de los que nadie corrigió | **`Credits`** ✅, `Feedback` | `chapterId`, `workId`, `authorId` |
+| `ChapterRemoved` | Se elimina un capítulo, de los que nadie corrigió | **`Credits`** ✅, `Feedback` | `chapterId`, `workId`, `authorId`, `order` (el que queda) |
 | `ChapterVisibilityChanged` | El autor oculta o muestra un capítulo (`FEAT-WRK-008`) | `Notification`, `Credits` |  `chapterId`, `workId`, `authorId`, `visibility`, `changedAt` |
-| `WorkArchived` | El autor retira la obra (`FEAT-WRK-006`) | `Reading`, `Feedback`, `Credits`, `Community`, `Notification` | `workId`, `authorId`, `archivedAt` |
+| `WorkArchived` | El autor retira la obra (`FEAT-WRK-006`) | **`Reading`** ✅ (revoca los accesos), `Feedback`, `Credits`, `Community`, `Notification` | `workId`, `authorId`, `archivedAt` |
 | `WorkRestored` | La recupera | Los mismos | `workId`, `authorId`, `restoredAt` |
 | `WorkDeleted` | Se borra de verdad | `Reading`, `Feedback`, `Community` | `workId`, `authorId`. **Borrado definitivo**, no el botón de «Eliminar»: lo publica `FEAT-USR-013` |
 | `WorkBlockedByModeration` | Se bloquea la obra o uno de sus capítulos tras una reclamación estimada (`FEAT-MOD-003`) | `Notification` ✅, `Community`, **`Credits`** | `workId`, `authorId`, `title`, `scope`, `chapterId?`, `reason`, `blockedAt` |

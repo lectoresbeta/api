@@ -568,6 +568,103 @@ work:
       '422':
         $ref: '../openapi.yaml#/components/responses/ValidationFailed'
 
+  delete:
+    tags: [Works]
+    operationId: archiveWork
+    summary: Retirar una obra
+    description: |
+      El botón dice «Eliminar» y lo que ocurre es un **archivado**: la obra
+      desaparece del catálogo, del perfil y de las búsquedas, deja de poder
+      corregirse, los accesos de lector beta se revocan, y **su autor la sigue
+      viendo**.
+
+      Borrar no es una operación local. De una obra cuelgan correcciones
+      **pagadas**, reclamaciones resueltas y movimientos de crédito que la
+      citan; borrarla destruiría el trabajo de otras personas y la prueba de
+      lo que se decidió.
+
+      El mensaje de confirmación tiene que decirlo con estas palabras: deja de
+      verla todo el mundo menos tú, las correcciones que recibiste siguen ahí,
+      los créditos no se devuelven, y **puedes recuperarla**. Un diálogo que
+      diga «esta acción no se puede deshacer» sobre algo que sí se deshace
+      enseña a no leer los diálogos.
+
+      La confirmación viaja en el cuerpo: un `DELETE` que se dispara por un
+      enlace mal pulsado no debería vaciar un perfil.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [confirm]
+            properties:
+              confirm:
+                type: boolean
+                description: Debe ser `true`. Lo comprueba el servidor, no solo la pantalla.
+    responses:
+      '204':
+        description: Archivada. También cuando ya lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suya. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: WORK_BLOCKED`. Una obra bloqueada por moderación no se archiva: sería la vía para hacer desaparecer contenido reclamado.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CONFIRMATION_REQUIRED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+workRestore:
+  post:
+    tags: [Works]
+    operationId: restoreWork
+    summary: Recuperar una obra retirada
+    description: |
+      Vuelve **a borrador**, nunca publicada ni en corrección: reabrir la
+      puerta a los lectores beta es una decisión aparte, y tomarla por el
+      autor sería volver a enseñar una obra que él retiró.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Recuperada, en borrador.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es suya. `code: WORK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: WORK_NOT_ARCHIVED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
 chapter:
   get:
     tags: [Works]

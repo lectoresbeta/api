@@ -106,6 +106,10 @@ abstract class EconomyScenario extends WebTestCase
         // (`FEAT-WRK-003`).
         'ChaptersReordered',
         'ChapterRemoved',
+
+        // Y lo que retirar una obra significa para quien la estaba leyendo
+        // (`FEAT-WRK-006`).
+        'WorkArchived',
     ];
 
     /**

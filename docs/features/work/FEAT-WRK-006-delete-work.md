@@ -5,7 +5,7 @@ context: Work
 concept: Manuscript
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-25 (bloque de ciclo de vida de la obra)
@@ -122,17 +122,17 @@ que ya añaden `blocked_at IS NULL`.
 
 ## Criterios de aceptación
 
-- [ ] El autor archiva su obra y deja de verla cualquier otra persona.
-- [ ] La obra desaparece del catálogo, del perfil y de las búsquedas.
-- [ ] El autor la sigue viendo, marcada como archivada.
-- [ ] Sin confirmación explícita no se archiva.
-- [ ] Los accesos de lector beta quedan revocados.
+- [x] El autor archiva su obra y deja de verla cualquier otra persona.
+- [x] La obra desaparece del catálogo, del perfil y de las búsquedas.
+- [x] El autor la sigue viendo, marcada como archivada.
+- [x] Sin confirmación explícita no se archiva.
+- [x] Los accesos de lector beta quedan revocados.
 - [ ] Quien tenía un borrador de corrección recibe aviso y no puede entregarlo.
-- [ ] Las correcciones entregadas se siguen leyendo por las dos partes.
-- [ ] Los créditos no se devuelven.
-- [ ] El autor la restaura y vuelve a `DRAFT`, nunca publicada.
-- [ ] Una obra bloqueada por moderación no se puede archivar.
-- [ ] El contador de relatos del perfil no la cuenta.
+- [x] Las correcciones entregadas se siguen leyendo por las dos partes.
+- [x] Los créditos no se devuelven.
+- [x] El autor la restaura y vuelve a `DRAFT`, nunca publicada.
+- [x] Una obra bloqueada por moderación no se puede archivar.
+- [x] El contador de relatos del perfil no la cuenta.
 
 ## Preguntas abiertas
 
@@ -147,4 +147,15 @@ que ya añaden `blocked_at IS NULL`.
 **Especificación:** `APPROVED` (2026-09-25). La decisión de archivar en
 lugar de borrar se tomó el 2026-09-25.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). Archivar y restaurar funcionan, con la
+confirmación comprobada en el servidor, los accesos revocados por `Reading` —que es quien sabe
+qué es un acceso, no quien publica el hecho—, la obra fuera del catálogo, del contador público
+y de las lecturas ajenas, y las correcciones pagadas intactas para las dos partes.
+
+**Falta el aviso a quien estuviera corrigiendo** (`RN-4`). Hoy pierde el acceso y lo descubre
+al volver. Es el mismo mecanismo que `FEAT-WRK-008` `RN-5` y que
+[`FEAT-MOD-003`](../moderation/FEAT-MOD-003-block-work.md) `RN-4` necesitan, y los tres entran
+juntos: un aviso a quien tiene trabajo a medias sobre algo que acaba de cerrarse.
+
+`W-31`, `W-32` y `W-33` siguen abiertas. `W-31` —si el archivado caduca— gana peso ahora que
+existe: sin caducidad, el archivo crece para siempre.

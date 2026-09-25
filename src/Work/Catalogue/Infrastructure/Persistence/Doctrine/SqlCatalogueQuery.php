@@ -170,6 +170,9 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
         $conditions = [
             "w.status <> 'DRAFT'",
             'w.blocked_at IS NULL',
+            // Retirada por su autor (`FEAT-WRK-006`): para el catálogo no
+            // existe, igual que una bloqueada.
+            'w.archived_at IS NULL',
             'w.author_id <> :reader',
         ];
 

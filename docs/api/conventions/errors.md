@@ -161,6 +161,9 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `WORK_NEEDS_A_CHAPTER` | 409 | Una obra publicada no se queda sin capítulos. En borrador sí |
 | `CHAPTER_ORDER_INCOMPLETE` | 422 | El orden enviado no contiene exactamente los capítulos de la obra. Se rechaza entero |
 | `CHAPTER_BLOCKED` | 409 | El capítulo está bloqueado por una reclamación estimada y su contenido se conserva tal cual (`FEAT-WRK-005` `RN-7`) |
+| `CONFIRMATION_REQUIRED` | 422 | Falta la confirmación explícita. La comprueba el servidor, no solo la pantalla (`FEAT-WRK-006`) |
+| `WORK_BLOCKED` | 409 | La obra está bloqueada por una reclamación estimada y no se puede retirar |
+| `WORK_NOT_ARCHIVED` | 409 | Se pide recuperar una obra que no estaba retirada |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |

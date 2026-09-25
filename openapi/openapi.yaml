@@ -165,6 +165,9 @@ paths:
   /chapters/{chapterId}:
     $ref: './paths/works.yaml#/chapter'
 
+  /works/{workId}/restore:
+    $ref: './paths/works.yaml#/workRestore'
+
   /works/{workId}/chapters/order:
     $ref: './paths/works.yaml#/chapterOrder'
 

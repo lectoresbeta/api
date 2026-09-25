@@ -75,7 +75,7 @@ final readonly class ResolveWorkAccessBriefs implements WorkAccessBriefs
                 static fn (ContentWarning $warning): string => $warning->value,
                 $this->warnings->of($work->id()),
             ),
-            $work->status()->isReadableByOthers() && !$work->isBlocked(),
+            $work->status()->isReadableByOthers() && !$work->isBlocked() && !$work->isArchived(),
         );
     }
 }

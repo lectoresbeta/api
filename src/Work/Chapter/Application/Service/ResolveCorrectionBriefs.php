@@ -49,7 +49,7 @@ final readonly class ResolveCorrectionBriefs implements CorrectionBriefs
 
         $work = $this->works->ofId($chapter->workId());
 
-        if (null === $work || $work->isBlocked()) {
+        if (null === $work || $work->isBlocked() || $work->isArchived()) {
             return null;
         }
 

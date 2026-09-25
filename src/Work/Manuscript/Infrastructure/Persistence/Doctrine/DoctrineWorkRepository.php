@@ -57,7 +57,16 @@ final class DoctrineWorkRepository extends DoctrineRepository implements WorkRep
 
     public function countByAuthor(AuthorId $authorId): int
     {
-        return $this->repository()->count(['authorId' => $authorId->value()]);
+        // Las archivadas no cuentan (`FEAT-WRK-006` `RN-10`): para el resto
+        // del mundo no existen, y un contador que las incluyera prometería
+        // obras que nadie va a poder abrir.
+        return (int) $this->repository()->createQueryBuilder('w')
+            ->select('COUNT(w.id)')
+            ->where('w.authorId = :author')
+            ->andWhere('w.archivedAt IS NULL')
+            ->setParameter('author', $authorId->value())
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     public function remove(Work $work): void

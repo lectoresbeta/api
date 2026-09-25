@@ -57,6 +57,16 @@ class Work
      */
     private ?\DateTimeImmutable $blockedAt = null;
 
+    /**
+     * Retirada por su autor ([`FEAT-WRK-006`](../../../../../docs/features/work/FEAT-WRK-006-delete-work.md)).
+     *
+     * **Archivada, no borrada.** Una obra de esta plataforma casi nunca es
+     * solo de quien la escribió: pueden colgar de ella correcciones pagadas y
+     * reclamaciones resueltas, y borrarla destruiría el trabajo de otros y la
+     * prueba de lo que se decidió.
+     */
+    private ?\DateTimeImmutable $archivedAt = null;
+
     private \DateTimeImmutable $createdAt;
 
     private \DateTimeImmutable $updatedAt;
@@ -126,6 +136,34 @@ class Work
     public function isBlocked(): bool
     {
         return null !== $this->blockedAt;
+    }
+
+    public function isArchived(): bool
+    {
+        return null !== $this->archivedAt;
+    }
+
+    /**
+     * El botón dice «Eliminar» y esto es lo que ocurre: desaparece para todos
+     * menos para su autor, y nada de lo que cuelga de ella se pierde.
+     */
+    public function archive(\DateTimeImmutable $now): void
+    {
+        $this->archivedAt ??= $now;
+        $this->touch($now);
+    }
+
+    /**
+     * Vuelve **a borrador**, nunca publicada ni en corrección (`RN-7`):
+     * reabrir la puerta es una decisión aparte, y tomarla por el autor sería
+     * volver a enseñar a lectores beta una obra que él retiró.
+     */
+    public function restore(\DateTimeImmutable $now): void
+    {
+        $this->archivedAt = null;
+        $this->status = WorkStatus::DRAFT;
+        $this->statusChangedAt = $now;
+        $this->touch($now);
     }
 
     public function isVisibleTo(AuthorId $reader): bool

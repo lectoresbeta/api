@@ -107,3 +107,17 @@ setChapterVisibility:
     path: /api/v1/chapters/{chapterId}/visibility
     controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\SetChapterVisibilityController::__invoke
     methods: [PUT]
+
+# Retirar una obra (`FEAT-WRK-006`). El botón dice «Eliminar» y lo que ocurre
+# es un archivado: de una obra cuelgan correcciones pagadas y reclamaciones
+# resueltas, y borrarla destruiría lo que no es de su autor.
+archiveWork:
+    path: /api/v1/works/{workId}
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ArchiveWorkController::__invoke
+    methods: [DELETE]
+
+# Vuelve a borrador, nunca publicada: reabrir la puerta es otra decisión.
+restoreWork:
+    path: /api/v1/works/{workId}/restore
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\RestoreWorkController::__invoke
+    methods: [POST]

@@ -128,6 +128,11 @@ services:
                 # ello lo que cuesta corregir dos de ellos (FEAT-WRK-003).
                 - LectoresBeta\Credits\Pricing\Application\Event\ChaptersReordered
                 - LectoresBeta\Credits\Pricing\Application\Event\ChapterRemoved
+
+                # El autor retira su obra: ya no hay nada que leer, así que
+                # los accesos de lector beta dejan de tener objeto
+                # (FEAT-WRK-006).
+                - LectoresBeta\Reading\BetaReaderAccess\Application\Event\WorkArchived
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
                 - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
                 - LectoresBeta\Notification\Delivery\Application\Event\PasswordResetRequested
@@ -458,6 +463,10 @@ services:
     # Y lo que un bloqueo significa para una obra inédita, que lo decide
     # `Reading` y no `Community`.
     LectoresBeta\Reading\BetaReaderAccess\Application\Handler\RevokeAccessOnBlock:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Reading\BetaReaderAccess\Application\Handler\RevokeAccessOnWorkArchived:
         tags:
             - { name: messenger.message_handler }
 
