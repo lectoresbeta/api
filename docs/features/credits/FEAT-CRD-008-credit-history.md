@@ -4,7 +4,7 @@ title: Consultar el historial de movimientos de créditos
 context: Credits
 concept: Account
 actors: [User]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -130,7 +130,7 @@ contradecir a la suma, que es justo lo que `RN-11` de
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación.
+**Especificación:** `APPROVED` (2026-09-25).
 
 **Implementación:** `TODO`. El repositorio ya expone `historyOf()` y `balanceOf()`; falta el
 caso de uso, la resolución del objeto citado y el endpoint.

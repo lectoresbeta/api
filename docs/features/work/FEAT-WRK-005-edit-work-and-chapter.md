@@ -4,7 +4,7 @@ title: Editar una obra o un capítulo
 context: Work
 concept: Chapter
 actors: [Writer]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -200,7 +200,7 @@ cómo se versiona.
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación. Las decisiones de diseño
+**Especificación:** `APPROVED` (2026-09-25). Las decisiones de diseño
 del versionado (cuándo se crea, qué texto ve quien corrige, quién lee una versión antigua y
 qué entra en ella) se tomaron el 2026-09-25.
 

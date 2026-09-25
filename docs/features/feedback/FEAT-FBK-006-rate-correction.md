@@ -4,7 +4,7 @@ title: Valorar una corrección recibida
 context: Feedback
 concept: Rating
 actors: [Writer]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -122,6 +122,6 @@ reclama.
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación. Resuelve `F-5` (binaria).
+**Especificación:** `APPROVED` (2026-09-25). Resuelve `F-5` (binaria).
 
 **Implementación:** `TODO`.

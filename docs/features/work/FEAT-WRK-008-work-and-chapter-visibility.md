@@ -4,7 +4,7 @@ title: Configurar la visibilidad de obra y capítulos
 context: Work
 concept: Chapter
 actors: [Writer]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: PARTIAL
 priority: P1
 sources:
@@ -121,7 +121,7 @@ avisa a quien tuviera un borrador en curso.
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación. Resuelve de paso la
+**Especificación:** `APPROVED` (2026-09-25). Resuelve de paso la
 ambigüedad «visibilidad de la obra», que no existe: la obra tiene estado.
 
 **Implementación:** `PARTIAL`. `ChapterVisibility` existe en el modelo y las lecturas ya la

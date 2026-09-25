@@ -4,7 +4,7 @@ title: Filtrado automático de contenido por edad
 context: User
 concept: Account
 actors: [User, Guest]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: PARTIAL
 priority: P0
 sources:
@@ -130,7 +130,7 @@ Ninguno nuevo. `User` ya guarda la fecha de nacimiento y `Work` la clasificació
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación.
+**Especificación:** `APPROVED` (2026-09-25).
 
 **Implementación:** `PARTIAL`. El filtro se aplica ya en seis sitios —catálogo, obra,
 capítulo, cuestionario, panel de corrección y solicitud de acceso— a través del contrato

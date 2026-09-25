@@ -4,7 +4,7 @@ title: Mis correcciones — lo que he corregido
 context: Feedback
 concept: Correction
 actors: [BetaReader]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P2
 sources:
@@ -131,6 +131,6 @@ sabe de dinero.
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación. Resuelve `F-9`.
+**Especificación:** `APPROVED` (2026-09-25). Resuelve `F-9`.
 
 **Implementación:** `TODO`.

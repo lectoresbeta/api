@@ -4,7 +4,7 @@ title: Eliminar una obra con confirmación
 context: Work
 concept: Manuscript
 actors: [Writer]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -144,7 +144,7 @@ que ya añaden `blocked_at IS NULL`.
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación. La decisión de archivar en
+**Especificación:** `APPROVED` (2026-09-25). La decisión de archivar en
 lugar de borrar se tomó el 2026-09-25.
 
 **Implementación:** `TODO`.

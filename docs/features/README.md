@@ -17,15 +17,15 @@ verdad sobre el alcance.**
 
 | Contexto | Total | Con ficha | `APPROVED` | `REVIEW` | `DONE` | `PARTIAL` |
 |---|---|---|---|---|---|---|
-| `User` (USR) | 44 | 30 | 29 | 1 | 12 | 10 |
-| `Work` (WRK) | 17 | 12 | 8 | 4 | 0 | 9 |
+| `User` (USR) | 44 | 30 | 30 | 0 | 12 | 10 |
+| `Work` (WRK) | 17 | 12 | 12 | 0 | 0 | 9 |
 | `Reading` (RDG) | 10 | 7 | 7 | 0 | 7 | 0 |
-| `Feedback` (FBK) | 12 | 8 | 3 | 4 | 1 | 1 |
+| `Feedback` (FBK) | 12 | 8 | 7 | 0 | 1 | 1 |
 | `Community` (COM) | 38 | 11 | 10 | 0 | 2 | 1 |
-| `Moderation` (MOD) | 12 | 11 | 10 | 1 | 1 | 6 |
-| `Credits` (CRD) | 19 | 13 | 12 | 1 | 3 | 5 |
+| `Moderation` (MOD) | 12 | 11 | 11 | 0 | 1 | 6 |
+| `Credits` (CRD) | 19 | 13 | 13 | 0 | 3 | 5 |
 | `Notification` (NOT) | 9 | 3 | 3 | 0 | 2 | 1 |
-| **Total** | **161** | **95** | **82** | **11** | **28** | **33** |
+| **Total** | **161** | **95** | **93** | **0** | **28** | **33** |
 
 `APPROVED` y `REVIEW` son estados de la **especificación**; `DONE` y `PARTIAL`, del **código**.
 Las columnas no suman entre sí a propósito: una funcionalidad aprobada y a medio implementar
@@ -37,10 +37,10 @@ escrito en su ficha. El ciclo de la cuenta —registro, activación, sesión, co
 consentimiento legal— está entero; el económico —precio, cobro, abono, descubierto— también;
 y la moderación resuelve reclamaciones y bloquea obras.
 
-Las once fichas en `REVIEW` son el bloque de trabajo redactado el 2026-09-25: el ciclo de vida
-de una obra (`FEAT-WRK-003`, `005`, `006`, `008`), leer y responder lo que se recibe
-(`FEAT-FBK-004`, `005`, `006`, `010`), y tres deudas de transparencia (`FEAT-CRD-008`,
-`FEAT-MOD-007`, `FEAT-USR-044`).
+El bloque en curso, aprobado el 2026-09-25: el ciclo de vida de una obra (`FEAT-WRK-003`,
+`005`, `006`, `008`, `015`), leer y responder lo que se recibe (`FEAT-FBK-004`, `005`, `006`,
+`010`), y las deudas de transparencia (`FEAT-CRD-008`, `FEAT-MOD-007`, `FEAT-USR-043`,
+`FEAT-USR-044`).
 
 Áreas cubiertas con diseño:
 
@@ -112,7 +112,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-041 | Cambiar o establecer la contraseña | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-041-change-password.md) |
 | FEAT-USR-042 | Preferencias de apariencia (tema) | User | PENDING | TODO | P3 | — *(sin captura)* |
 | FEAT-USR-043 | Preferencias de contenido sensible | User | APPROVED | TODO | P1 | [ficha](user/FEAT-USR-043-content-preferences.md) |
-| FEAT-USR-044 | Filtrado automático de contenido por edad | User, Guest | REVIEW | PARTIAL | P0 | [ficha](user/FEAT-USR-044-age-based-content-filtering.md) |
+| FEAT-USR-044 | Filtrado automático de contenido por edad | User, Guest | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-044-age-based-content-filtering.md) |
 
 > **`FEAT-USR-013`: eliminar una cuenta la anonimiza** (`S-32`, decidida). Se suprime todo
 > dato personal y se conserva, sin autor identificable, lo que pertenece a terceros: las
@@ -169,12 +169,12 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 |---|---|---|---|---|---|---|
 | FEAT-WRK-001 | Crear obra con el editor WYSIWYG | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-001-create-work-with-editor.md) |
 | FEAT-WRK-002 | Crear obra subiendo un fichero (.doc, .pdf, .txt) | Writer | PENDING | TODO | P1 | — |
-| FEAT-WRK-003 | Estructurar la obra en capítulos | Writer | REVIEW | PARTIAL | P0 | [ficha](work/FEAT-WRK-003-structure-work-in-chapters.md) |
+| FEAT-WRK-003 | Estructurar la obra en capítulos | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-003-structure-work-in-chapters.md) |
 | FEAT-WRK-004 | Ver una obra y el contenido de sus capítulos | Writer, BetaReader, User | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-004-read-a-work.md) |
-| FEAT-WRK-005 | Editar una obra o un capítulo | Writer | REVIEW | TODO | P0 | [ficha](work/FEAT-WRK-005-edit-work-and-chapter.md) |
-| FEAT-WRK-006 | Eliminar una obra con confirmación | Writer | REVIEW | TODO | P1 | [ficha](work/FEAT-WRK-006-delete-work.md) |
+| FEAT-WRK-005 | Editar una obra o un capítulo | Writer | APPROVED | TODO | P0 | [ficha](work/FEAT-WRK-005-edit-work-and-chapter.md) |
+| FEAT-WRK-006 | Eliminar una obra con confirmación | Writer | APPROVED | TODO | P1 | [ficha](work/FEAT-WRK-006-delete-work.md) |
 | FEAT-WRK-007 | Configurar la modalidad de acceso de lectores beta | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-007-configure-access-mode.md) |
-| FEAT-WRK-008 | Configurar la visibilidad de obra y capítulos | Writer | REVIEW | PARTIAL | P1 | [ficha](work/FEAT-WRK-008-work-and-chapter-visibility.md) |
+| FEAT-WRK-008 | Configurar la visibilidad de obra y capítulos | Writer | APPROVED | PARTIAL | P1 | [ficha](work/FEAT-WRK-008-work-and-chapter-visibility.md) |
 | FEAT-WRK-009 | Generar el registro de autoría | Writer | PENDING | BLOCKED | P1 | — |
 | FEAT-WRK-010 | Crear enlace público para leer y comentar sin sesión | Writer | PENDING | TODO | P2 | — |
 | FEAT-WRK-011 | Generar enlace para compartir en redes sociales y captar LB | Writer | PENDING | TODO | P2 | — |
@@ -244,13 +244,13 @@ Ficha del contexto: [`../bounded-contexts/feedback.md`](../bounded-contexts/feed
 | FEAT-FBK-001 | Dejar feedback sobre una obra o fragmento | BetaReader | PENDING | TODO | P0 | — |
 | FEAT-FBK-002 | Valorar una obra | BetaReader | PENDING | TODO | P1 | — |
 | FEAT-FBK-003 | Responder y enviar el cuestionario de corrección | BetaReader | APPROVED | PARTIAL | P0 | [ficha](feedback/FEAT-FBK-003-answer-correction-questionnaire.md) |
-| FEAT-FBK-004 | Ver las correcciones recibidas | Writer | REVIEW | TODO | P0 | [ficha](feedback/FEAT-FBK-004-read-received-corrections.md) |
-| FEAT-FBK-005 | Contestar a una corrección recibida | Writer | REVIEW | TODO | P1 | [ficha](feedback/FEAT-FBK-005-reply-to-correction.md) |
-| FEAT-FBK-006 | Valorar una corrección recibida | Writer | REVIEW | TODO | P1 | [ficha](feedback/FEAT-FBK-006-rate-correction.md) |
+| FEAT-FBK-004 | Ver las correcciones recibidas | Writer | APPROVED | TODO | P0 | [ficha](feedback/FEAT-FBK-004-read-received-corrections.md) |
+| FEAT-FBK-005 | Contestar a una corrección recibida | Writer | APPROVED | TODO | P1 | [ficha](feedback/FEAT-FBK-005-reply-to-correction.md) |
+| FEAT-FBK-006 | Valorar una corrección recibida | Writer | APPROVED | TODO | P1 | [ficha](feedback/FEAT-FBK-006-rate-correction.md) |
 | FEAT-FBK-007 | Ocultar un comentario recibido | Writer | PENDING | TODO | P2 | — |
 | FEAT-FBK-008 | Corregir por enlace público sin cuenta | Guest | APPROVED | TODO | P1 | [ficha](feedback/FEAT-FBK-008-public-link-correction.md) |
 | FEAT-FBK-009 | Denunciar una corrección abusiva → `FEAT-MOD-001` | User | PENDING | TODO | P2 | — |
-| FEAT-FBK-010 | Mis correcciones — lo que he corregido | BetaReader | REVIEW | TODO | P2 | [ficha](feedback/FEAT-FBK-010-my-corrections.md) |
+| FEAT-FBK-010 | Mis correcciones — lo que he corregido | BetaReader | APPROVED | TODO | P2 | [ficha](feedback/FEAT-FBK-010-my-corrections.md) |
 | FEAT-FBK-011 | Guardar un borrador de corrección | BetaReader | APPROVED | DONE | P1 | [ficha](feedback/FEAT-FBK-011-save-correction-draft.md) |
 | FEAT-FBK-012 | Control antifraude de las correcciones | — (sistema) | PENDING | BLOCKED | P0 | [ficha](feedback/FEAT-FBK-012-correction-fraud-control.md) |
 
@@ -366,7 +366,7 @@ Ficha del contexto: [`../bounded-contexts/moderation.md`](../bounded-contexts/mo
 | FEAT-MOD-004 | Rol de moderador y aviso de reclamaciones | Admin, Moderator | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-004-moderator-role.md) |
 | FEAT-MOD-005 | Gestión de usuarios desde el backoffice | Admin, Moderator | APPROVED | TODO | P2 | [ficha](moderation/FEAT-MOD-005-user-management.md) |
 | FEAT-MOD-006 | Catálogo de sanciones | Moderator | APPROVED | TODO | P2 | [ficha](moderation/FEAT-MOD-006-sanctions.md) |
-| FEAT-MOD-007 | Registro de auditoría de acciones administrativas | Admin | REVIEW | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-007-audit-log.md) |
+| FEAT-MOD-007 | Registro de auditoría de acciones administrativas | Admin | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-007-audit-log.md) |
 | FEAT-MOD-008 | Cola de reclamaciones con filtros y prioridad | Moderator | PENDING | TODO | P2 | — |
 | FEAT-MOD-009 | Conversación entre el moderador y las partes | Moderator, User | APPROVED | TODO | P1 | [ficha](moderation/FEAT-MOD-009-moderator-conversation.md) |
 | FEAT-MOD-010 | Mis reclamaciones — sección del usuario | User | APPROVED | PARTIAL | P1 | [ficha](moderation/FEAT-MOD-010-my-claims.md) |
@@ -429,7 +429,7 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-005 | Abonar +5 al invitador cuando el invitado entrega su primera corrección | — (sistema) | PENDING | TODO | P2 | — |
 | FEAT-CRD-006 | Cargar al autor y abonar al lector al entregarse la corrección | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-006-charge-author-for-received-feedback.md) |
 | FEAT-CRD-007 | ~~Coste adicional por preguntas extra del cuestionario~~ → `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
-| FEAT-CRD-008 | Consultar el historial de movimientos de créditos | User | REVIEW | TODO | P1 | [ficha](credits/FEAT-CRD-008-credit-history.md) |
+| FEAT-CRD-008 | Consultar el historial de movimientos de créditos | User | APPROVED | TODO | P1 | [ficha](credits/FEAT-CRD-008-credit-history.md) |
 | FEAT-CRD-009 | Comprobar el saldo al empezar una corrección | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-009-balance-check-on-correction-start.md) |
 | FEAT-CRD-010 | ~~Fórmula continua en vez de tramos~~ → adoptada en `FEAT-CRD-016` | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-011-deduplicate-integration-events.md) |

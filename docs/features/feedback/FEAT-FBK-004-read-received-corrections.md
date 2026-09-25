@@ -4,7 +4,7 @@ title: Ver las correcciones recibidas
 context: Feedback
 concept: Correction
 actors: [Writer]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P0
 sources:
@@ -173,7 +173,7 @@ Las dos ya están implementadas (`FEAT-CRD-018`).
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación. Resuelve la forma de acceso
+**Especificación:** `APPROVED` (2026-09-25). Resuelve la forma de acceso
 (bandeja global con detalle) decidida el 2026-09-25.
 
 **Implementación:** `TODO`.

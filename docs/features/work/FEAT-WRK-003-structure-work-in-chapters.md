@@ -4,7 +4,7 @@ title: Estructurar la obra en capítulos
 context: Work
 concept: Chapter
 actors: [Writer]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: PARTIAL
 priority: P0
 sources:
@@ -126,7 +126,7 @@ preguntas que se cobran.
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación.
+**Especificación:** `APPROVED` (2026-09-25).
 
 **Implementación:** `PARTIAL`. Existe `addChapter`, siempre al final. **Falta** insertar en
 una posición, reordenar y eliminar, con todo lo que eso arrastra: el índice diferido, el

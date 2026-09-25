@@ -4,7 +4,7 @@ title: Registro de auditoría de acciones administrativas
 context: Moderation
 concept: AuditLog
 actors: [Admin]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: PARTIAL
 priority: P1
 sources:
@@ -126,7 +126,7 @@ Hacen falta índices para los filtros: `(occurred_at DESC)`, `(actor_id, occurre
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación.
+**Especificación:** `APPROVED` (2026-09-25).
 
 **Implementación:** `PARTIAL`. El registro se escribe desde `FEAT-MOD-004` y `FEAT-MOD-002`,
 con su entidad, su repositorio y su servicio de aplicación. **Falta** poder leerlo: la

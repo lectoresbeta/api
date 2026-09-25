@@ -4,7 +4,7 @@ title: Contestar a una corrección recibida
 context: Feedback
 concept: Reply
 actors: [Writer]
-spec_status: REVIEW
+spec_status: APPROVED
 impl_status: TODO
 priority: P1
 sources:
@@ -122,7 +122,7 @@ garantizado por la base de datos y no por una comprobación en código— y el c
 
 ## Estado
 
-**Especificación:** `REVIEW` — completa, pendiente de validación.
+**Especificación:** `APPROVED` (2026-09-25).
 
 **Implementación:** `TODO`. La entidad `CorrectionReply` ya está en el modelo desde
 `FEAT-FBK-003`; falta todo lo demás.
