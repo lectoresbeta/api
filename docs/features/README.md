@@ -289,8 +289,8 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 
 | ID | Funcionalidad | Actores | Spec | Impl | Prio | Ficha |
 |---|---|---|---|---|---|---|
-| FEAT-COM-001 | Ver las publicaciones del muro principal | User | PENDING | TODO | P1 | — |
-| FEAT-COM-002 | Crear una publicación (texto, imagen, vídeo, enlace o relato) | User | APPROVED | TODO | P1 | [ficha](community/FEAT-COM-002-create-post.md) |
+| FEAT-COM-001 | Ver las publicaciones del muro principal | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-001-main-wall.md) |
+| FEAT-COM-002 | Crear una publicación (texto, imagen, vídeo, enlace o relato) | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-002-create-post.md) |
 | FEAT-COM-003 | Publicar buscando lectores beta para una obra | Writer | PENDING | TODO | P1 | — |
 | FEAT-COM-004 | Publicar buscando writing buddy | Writer | PENDING | TODO | P2 | — |
 | FEAT-COM-005 | Publicar ofreciéndose como lector beta | Reader | PENDING | TODO | P2 | — |

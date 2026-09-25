@@ -379,3 +379,402 @@ blockedUsers:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# ---------------------------------------------------------------------------
+# El muro y lo que se escribe en él (`FEAT-COM-001`, `FEAT-COM-002`).
+# ---------------------------------------------------------------------------
+
+PostAudience:
+  type: string
+  description: |
+    Quién puede ver una publicación. **Se fija al publicar y no cambia
+    después**: permitir ampliarla más tarde haría que algo escrito para un
+    círculo cerrado apareciera de pronto ante todos, que es la clase de
+    sorpresa que hace que la gente deje de publicar.
+
+    Comparte valores con los ajustes de privacidad menos `NOBODY`, que aquí no
+    significa nada: una publicación que nadie puede ver no es una publicación.
+  enum:
+    - EVERYONE
+    - FOLLOWERS
+
+PostType:
+  type: string
+  description: |
+    Para **qué** se publica. Es una dimensión distinta del formato: una
+    publicación buscando lectores beta puede llevar imagen, enlace o nada.
+  enum:
+    - GENERAL
+    - LOOKING_FOR_BETA_READERS
+    - LOOKING_FOR_WRITING_BUDDY
+    - OFFERING_AS_BETA_READER
+
+PostFormat:
+  type: string
+  description: |
+    Qué lleva dentro. **Se deriva del adjunto y no se envía**: pedirle al
+    cliente que lo declare es pedirle que repita algo que ya está diciendo, y
+    abrir la puerta a que lo diga mal.
+
+    `VIDEO` está en la enumeración y no se puede producir todavía: adjuntar
+    vídeo es `FEAT-COM-037`, fuera de alcance por su coste de transcodificación
+    y almacenamiento.
+  enum:
+    - TEXT
+    - IMAGE
+    - VIDEO
+    - LINK
+    - WORK
+
+PostCard:
+  type: object
+  required: [postId, author, body, type, format, audience, commentCount, likeCount, repostCount, edited, createdAt]
+  description: |
+    Una tarjeta del muro. El autor viaja **resuelto** —nombre, `@usuario`,
+    avatar— porque una tarjeta con un identificador no se puede pintar.
+
+    Los contadores vienen de la propia publicación, no de un recuento por
+    tarjeta: un muro que cuenta comentarios en cada carga se degrada justo
+    cuando la plataforma empieza a funcionar.
+  properties:
+    postId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    author:
+      type: object
+      required: [userId, username]
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    body:
+      type: string
+      description: Texto plano y saneado. Puede venir vacío si la publicación es solo un adjunto.
+    type:
+      $ref: '#/PostType'
+    format:
+      $ref: '#/PostFormat'
+    audience:
+      $ref: '#/PostAudience'
+    imageUrl:
+      type: [string, 'null']
+      description: |
+        Apunta a `/posts/{postId}/image`, **no al almacén público**. Una
+        publicación para seguidores es una regla de privacidad, y una clave
+        difícil de adivinar no es una comprobación: se filtra el día que
+        aparece en un registro o en una captura de pantalla.
+    linkUrl:
+      type: [string, 'null']
+      description: |
+        La dirección, **sin previsualización**. El título y la descripción de
+        una tarjeta de artículo los generaría el servidor visitando la URL que
+        escribió alguien, y eso es una capacidad que se decide aparte.
+    workId:
+      type: [string, 'null']
+      description: |
+        El relato que promociona. Se cita **por identificador**: la tarjeta se
+        pinta con los datos vivos de la obra, no con una copia envejecida.
+    commentCount:
+      type: integer
+    likeCount:
+      type: integer
+    repostCount:
+      type: integer
+    edited:
+      type: boolean
+      description: |
+        Si su texto cambió después de publicarse. Quien lee un comentario
+        tiene derecho a saber que lo que hay encima no es lo que había cuando
+        se escribió.
+    createdAt:
+      type: string
+      format: date-time
+
+WallPage:
+  type: object
+  required: [posts, pageInfo]
+  description: |
+    **Una página puede traer menos tarjetas que el `limit` pedido y seguir
+    teniendo siguiente**: el perfil de un autor que ha dejado de ser visible
+    deja un hueco, igual que en las listas de personas.
+
+    Sin total: contar aquí sería contar lo que ve cada persona, una cifra
+    distinta por visitante y una consulta cara en la pantalla que más se abre.
+  properties:
+    posts:
+      type: array
+      items:
+        $ref: '#/PostCard'
+    pageInfo:
+      type: object
+      required: [nextCursor, hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
+PostIdParam:
+  name: postId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+posts:
+  get:
+    tags: [Community]
+    operationId: listPosts
+    summary: El muro principal
+    description: |
+      Las publicaciones de la comunidad, de la más reciente a la más antigua.
+
+      **Lo compone la audiencia, no el seguimiento**: se ve todo lo
+      `EVERYONE`, lo `FOLLOWERS` de quienes sigue quien mira, y lo suyo propio.
+      En un muro restringido a quienes sigues las dos audiencias serían
+      indistinguibles y el selector del modal sería un adorno.
+
+      **El filtrado es de servidor.** Una publicación que quien mira no debe
+      ver no se envía para que el cliente la esconda.
+
+      Ordena por fecha. «Más relevante» necesita una fórmula que nadie ha
+      definido y es otra funcionalidad.
+
+      Exige sesión: sin saber quién mira no se puede resolver `FOLLOWERS`.
+    parameters:
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Una página del muro.
+        content:
+          application/json:
+            schema:
+              $ref: '#/WallPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`. El cursor no lo produjo esta API.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  post:
+    tags: [Community]
+    operationId: createPost
+    summary: Publicar en el muro
+    description: |
+      Texto, un adjunto, o ambos. **Vacía se rechaza**; sin texto no, porque
+      una foto sola es una publicación legítima y obligar a escribir algo junto
+      a ella solo consigue que la gente escriba un punto.
+
+      **Un adjunto como máximo** —imagen, enlace o relato—, y dos se rechazan
+      en vez de quedarse con el primero: quien manda dos cree que va a publicar
+      dos.
+
+      El **formato no se envía**: se deriva del adjunto. El **autor tampoco**:
+      es quien tiene la sesión, aunque el cuerpo diga otra cosa.
+
+      Dos sobres para el mismo comando: `multipart/form-data` cuando hay
+      imagen, JSON cuando no.
+
+      La imagen **se reescribe al guardarla** y pierde sus metadatos EXIF, que
+      es donde va escrito dónde se tomó una foto.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              body:
+                type: string
+                maxLength: 5000
+                description: Texto plano. El marcado se retira en vez de rechazarse; los emojis se conservan.
+              type:
+                $ref: '#/PostType'
+              audience:
+                $ref: '#/PostAudience'
+              linkUrl:
+                type: string
+                description: Solo `http` y `https`. Cualquier otro esquema es una forma de que el cliente ejecute algo al pulsar.
+              workId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              body:
+                type: string
+                maxLength: 5000
+              type:
+                $ref: '#/PostType'
+              audience:
+                $ref: '#/PostAudience'
+              image:
+                type: string
+                format: binary
+    responses:
+      '201':
+        description: Publicada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [postId]
+              properties:
+                postId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`. Publicar es escribir.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND`. El relato no existe o no es visible para
+          quien publica. Se nombra el motivo porque quien publica **eligió**
+          esa obra, y decirle que la publicación no existe sería contestarle a
+          otra cosa.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '413':
+        description: '`code: FILE_TOO_LARGE`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: EMPTY_POST` si no lleva ni texto ni adjunto,
+          `TOO_MANY_ATTACHMENTS` si lleva dos, `UNSUPPORTED_FILE_TYPE` si el
+          fichero no es una imagen legible, o `INVALID_VALUE` si el texto pasa
+          del máximo o el enlace no es `http`/`https`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+post:
+  patch:
+    tags: [Community]
+    operationId: editPost
+    summary: Cambiar el texto de una publicación propia
+    description: |
+      **Solo el texto.** La audiencia y el adjunto se fijan al publicar:
+      ampliar la audiencia haría aparecer ante todos algo escrito para un
+      círculo cerrado, y cambiar el adjunto alteraría aquello a lo que la gente
+      ya respondió.
+
+      La publicación queda **marcada como editada**.
+
+      La de otra persona responde `404`, no `403`: un permiso denegado
+      confirmaría que existe, y eso ya es información sobre quien la escribió.
+    parameters:
+      - $ref: '#/PostIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              body:
+                type: string
+                maxLength: 5000
+    responses:
+      '204':
+        description: Cambiada, o ya estaba así.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: POST_NOT_FOUND`. No existe, está eliminada, o es de otra persona.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: EMPTY_POST`. Vaciar del todo una publicación sin adjunto es
+          eliminarla, y para eso hay una operación que dice lo que hace.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: deletePost
+    summary: Retirar una publicación propia
+    description: |
+      **Definitivo y para todos**, incluido su autor. No hay papelera:
+      «eliminar» tiene que significar lo que la gente cree que significa.
+
+      Eliminar lo ya eliminado responde `404`, como cualquier otra publicación
+      que ya no existe.
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '204':
+        description: Retirada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+postImage:
+  get:
+    tags: [Community]
+    operationId: getPostImage
+    summary: La imagen de una publicación
+    description: |
+      Comprueba **lo mismo que el muro**: si esa publicación no existe para
+      quien pregunta, su imagen tampoco.
+
+      Se sirve con `Cache-Control: private` a propósito: la respuesta depende
+      de quién pregunta, así que una caché compartida entregaría la foto de una
+      publicación cerrada a quien no debía verla.
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '200':
+        description: La imagen.
+        content:
+          image/*:
+            schema:
+              type: string
+              format: binary
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: POST_NOT_FOUND`. No existe, no lleva imagen, o no es para quien pregunta.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

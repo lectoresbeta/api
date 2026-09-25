@@ -31,6 +31,19 @@ interface AuthorSubscriptionRepository
     public function subscribersOf(MemberId $authorId, ?Cursor $after, int $limit): array;
 
     /**
+     * A quién sigue, entera y sin paginar (`FEAT-COM-001`).
+     *
+     * Existe para **una** cosa: resolver en la consulta del muro qué
+     * publicaciones `FOLLOWERS` alcanza quien mira. No sirve para pintar una
+     * lista —para eso está `subscriptionsOf`, que pagina— y no debe usarse
+     * para eso: lo que aquí es aceptable porque acaba en un `IN` de la base
+     * de datos, allí sería una lista sin límite viajando hasta el cliente.
+     *
+     * @return list<string> identificadores de autor
+     */
+    public function followedBy(MemberId $subscriberId): array;
+
+    /**
      * A cuántos sigue, y cuántos le siguen (`FEAT-USR-028`).
      *
      * Contar y no traer las filas: un contador de la cabecera del perfil no

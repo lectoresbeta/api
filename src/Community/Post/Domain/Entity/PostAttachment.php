@@ -57,4 +57,9 @@ class PostAttachment
     {
         return $this->url;
     }
+
+    public function mediaType(): string
+    {
+        return $this->mediaType;
+    }
 }

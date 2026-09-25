@@ -27,11 +27,13 @@
         <field name="audience" type="string" length="16"
                enum-type="LectoresBeta\Community\Post\Domain\Enum\PostAudience"/>
         <field name="workId" column="work_id" type="guid" nullable="true"/>
+        <field name="linkUrl" column="link_url" type="string" length="2048" nullable="true"/>
         <field name="commentCount" column="comment_count" type="integer"/>
         <field name="likeCount" column="like_count" type="integer"/>
         <field name="repostCount" column="repost_count" type="integer"/>
         <field name="createdAt" column="created_at" type="datetime_immutable"/>
         <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+        <field name="editedAt" column="edited_at" type="datetime_immutable" nullable="true"/>
         <field name="deletedAt" column="deleted_at" type="datetime_immutable" nullable="true"/>
 
     </entity>

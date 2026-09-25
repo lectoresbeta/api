@@ -159,6 +159,15 @@ paths:
   /me/blocked-users:
     $ref: './paths/community.yaml#/blockedUsers'
 
+  /posts:
+    $ref: './paths/community.yaml#/posts'
+
+  /posts/{postId}:
+    $ref: './paths/community.yaml#/post'
+
+  /posts/{postId}/image:
+    $ref: './paths/community.yaml#/postImage'
+
   /works:
     $ref: './paths/works.yaml#/collection'
 

@@ -3,9 +3,9 @@
 La vida social de la plataforma. Ficha del contexto:
 [`community.md`](../../bounded-contexts/community.md).
 
-**Este documento empieza con una sola funcionalidad**, y es la que pone el contexto en
-marcha: hasta `FEAT-COM-010`, `Community` era un modelo sin comportamiento — entidades,
-tablas y ni un endpoint.
+Hasta `FEAT-COM-010`, `Community` era un modelo sin comportamiento —entidades, tablas y ni un
+endpoint—. Con `FEAT-COM-001` y `FEAT-COM-002` tiene por fin **muro**: sitio donde escribir y
+sitio donde leer lo escrito.
 
 ## Operaciones
 
@@ -19,6 +19,11 @@ tablas y ni un endpoint.
 | `PUT /api/v1/users/{userId}/block` | `blockUser` | Bloquear | FEAT-COM-034 | **Implementado** |
 | `DELETE /api/v1/users/{userId}/block` | `unblockUser` | Levantar el bloqueo | FEAT-COM-034 | **Implementado** |
 | `GET /api/v1/me/blocked-users` | `listBlockedUsers` | A quién tengo bloqueado | FEAT-COM-034 | **Implementado** |
+| `GET /api/v1/posts` | `listPosts` | El muro principal | FEAT-COM-001 | **Implementado** |
+| `POST /api/v1/posts` | `createPost` | Publicar | FEAT-COM-002 | **Implementado** |
+| `PATCH /api/v1/posts/{postId}` | `editPost` | Cambiar el texto de lo propio | FEAT-COM-002 | **Implementado** |
+| `DELETE /api/v1/posts/{postId}` | `deletePost` | Retirar lo propio | FEAT-COM-002 | **Implementado** |
+| `GET /api/v1/posts/{postId}/image` | `getPostImage` | La imagen de una publicación | FEAT-COM-002 | **Implementado** |
 
 ---
 
@@ -203,3 +208,75 @@ práctica. Quien pregunta ya sabe quiénes son.
 | `CANNOT_BLOCK_YOURSELF` | 422 | Uno no se bloquea a sí mismo |
 | `ACCOUNT_NOT_ACTIVATED` | 403 | Bloquear sin haber activado la cuenta |
 | `INVALID_CURSOR` | 422 | Al listar, un cursor que no produjo esta API |
+
+
+---
+
+## `GET` y `POST /api/v1/posts`
+
+**`operationId`:** `listPosts`, `createPost` · **Funcionalidades:**
+[`FEAT-COM-001`](../../features/community/FEAT-COM-001-main-wall.md),
+[`FEAT-COM-002`](../../features/community/FEAT-COM-002-create-post.md)
+
+### Propósito
+
+El muro y lo que se escribe en él. Van juntos porque son las dos mitades de lo mismo: sin el
+listado, publicar es escribir en un sitio que nadie mira.
+
+### Autorización
+
+Publicar, editar y eliminar exigen sesión **y cuenta activada**: son escrituras. Leer el muro
+exige solo sesión, porque leer no es escribir y quien acaba de registrarse necesita ver dónde
+ha entrado.
+
+Sin sesión no hay muro, y no es una limitación técnica: sin saber quién mira no se puede
+resolver qué publicaciones `FOLLOWERS` le alcanzan.
+
+### Reglas aplicadas
+
+- **Lo que compone el muro es la audiencia, no el seguimiento.** Se ve todo lo `EVERYONE`, lo
+  `FOLLOWERS` de quienes sigue quien mira, y lo suyo. En un muro restringido a quienes sigues
+  las dos audiencias serían indistinguibles y el selector del modal sería un adorno.
+- **El filtrado va dentro de la consulta.** Traer lo que no se puede ver para descartarlo
+  después rompería la paginación —una página de veinte devolvería doce— y dejaría el texto de
+  alguien viajando por dentro del servidor.
+- El **perfil ajeno es un techo**: quien no es visible para quien mira no aparece, y su
+  publicación tampoco. Es la misma regla que aplican las listas de seguidores.
+- Un **bloqueo** esconde las publicaciones en las dos direcciones.
+- **Un adjunto como máximo** y el **formato se deriva** de él. Dos adjuntos se rechazan en vez
+  de quedarse con el primero.
+- El **autor es quien tiene la sesión**, aunque el cuerpo diga otra cosa.
+- El texto se guarda **plano**: el marcado se retira en vez de rechazarse, y los emojis se
+  conservan.
+- Una **imagen se reescribe al guardarla** y pierde sus metadatos EXIF, que es donde va
+  escrito dónde se tomó una foto.
+- Un **enlace** se guarda como dirección y nada más, y solo `http` o `https`.
+- Un **relato** se cita por `workId` y tiene que ser visible para quien publica.
+- **Editar cambia solo el texto** y lo marca como editado. **Eliminar es definitivo para
+  todos**, incluido su autor.
+
+### La imagen no está en la carpeta pública
+
+`GET /api/v1/posts/{postId}/image` comprueba **lo mismo que el muro**. Si la foto viviera bajo
+`/api/v1/media/`, la de una publicación para seguidores quedaría protegida solo por lo difícil
+que es adivinar una clave, y una clave se filtra el día que aparece en un registro, en un
+`Referer` o en una captura de pantalla.
+
+El coste, dicho: esa respuesta depende de quién pregunta, así que se sirve con
+`Cache-Control: private` y no puede ir detrás de una caché compartida.
+
+### Qué no está todavía
+
+Filtrar por tipo de publicación y ordenar por relevancia son funcionalidades propias
+(`FEAT-COM-009`, `FEAT-COM-024`), y la segunda espera a que alguien defina qué es «relevante».
+
+El **vídeo** queda fuera: adjuntarlo arrastra transcodificación y almacenamiento con un coste
+que no se parece al de una imagen (`FEAT-COM-037`).
+
+La **previsualización de un enlace** tampoco existe. Generarla obligaría al servidor a visitar
+la dirección que escribe cualquiera, y eso se decide aparte.
+
+### Efectos
+
+Publica `PostPublished` con la audiencia incluida, que es lo que impide que `Notification`
+avise a quien no puede abrir lo que se le anuncia. Todavía no lo escucha nadie.

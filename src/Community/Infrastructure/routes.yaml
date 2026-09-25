@@ -75,3 +75,35 @@ listBlockedUsers:
     path: /api/v1/me/blocked-users
     controller: LectoresBeta\Community\Relationship\Infrastructure\Controller\ListBlockedUsersController::__invoke
     methods: [GET]
+
+# El muro y lo que se escribe en él (`FEAT-COM-001`, `FEAT-COM-002`).
+#
+# El listado exige sesión: sin saber quién mira no se puede resolver qué
+# publicaciones `FOLLOWERS` le alcanzan.
+listPosts:
+    path: /api/v1/posts
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\ListPostsController::__invoke
+    methods: [GET]
+
+createPost:
+    path: /api/v1/posts
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\CreatePostController::__invoke
+    methods: [POST]
+
+editPost:
+    path: /api/v1/posts/{postId}
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\EditPostController::__invoke
+    methods: [PATCH]
+
+deletePost:
+    path: /api/v1/posts/{postId}
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\DeletePostController::__invoke
+    methods: [DELETE]
+
+# La imagen se pide **por la publicación** y no desde la carpeta pública: una
+# publicación para seguidores es una regla de privacidad, y una clave difícil
+# de adivinar no es una comprobación.
+getPostImage:
+    path: /api/v1/posts/{postId}/image
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\GetPostImageController::__invoke
+    methods: [GET]
