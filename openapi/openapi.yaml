@@ -119,6 +119,14 @@ paths:
   /genres:
     $ref: './paths/onboarding.yaml#/catalogue'
 
+  # El tour de bienvenida (FEAT-USR-026). Su estado también viaja en
+  # /me/context, para no añadir una petición en cada carga del layout.
+  /me/tour:
+    $ref: './paths/settings.yaml#/tour'
+
+  /me/tour/completion:
+    $ref: './paths/settings.yaml#/tourCompletion'
+
   /me/context:
     $ref: './paths/settings.yaml#/sessionContext'
 

@@ -343,3 +343,23 @@ listMyInvitations:
     path: /api/v1/me/invitations
     controller: LectoresBeta\User\Invitation\Infrastructure\Controller\ListMyInvitationsController::__invoke
     methods: [GET]
+
+# El tour de bienvenida de la Home (FEAT-USR-026).
+#
+# El backend aporta poco pero imprescindible: **recordar si ya lo vio**. Sin
+# eso, el tour reaparece en cada visita y se convierte en un incordio.
+#
+# Se guarda en el servidor y no en el navegador (`RN-3`): en local reaparecería
+# en cada dispositivo y desaparecería al limpiar el navegador.
+#
+# `tourId` viaja en la petición y no en la ruta, para que añadir un tour no sea
+# añadir dos endpoints.
+getTourState:
+    path: /api/v1/me/tour
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\GetTourStateController::__invoke
+    methods: [GET]
+
+completeTour:
+    path: /api/v1/me/tour/completion
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\CompleteTourController::__invoke
+    methods: [POST]

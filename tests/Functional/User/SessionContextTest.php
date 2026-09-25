@@ -31,7 +31,11 @@ final class SessionContextTest extends EconomyScenario
         self::assertArrayHasKey('onboardingStatus', $contexto);
         self::assertSame(10, $contexto['credits']['balance'], 'Los diez de bienvenida, ya proyectados.');
         self::assertSame(0, $contexto['unreadNotifications']);
-        self::assertSame([], $contexto['pendingTours']);
+        self::assertSame(
+            ['home'],
+            $contexto['pendingTours'],
+            'Quien acaba de llegar tiene el tour de la Home pendiente (`FEAT-USR-026`).',
+        );
     }
 
     /**

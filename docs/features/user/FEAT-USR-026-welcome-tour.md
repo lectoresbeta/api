@@ -5,15 +5,17 @@ context: User
 concept: Onboarding
 actors: [User]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P2
 sources:
   - figma:1800-14717 (Home_Tour)
   - docs/ui/home.md
-endpoints: [GET /me/tour, POST /me/tour/completion]
+endpoints:
+  - getTourState
+  - completeTour
 events: []
 depends_on: [FEAT-COM-017]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-USR-026 — Tour de bienvenida de la Home
@@ -66,8 +68,16 @@ observable y una preferencia invisible del navegador.
 
 | Operación | Método y ruta | `operationId` |
 |---|---|---|
-| Consultar estado del tour | `GET /me/tour` | `getTourState` |
-| Marcar el tour como visto | `POST /me/tour/completion` | `completeTour` |
+| Consultar estado del tour | `GET /api/v1/me/tour` | `getTourState` |
+| Marcar el tour como visto | `POST /api/v1/me/tour/completion` | `completeTour` |
+
+`tourId` es opcional y por defecto es el de la Home, el único que hay hoy. **Va en la petición
+y no en la ruta**, para que añadir un tour no sea añadir dos endpoints.
+
+Un `tourId` que no existe, o un paso que no está en el tour, **se rechazan** con `422`
+(`UNKNOWN_TOUR`, `UNKNOWN_TOUR_STEP`). No se ignoran: un identificador con una errata crearía
+un tour fantasma que nadie ha visto nunca y que se enseñaría para siempre, y un paso fuera de
+rango estropearía en silencio la única métrica que justifica guardarlo.
 
 El estado también viaja en el contexto de sesión del layout, para no añadir una petición más
 en cada carga.
@@ -79,6 +89,13 @@ en cada carga.
 | Tabla | Contenido |
 |---|---|
 | `user_tour` | `user_id`, identificador del tour, `completed_at`, `last_step`, `dismissed` |
+
+Ya existía desde el esquema inicial. **Ninguna migración**: esta ficha era la que faltaba por
+encima.
+
+**La ausencia de fila significa «pendiente»**, y de ahí que consultar el estado no escriba
+nada. Apuntar en la base de datos que alguien todavía no ha hecho nada, en cada carga de la
+Home, sería la escritura más cara y menos útil del producto.
 
 Se modela **por tour identificado**, no como un booleano en `user`. Habrá más tours —al
 estrenar secciones, al cambiar funcionalidades— y un campo por cada uno acabaría siendo una
@@ -92,29 +109,29 @@ Ver [`../../ui/home.md`](../../ui/home.md).
 
 ## Criterios de aceptación
 
-- [ ] Un usuario nuevo ve el tour la primera vez que entra en la Home.
-- [ ] Tras terminarlo, no vuelve a aparecer.
-- [ ] Cerrarlo en el paso 2 cuenta como visto y no reaparece.
-- [ ] El estado persiste al cambiar de navegador o de dispositivo.
-- [ ] Se registra el paso en que se abandonó.
-- [ ] La Home funciona con el tour abierto.
-- [ ] Un usuario con la cuenta sin activar ve el tour con normalidad.
-- [ ] El modelo admite tours futuros sin cambiar el esquema.
+- [x] Un usuario nuevo ve el tour la primera vez que entra en la Home.
+- [x] Tras terminarlo, no vuelve a aparecer.
+- [x] Cerrarlo en el paso 2 cuenta como visto y no reaparece.
+- [x] El estado persiste al cambiar de navegador o de dispositivo.
+- [x] Se registra el paso en que se abandonó.
+- [x] La Home funciona con el tour abierto.
+- [x] Un usuario con la cuenta sin activar ve el tour con normalidad.
+- [x] El modelo admite tours futuros sin cambiar el esquema.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| T-1 | ¿Se puede volver a lanzar el tour desde «Ayuda»? | Requeriría poder reiniciar el estado |
-| T-2 | ¿Se puede retroceder de paso? El diseño solo muestra «Siguiente» | Interfaz |
-| T-3 | ¿Qué pasa si se cierra la pestaña a mitad sin pulsar nada? | Propuesta: sigue pendiente, se muestra de nuevo |
-| M-4 | El paso 4/4 y el modal de créditos (`FEAT-CRD-014`) cuentan lo mismo. ¿Conviven? | Redundancia |
-| T-4 | El paso 4/4 dice «úsalos para obtener sugerencias sobre tus textos», pero los créditos se gastan al recibir comentarios | Alinear el lenguaje con el dominio |
+| T-1 | ¿Se puede volver a lanzar el tour desde «Ayuda»? | Sigue abierta. El modelo lo admitiría —bastaría con borrar la fila— pero no hay operación para ello, y crearla sin que nadie la pida sería una forma de reabrir el tour por error |
+| T-2 | ¿Se puede retroceder de paso? El diseño solo muestra «Siguiente» | Interfaz. Al backend le da igual: `lastStep` es el paso alcanzado, no un puntero |
+| T-3 | ¿Qué pasa si se cierra la pestaña a mitad sin pulsar nada? | **Resuelta:** sigue pendiente y se vuelve a mostrar. Es lo que se consigue no escribiendo nada al consultarlo |
+| M-4 | El paso 4/4 y el modal de créditos (`FEAT-CRD-014`) cuentan lo mismo. ¿Conviven? | **Resuelta:** el tour cubre la primera vez y el modal se abre bajo demanda. Dos explicaciones seguidas de lo mismo se saltan las dos |
+| T-4 | El paso 4/4 dice «úsalos para obtener sugerencias sobre tus textos», pero los créditos se gastan al recibir comentarios | **Resuelta en el lenguaje**: lo que manda es `FEAT-CRD-015`, que declara `chargedOn: FEEDBACK_DELIVERED`. El texto del globo debe decir eso mismo |
 
 ## Estado
 
-**Especificación:** `APPROVED` (2026-09-24). Las preguntas abiertas que quedan no
-afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
-implementación.
+**Especificación:** `APPROVED` (2026-09-24).
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25). La entidad y la tabla existían desde el esquema
+inicial; lo que faltaba era el repositorio, los dos casos de uso y los dos endpoints. `T-1`
+sigue abierta y no bloquea nada.

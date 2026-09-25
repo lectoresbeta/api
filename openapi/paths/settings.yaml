@@ -921,8 +921,115 @@ sessionContext:
                   type: array
                   items:
                     type: string
+                  description: |
+                    Los tours guiados que esta persona no ha visto todavía
+                    (`FEAT-USR-026`). Van aquí y no en una petición aparte
+                    porque el layout ya pide esta respuesta en cada carga.
+
+                    La lista vacía significa que no hay ninguno pendiente.
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+tour:
+  get:
+    tags: [User]
+    operationId: getTourState
+    summary: Si hay que enseñar el tour de bienvenida
+    description: |
+      El backend aporta poco pero imprescindible: **recordar si ya lo vio**
+      (`FEAT-USR-026`). Sin eso, el tour reaparece en cada visita.
+
+      **Consultarlo no escribe nada**: la ausencia de registro significa
+      «pendiente», así que cerrar la pestaña a mitad sin pulsar nada lo deja
+      pendiente y se vuelve a mostrar.
+
+      El mismo estado viaja en `GET /me/context`, para no añadir una petición
+      más en cada carga del layout.
+    parameters:
+      - name: tourId
+        in: query
+        required: false
+        description: |
+          Por defecto el de la Home, el único que hay hoy. Va en la petición y
+          no en la ruta para que añadir un tour no sea añadir dos endpoints.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: El estado de ese tour.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tourId, pending, lastStep]
+              properties:
+                tourId:
+                  type: string
+                pending:
+                  type: boolean
+                lastStep:
+                  type: [integer, 'null']
+                  description: |
+                    Por dónde iba. Está para la métrica de en qué paso
+                    abandona la gente, y para que quien cerró la pestaña a
+                    mitad vuelva por donde iba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_TOUR`. Ese tour no existe.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+tourCompletion:
+  post:
+    tags: [User]
+    operationId: completeTour
+    summary: Dar el tour por visto
+    description: |
+      **Cerrarlo y terminarlo son la misma operación con distinto
+      `dismissed`**, y las dos cuentan como visto (`RN-2`): quien lo cierra en
+      el primer globo ha decidido que no le interesa, y volver a enseñárselo
+      mañana sería no haberle escuchado.
+
+      Lo que la distinción guarda es la única métrica que dice si el tour
+      funciona: cuánta gente llega al final y cuánta lo cierra enseguida.
+
+      **Se guarda en el servidor, no en el navegador** (`RN-3`). En local, el
+      tour reaparecería en cada dispositivo y desaparecería al limpiarlo.
+
+      **Funciona con la cuenta sin activar** (`RN-6`): no es publicar
+      contenido, es decir que ya has visto algo.
+
+      Es idempotente: repetirlo no reabre nada.
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              tourId:
+                type: string
+              lastStep:
+                type: integer
+                minimum: 1
+                description: El paso alcanzado. Fuera del rango del tour, `422`.
+              dismissed:
+                type: boolean
+                description: '`true` si se cerró, `false` o ausente si se terminó.'
+    responses:
+      '204':
+        description: Anotado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_TOUR` o `UNKNOWN_TOUR_STEP`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
 # Lo que una persona ha decidido no ver (FEAT-USR-043).
 #
 # La lista vacía es el estado normal de quien nunca ha entrado aquí: por

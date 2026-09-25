@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace LectoresBeta\User\Profile\Application\Handler;
 
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
+use LectoresBeta\User\Onboarding\Domain\Enum\GuidedTour;
+use LectoresBeta\User\Onboarding\Domain\Repository\UserTourRepository;
 use LectoresBeta\User\Profile\Application\DTO\SessionContext;
 use LectoresBeta\User\Profile\Application\Port\SessionSideloads;
 use LectoresBeta\User\Profile\Application\Query\GetSessionContext;
@@ -31,6 +33,7 @@ final readonly class GetSessionContextHandler
         private MyProfile $profile,
         private KnownCreditBalanceRepository $balances,
         private SessionSideloads $sideloads,
+        private UserTourRepository $tours,
     ) {
     }
 
@@ -47,11 +50,35 @@ final readonly class GetSessionContextHandler
             $user->onboardingStatus(),
             $this->balanceOf($user->id()),
             $this->sideloads->unreadNotifications($query->userId),
-            // El tour todavía no existe como modelo (`FEAT-USR-026`). La
-            // lista vacía es la respuesta correcta —no hay ninguno
-            // pendiente— y no una omisión: el cliente ya puede leerla.
-            [],
+            // Los tours que esta persona no ha visto (`FEAT-USR-026`). Van
+            // aquí y no en una petición aparte porque el layout ya pide esta
+            // respuesta en cada carga, y una más solo para saber si pintar
+            // cuatro globos sería una petición por pantalla.
+            $this->pendingTours($user->id()),
         );
+    }
+
+    /**
+     * **Ausencia de fila es «pendiente»**, así que esto no escribe nada.
+     * Apuntar en la base de datos que alguien todavía no ha visto un tour, en
+     * cada carga de pantalla, sería la escritura más cara y menos útil del
+     * producto.
+     *
+     * @return list<string>
+     */
+    private function pendingTours(UserId $userId): array
+    {
+        $pending = [];
+
+        foreach (GuidedTour::cases() as $tour) {
+            $seen = $this->tours->of($userId, $tour->value);
+
+            if (null === $seen || !$seen->isFinished()) {
+                $pending[] = $tour->value;
+            }
+        }
+
+        return $pending;
     }
 
     private function balanceOf(UserId $userId): ?int

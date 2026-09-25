@@ -81,6 +81,12 @@ final readonly class RequireActivatedAccountListener
         // Your own inbox, where the notice about activating is.
         'markNotificationRead',
         'markAllNotificationsRead',
+
+        // Dismissing the welcome tour (`FEAT-USR-026` `RN-6`). It is not
+        // publishing anything: it is saying you have already seen something,
+        // and a rule meant to keep unverified accounts from writing content
+        // should not condemn them to the same four bubbles on every visit.
+        'completeTour',
     ];
 
     public function __construct(
