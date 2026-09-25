@@ -237,3 +237,46 @@ updateMyNotificationPreferences:
     path: /api/v1/me/notification-preferences
     controller: LectoresBeta\User\Preferences\Infrastructure\Controller\NotificationPreferencesController::__invoke
     methods: [PUT]
+
+# La bibliografía del autor (`FEAT-USR-029`). Una obra publicada **no es una
+# `Work`**: no tiene contenido aquí, ni lectores beta, ni créditos. Comparten
+# la palabra «obra» y nada más, y por eso son rutas distintas de un concepto
+# distinto.
+#
+# El listado es público, como el perfil del que forma parte: acreditar una
+# trayectoria es enseñarla.
+
+listPublishedBooks:
+    path: /api/v1/users/{userId}/published-books
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\ListPublishedBooksController::__invoke
+    methods: [GET]
+
+addPublishedBook:
+    path: /api/v1/me/published-books
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\AddPublishedBookController::__invoke
+    methods: [POST]
+
+updatePublishedBook:
+    path: /api/v1/me/published-books/{publishedBookId}
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\UpdatePublishedBookController::__invoke
+    methods: [PATCH]
+
+deletePublishedBook:
+    path: /api/v1/me/published-books/{publishedBookId}
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\DeletePublishedBookController::__invoke
+    methods: [DELETE]
+
+# La portada tiene endpoint propio y no es un campo del `PATCH`: PHP solo
+# desmonta un cuerpo `multipart` en las peticiones `POST`, así que una portada
+# dentro del `PATCH` llegaría como un cuerpo vacío. Además, separadas, el año
+# no se queda sin guardar porque falló una subida.
+
+updatePublishedBookCover:
+    path: /api/v1/me/published-books/{publishedBookId}/cover
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\UpdatePublishedBookCoverController::__invoke
+    methods: [PUT]
+
+deletePublishedBookCover:
+    path: /api/v1/me/published-books/{publishedBookId}/cover
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\DeletePublishedBookCoverController::__invoke
+    methods: [DELETE]

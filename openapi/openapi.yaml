@@ -155,6 +155,22 @@ paths:
   /profiles/{username}:
     $ref: './paths/profiles.yaml#/byUsername'
 
+  # La bibliografía del autor (FEAT-USR-029). Una obra publicada **no es una
+  # `Work`**: está editada y a la venta fuera, no tiene contenido aquí y no
+  # cuenta como «Relato» en ningún contador.
+
+  /users/{userId}/published-books:
+    $ref: './paths/published-books.yaml#/list'
+
+  /me/published-books:
+    $ref: './paths/published-books.yaml#/collection'
+
+  /me/published-books/{publishedBookId}:
+    $ref: './paths/published-books.yaml#/item'
+
+  /me/published-books/{publishedBookId}/cover:
+    $ref: './paths/published-books.yaml#/cover'
+
   /users/{userId}/subscription:
     $ref: './paths/community.yaml#/subscription'
 

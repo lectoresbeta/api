@@ -27,8 +27,14 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 #[AsController]
 final readonly class GetMediaFileController
 {
-    /** Lo que se sirve en abierto. Añadir una carpeta aquí es una decisión. */
-    private const PUBLIC_FOLDERS = ['avatars'];
+    /**
+     * Lo que se sirve en abierto. Añadir una carpeta aquí es una decisión.
+     *
+     * `book-covers` son las portadas de las obras que alguien ya publicó
+     * fuera (`FEAT-USR-029`): material promocional de un libro a la venta,
+     * que aparece en perfiles que se abren sin sesión.
+     */
+    private const PUBLIC_FOLDERS = ['avatars', 'book-covers'];
 
     public function __construct(private FileStorage $storage)
     {

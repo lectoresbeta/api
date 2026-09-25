@@ -3,8 +3,10 @@
 > Estado: `DRAFT` en lo que falta. **La foto de perfil ya funciona**
 > ([`FEAT-USR-037`](../../features/user/FEAT-USR-037-upload-profile-photo.md)) y con ella
 > existen el puerto `FileStorage`, el normalizador de imágenes y
-> `GET /api/v1/media/{key}`. Lo que sigue sin implementarse es el manuscrito
-> (`FEAT-WRK-002`) y las demás imágenes.
+> `GET /api/v1/media/{key}`. **La portada de una obra publicada también**
+> ([`FEAT-USR-029`](../../features/user/FEAT-USR-029-published-books.md)), montada sobre esas
+> mismas piezas. Lo que sigue sin implementarse es el manuscrito (`FEAT-WRK-002`) y las demás
+> imágenes.
 
 ## Tipos de fichero
 
@@ -13,7 +15,7 @@
 | Manuscrito | `.doc`, `.pdf`, `.txt` (¿y `.docx`?, ver `W-3`) | `FEAT-WRK-002` |
 | Foto de perfil (avatar) | `.jpg`, `.png`, `.webp`. ¿HEIC? ver `F-3` | `FEAT-USR-037` |
 | Portada del perfil | `.jpg`, `.png`, `.webp` | `FEAT-USR-028` |
-| Portada de una obra publicada | `.jpg`, `.png`, `.webp`. Formato **vertical**, proporción de libro | `FEAT-USR-029` |
+| Portada de una obra publicada | `.jpg`, `.png`, `.webp`. Proporción de libro (2:3) **recomendada, no impuesta** | `FEAT-USR-029` |
 | Fondos de la página de autor | `.jpg`, `.png`, `.webp` | `FEAT-USR-016` |
 
 El documento de origen dice `.doc`; conviene confirmar si incluye `.docx`, que es lo que
@@ -41,10 +43,15 @@ devuelve `202 Accepted` y el cliente consulta el estado del procesamiento.
 |---|---|---|
 | Foto de perfil | **2 MB** | Anunciado en el propio modal (`FEAT-USR-037`) |
 | Portada del perfil | Por definir | — |
-| Portada de obra publicada | Por definir | — |
+| Portada de obra publicada | **2 MB** | `FEAT-USR-029` `P-18` |
 | Manuscrito | Por definir. Referencia: una novela media de 75.000 palabras en `.docx` con imágenes puede superar varios megabytes | — |
 
 El límite lo aplica **el servidor**. Que el cliente lo anuncie es una cortesía, no un control.
+La proporción de la portada de una obra publicada es una recomendación de diseño y **no se
+fuerza con un recorte**: las portadas reales no miden todas lo mismo, y recortar la de alguien
+para que encaje en una cuadrícula es estropearla. Se guarda con el lado mayor en 900 px,
+conservando su proporción.
+
 - Los ficheros se analizan antes de procesarse. Un PDF es un formato con capacidad de
   ejecución y no se trata como texto inofensivo.
 - Los nombres de fichero originales se sanean y no se usan como ruta de almacenamiento.

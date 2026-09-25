@@ -59,8 +59,12 @@
 | `DELETE /api/v1/me/profile/avatar` | `deleteAvatar` | Quitar la foto | FEAT-USR-037 | **Implementado** |
 | `GET /api/v1/me/profile/avatar/original` | `getMyAvatarOriginal` | Mi foto sin recortar, para el editor | FEAT-USR-037 | **Implementado** |
 | `PUT /me/profile/cover` | `updateCover` | Cambiar portada | FEAT-USR-028 | DRAFT |
-| `GET /users/{userId}/published-books` | `listPublishedBooks` | Obras publicadas de un autor | FEAT-USR-029 | DRAFT |
-| `POST /me/published-books` | `addPublishedBook` | Añadir obra publicada | FEAT-USR-029 | DRAFT |
+| `GET /api/v1/users/{userId}/published-books` | `listPublishedBooks` | La bibliografía de un autor | FEAT-USR-029 | **Implementado** |
+| `POST /api/v1/me/published-books` | `addPublishedBook` | Añadir una obra publicada | FEAT-USR-029 | **Implementado** |
+| `PATCH /api/v1/me/published-books/{publishedBookId}` | `updatePublishedBook` | Editarla | FEAT-USR-029 | **Implementado** |
+| `DELETE /api/v1/me/published-books/{publishedBookId}` | `deletePublishedBook` | Quitarla | FEAT-USR-029 | **Implementado** |
+| `PUT /api/v1/me/published-books/{publishedBookId}/cover` | `updatePublishedBookCover` | Subir su portada | FEAT-USR-029 | **Implementado** |
+| `DELETE /api/v1/me/published-books/{publishedBookId}/cover` | `deletePublishedBookCover` | Quitar su portada | FEAT-USR-029 | **Implementado** |
 | `GET /users` | `searchUsers` | Buscar autores | FEAT-USR-017 | PENDING |
 | `GET /authors/{userId}/page` | `getAuthorPage` | Página pública de autor | FEAT-USR-015 | PENDING |
 | `PUT /me/author-page` | `updateAuthorPage` | Información de la página de autor | FEAT-USR-015 | PENDING |
@@ -792,3 +796,110 @@ las claves sean impredecibles; no basta, porque una clave acaba en un log o en u
 
 Publica `UserProfileUpdated` con la **recortada y nunca la original**, para que los read
 models que copian el avatar se actualicen.
+
+---
+
+## Las obras publicadas del autor
+
+**Funcionalidad:** [`FEAT-USR-029`](../../features/user/FEAT-USR-029-published-books.md)
+
+Seis operaciones sobre la bibliografía que un autor añade a su perfil para acreditar su
+trayectoria: libros ya editados **fuera** de la plataforma.
+
+### Una obra publicada no es una `Work`
+
+Es lo que hay que tener claro antes de leer nada más. Comparten la palabra «obra» y nada más:
+
+| | `Work` (relato) | `PublishedBook` |
+|---|---|---|
+| Qué es | Manuscrito inédito | Libro editado y a la venta fuera |
+| Contenido | Sí, y es el activo que hay que proteger | No: metadatos y un enlace |
+| Lectores beta, correcciones, créditos | Sí | **No** |
+| Quién la ve | Su autor y quien tenga acceso | Cualquiera: es promoción |
+| Cuenta en `counters.works` | Sí | **No** (`P-17`) |
+
+No se puede leer, ni comentar, ni pedirle acceso (`RN-3`). Es la regla que impide que el
+concepto contamine el resto: en cuanto algo «publicado» admitiera correcciones habría que
+decidir si cuesta créditos.
+
+### Quién puede qué
+
+| Operación | Sesión | Quién |
+|---|---|---|
+| `listPublishedBooks` | **No** | Cualquiera, si el perfil se puede ver |
+| Las cinco de escritura | Sí, y **activada** | Solo su dueño |
+
+El listado responde `404` cuando el perfil no se puede ver —cuenta eliminada o privacidad
+restringida (`FEAT-USR-038`)—. Contestar por su cuenta sería un camino lateral para confirmar
+que una cuenta existe justo cuando su titular ha pedido que no se sepa.
+
+Editar o borrar la obra de otro responde **`403` y no `404`**, al revés que casi todo lo
+demás: la obra se enseña en un perfil abierto, así que fingir que no existe sería mentirle a
+quien la acaba de ver, sin ocultarle nada.
+
+### Los datos
+
+Solo el **título** es obligatorio (`RN-6`): quien cita una obra descatalogada no tiene
+editorial que poner ni enlace al que mandar a nadie.
+
+La **editorial es texto libre** y no se valida contra ningún catálogo (`RN-9`). El ejemplo del
+propio diseño dice «Amazon», que no es un sello sino una plataforma de autopublicación:
+validarla dejaría fuera justo al autor que más usa el campo.
+
+El **enlace de compra** se valida como dirección absoluta `http` o `https`, y el servidor
+**no la visita**. Viaja acompañado de `purchaseUrlIsExternal`, que dice que sale de la
+plataforma: es lo que necesita saber quien lo pinta para abrirlo aparte y sin arrastrar la
+sesión.
+
+El **año** se acepta entre 1450 y el año que viene. El tope está para atrapar el error de
+teclado —un `19` o un `202`—, no para discutirle a nadie su bibliografía; y llega a el año
+que viene porque un libro se anuncia antes de salir.
+
+Un perfil admite **50 obras** (`P-16`). Un perfil no es un catálogo.
+
+### El orden
+
+Lo decide el autor con `position` (`RN-7`). Hasta que decide algo, manda el **año
+descendente**, y las obras sin año van al final.
+
+Las dos mitades se sostienen porque al añadir una obra solo se coloca **esa**: reordenar la
+lista entera por año en cada alta desharía en silencio lo que el autor acababa de arrastrar.
+Por lo mismo, cambiarle el año a una obra ya colocada no la mueve de sitio.
+
+Las posiciones son consecutivas desde cero y sin huecos, también después de borrar.
+
+### La portada
+
+Endpoint propio, y no un campo del `PATCH`: **PHP solo desmonta un cuerpo `multipart` en las
+peticiones `POST`**, así que una portada dentro del `PATCH` llegaría vacía. Separadas, además,
+el año no se queda sin guardar porque falló una subida.
+
+Le aplican las reglas generales de [`file-uploads.md`](../conventions/file-uploads.md):
+reescritura siempre, sin metadatos, tipo decidido por el contenido, máximo 2 MB. Se guarda con
+el lado mayor en 900 px, en la carpeta pública `book-covers/`.
+
+**No se recorta a proporción de libro.** Las portadas reales no miden todas lo mismo, y
+recortar la de alguien para que encaje en una cuadrícula es estropearla: 2:3 es una
+recomendación de diseño (`P-18`).
+
+Sin portada viaja `coverUrl: null` y el marcador por defecto lo pone la interfaz (`P-20`).
+Devolver aquí una imagen de relleno le quitaría al cliente la única forma de distinguir «no
+hay portada» de «esta es la portada».
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `VALIDATION_FAILED` | 422 | Falta el título, algo no cabe, el año no es creíble o no venía portada |
+| `INVALID_PURCHASE_URL` | 422 | El enlace de compra no es una dirección absoluta `http` o `https` |
+| `PUBLISHED_BOOK_LIMIT_REACHED` | 409 | Ya hay 50 |
+| `PUBLISHED_BOOK_NOT_FOUND` | 404 | No existe |
+| `NOT_YOUR_PUBLISHED_BOOK` | 403 | Es de otro |
+| `ACCOUNT_NOT_ACTIVATED` | 403 | La cuenta no está activada |
+| `UNSUPPORTED_FILE_TYPE` / `INVALID_IMAGE` | 422 | La portada no es una imagen admitida, o no se puede leer |
+| `FILE_TOO_LARGE` | 413 | La portada pasa de 2 MB |
+
+### Efectos
+
+**Ninguno fuera de `User`.** No mueve créditos, no cuenta como relato y no publica ningún
+evento: un evento «por si acaso» es un contrato que luego hay que mantener.

@@ -5,16 +5,16 @@ context: User
 concept: AuthorPage
 actors: [Writer]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P2
 sources:
   - conversation:2026-09-22 (capturas de «Mi perfil» → «Más info»)
   - docs/ui/my-profile.md
   - docs/ui/profile-more-info.md
-endpoints: [GET /users/{userId}/published-books, POST /me/published-books, PATCH /me/published-books/{id}, DELETE /me/published-books/{id}]
+endpoints: [GET /users/{userId}/published-books, POST /me/published-books, PATCH /me/published-books/{id}, DELETE /me/published-books/{id}, PUT /me/published-books/{id}/cover, DELETE /me/published-books/{id}/cover]
 events: []
 depends_on: [FEAT-USR-028]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-USR-029 — Obras publicadas del autor
@@ -99,8 +99,20 @@ tambalea.
 | Añadir | `POST /me/published-books` | `addPublishedBook` |
 | Editar | `PATCH /me/published-books/{publishedBookId}` | `updatePublishedBook` |
 | Eliminar | `DELETE /me/published-books/{publishedBookId}` | `deletePublishedBook` |
+| Subir la portada | `PUT /me/published-books/{publishedBookId}/cover` | `updatePublishedBookCover` |
+| Quitar la portada | `DELETE /me/published-books/{publishedBookId}/cover` | `deletePublishedBookCover` |
 
-El listado es público: no requiere sesión, igual que el resto del perfil.
+El listado es público: no requiere sesión, igual que el resto del perfil. Responde `404`
+cuando el perfil no se puede ver —cuenta eliminada o privacidad restringida
+(`FEAT-USR-038`)—: contestar por su cuenta sería un camino lateral para confirmar que una
+cuenta existe justo cuando su titular ha pedido que no se sepa.
+
+### Las dos operaciones de portada no estaban en la ficha
+
+La ficha daba cuatro endpoints y la portada como un campo más. **No cabe ahí**: PHP solo
+desmonta un cuerpo `multipart/form-data` en las peticiones `POST`, así que una portada dentro
+del `PATCH` llegaría como un cuerpo vacío, en silencio. Tiene endpoint propio, como la foto de
+perfil, y de paso el año no se queda sin guardar porque falló una subida.
 
 ## Modelo de datos afectado
 
@@ -110,31 +122,49 @@ El listado es público: no requiere sesión, igual que el resto del perfil.
 
 Índice sobre `published_book(user_id, position)`.
 
+La tabla y su índice ya existían en `Version20260923174400`, así que esta funcionalidad **no
+trae migración**: lo que faltaba era el comportamiento, no el esquema.
+
 ## Criterios de aceptación
 
-- [ ] Un autor añade una obra publicada con solo el título y se guarda.
-- [ ] La obra publicada aparece en su perfil público.
-- [ ] No se puede solicitar acceso de lector beta a una obra publicada.
-- [ ] No se puede dejar feedback sobre una obra publicada.
-- [ ] Añadirla no mueve créditos.
-- [ ] Un usuario no puede editar ni borrar las obras publicadas de otro.
-- [ ] Un enlace de compra malformado se rechaza con `422`.
-- [ ] El enlace de compra se marca como externo en la respuesta.
-- [ ] Con la cuenta sin activar, añadir devuelve `403 ACCOUNT_NOT_ACTIVATED`.
-- [ ] Se acepta cualquier texto como editorial, incluida una plataforma como «Amazon».
-- [ ] La portada subida pierde sus metadatos EXIF.
-- [ ] Una obra publicada sin portada se acepta y se muestra sin fallar.
+- [x] Un autor añade una obra publicada con solo el título y se guarda.
+- [x] La obra publicada aparece en su perfil público.
+- [x] No se puede solicitar acceso de lector beta a una obra publicada.
+- [x] No se puede dejar feedback sobre una obra publicada.
+- [x] Añadirla no mueve créditos.
+- [x] Un usuario no puede editar ni borrar las obras publicadas de otro.
+- [x] Un enlace de compra malformado se rechaza con `422`.
+- [x] El enlace de compra se marca como externo en la respuesta.
+- [x] Con la cuenta sin activar, añadir devuelve `403 ACCOUNT_NOT_ACTIVATED`.
+- [x] Se acepta cualquier texto como editorial, incluida una plataforma como «Amazon».
+- [x] La portada subida pierde sus metadatos EXIF.
+- [x] Una obra publicada sin portada se acepta y se muestra sin fallar.
+
+Los cuatro primeros están en `tests/Functional/User/PublishedBooksTest.php`, y el tercero y el
+cuarto en un solo caso —`testAPublishedBookIsNotAWorkAnywhere`— que prueba el identificador de
+una obra publicada contra los endpoints de `Work`, `Reading` y `Feedback`. Es el que se pondrá
+rojo el día que alguien junte los dos conceptos «porque son casi lo mismo».
+
+## Decisiones tomadas al implementar
+
+| Decisión | Por qué |
+|---|---|
+| El listado se apoya en la visibilidad del perfil en vez de responder por su cuenta | La regla de quién ve a quién se decide en un solo sitio (`VisibleProfile`). Dos sitios acaban dando dos respuestas |
+| Editar la obra de otro responde `403`, no `404` | Esconder la existencia de algo solo sirve cuando lo que se protege es saber que existe, y esto se enseña en un perfil abierto |
+| El año se valida entre 1450 y el año que viene | Atrapa el error de teclado —un `19`, un `202`— sin discutirle a nadie su bibliografía. Llega al año que viene porque un libro se anuncia antes de salir |
+| No se publica ningún evento | Esto no mueve créditos, ni cuenta como relato, ni le interesa a ningún otro contexto. Un evento «por si acaso» es un contrato que luego hay que mantener |
+| `purchaseUrlIsExternal` viaja siempre, y siempre en `true` | No es información que varíe: es el contrato diciendo que ese enlace sale de la plataforma, para que quien lo pinta no tenga que comparar dominios en cada pantalla |
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| P-9 | ¿Se valida de algún modo que el libro exista, por ISBN o similar? | Viendo que la editorial puede ser «Amazon», lo natural es que **no** |
-| P-18 | ¿Qué proporción y tamaño máximo tiene la portada? | El diseño no da recomendaciones, a diferencia del avatar |
-| P-20 | ¿Qué se muestra si el autor no sube portada? | Hace falta un marcador por defecto |
+| P-9 | ¿Se valida de algún modo que el libro exista, por ISBN o similar? | **Resuelta:** no. Viendo que la editorial puede ser «Amazon», comprobar la existencia del libro dejaría fuera justo a quien más usa esto |
+| P-18 | ¿Qué proporción y tamaño máximo tiene la portada? | **Resuelta:** 2 MB de subida y lado mayor 900 px al guardarla. La proporción 2:3 es una **recomendación de diseño y no se impone**: recortar la portada de alguien para que encaje en una cuadrícula es estropearla, y las reales no miden todas lo mismo |
+| P-20 | ¿Qué se muestra si el autor no sube portada? | **Resuelta:** el marcador lo pone la interfaz. La API devuelve `coverUrl: null`, porque una imagen de relleno le quitaría al cliente la única forma de distinguir «no hay portada» de «esta es la portada» |
 | P-10 | ¿Hay afiliación en el enlace «Comprar»? | Implicaciones comerciales y legales |
-| P-15 | ¿Quién decide el orden de la lista? | Propuesta: el autor, con año descendente por defecto |
-| P-16 | ¿Hay límite de obras publicadas por perfil? | Evitar perfiles inflados |
+| P-15 | ¿Quién decide el orden de la lista? | **Resuelta:** el autor, con año descendente por defecto. Al añadir una obra se coloca **solo esa**, donde la pondría el año; reordenar la lista entera en cada alta desharía en silencio lo que el autor acababa de arrastrar. Las obras sin año van al final |
+| P-16 | ¿Hay límite de obras publicadas por perfil? | **Resuelta:** 50. Un perfil no es un catálogo, y quien de verdad las supere tiene un problema que merece una conversación, no un formulario |
 | P-17 | ¿Cuenta como «Relato» en los contadores? | **No.** Son conceptos distintos (`RN-3`) |
 
 ## Estado
@@ -143,4 +173,7 @@ El listado es público: no requiere sesión, igual que el resto del perfil.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-25). `P-10` —si el enlace «Comprar» lleva afiliación— sigue
+abierta y no la decide el backend: es una decisión comercial y legal. El campo guarda la
+dirección que escriba el autor, y añadir un parámetro de afiliación el día que se decida no
+cambia el modelo.

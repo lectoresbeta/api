@@ -1,0 +1,382 @@
+# Las obras que un autor ya publicó **fuera** de la plataforma
+# (`FEAT-USR-029`).
+#
+# Una obra publicada **no es una `Work`**: no tiene contenido aquí, ni
+# lectores beta, ni créditos, ni cuenta como «Relato» en ningún contador.
+# Comparten la palabra «obra» y nada más.
+
+list:
+  get:
+    tags: [Account]
+    operationId: listPublishedBooks
+    summary: La bibliografía de un autor
+    description: |
+      **Público**, como el perfil del que forma parte: acreditar una
+      trayectoria es enseñarla.
+
+      Responde `404` cuando el perfil no se puede ver —cuenta eliminada o
+      privacidad restringida—, por la misma razón que el perfil: si esta lista
+      contestara por su cuenta sería un camino lateral para confirmar que una
+      cuenta existe justo cuando su titular ha pedido que no se sepa.
+
+      El orden es el que decidió el autor. Hasta que decide algo, el año
+      descendente; las obras sin año van al final.
+    security: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Su bibliografía, en su orden.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [publishedBooks]
+              properties:
+                publishedBooks:
+                  type: array
+                  items:
+                    $ref: '#/PublishedBook'
+      '404':
+        description: No hay perfil que enseñar.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+collection:
+  post:
+    tags: [Account]
+    operationId: addPublishedBook
+    summary: Añadir una obra publicada
+    description: |
+      **Solo el título es obligatorio.** Quien cita una obra descatalogada no
+      tiene editorial que poner ni enlace al que mandar a nadie.
+
+      La **editorial es texto libre** y no se valida contra ningún catálogo:
+      «Amazon» es una respuesta tan válida como el nombre de un sello.
+
+      La portada **no viaja aquí**: se sube después, a
+      `PUT /me/published-books/{publishedBookId}/cover`.
+
+      La obra nueva se coloca donde la pondría el año descendente, sin
+      reordenar las que ya estaban.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [title]
+            properties:
+              title:
+                type: string
+                maxLength: 255
+              publisher:
+                type: string
+                maxLength: 255
+                nullable: true
+              publicationYear:
+                type: integer
+                minimum: 1450
+                nullable: true
+                description: Hasta el año que viene, porque un libro se anuncia antes de salir.
+              purchaseUrl:
+                type: string
+                maxLength: 512
+                nullable: true
+                description: Dirección absoluta `http` o `https`. El servidor no la visita.
+    responses:
+      '201':
+        description: La obra añadida.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PublishedBook'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: PUBLISHED_BOOK_LIMIT_REACHED`. Ya hay 50, que es el tope por
+          perfil.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: VALIDATION_FAILED` si falta el título, si algo no cabe o si
+          el año no es creíble; `INVALID_PURCHASE_URL` si el enlace de compra
+          no es una dirección absoluta `http` o `https`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+item:
+  patch:
+    tags: [Account]
+    operationId: updatePublishedBook
+    summary: Editar una obra publicada
+    description: |
+      Lo que no se envía se queda como estaba; enviar `publisher: null` lo
+      borra. La diferencia la hace **la presencia de la clave**, no su valor.
+
+      `position` mueve la obra dentro de la bibliografía: a partir de ahí
+      manda ese orden, y cambiar el año de una obra ya colocada no la mueve de
+      sitio. Una posición mayor que la lista se entiende como «al final».
+    parameters:
+      - $ref: '#/PublishedBookId'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+                maxLength: 255
+              publisher:
+                type: string
+                maxLength: 255
+                nullable: true
+              publicationYear:
+                type: integer
+                minimum: 1450
+                nullable: true
+              purchaseUrl:
+                type: string
+                maxLength: 512
+                nullable: true
+              position:
+                type: integer
+                minimum: 0
+    responses:
+      '200':
+        description: La obra como queda.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PublishedBook'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: NOT_YOUR_PUBLISHED_BOOK` si es de otro, o
+          `ACCOUNT_NOT_ACTIVATED` si la cuenta no está activada.
+
+          Es de las pocas cosas que responden `403` y no `404` al ser de otro:
+          la obra se enseña en un perfil abierto, así que fingir que no existe
+          sería mentirle a quien la acaba de ver, sin ocultarle nada.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe. `code: PUBLISHED_BOOK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: VALIDATION_FAILED` o `INVALID_PURCHASE_URL`, igual que al
+          añadirla.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Account]
+    operationId: deletePublishedBook
+    summary: Quitar una obra publicada
+    description: |
+      Se lleva su portada por delante: un fichero que ya no tiene fila que lo
+      nombre no lo va a borrar nadie nunca.
+
+      Las obras que quedan se recolocan sin hueco.
+    parameters:
+      - $ref: '#/PublishedBookId'
+    responses:
+      '204':
+        description: Ya no está.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: NOT_YOUR_PUBLISHED_BOOK` o `ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe. `code: PUBLISHED_BOOK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+cover:
+  put:
+    tags: [Account]
+    operationId: updatePublishedBookCover
+    summary: Subir la portada de una obra publicada
+    description: |
+      `multipart/form-data` con `cover`. **Endpoint aparte y no un campo del
+      `PATCH`** porque PHP solo desmonta un cuerpo `multipart` en las
+      peticiones `POST`: una portada dentro del `PATCH` llegaría vacía.
+
+      El servidor **reescribe siempre** la imagen: normaliza el formato,
+      redimensiona a 900 px de lado mayor y **elimina los metadatos**, que en
+      una foto llevan dónde se tomó.
+
+      **No la recorta a proporción de libro.** Las portadas reales no miden
+      todas lo mismo, y recortar la de alguien para que encaje en una
+      cuadrícula es estropearla: 2:3 es una recomendación de diseño.
+
+      Subir una portada nueva **borra la anterior**.
+    parameters:
+      - $ref: '#/PublishedBookId'
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [cover]
+            properties:
+              cover:
+                type: string
+                format: binary
+                description: La portada. Máximo 2 MB. Proporción recomendada 2:3.
+    responses:
+      '200':
+        description: La obra, ya con su portada.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PublishedBook'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: NOT_YOUR_PUBLISHED_BOOK` o `ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe. `code: PUBLISHED_BOOK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '413':
+        description: |
+          `code: FILE_TOO_LARGE`. Más de 2 MB. **El límite lo aplica el
+          servidor**.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNSUPPORTED_FILE_TYPE` si no es una imagen de un formato
+          admitido —JPEG, PNG o WebP, **decidido por el contenido**—,
+          `INVALID_IMAGE` si lo parece y no se puede leer, o
+          `VALIDATION_FAILED` si no venía fichero.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Account]
+    operationId: deletePublishedBookCover
+    summary: Quitar la portada de una obra publicada
+    description: |
+      Quita la portada y deja la obra. Devuelve la ficha entera y no un `204`
+      porque lo que el cliente pinta a continuación es esa ficha sin portada.
+
+      Idempotente: quitar una portada que no hay responde igual.
+    parameters:
+      - $ref: '#/PublishedBookId'
+    responses:
+      '200':
+        description: La obra, ya sin portada.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PublishedBook'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: NOT_YOUR_PUBLISHED_BOOK` o `ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe. `code: PUBLISHED_BOOK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+PublishedBookId:
+  name: publishedBookId
+  in: path
+  required: true
+  schema:
+    type: string
+    format: uuid
+
+PublishedBook:
+  type: object
+  required: [publishedBookId, title, purchaseUrlIsExternal, position]
+  properties:
+    publishedBookId:
+      type: string
+      format: uuid
+    title:
+      type: string
+    publisher:
+      type: string
+      nullable: true
+      description: |
+        **Texto libre.** No se valida contra ningún catálogo de editoriales:
+        el campo responde a «¿dónde salió este libro?», y «Amazon» es una
+        respuesta tan válida como el nombre de un sello.
+    publicationYear:
+      type: integer
+      nullable: true
+    purchaseUrl:
+      type: string
+      nullable: true
+    purchaseUrlIsExternal:
+      type: boolean
+      description: |
+        Dice que ese enlace **sale de la plataforma**, que es lo que necesita
+        saber quien lo pinta para abrirlo aparte y sin arrastrar la sesión
+        (`rel="noopener noreferrer"`).
+    coverUrl:
+      type: string
+      nullable: true
+      description: |
+        `null` cuando no hay portada: el marcador por defecto lo pone la
+        interfaz. Devolver aquí una imagen de relleno le quitaría al cliente
+        la única forma de distinguir «no hay portada» de «esta es la portada».
+    position:
+      type: integer
+      description: Su sitio en la bibliografía, desde cero y sin huecos.

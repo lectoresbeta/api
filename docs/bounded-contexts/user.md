@@ -56,7 +56,7 @@ preferencias y presencia pública como autor.
 |---|---|---|
 | `User` | `UserId` | Email único. Una cuenta eliminada no autentica. El estado sigue `PENDING_ACTIVATION → ACTIVE → DELETED`. Solo `ACTIVE` puede escribir. En `DELETED` **no queda ningún dato personal**: la cuenta se anonimiza y el `UserId` sobrevive como identificador vacío al que siguen apuntando correcciones y movimientos de créditos. |
 | `AuthorPage` | `UserId` | Pertenece a un único usuario |
-| `PublishedBook` | `PublishedBookId` | Libro editado **fuera** de la plataforma. Sin contenido, sin lectores beta y sin créditos. No confundir con `Work` |
+| `PublishedBook` | `PublishedBookId` | Libro editado **fuera** de la plataforma. Sin contenido, sin lectores beta y sin créditos. No confundir con `Work`. Título obligatorio y nada más; editorial libre; enlace de compra `http`/`https`; orden decidido por su autor, con el año descendente mientras no decida. Hasta 50 por perfil (`FEAT-USR-029`) |
 | `PlatformInvitation` | `PlatformInvitationId` | Token único. Se consume una sola vez. |
 | `AccountActivationToken` | `UserId` | Un único token vigente por cuenta. Se almacena con hash, nunca en claro. |
 | `UsernameAlias` | `username` | Nombre de usuario reservado 30 días, por un cambio de nombre o por el borrado de la cuenta. Un alias vigente **ocupa el nombre**; uno caducado no resuelve ni ocupa, aunque su fila siga existiendo. El de un cambio de nombre resuelve al perfil y su titular puede **recuperarlo**; el de una cuenta eliminada solo bloquea. |

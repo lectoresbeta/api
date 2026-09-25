@@ -70,6 +70,12 @@ security:
         # aunque haya restringido su perfil.
         - { path: '^/api/v1/(users|profiles)/[^/]+$', methods: [GET], roles: PUBLIC_ACCESS }
 
+        # Y su bibliografía (FEAT-USR-029), que es parte de ese perfil: una
+        # obra publicada está en el mundo, a la venta, y acreditarla es
+        # justamente enseñarla. Quien tenga sesión sigue siendo reconocido,
+        # que es lo que permite a su titular verse a sí mismo.
+        - { path: '^/api/v1/users/[^/]+/published-books$', methods: [GET], roles: PUBLIC_ACCESS }
+
         # Y sus listas de seguidos y seguidores (FEAT-COM-027), por lo mismo:
         # son parte de ese perfil. Solo el `GET` de esas dos, no cualquier
         # subrecurso — `/users/{id}/subscription` es la acción de seguir, y

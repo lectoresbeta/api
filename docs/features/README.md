@@ -97,7 +97,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-026 | Tour de bienvenida de la Home | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-026-welcome-tour.md) |
 | FEAT-USR-027 | Contexto de sesión para el layout | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-027-session-context.md) |
 | FEAT-USR-028 | Mi perfil — cabecera, datos y contadores | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-028-own-profile-header.md) |
-| FEAT-USR-029 | Obras publicadas del autor (bibliografía externa) | Writer | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-029-published-books.md) |
+| FEAT-USR-029 | Obras publicadas del autor (bibliografía externa) | Writer | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-029-published-books.md) |
 | FEAT-USR-030 | Premios y reconocimientos del autor | Writer | PENDING | TODO | P3 | — *(sin diseño)* |
 | FEAT-USR-031 | ~~Nivel del usuario~~ | — | PENDING | DEPRECATED | P3 | — |
 | FEAT-USR-032 | Compartir el perfil | User | PENDING | TODO | P3 | — |
