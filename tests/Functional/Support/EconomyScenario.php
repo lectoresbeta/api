@@ -7,6 +7,9 @@ namespace LectoresBeta\Tests\Functional\Support;
 use Doctrine\Persistence\ManagerRegistry;
 use LectoresBeta\Credits\Account\Domain\Repository\CreditAccountRepository;
 use LectoresBeta\Credits\Account\Domain\ValueObject\UserId as CreditsUserId;
+use LectoresBeta\Moderation\ModeratorRole\Application\Command\SetModeratorRole;
+use LectoresBeta\Moderation\ModeratorRole\Application\Handler\SetModeratorRoleHandler;
+use LectoresBeta\Moderation\ModeratorRole\Domain\Enum\ModeratorLevel;
 use LectoresBeta\Shared\Application\Security\SecureTokenFactory;
 use LectoresBeta\Shared\Domain\Event\EventId;
 use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
@@ -465,6 +468,37 @@ abstract class EconomyScenario extends WebTestCase
      * Alguien que ha iniciado sesión pero **no ha activado la cuenta**, que
      * es lo que separa leer de escribir (`FEAT-USR-025`).
      */
+    /**
+     * Alguien con el rol de administrador, por el mismo camino que el comando
+     * de consola: saltando la regla de «nadie se toca su propio rol», porque
+     * la primera vez no hay ningún administrador que firme.
+     *
+     * @return array{token: string, userId: string}
+     */
+    protected function administrator(string $local): array
+    {
+        return $this->moderator($local, ModeratorLevel::ADMIN);
+    }
+
+    /**
+     * @return array{token: string, userId: string}
+     */
+    protected function moderator(string $local, ModeratorLevel $level = ModeratorLevel::MODERATOR): array
+    {
+        $person = $this->activatedPerson($local);
+
+        /** @var SetModeratorRoleHandler $setRole */
+        $setRole = self::getContainer()->get(SetModeratorRoleHandler::class);
+        $setRole(new SetModeratorRole(
+            SetModeratorRoleHandler::CONSOLE,
+            $person['userId'],
+            $level->value,
+            fromConsole: true,
+        ));
+
+        return $person;
+    }
+
     protected function signedInWithoutActivating(string $local): string
     {
         $email = $this->address($local);

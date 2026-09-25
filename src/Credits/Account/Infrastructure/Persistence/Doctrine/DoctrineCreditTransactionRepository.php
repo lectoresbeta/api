@@ -110,6 +110,37 @@ final class DoctrineCreditTransactionRepository extends DoctrineRepository imple
             ->getSingleScalarResult();
     }
 
+    public function totalMoved(): int
+    {
+        return (int) $this->entityManager->createQueryBuilder()
+            ->select('COALESCE(SUM(t.amount), 0)')
+            ->from(CreditTransaction::class, 't')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function tallyOfReason(CreditTransactionReason $reason, ?\DateTimeImmutable $from, ?\DateTimeImmutable $to): array
+    {
+        $query = $this->entityManager->createQueryBuilder()
+            ->select('COUNT(t.id) AS movements', 'COALESCE(SUM(t.amount), 0) AS net')
+            ->from(CreditTransaction::class, 't')
+            ->where('t.reason = :reason')
+            ->setParameter('reason', $reason);
+
+        if (null !== $from) {
+            $query->andWhere('t.occurredAt >= :from')->setParameter('from', $from);
+        }
+
+        if (null !== $to) {
+            $query->andWhere('t.occurredAt <= :to')->setParameter('to', $to);
+        }
+
+        /** @var array{movements: int|string, net: int|string} $row */
+        $row = $query->getQuery()->getSingleResult();
+
+        return ['count' => (int) $row['movements'], 'net' => (int) $row['net']];
+    }
+
     public function ofCorrection(string $correctionId): array
     {
         // `metadata` es `jsonb` y esto es una consulta que DQL no sabe

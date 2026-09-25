@@ -35,6 +35,14 @@ final class InMemoryChapterPrices implements ChapterPriceRepository
         return $this->matching(static fn (ChapterPrice $p): bool => $p->authorId()->equals($authorId));
     }
 
+    public function countCorrectable(): int
+    {
+        return \count(array_filter(
+            $this->prices,
+            static fn (ChapterPrice $price): bool => $price->isCorrectable(),
+        ));
+    }
+
     /**
      * @param callable(ChapterPrice): bool $matches
      *

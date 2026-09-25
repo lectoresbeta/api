@@ -29,3 +29,11 @@ tipCorrection:
     path: /api/v1/corrections/{correctionId}/tip
     controller: LectoresBeta\Credits\Account\Infrastructure\Controller\TipCorrectionController::__invoke
     methods: [POST]
+
+# La salud de la economía (`FEAT-CRD-012`). **No es `/health`**: aquel es
+# público y lo consultan sondas sin credenciales; este suma sobre todo el
+# histórico y cuenta cómo está repartido el saldo.
+getEconomyHealth:
+    path: /api/v1/admin/credits/health
+    controller: LectoresBeta\Credits\Monitoring\Infrastructure\Controller\GetEconomyHealthController::__invoke
+    methods: [GET]

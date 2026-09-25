@@ -89,4 +89,27 @@ final class InMemoryCreditTransactions implements CreditTransactionRepository
             $this->movements,
         ));
     }
+
+    public function totalMoved(): int
+    {
+        return array_sum(array_map(
+            static fn (CreditTransaction $m): int => $m->amount(),
+            $this->movements,
+        ));
+    }
+
+    public function tallyOfReason(CreditTransactionReason $reason, ?\DateTimeImmutable $from, ?\DateTimeImmutable $to): array
+    {
+        $matching = array_filter(
+            $this->movements,
+            static fn (CreditTransaction $m): bool => $m->reason() === $reason
+                && (null === $from || $m->occurredAt() >= $from)
+                && (null === $to || $m->occurredAt() <= $to),
+        );
+
+        return [
+            'count' => \count($matching),
+            'net' => array_sum(array_map(static fn (CreditTransaction $m): int => $m->amount(), $matching)),
+        ];
+    }
 }

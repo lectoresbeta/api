@@ -2,7 +2,7 @@
 
 > Convenciones transversales en [`../conventions/`](../conventions/). Esquemas en `openapi/`.
 >
-> Estado: **dos operaciones especificadas**. El resto del contexto trabaja por eventos, no
+> Estado: **tres operaciones especificadas**. El resto del contexto trabaja por eventos, no
 > por HTTP.
 
 ## Resumen
@@ -12,7 +12,7 @@
 | `GET /api/v1/credits/balance` | `getCreditBalance` | Saldo del usuario autenticado | FEAT-CRD-001 | **Implementado** |
 | `GET /credits/transactions` | `listCreditTransactions` | Historial de movimientos | FEAT-CRD-008 | PENDING |
 | `POST /api/v1/corrections/{correctionId}/tip` | `tipCorrection` | Propina a una corrección | FEAT-CRD-017 | **Implementado** |
-| `GET /admin/credits/health` | `getEconomyHealth` | Estado agregado de la economía | FEAT-CRD-012 | PENDING |
+| `GET /api/v1/admin/credits/health` | `getEconomyHealth` | Estado agregado de la economía | FEAT-CRD-012 | **Implementado** |
 
 **La mayor parte de este contexto no tiene API.** Los créditos se mueven al recibir eventos de
 integración, nunca por una llamada HTTP de otro contexto
@@ -179,3 +179,90 @@ el `correctionId` en sus metadatos. Masa constante.
 Publica `CorrectionTipped`, que consumen `Feedback` —para que la corrección muestre que fue
 propinada— y `Community`, para la reputación del corrector. Es lo que permite que la propina
 alimente un ranking **sin que `Credits` sepa nada de rankings**.
+
+---
+
+## `GET /api/v1/admin/credits/health`
+
+**`operationId`:** `getEconomyHealth` · **Funcionalidad:** [`FEAT-CRD-012`](../../features/credits/FEAT-CRD-012-economy-health.md)
+
+### Propósito
+
+Decir si el sistema de créditos está funcionando y cuál de las palancas hay que mover.
+
+Un sistema de créditos sin medición se descubre roto por las quejas, y las dos formas de
+morir —nadie tiene créditos, o los créditos no valen nada— tardan semanas en manifestarse y
+son caras de revertir, porque para entonces los saldos ya están formados.
+
+### No confundir con `GET /health`
+
+Aquel es público, lo consultan sondas sin credenciales y responde en milisegundos. Este suma
+sobre todo el histórico de movimientos y cuenta cómo está repartida la economía.
+
+Las dos diferencias importan: **una sonda no debe contarle a un desconocido que el sistema de
+créditos está roto**, y una consulta que recorre todos los movimientos no es lo que se pregunta
+cada diez segundos.
+
+### Autorización
+
+El backoffice, por la regla general de `^/api/v1/admin`.
+
+**Nada identifica a nadie** (`RN-2`): son cifras agregadas. El saldo más bajo del sistema es
+un número, no una persona.
+
+### La invariante
+
+```text
+lo que emitieron los grifos == la suma de todos los movimientos == la suma de los saldos
+```
+
+**Es un test, no una aspiración.** Si deja de cumplirse, hay un movimiento que no es una
+transferencia, y eso significa que alguien tiene créditos que nadie pagó.
+
+Son tres cifras y no dos, y la tercera es la que vale:
+
+| Qué falla | Qué significa |
+|---|---|
+| `issued` ≠ `moved` | Hay un movimiento que cobra sin pagar, o paga sin cobrar |
+| `moved` ≠ `balances` | Un saldo se ha desviado de su propia historia |
+
+La segunda comparación solo dice algo porque **las dos cifras llegan por caminos
+independientes**: el saldo se guarda, no se calcula sumando los movimientos. Si se calculase,
+coincidiría siempre y no comprobaría nada.
+
+**El descubierto no aparece en la fórmula**, al contrario de lo que decía la ficha. Los saldos
+negativos ya están dentro de la suma; restarlos otra vez haría fallar la igualdad justo cuando
+alguien está endeudado, que es un estado normal y previsto.
+
+### Además del endpoint
+
+`php bin/console credits:check-invariant` hace la misma comprobación desde consola, registra a
+nivel `error` y sale con código distinto de cero si falla. Son las dos formas de que el fallo
+se vea sin que nadie esté mirando: la alerta del sistema de monitorización y el trabajo
+programado en rojo.
+
+**Cada cuánto se ejecuta es decisión de operación.** Programarlo desde el código ataría la
+frecuencia a un despliegue.
+
+### Respuesta
+
+`200 OK`, con `Cache-Control: no-store`: es una foto de ahora mismo, y quien la lee está
+mirando si algo acaba de cambiar.
+
+`from` y `to` acotan **solo las cifras de periodo**, que hoy son los ajustes manuales. La
+invariante y el reparto de saldos son del instante.
+
+`alerts` dice qué umbral se ha cruzado. Los umbrales viven en `config/services.yaml` porque son
+lo primero que habrá que mover en cuanto haya datos reales, y mover un umbral no debería ser un
+despliegue. **Sin umbral, una métrica es decorativa**: dice una cifra y no dice si está bien.
+
+`overdraft.recoveryRate` es **nulo** mientras no se haya concedido ningún descubierto. Un cero
+diría que ninguno se recupera, que es una afirmación sobre datos que no existen.
+
+### Errores específicos
+
+Ninguno propio. `401` sin autenticar y `403` sin el rol.
+
+### Efectos
+
+Ninguno. Es una lectura: no publica eventos ni mueve créditos.

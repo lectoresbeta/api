@@ -367,6 +367,9 @@ paths:
   /credits/movements:
     $ref: './paths/credits.yaml#/movements'
 
+  /admin/credits/health:
+    $ref: './paths/credits.yaml#/health'
+
   /corrections/{correctionId}/tip:
     $ref: './paths/credits.yaml#/tip'
 

@@ -5,7 +5,7 @@ context: Credits
 concept: Monitoring
 actors: [Admin]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: DONE
 priority: P1
 sources:
   - conversation:2026-09-23 (rediseño del sistema de créditos)
@@ -14,7 +14,7 @@ endpoints:
   - GET /admin/credits/health
 events: []
 depends_on: [FEAT-CRD-008]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-CRD-012 — Salud de la economía de créditos
@@ -81,19 +81,30 @@ manifestarse y son caras de revertir, porque para entonces los saldos ya están 
 
 ## Criterios de aceptación
 
-- [ ] La invariante contable se comprueba automáticamente y alerta si falla.
-- [ ] Las cuatro métricas son consultables por periodo.
-- [ ] Las métricas se derivan del registro de movimientos.
-- [ ] El regalo de bienvenida se cambia por configuración, sin desplegar código.
-- [ ] Las dos constantes del precio también.
+- [x] La invariante contable se comprueba automáticamente y alerta si falla.
+- [x] Las métricas son consultables por periodo. **Las de periodo**: la invariante y el
+  reparto de saldos son una foto de ahora y no admiten acotación, porque un saldo no tiene
+  historia acotable sin recorrer todo el registro.
+- [x] Las métricas se derivan del registro de movimientos.
+- [x] El regalo de bienvenida se cambia por configuración, sin desplegar código.
+- [x] Las dos constantes del precio también.
+
+Las dos últimas ya se cumplían antes de esta funcionalidad: `app.welcome_credits` y
+`app.pricing.*` viven en `config/services.yaml` desde `FEAT-CRD-016`. Se dejan marcadas porque
+son criterios de esta ficha y alguien tendría que comprobarlos.
 
 ## Preguntas abiertas
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| MOD-1 | ¿Qué umbral de deuda dispara alerta? | `RN-12` de `FEAT-CRD-018` propone −40 |
-| C-33 | ¿Con qué frecuencia se comprueba la invariante? | Diaria parece razonable |
-| C-34 | ¿Qué umbrales disparan alerta en cada métrica? | Sin umbral, una métrica es decorativa |
+| C-33 | ¿Con qué frecuencia se comprueba la invariante? | **Parcialmente resuelta**: hay comando; cada cuánto se ejecuta es decisión de operación y no se programa desde el código |
+
+Resueltas: `MOD-1` (**−40**, el que propone `FEAT-CRD-018` `RN-12`) y `C-34` (cada métrica
+tiene su umbral en `config/services.yaml`: `app.economy.debt_alert_threshold`,
+`app.economy.zero_balance_alert_share` y `app.economy.overdraft_recovery_alert_rate`).
+
+Los dos últimos son una primera propuesta a falta de datos reales, y están en configuración
+precisamente para poder corregirlos cuando los haya.
 
 ## Estado
 
@@ -101,5 +112,30 @@ manifestarse y son caras de revertir, porque para entonces los saldos ya están 
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`. La invariante puede —y debería— implementarse desde el primer día,
-aunque el panel llegue después.
+**Implementación:** `DONE` (2026-09-25).
+
+Tres cosas que la ficha no preveía y que la implementación obligó a decidir:
+
+- **la invariante no lleva el término del descubierto, y la ficha se equivocaba.** Escrita como
+  «saldos = grifos − descubierto no recuperado», ese término sobra: los saldos negativos ya
+  están dentro de la suma, así que restarlos otra vez haría fallar la identidad justo cuando
+  alguien está endeudado, que es un estado normal y previsto
+  ([`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md)). La forma implementada es una igualdad
+  exacta, **más fuerte y más fácil de comprobar**;
+- **son tres cifras y no dos**, y la tercera es la que vale. `issued` frente a `moved` detecta
+  un movimiento que cobra sin pagar; `moved` frente a `balances` detecta un saldo que se ha
+  desviado de su propia historia. Comparar solo dos dejaría uno de los dos fallos invisible, y
+  el segundo solo se ve porque las dos cifras llegan por caminos independientes;
+- **la comprobación periódica es un comando de consola, no un chequeo de `/health`.** Aquel es
+  público y lo consultan sondas sin credenciales; esto suma sobre todo el histórico. El
+  comando registra a nivel `error` y sale con código distinto de cero, que son las dos formas
+  de que un fallo se vea sin que nadie esté mirando.
+
+Y una decisión de alcance: **`Credits` no publica «capítulos corregibles por corrector
+activo»**, sino solo el numerador. Cuántos correctores están activos lo sabe `Feedback`, y
+preguntárselo pondría en un panel de un contexto una cifra compuesta de dos.
+
+**Falta** «tiempo hasta la primera corrección recibida», que es la única métrica de la ficha
+que un usuario notaría y **no es calculable dentro de este contexto**: la fecha de la primera
+corrección vive en `Feedback`. Encaja como métrica de allí, o como un panel compuesto que
+todavía no existe.

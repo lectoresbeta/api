@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Tests\Functional\Moderation;
 
-use LectoresBeta\Moderation\ModeratorRole\Application\Command\SetModeratorRole;
-use LectoresBeta\Moderation\ModeratorRole\Application\Handler\SetModeratorRoleHandler;
 use LectoresBeta\Moderation\ModeratorRole\Domain\Enum\ModeratorLevel;
 use LectoresBeta\Tests\Functional\Support\EconomyScenario;
 use Symfony\Component\HttpFoundation\Response;
@@ -343,24 +341,5 @@ final class SanctionTest extends EconomyScenario
             'SELECT status FROM user_ctx.account WHERE id = :user',
             ['user' => $userId],
         );
-    }
-
-    /**
-     * @return array{token: string, userId: string}
-     */
-    private function moderator(string $local, ModeratorLevel $level = ModeratorLevel::MODERATOR): array
-    {
-        $persona = $this->activatedPerson($local);
-
-        /** @var SetModeratorRoleHandler $setRole */
-        $setRole = self::getContainer()->get(SetModeratorRoleHandler::class);
-        $setRole(new SetModeratorRole(
-            SetModeratorRoleHandler::CONSOLE,
-            $persona['userId'],
-            $level->value,
-            fromConsole: true,
-        ));
-
-        return $persona;
     }
 }

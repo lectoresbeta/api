@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Tests\Functional\Moderation;
 
-use LectoresBeta\Moderation\ModeratorRole\Application\Command\SetModeratorRole;
-use LectoresBeta\Moderation\ModeratorRole\Application\Handler\SetModeratorRoleHandler;
-use LectoresBeta\Moderation\ModeratorRole\Domain\Enum\ModeratorLevel;
 use LectoresBeta\Tests\Functional\Support\EconomyScenario;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mime\Email;
@@ -288,25 +285,6 @@ final class ReviewClaimTest extends EconomyScenario
         self::assertResponseIsSuccessful();
         $this->capture();
         $this->consumeEverything();
-    }
-
-    /**
-     * @return array{token: string, userId: string}
-     */
-    private function moderator(string $local): array
-    {
-        $persona = $this->activatedPerson($local);
-
-        /** @var SetModeratorRoleHandler $setRole */
-        $setRole = self::getContainer()->get(SetModeratorRoleHandler::class);
-        $setRole(new SetModeratorRole(
-            SetModeratorRoleHandler::CONSOLE,
-            $persona['userId'],
-            ModeratorLevel::MODERATOR->value,
-            fromConsole: true,
-        ));
-
-        return $persona;
     }
 
     private function claimAbout(string $token, string $targetType, string $targetId, string $reason = 'OFFENSIVE'): string

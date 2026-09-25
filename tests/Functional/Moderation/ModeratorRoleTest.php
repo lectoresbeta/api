@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace LectoresBeta\Tests\Functional\Moderation;
 
 use LectoresBeta\Moderation\Claim\Domain\ValueObject\PartyId;
-use LectoresBeta\Moderation\ModeratorRole\Application\Command\SetModeratorRole;
-use LectoresBeta\Moderation\ModeratorRole\Application\Handler\SetModeratorRoleHandler;
-use LectoresBeta\Moderation\ModeratorRole\Domain\Enum\ModeratorLevel;
 use LectoresBeta\Moderation\ModeratorRole\Domain\Repository\ModeratorRoleRepository;
 use LectoresBeta\Tests\Functional\Support\EconomyScenario;
 use Symfony\Component\HttpFoundation\Response;
@@ -151,40 +148,10 @@ final class ModeratorRoleTest extends EconomyScenario
      */
     public function testTheFirstAdministratorIsNamedFromTheConsole(): void
     {
-        $persona = $this->activatedPerson('primera');
-
-        $this->makeAdmin($persona['userId']);
+        $persona = $this->administrator('primera');
 
         $this->moderators($persona['token']);
         self::assertResponseIsSuccessful();
-    }
-
-    /**
-     * @return array{token: string, userId: string}
-     */
-    private function administrator(string $local): array
-    {
-        $admin = $this->activatedPerson($local);
-        $this->makeAdmin($admin['userId']);
-
-        return $admin;
-    }
-
-    /**
-     * Lo que hace el comando de consola, por el mismo camino que él: saltando
-     * la regla de «nadie se toca su propio rol», porque la primera vez no hay
-     * ningún administrador que firme.
-     */
-    private function makeAdmin(string $userId): void
-    {
-        /** @var SetModeratorRoleHandler $setRole */
-        $setRole = self::getContainer()->get(SetModeratorRoleHandler::class);
-        $setRole(new SetModeratorRole(
-            SetModeratorRoleHandler::CONSOLE,
-            $userId,
-            ModeratorLevel::ADMIN->value,
-            fromConsole: true,
-        ));
     }
 
     private function setRole(string $token, string $userId, ?string $level): void
