@@ -117,6 +117,20 @@ class Claim
         return $this->status;
     }
 
+    public function reason(): ClaimReason
+    {
+        return $this->reason;
+    }
+
+    /**
+     * Lo que escribió quien reclamó. El moderador lo necesita para decidir y
+     * es el único sitio donde se lee: nunca viaja en un evento.
+     */
+    public function description(): ?string
+    {
+        return $this->description;
+    }
+
     public function submittedAt(): \DateTimeImmutable
     {
         return $this->submittedAt;

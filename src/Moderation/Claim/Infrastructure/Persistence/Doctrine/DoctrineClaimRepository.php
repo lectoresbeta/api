@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Moderation\Claim\Infrastructure\Persistence\Doctrine;
 
+use Doctrine\DBAL\LockMode;
 use LectoresBeta\Moderation\Claim\Domain\Entity\Claim;
+use LectoresBeta\Moderation\Claim\Domain\Enum\ClaimStatus;
 use LectoresBeta\Moderation\Claim\Domain\Enum\ClaimTargetType;
 use LectoresBeta\Moderation\Claim\Domain\Repository\ClaimRepository;
 use LectoresBeta\Moderation\Claim\Domain\ValueObject\ClaimId;
@@ -56,6 +58,30 @@ final class DoctrineClaimRepository extends DoctrineRepository implements ClaimR
             ['reporterId' => $reporterId->value()],
             ['submittedAt' => 'DESC'],
         ));
+    }
+
+    public function openExcludingParty(PartyId $moderator, int $limit, int $offset = 0): array
+    {
+        $query = $this->repository()->createQueryBuilder('c')
+            ->where('c.status IN (:open)')
+            ->andWhere('c.reporterId != :moderator')
+            // `subject_id` es nulo cuando todavía no se sabe contra quién va
+            // (un capítulo, una publicación). Un `!=` en SQL descartaría esas
+            // filas, que son justo las que nadie ha mirado aún.
+            ->andWhere('c.subjectId IS NULL OR c.subjectId != :moderator')
+            ->setParameter('open', [ClaimStatus::PENDING, ClaimStatus::UNDER_REVIEW])
+            ->setParameter('moderator', $moderator->value())
+            ->orderBy('c.submittedAt', 'ASC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
+            ->getQuery();
+
+        return array_values($query->getResult());
+    }
+
+    public function lockedById(ClaimId $id): ?Claim
+    {
+        return $this->repository()->find($id->value(), LockMode::PESSIMISTIC_WRITE);
     }
 
     protected function entityClass(): string

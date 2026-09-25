@@ -24,6 +24,11 @@ namespace LectoresBeta\Notification\Delivery\Domain\Enum;
  * recover their account. `PASSWORD_CHANGED` likewise — it is the only thing
  * that tells a person their account has just been taken.
  *
+ * `WORK_BLOCKED` es operativo por una razón parecida y más dura
+ * (`FEAT-MOD-003` `RN-8b`): es la **única vía** por la que el autor se entera
+ * de que su obra ha sido bloqueada y la única que le dice a qué dirección
+ * recurrir. Un recurso que no se sabe dónde presentar no existe.
+ *
  * `BETA_READER_ACCESS_REVOKED` arrived with `FEAT-NOT-001` and is the one
  * that saldó a debt two features had written down: somebody who loses access
  * to a work **stops being able to deliver what they were writing**, and until
@@ -59,6 +64,7 @@ enum NotificationKind: string
     case BALANCE_WENT_NEGATIVE = 'BALANCE_WENT_NEGATIVE';
     case CORRECTION_UNLOCKED = 'CORRECTION_UNLOCKED';
     case CLAIM_RESOLVED = 'CLAIM_RESOLVED';
+    case WORK_BLOCKED = 'WORK_BLOCKED';
 
     public function isOperational(): bool
     {
@@ -70,6 +76,7 @@ enum NotificationKind: string
             self::EMAIL_CHANGED,
             self::ACCOUNT_BLOCKED,
             self::MODERATION_ALERT,
+            self::WORK_BLOCKED,
             self::PLATFORM_INVITATION => true,
             default => false,
         };

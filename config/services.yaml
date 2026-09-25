@@ -128,6 +128,15 @@ services:
                 - LectoresBeta\User\Privacy\Application\Event\UserUnblocked
                 - LectoresBeta\Reading\BetaReaderAccess\Application\Event\UserBlocked
 
+                # Una reclamación estimada (FEAT-MOD-002). El hecho es uno y
+                # lo escuchan tres contextos, cada uno con su clase y su
+                # lectura: `Work` bloquea lo reclamado, `Credits` revierte lo
+                # que se cobró, `Notification` avisa. `Moderation` no sabe
+                # nada de eso, que es justo lo que RN-4 protege.
+                - LectoresBeta\Work\Manuscript\Application\Event\ClaimUpheld
+                - LectoresBeta\Credits\Account\Application\Event\ClaimUpheld
+                - LectoresBeta\Notification\Delivery\Application\Event\WorkBlockedByModeration
+
                 # Lo que `Notification` escucha para convertir en avisos
                 # (`FEAT-NOT-001`). Son hechos de `Reading` y de `Feedback`, y
                 # cada contexto los modela por su cuenta: aquí llegan cuatro
@@ -400,6 +409,20 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    # Quién ejecuta el bloqueo de una obra reclamada: `Work`, porque es un
+    # cambio en el ciclo de vida de la obra y ese es su modelo
+    # (FEAT-MOD-003). Si lo escribiera `Moderation`, dos contextos
+    # gobernarían el mismo dato.
+    LectoresBeta\Work\Manuscript\Application\Handler\BlockContentOnClaimUpheld:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Y qué significa esa misma decisión para el saldo, que lo decide
+    # `Credits` a solas: el hecho no lleva importes.
+    LectoresBeta\Credits\Account\Application\Handler\ReverseCorrectionOnClaimUpheld:
+        tags:
+            - { name: messenger.message_handler }
+
     LectoresBeta\Work\Catalogue\Application\Handler\TrackCorrectability:
         tags:
             - { name: messenger.message_handler }
@@ -414,6 +437,16 @@ services:
 
     # Los avisos in-app (`FEAT-NOT-001`). `Notification` no origina nada: todo
     # lo que hace entra por aquí.
+    # El correo de bloqueo (FEAT-MOD-003 RN-8b). Lleva la dirección de
+    # recurso porque un recurso que no se sabe dónde presentar no existe, y
+    # la dirección es configuración: en un evento quedaría congelada en cada
+    # mensaje que estuviera esperando en la cola.
+    LectoresBeta\Notification\Delivery\Application\Handler\SendWorkBlockedNotice:
+        arguments:
+            $appealsAddress: '%env(MODERATION_APPEALS_EMAIL)%'
+        tags:
+            - { name: messenger.message_handler }
+
     LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorOfAnAccessRequest:
         tags:
             - { name: messenger.message_handler }

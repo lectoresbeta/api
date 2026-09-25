@@ -89,6 +89,7 @@ decisión sobre agrupación (`N-2`).
 | `ChapterContentUpdated` | Cambia el texto de un capítulo | `Feedback`, **`Credits`** | `chapterId`, `workId`, `authorId`, `position`, `wordCount`, `updatedAt` |
 | `WorkAccessModeChanged` | Cambia la modalidad | `Reading` | `workId`, `authorId`, `accessMode`, `changedAt` |
 | `WorkDeleted` | Se elimina | `Reading`, `Feedback`, `Community` | `workId`, `authorId` |
+| `WorkBlockedByModeration` | Se bloquea la obra o uno de sus capítulos tras una reclamación estimada (`FEAT-MOD-003`) | `Notification` ✅, `Community`, **`Credits`** | `workId`, `authorId`, `title`, `scope`, `chapterId?`, `reason`, `blockedAt` |
 | `QuestionnaireUpdated` | Cambia el cuestionario: nueva versión | **`Credits`** | `workId`, `version`, `questionCount`, `requiredWords`, `requiredWordsForEveryChapter`, `updatedAt` |
 
 **Ningún evento de `Work` transporta el contenido de la obra**, y `QuestionnaireUpdated`
@@ -294,7 +295,7 @@ autor convertiría una acción discreta en un desaire con acuse de recibo.
 | Evento | Cuándo | Consumidores | Payload |
 |---|---|---|---|
 | `ClaimSubmitted` | Se presenta una reclamación | **`Notification`** (avisa a los moderadores) | `claimId`, `type`, `targetType`, `targetId`, `reporterId`, `reason`. **Sin el texto del reclamante** |
-| `ClaimUpheld` | El moderador la estima | **`Credits`**, **`Work`**, **`User`**, `Notification` | `claimId`, `type`, `targetType`, `targetId`, `subjectId` |
+| `ClaimUpheld` | El moderador la estima | **`Credits`** ✅ (revierte lo cobrado), **`Work`** ✅ (bloquea lo reclamado), **`User`**, `Notification` | `claimId`, `type`, `targetType`, `targetId`, `subjectId` |
 | `ClaimRejected` | La desestima | `Notification` | `claimId`, `reporterId` |
 | `ClaimMessageSent` | El moderador o una parte escribe | `Notification` | `claimId`, `thread`, `authorType`. **Sin el cuerpo del mensaje** |
 | `ContentReviewPassed` | El revisor automático aprueba | **`Work`** | `workId`, `chapterId?`, `reviewerVersion` |
@@ -311,6 +312,13 @@ sanción, cada uno según su modelo.
 Tampoco viajan **el texto del reclamante, la motivación del moderador ni el cuerpo de los
 mensajes**. Son material que acusa a alguien y que va al expediente, no a una cola con
 reintentos: `Notification` avisa de que hay algo que leer, no lo reproduce.
+
+`WorkBlockedByModeration` lo publica **`Work`**, no `Moderation`: el bloqueo es un cambio en
+el ciclo de vida de la obra, y ese es su modelo. Lleva el **título** porque el correo que
+avisa al autor tiene que decirle qué se ha bloqueado, y un identificador no se lo dice; lleva
+el **tipo de la reclamación** como motivo, nunca la motivación del moderador. La dirección a
+la que recurrir **no viaja**: es configuración, y en un evento quedaría congelada en cada
+mensaje que estuviera esperando en la cola.
 
 `CreditAdjustmentOrdered` es la única vía por la que entra crédito al sistema sin ser
 transferencia ni grifo ordinario, así que **`Credits` lo contabiliza aparte** o la invariante

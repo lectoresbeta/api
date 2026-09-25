@@ -42,5 +42,19 @@ interface CreditTransactionRepository
      * invitation rewards and any manual adjustment. The other half of the
      * invariant in `RN-11`.
      */
+    /**
+     * Los movimientos de una corrección concreta, en el orden en que
+     * ocurrieron.
+     *
+     * Existe para la reversión de `FEAT-MOD-002`: revertir no edita ni borra
+     * nada —un movimiento es inmutable— sino que añade dos apuntes nuevos, y
+     * para eso hay que saber **quién pagó, quién cobró y cuánto**. Y cuánto
+     * es el importe que se cobró entonces, no el precio vigente del capítulo,
+     * que puede haber cambiado.
+     *
+     * @return list<CreditTransaction>
+     */
+    public function ofCorrection(string $correctionId): array;
+
     public function totalIssued(): int;
 }

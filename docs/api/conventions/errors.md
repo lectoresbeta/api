@@ -148,6 +148,11 @@ Se irá completando conforme se especifiquen las funcionalidades.
 | `CLAIM_BLOCKED` | 403 | Hay reclamaciones desestimadas y el bloqueo es acumulativo. Lleva `blockedUntil` |
 | `CLAIM_LIMIT_REACHED` | 429 | Se ha agotado el cupo mensual. Lleva `monthlyLimit` |
 | `CLAIM_REASON_UNKNOWN` | 422 | El motivo no está en el catálogo |
+| `CLAIM_NOT_FOUND` | 404 | Esa reclamación no existe (`FEAT-MOD-002`) |
+| `CLAIM_MODERATOR_IS_PARTY` | 403 | Nadie modera un asunto en el que es parte. Es la segunda puerta: la cola ya no se las muestra |
+| `CLAIM_ALREADY_RESOLVED` | 409 | Ya está resuelta, y el estado no retrocede. También es lo que ve el segundo moderador que llega a la vez |
+| `CLAIM_MOTIVATION_REQUIRED` | 422 | Toda decisión lleva motivación escrita, también la que desestima |
+| `CLAIM_DECISION_UNKNOWN` | 422 | La decisión no es `UPHELD` ni `REJECTED` |
 | `WORK_NOT_FOUND` | 404 | La obra no existe o no es visible para este usuario |
 | `NOT_WORK_AUTHOR` | 403 | La operación requiere ser el autor de la obra |
 | `NO_BETA_READER_ACCESS` | 403 | No tiene acceso de lector beta a esta obra |

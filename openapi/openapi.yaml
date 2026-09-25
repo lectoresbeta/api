@@ -249,6 +249,12 @@ paths:
   /me/claims:
     $ref: './paths/moderation.yaml#/myClaims'
 
+  /admin/claims:
+    $ref: './paths/moderation.yaml#/adminClaims'
+
+  /admin/claims/{claimId}/review:
+    $ref: './paths/moderation.yaml#/claimReview'
+
   /admin/moderators:
     $ref: './paths/moderation.yaml#/moderators'
 

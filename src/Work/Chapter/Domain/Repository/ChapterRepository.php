@@ -28,5 +28,14 @@ interface ChapterRepository
 
     public function countOfWork(WorkId $workId): int;
 
+    /**
+     * Cuántos capítulos de esa obra están bloqueados por una reclamación
+     * estimada (`FEAT-MOD-003` `RN-9`).
+     *
+     * Contar y no traerlos: al tercero la obra entera queda bloqueada, y para
+     * saberlo no hace falta cargar el texto de ninguno.
+     */
+    public function countBlockedOfWork(WorkId $workId): int;
+
     public function remove(Chapter $chapter): void;
 }

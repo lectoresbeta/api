@@ -297,3 +297,162 @@ myClaims:
                         format: date-time
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+adminClaims:
+  get:
+    tags: [Moderation]
+    operationId: listClaims
+    summary: La cola de reclamaciones
+    description: |
+      Lo que sigue abierto, de lo más antiguo a lo más reciente, **menos
+      aquello en lo que quien mira es parte** (`FEAT-MOD-002` `RN-1`).
+
+      La exclusión ocurre en la consulta, no al decidir: no basta con
+      rechazar la acción, **no debe verlas**. Ver el expediente de una
+      reclamación que te señala ya es enterarse de quién te denunció.
+
+      No lleva identidades. El moderador decide sobre lo que se escribió —el
+      objeto reclamado, el motivo y lo que contó quien reclama—, y saber de
+      quién es antes de mirarlo solo puede inclinar la decisión.
+    parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Las reclamaciones abiertas que este moderador puede resolver.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [claims]
+              properties:
+                claims:
+                  type: array
+                  items:
+                    type: object
+                    required: [claimId, type, targetType, targetId, reason, status, submittedAt]
+                    properties:
+                      claimId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      type:
+                        type: string
+                      targetType:
+                        type: string
+                      targetId:
+                        type: string
+                      reason:
+                        type: string
+                      description:
+                        type: [string, 'null']
+                      status:
+                        type: string
+                        enum: [PENDING, UNDER_REVIEW]
+                      submittedAt:
+                        type: string
+                        format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: No modera.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+claimReview:
+  post:
+    tags: [Moderation]
+    operationId: reviewClaim
+    summary: Tomar una reclamación y resolverla
+    description: |
+      Un solo paso: no hay «asignármela» aparte, porque una asignación que se
+      pide y no se usa deja la cola llena de expedientes retenidos por quien
+      ya se fue a otra cosa. Lo que impide que dos moderadores resuelvan la
+      misma (`RN-8`) es el bloqueo de la fila mientras se decide.
+
+      **La motivación es obligatoria**, también al desestimar (`RN-2`): un
+      expediente sin motivo no se puede auditar ni defender si alguien
+      discute la decisión. Queda en el registro de auditoría con quién,
+      cuándo y por qué, y **no sale de ahí**: no viaja en ningún evento ni
+      llega a las partes.
+
+      La respuesta **no dice qué va a pasar**. `Moderation` no aplica los
+      efectos (`RN-4`): publica la decisión y cada contexto la interpreta en
+      su modelo —`Work` bloquea lo reclamado, `Credits` revierte lo que se
+      cobró—, así que prometerlos aquí sería prometer por otros.
+    parameters:
+      - name: claimId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [decision, motivation]
+            properties:
+              decision:
+                type: string
+                enum: [UPHELD, REJECTED]
+              motivation:
+                type: string
+                minLength: 1
+    responses:
+      '200':
+        description: La decisión, ya registrada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [claimId, status, decision]
+              properties:
+                claimId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                status:
+                  type: string
+                  enum: [UPHELD, REJECTED]
+                decision:
+                  type: string
+                  enum: [UPHELD, REJECTED]
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: CLAIM_MODERATOR_IS_PARTY`, o no modera.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: CLAIM_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CLAIM_ALREADY_RESOLVED`. El estado no retrocede.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CLAIM_MOTIVATION_REQUIRED` o `CLAIM_DECISION_UNKNOWN`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

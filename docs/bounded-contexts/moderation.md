@@ -128,8 +128,14 @@ estrictos (`MOD-3`).
 
 No se edita ni se borra el movimiento original: los movimientos son inmutables
 ([`decision:0006`](../decisions/0006-credit-system.md)). Una reversión son **dos apuntes
-nuevos** —abono al autor, cargo al corrector— con motivo `CLAIM_UPHELD` y referencia a la
-reclamación.
+nuevos** —abono al autor, cargo al corrector— con motivo `CLAIM_REVERSAL_REFUND` y
+`CLAIM_REVERSAL_CHARGE` y referencia a la reclamación. Dos motivos y no uno porque el signo no
+basta para leer el historial: quien mira su saldo tiene que distinguir lo que le devolvieron
+de lo que le retiraron.
+
+**El importe es el que se cobró**, no el precio vigente del capítulo, que puede haber cambiado
+desde entonces: se lee del apunte original en vez de volver a calcularlo. Y la propina, si la
+hubo, no se revierte — el autor la dio voluntariamente después de leer.
 
 Y como el corrector puede haber gastado ya esos créditos, la reversión **puede dejarle en
 negativo**. Es coherente con el resto del sistema y no hace falta ninguna regla nueva: con
@@ -143,7 +149,7 @@ saldo negativo no recibe correcciones, pero sí puede corregir para saldarlo.
 | `ClaimMessageSent` | El moderador o una parte escribe en su hilo | `Notification` |
 | `ContentReviewPassed` | El revisor automático aprueba un texto | **`Work`** (lo hace visible) |
 | `ContentReviewFlagged` | El revisor lo marca | **`Work`**, `Notification` |
-| `ClaimUpheld` | El moderador la estima | **`Credits`**, **`Work`**, **`User`**, `Notification` |
+| `ClaimUpheld` | El moderador la estima | **`Credits`** (revierte lo cobrado), **`Work`** (bloquea lo reclamado), **`User`**, `Notification` |
 | `ClaimRejected` | El moderador la desestima | `Notification` |
 | `SanctionImposed` | Se sanciona a un usuario | **`User`**, `Notification` |
 | `SanctionLifted` | Caduca o se levanta | `User`, `Notification` |

@@ -15,7 +15,7 @@ duplica aquí.
 | `Community` | [community.md](community.md) | Seguir a un autor implementado |
 | `Credits` | [credits.md](credits.md) | Saldo implementado |
 | `Notification` | [notification.md](notification.md) | Bandeja y contador implementados |
-| `Moderation` | moderation.md | Por crear. Rol de moderador implementado; contrato en `openapi/paths/moderation.yaml` |
+| `Moderation` | moderation.md | Por crear. Rol de moderador, reclamaciones y su resolución implementados; contrato en `openapi/paths/moderation.yaml` |
 
 Se crean a partir de [`../../_templates/endpoint.md`](../../_templates/endpoint.md) conforme
 se especifican las funcionalidades correspondientes.

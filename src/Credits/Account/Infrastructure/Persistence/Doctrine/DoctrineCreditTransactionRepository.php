@@ -76,6 +76,29 @@ final class DoctrineCreditTransactionRepository extends DoctrineRepository imple
             ->getSingleScalarResult();
     }
 
+    public function ofCorrection(string $correctionId): array
+    {
+        // `metadata` es `jsonb` y esto es una consulta que DQL no sabe
+        // expresar, así que es SQL de PostgreSQL — y por eso vive aquí, en
+        // Infrastructure, y no en el contrato.
+        /** @var list<string> $ids */
+        $ids = $this->entityManager->getConnection()->fetchFirstColumn(
+            "SELECT id FROM credits_ctx.credit_transaction
+             WHERE metadata->>'correctionId' = :correction
+             ORDER BY occurred_at ASC, id ASC",
+            ['correction' => $correctionId],
+        );
+
+        if ([] === $ids) {
+            return [];
+        }
+
+        /** @var list<CreditTransaction> $transactions */
+        $transactions = $this->repository()->findBy(['id' => $ids], ['occurredAt' => 'ASC', 'id' => 'ASC']);
+
+        return $transactions;
+    }
+
     protected function entityClass(): string
     {
         return CreditTransaction::class;

@@ -5,14 +5,14 @@ context: Moderation
 concept: Claim
 actors: []
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-23 (backoffice de administración)
 endpoints: []
 events: [ClaimUpheld, WorkBlockedByModeration]
 depends_on: [FEAT-MOD-002, FEAT-WRK-016]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-MOD-003 — Bloquear por reclamación
@@ -118,20 +118,20 @@ sabe dónde presentar no existe**.
 
 ## Criterios de aceptación
 
-- [ ] La obra desaparece del catálogo, del perfil y de las búsquedas.
-- [ ] El autor la sigue viendo, marcada como bloqueada, con el motivo.
+- [x] La obra desaparece del catálogo, del perfil y de las búsquedas.
+- [x] El autor la sigue viendo, marcada como bloqueada, con el motivo.
 - [ ] Sus enlaces públicos dejan de servir contenido.
 - [ ] Las correcciones en curso se cancelan sin cargo, y se avisa a quien las escribía.
-- [ ] Las correcciones ya pagadas **no** se revierten.
-- [ ] El contenido no se borra.
-- [ ] `BLOCKED` no se abandona por ninguna transición ordinaria.
-- [ ] Una reclamación sobre un capítulo bloquea ese capítulo, no la obra.
-- [ ] Al tercer capítulo bloqueado, la obra entera queda bloqueada.
+- [x] Las correcciones ya pagadas **no** se revierten.
+- [x] El contenido no se borra.
+- [x] `BLOCKED` no se abandona por ninguna transición ordinaria.
+- [x] Una reclamación sobre un capítulo bloquea ese capítulo, no la obra.
+- [x] Al tercer capítulo bloqueado, la obra entera queda bloqueada.
 - [ ] Un moderador puede revocar un bloqueo.
-- [ ] No existe ningún endpoint de recurso: el recurso es por correo.
-- [ ] El correo de bloqueo indica qué, por qué y **a qué dirección recurrir**.
-- [ ] Ese correo se envía aunque el usuario tenga las notificaciones desactivadas.
-- [ ] El cambio de estado lo ejecuta `Work`, no `Moderation`.
+- [x] No existe ningún endpoint de recurso: el recurso es por correo.
+- [x] El correo de bloqueo indica qué, por qué y **a qué dirección recurrir**.
+- [x] Ese correo se envía aunque el usuario tenga las notificaciones desactivadas.
+- [x] El cambio de estado lo ejecuta `Work`, no `Moderation`.
 
 ## Preguntas abiertas
 
@@ -153,4 +153,36 @@ obra y el umbral llega tarde; en una novela de cuarenta, son el 7% y llega pront
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). El bloqueo funciona de punta a punta: `Work`
+consume `ClaimUpheld`, bloquea **lo que se reclamó** —el capítulo o la obra—, cuenta y al
+tercer capítulo bloqueado tumba la obra entera, y publica `WorkBlockedByModeration`. El autor
+recibe el correo operativo con qué, por qué y a qué dirección escribir
+(`MODERATION_APPEALS_EMAIL`).
+
+Dos detalles de implementación que conviene dejar escritos:
+
+- **el umbral se cuenta después de confirmar el bloqueo del capítulo**, no dentro de la misma
+  transacción. Contarlo dentro leería un estado en el que ese capítulo todavía no está
+  bloqueado, y la obra no caería nunca — que es exactamente lo que ocurrió al escribirlo;
+- **la reentrega no vuelve a anunciar nada.** El mensaje puede llegar dos veces y `block()` es
+  idempotente, así que lo que decide si se publica el hecho es si el estado cambió de verdad:
+  un correo de bloqueo repetido es, para quien lo recibe, un segundo bloqueo.
+
+**Lo que no está:**
+
+- **`RN-4`: cancelar las correcciones en curso** sobre la obra bloqueada, sin cargo y
+  avisando a quien las escribía. Hoy quien estuviera corrigiendo descubre el bloqueo al
+  intentar entregar. Es la deuda más incómoda de las tres, porque la ficha subraya que a esa
+  persona hay que avisarla y que el mensaje no la haga pensar que hizo algo mal;
+- **`RN-7`: revocar un bloqueo.** Solo un moderador puede, dice la regla, y todavía no hay
+  por dónde: el modelo lo admite (`unblock()`), falta el endpoint y su registro de auditoría.
+  Mientras tanto, un bloqueo es definitivo de hecho, no solo de derecho;
+- **`RN-3`: los enlaces públicos.** No dejan de servir contenido porque todavía no sirven
+  ninguno: `PublicLink` existe como entidad y no tiene endpoint. Cuando lo tenga, tendrá que
+  mirar `blocked_at` como ya hace el catálogo;
+- **`Community`** no retira todavía la obra de muros y recomendaciones: ese contexto está sin
+  escribir. El hecho ya se publica, así que es un consumidor más el día que exista.
+
+`MOD-14` y `MOD-41` siguen abiertas. `MOD-41` merece atención antes de que haya obras largas
+en el sistema: tres capítulos de cuatro son el 75% de la obra y el umbral llega tarde; tres de
+cuarenta son el 7% y llega pronto.

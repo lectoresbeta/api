@@ -54,6 +54,14 @@ final class InMemoryCreditTransactions implements CreditTransactionRepository
         return false;
     }
 
+    public function ofCorrection(string $correctionId): array
+    {
+        return array_values(array_filter(
+            $this->movements,
+            static fn (CreditTransaction $m): bool => ($m->metadata()['correctionId'] ?? null) === $correctionId,
+        ));
+    }
+
     public function totalIssued(): int
     {
         return array_sum(array_map(

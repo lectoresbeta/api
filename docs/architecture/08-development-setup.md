@@ -121,6 +121,7 @@ Las que el código exige. `.env` trae un valor de desarrollo para cada una.
 | `PASSWORD_RESET_URL_TEMPLATE` | Lo mismo para el enlace de «he olvidado mi contraseña» (`FEAT-USR-007`) |
 | `EMAIL_CHANGE_URL_TEMPLATE` | Lo mismo para confirmar un cambio de correo (`FEAT-USR-040`) |
 | `APP_STORAGE_DIR` | Dónde se guardan los ficheros subidos (`FEAT-USR-037`) |
+| `MODERATION_APPEALS_EMAIL` | Dirección a la que el autor recurre un bloqueo por reclamación (`FEAT-MOD-003` `RN-8b`). Va en el correo de bloqueo, que es la única vía por la que se entera |
 
 Las dos plantillas de URL apuntan al frontend y no a la API a propósito: el enlace abre una
 página que extrae el token y lo envía en el cuerpo de la petición, de modo que no quede en los

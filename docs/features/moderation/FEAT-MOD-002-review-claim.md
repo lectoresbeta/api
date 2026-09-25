@@ -5,7 +5,7 @@ context: Moderation
 concept: Review
 actors: [Moderator]
 spec_status: APPROVED
-impl_status: TODO
+impl_status: PARTIAL
 priority: P1
 sources:
   - conversation:2026-09-23 (backoffice de administración)
@@ -15,7 +15,7 @@ endpoints:
   - POST /admin/claims/{claimId}/review
 events: [ClaimUpheld, ClaimRejected]
 depends_on: [FEAT-MOD-001, FEAT-MOD-004]
-updated: 2026-09-24
+updated: 2026-09-25
 ---
 
 # FEAT-MOD-002 — Revisar y resolver una reclamación
@@ -178,20 +178,20 @@ dirigido al expediente, no a las partes.
 
 ## Criterios de aceptación
 
-- [ ] Un moderador no ve en su cola reclamaciones en las que es parte.
-- [ ] Dos moderadores no pueden resolver la misma reclamación.
-- [ ] Una decisión sin motivación se rechaza.
-- [ ] Estimar una reclamación de corrección produce **dos apuntes nuevos**, no edita ninguno.
-- [ ] El corrector puede quedar en saldo negativo tras una reversión.
-- [ ] La propina no se revierte.
+- [x] Un moderador no ve en su cola reclamaciones en las que es parte.
+- [x] Dos moderadores no pueden resolver la misma reclamación.
+- [x] Una decisión sin motivación se rechaza.
+- [x] Estimar una reclamación de corrección produce **dos apuntes nuevos**, no edita ninguno.
+- [x] El corrector puede quedar en saldo negativo tras una reversión.
+- [x] La propina no se revierte.
 - [ ] La reputación ganada por la corrección **sí** se revierte.
-- [ ] Una reclamación sobre un moderador no puede ser resuelta por él mismo.
-- [ ] Sin moderadores elegibles, la reclamación llega al administrador.
+- [x] Una reclamación sobre un moderador no puede ser resuelta por él mismo.
+- [x] Sin moderadores elegibles, la reclamación llega al administrador.
 - [ ] Una reclamación por contenido sensible sobre texto etiquetado se desestima.
-- [ ] El importe revertido es el que se cobró, no el precio actual.
-- [ ] `ClaimUpheld` no contiene importes ni instrucciones.
-- [ ] El estado de una reclamación nunca retrocede.
-- [ ] Toda decisión queda en el registro de auditoría.
+- [x] El importe revertido es el que se cobró, no el precio actual.
+- [x] `ClaimUpheld` no contiene importes ni instrucciones.
+- [x] El estado de una reclamación nunca retrocede.
+- [x] Toda decisión queda en el registro de auditoría.
 
 ## Preguntas abiertas
 
@@ -213,4 +213,42 @@ decide el administrador).
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `PARTIAL` (2026-09-25). Lo que funciona de punta a punta: la cola, la
+decisión con motivación, el registro de auditoría, la restricción de quien reclama en falso,
+y los dos efectos que la ficha describe en detalle —`Work` bloquea lo reclamado y `Credits`
+revierte lo que se cobró—, cada uno en su contexto, a partir de un `ClaimUpheld` que no lleva
+ni importes ni instrucciones.
+
+**Tomar y resolver son una sola operación, y `UNDER_REVIEW` no sobrevive a la llamada.** La
+ficha describe el flujo en dos pasos y el contrato de API en uno solo (`POST
+/admin/claims/{claimId}/review`), así que lo implementado sigue al contrato. Lo que `RN-8`
+pide —que dos moderadores no resuelvan la misma— lo da el **bloqueo de la fila** mientras se
+decide: el segundo encuentra un expediente cerrado y recibe `CLAIM_ALREADY_RESOLVED`. Una
+asignación que se puede pedir y no usar dejaría la cola llena de expedientes retenidos por
+quien ya se fue a otra cosa, y haría falta un plazo para soltarlos.
+
+Sobre `MOD-15` y el administrador: no hace falta ningún mecanismo de escalado porque un
+`ADMIN` **es** moderador a efectos de permisos, así que ve y resuelve cualquier expediente en
+el que no sea parte. La regla se cumple sin código propio; el día que haya un flujo de
+asignación, volverá a hacer falta decidirlo.
+
+**Lo que no está, dicho sin rodeos:**
+
+- **las sanciones** (`FEAT-MOD-006`). Estimar una reclamación de usuario abusivo o de
+  contenido inapropiado registra la decisión y la publica, pero nadie aplica todavía una
+  sanción: no existe el modelo que la impone;
+- **la reversión de reputación** (`RN-11`). No hay modelo de reputación en el backend, así
+  que no hay nada que revertir. Cuando lo haya, es un consumidor más de `ClaimUpheld`;
+- **la conversación con las partes** (`RN-9`, [`FEAT-MOD-009`](FEAT-MOD-009-moderator-conversation.md));
+- **el aviso por correo a las dos partes** de una reversión. Quien reclamó ve el estado en
+  «Mis reclamaciones» ([`FEAT-MOD-010`](FEAT-MOD-010-my-claims.md)); quien corrigió se entera
+  por su saldo, que es poco;
+- **archivar** una reclamación cuyo objeto ya no existe. Hoy se puede desestimar, que no es
+  lo mismo: desestimar cuenta como reclamación en falso para quien la presentó.
+
+El criterio de la tabla «no es fraude / sí lo es» **no es código y no puede serlo**: es lo que
+el moderador lee antes de decidir. Que una reclamación por contenido sensible sobre un texto
+bien etiquetado se desestime (`RN-12`) es una instrucción para la persona, no una regla que el
+backend pueda aplicar solo.
+
+`MOD-11`, `MOD-23` y `MOD-24` siguen abiertas.

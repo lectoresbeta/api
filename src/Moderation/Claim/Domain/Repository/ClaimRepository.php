@@ -33,4 +33,29 @@ interface ClaimRepository
      * @return list<Claim>
      */
     public function by(PartyId $reporterId): array;
+
+    /**
+     * La cola de un moderador: lo que sigue abierto **menos aquello en lo que
+     * es parte** (`FEAT-MOD-002` `RN-1`).
+     *
+     * La exclusión se hace aquí y no al decidir a propósito. La ficha lo pide
+     * así —«no basta con rechazar la acción, no debe verlas»— y tiene razón:
+     * ver el expediente de una reclamación que te señala ya es saber quién te
+     * denunció.
+     *
+     * @return list<Claim>
+     */
+    public function openExcludingParty(PartyId $moderator, int $limit, int $offset = 0): array;
+
+    /**
+     * La misma reclamación, con la fila bloqueada hasta que cierre la
+     * transacción.
+     *
+     * Es `RN-8`: tomar y resolver son una sola operación, así que dos
+     * moderadores que lleguen a la vez se ordenan aquí y el segundo encuentra
+     * un expediente ya cerrado. Sin el bloqueo, los dos leerían `PENDING`,
+     * los dos escribirían una decisión y **se publicarían dos hechos
+     * contradictorios** sobre el mismo objeto.
+     */
+    public function lockedById(ClaimId $id): ?Claim;
 }

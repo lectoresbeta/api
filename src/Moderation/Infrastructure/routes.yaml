@@ -53,3 +53,18 @@ listMyClaims:
     path: /api/v1/me/claims
     controller: LectoresBeta\Moderation\Claim\Infrastructure\Controller\ListMyClaimsController::__invoke
     methods: [GET]
+
+# La cola del moderador (`FEAT-MOD-002`). Excluye las reclamaciones en las que
+# es parte: no basta con rechazar la acción, no debe verlas (`RN-1`).
+listClaims:
+    path: /api/v1/admin/claims
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\ListClaimsController::__invoke
+    methods: [GET]
+
+# Tomar y resolver, en un solo paso. No hay «asignármela» aparte: lo que
+# impide que dos moderadores resuelvan la misma es el bloqueo de la fila
+# mientras se decide (`RN-8`), no un estado intermedio.
+reviewClaim:
+    path: /api/v1/admin/claims/{claimId}/review
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\ReviewClaimController::__invoke
+    methods: [POST]

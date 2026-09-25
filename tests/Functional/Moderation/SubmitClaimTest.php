@@ -168,71 +168,6 @@ final class SubmitClaimTest extends EconomyScenario
         self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }
 
-    /**
-     * @return array{0: array{token: string, userId: string}, 1: array{token: string, userId: string}, 2: string}
-     */
-    private function aDeliveredCorrection(): array
-    {
-        $autora = $this->activatedPerson('autora');
-        $lectora = $this->activatedPerson('lectora');
-
-        $workId = $this->createWork($autora['token'], 'La obra corregida');
-        $chapterId = $this->addChapter($workId, $autora['token'], words: 900);
-        $this->saveQuestionnaire($workId, $autora['token'], [
-            ['statement' => '¿Cómo funciona el ritmo?', 'minWords' => 10],
-        ]);
-        $this->put(\sprintf('/api/v1/works/%s/access-mode', $workId), $autora['token'], ['accessMode' => 'PUBLIC']);
-        $this->put(\sprintf('/api/v1/works/%s/status', $workId), $autora['token'], ['status' => 'PUBLISHED']);
-        $this->put(\sprintf('/api/v1/works/%s/status', $workId), $autora['token'], ['status' => 'IN_CORRECTION']);
-        $this->consumeEverything();
-
-        $this->client->request('POST', \sprintf('/api/v1/chapters/%s/corrections/start', $chapterId), server: [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$lectora['token'],
-        ]);
-        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
-        $this->capture();
-        $this->consumeEverything();
-
-        $this->client->request('GET', \sprintf('/api/v1/chapters/%s/questionnaire', $chapterId), server: [
-            'HTTP_AUTHORIZATION' => 'Bearer '.$lectora['token'],
-        ]);
-        /** @var list<array{questionId: string}> $questions */
-        $questions = $this->payload()['questions'];
-
-        $this->client->request('POST', \sprintf('/api/v1/chapters/%s/corrections', $chapterId), server: [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer '.$lectora['token'],
-        ], content: json_encode([
-            'answers' => array_map(
-                static fn (array $question): array => [
-                    'questionId' => $question['questionId'],
-                    'text' => implode(' ', array_fill(0, 60, 'palabra')),
-                ],
-                $questions,
-            ),
-        ], \JSON_THROW_ON_ERROR));
-
-        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
-        $correctionId = (string) $this->payload()['correctionId'];
-        $this->capture();
-        $this->consumeEverything();
-
-        return [$autora, $lectora, $correctionId];
-    }
-
-    /**
-     * @param array{token: string, userId: string} $autora
-     */
-    private function publishedWork(array $autora, string $title = 'La obra reclamada'): string
-    {
-        $workId = $this->createWork($autora['token'], $title);
-        $this->addChapter($workId, $autora['token'], words: 900);
-        $this->put(\sprintf('/api/v1/works/%s/status', $workId), $autora['token'], ['status' => 'PUBLISHED']);
-        $this->consumeEverything();
-
-        return $workId;
-    }
-
     private function dismissAClaimOf(string $userId): void
     {
         /** @var ClaimRestrictionRepository $restrictions */
@@ -269,19 +204,5 @@ final class SubmitClaimTest extends EconomyScenario
         $this->client->request('GET', '/api/v1/me/claims', server: [
             'HTTP_AUTHORIZATION' => 'Bearer '.$token,
         ]);
-    }
-
-    /**
-     * @param array<string, mixed> $body
-     */
-    private function put(string $path, string $token, array $body): void
-    {
-        $this->client->request('PUT', $path, server: [
-            'CONTENT_TYPE' => 'application/json',
-            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
-        ], content: json_encode($body, \JSON_THROW_ON_ERROR));
-
-        self::assertResponseIsSuccessful();
-        $this->capture();
     }
 }

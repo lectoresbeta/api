@@ -81,6 +81,12 @@ abstract class EconomyScenario extends WebTestCase
         // bloquea y libera la lectura de lo entregado.
         'CreditBalanceWentNegative',
         'CreditDebtCleared',
+
+        // Y lo que una reclamación estimada desencadena (`FEAT-MOD-002`,
+        // `FEAT-MOD-003`): `Work` bloquea lo reclamado y `Credits` revierte
+        // lo que se cobró; el bloqueo, a su vez, avisa al autor.
+        'ClaimUpheld',
+        'WorkBlockedByModeration',
     ];
 
     /**
@@ -435,6 +441,102 @@ abstract class EconomyScenario extends WebTestCase
     protected function address(string $local): string
     {
         return \sprintf('%s+%s@ejemplo.com', $local, $this->run);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    /**
+     * @param array{token: string, userId: string} $autora
+     */
+    protected function publishedWork(array $autora, string $title = 'La obra reclamada'): string
+    {
+        $workId = $this->createWork($autora['token'], $title);
+        $this->addChapter($workId, $autora['token'], words: 900);
+        // `PUBLIC` y no el `ON_REQUEST` por defecto: una obra que un extraño
+        // no puede abrir de todos modos no sirve para comprobar que dejó de
+        // poder abrirla.
+        $this->putAs(\sprintf('/api/v1/works/%s/access-mode', $workId), $autora['token'], ['accessMode' => 'PUBLIC']);
+        $this->putAs(\sprintf('/api/v1/works/%s/status', $workId), $autora['token'], ['status' => 'PUBLISHED']);
+        $this->consumeEverything();
+
+        return $workId;
+    }
+
+    /**
+     * Una corrección entregada y pagada: el único camino por el que los
+     * créditos se mueven de verdad, y por tanto el único desde el que se
+     * puede comprobar que una reversión los devuelve.
+     *
+     * @return array{0: array{token: string, userId: string}, 1: array{token: string, userId: string}, 2: string, 3: string}
+     */
+    protected function aDeliveredCorrection(): array
+    {
+        $autora = $this->activatedPerson('autora');
+        $lectora = $this->activatedPerson('lectora');
+
+        $workId = $this->createWork($autora['token'], 'La obra corregida');
+        $chapterId = $this->addChapter($workId, $autora['token'], words: 900);
+        $this->saveQuestionnaire($workId, $autora['token'], [
+            ['statement' => '¿Cómo funciona el ritmo?', 'minWords' => 10],
+        ]);
+        $this->putAs(\sprintf('/api/v1/works/%s/access-mode', $workId), $autora['token'], ['accessMode' => 'PUBLIC']);
+        $this->putAs(\sprintf('/api/v1/works/%s/status', $workId), $autora['token'], ['status' => 'PUBLISHED']);
+        $this->putAs(\sprintf('/api/v1/works/%s/status', $workId), $autora['token'], ['status' => 'IN_CORRECTION']);
+        $this->consumeEverything();
+
+        $this->client->request('POST', \sprintf('/api/v1/chapters/%s/corrections/start', $chapterId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$lectora['token'],
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $this->capture();
+        $this->consumeEverything();
+
+        $this->client->request('GET', \sprintf('/api/v1/chapters/%s/questionnaire', $chapterId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$lectora['token'],
+        ]);
+        /** @var list<array{questionId: string}> $questions */
+        $questions = $this->payload()['questions'];
+
+        $this->client->request('POST', \sprintf('/api/v1/chapters/%s/corrections', $chapterId), server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$lectora['token'],
+        ], content: json_encode([
+            'answers' => array_map(
+                static fn (array $question): array => [
+                    'questionId' => $question['questionId'],
+                    'text' => implode(' ', array_fill(0, 60, 'palabra')),
+                ],
+                $questions,
+            ),
+        ], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $correctionId = (string) $this->payload()['correctionId'];
+        $this->capture();
+        $this->consumeEverything();
+
+        return [$autora, $lectora, $correctionId, $workId];
+    }
+
+    /**
+     * Un `PUT` con sesión que además recoge lo que la petición publique.
+     *
+     * Se llama `putAs` y no `put` porque varias pruebas traen el suyo
+     * propio, privado, y un nombre compartido los convertiría en
+     * sobrescrituras accidentales.
+     *
+     * @param array<string, mixed> $body
+     */
+    protected function putAs(string $path, string $token, array $body): void
+    {
+        $this->client->request('PUT', $path, server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ], content: json_encode($body, \JSON_THROW_ON_ERROR));
+
+        self::assertResponseIsSuccessful();
+        $this->capture();
     }
 
     /**

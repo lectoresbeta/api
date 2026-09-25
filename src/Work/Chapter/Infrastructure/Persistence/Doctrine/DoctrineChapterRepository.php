@@ -49,6 +49,20 @@ final class DoctrineChapterRepository extends DoctrineRepository implements Chap
         return $this->repository()->count(['workId' => $workId->value()]);
     }
 
+    public function countBlockedOfWork(WorkId $workId): int
+    {
+        /** @var int $count */
+        $count = $this->repository()->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->where('c.workId = :work')
+            ->andWhere('c.blockedAt IS NOT NULL')
+            ->setParameter('work', $workId->value())
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $count;
+    }
+
     public function remove(Chapter $chapter): void
     {
         $this->forget($chapter);
