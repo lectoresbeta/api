@@ -172,21 +172,24 @@ final class PlatformAccountTest extends EconomyScenario
         ], \JSON_THROW_ON_ERROR));
 
         self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $postId = (string) $this->payload()['postId'];
         $this->capture();
 
+        // Quien no sigue a la cuenta institucional: con `FOLLOWERS` no lo
+        // vería, y lo ve, porque la audiencia la pone el servidor.
         $extrana = $this->activatedPerson('extrana');
 
         $this->client->request('GET', '/api/v1/posts', server: [
             'HTTP_AUTHORIZATION' => 'Bearer '.$extrana['token'],
         ]);
+        self::assertResponseIsSuccessful();
 
         $ids = array_map(
             static fn (array $post): string => (string) $post['postId'],
             $this->payload()['posts'],
         );
 
-        self::assertContains((string) $this->payload()['posts'][0]['postId'], $ids);
-        self::assertNotEmpty($ids, 'Llega igual: la audiencia la pone el servidor.');
+        self::assertContains($postId, $ids, 'Llega igual: la audiencia la pone el servidor.');
     }
 
     /**

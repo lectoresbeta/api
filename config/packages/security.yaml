@@ -56,14 +56,21 @@ security:
         # El registro de auditoría también (FEAT-MOD-007 RN-1): un moderador
         # no audita a sus compañeros, y saberse observado por los iguales
         # cambia cómo se decide.
-        # Hablar con la voz de la plataforma no es moderar (FEAT-COM-038).
-        - { path: '^/api/v1/admin/platform-posts$', roles: ROLE_ADMIN }
         - { path: '^/api/v1/admin/audit-log$', roles: ROLE_ADMIN }
+        # Hablar con la voz de la plataforma tampoco es moderar
+        # (FEAT-COM-038): llega a todo el mundo y lleva el nombre del
+        # producto detrás.
+        - { path: '^/api/v1/admin/platform-posts$', roles: ROLE_ADMIN }
         # Y mover créditos a mano (FEAT-MOD-005 RN-6): es la única acción del
         # backoffice que crea o destruye valor de la nada, y la invariante
         # contable de FEAT-CRD-012 la cuenta aparte por eso mismo.
         - { path: '^/api/v1/admin/users/[^/]+/credit-adjustment$', roles: ROLE_ADMIN }
         - { path: '^/api/v1/admin(/|$)', roles: ROLE_MODERATOR }
+
+        # Las reglas de la economía de créditos, sin sesión (FEAT-CRD-015):
+        # no hay nada de nadie ahí, son las reglas de la casa, y quien se está
+        # planteando registrarse tiene derecho a leerlas antes.
+        - { path: '^/api/v1/credits/scoring$', methods: [GET], roles: PUBLIC_ACCESS }
 
         # El perfil ajeno se abre sin sesión (FEAT-USR-014, FEAT-USR-035): es
         # una URL que se comparte. Va en `access_control` y no en un firewall

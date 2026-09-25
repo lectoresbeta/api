@@ -460,8 +460,8 @@ Ficha del contexto: [`../bounded-contexts/credits.md`](../bounded-contexts/credi
 | FEAT-CRD-011 | Deduplicar eventos para garantizar idempotencia | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-011-deduplicate-integration-events.md) |
 | FEAT-CRD-012 | Salud de la economía de créditos | Admin | APPROVED | DONE | P1 | [ficha](credits/FEAT-CRD-012-economy-health.md) |
 | FEAT-CRD-013 | Créditos asociados a un capítulo (insignia de la tarjeta) | User | APPROVED | DONE | P2 | [ficha](credits/FEAT-CRD-013-work-credit-badge.md) |
-| FEAT-CRD-014 | Modal informativo del sistema de créditos | User | APPROVED | TODO | P2 | [ficha](credits/FEAT-CRD-014-credits-info-modal.md) |
-| FEAT-CRD-015 | Pantalla explicativa de cómo se calcula el precio | User | PENDING | TODO | P2 | — |
+| FEAT-CRD-014 | Modal informativo del sistema de créditos | User | APPROVED | DONE | P2 | [ficha](credits/FEAT-CRD-014-credits-info-modal.md) |
+| FEAT-CRD-015 | Pantalla explicativa de cómo se calcula el precio | User | APPROVED | DONE | P2 | [ficha](credits/FEAT-CRD-015-credit-scoring-screen.md) |
 | FEAT-CRD-016 | Precio de una corrección según el esfuerzo | — (sistema) | APPROVED | PARTIAL | P0 | [ficha](credits/FEAT-CRD-016-effort-based-pricing.md) |
 | FEAT-CRD-017 | Propina del autor a una buena corrección | Writer | APPROVED | DONE | P2 | [ficha](credits/FEAT-CRD-017-author-tip.md) |
 | FEAT-CRD-018 | Saldo negativo y correcciones bloqueadas | — (sistema) | APPROVED | DONE | P0 | [ficha](credits/FEAT-CRD-018-negative-balance.md) |

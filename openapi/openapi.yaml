@@ -513,6 +513,10 @@ paths:
   /credits/movements:
     $ref: './paths/credits.yaml#/movements'
 
+  # Las reglas de la economía, sin sesión (FEAT-CRD-015).
+  /credits/scoring:
+    $ref: './paths/credits.yaml#/scoring'
+
   /admin/credits/health:
     $ref: './paths/credits.yaml#/health'
 

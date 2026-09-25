@@ -685,6 +685,25 @@ services:
         tags:
             - { name: messenger.message_handler }
 
+    # «Ver puntuación de créditos» (FEAT-CRD-015), el destino del botón
+    # izquierdo del modal de FEAT-CRD-014.
+    #
+    # Las cifras llegan de **las mismas palancas que usa el motor**, no
+    # copiadas: un texto con los números dentro y un motor con los suyos
+    # acaban, un día, diciendo cosas distintas, y quien lo descubre es alguien
+    # que esperaba cobrar otra cosa.
+    LectoresBeta\Credits\Pricing\Application\Handler\ExplainCreditScoringHandler:
+        arguments:
+            $welcomeCredits: '%app.welcome_credits%'
+            $invitationReward: '%app.invitation_reward%'
+            $rewardedInvitationLimit: '%app.rewarded_invitation_limit%'
+            $wordsPerReadingCredit: '%app.pricing.words_per_reading_credit%'
+            $wordsPerWritingCredit: '%app.pricing.words_per_writing_credit%'
+            $wordsPerUnboundedQuestion: '%app.pricing.words_per_unbounded_question%'
+            $minPrice: '%app.pricing.min_price%'
+            $maxPrice: '%app.pricing.max_price%'
+            $overdraftWeeklyQuota: '%app.overdraft.weekly_quota%'
+
     LectoresBeta\Credits\Pricing\Domain\Service\ChapterPricing:
         arguments:
             $wordsPerReadingCredit: '%app.pricing.words_per_reading_credit%'

@@ -413,3 +413,103 @@ health:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+scoring:
+  get:
+    tags: [Credits]
+    operationId: getCreditScoring
+    summary: Cómo se gana y cómo se gasta
+    description: |
+      Las reglas de la economía de créditos, con las cifras vigentes
+      (`FEAT-CRD-015`). Es el destino del botón «Ver puntuación de créditos»
+      del modal informativo (`FEAT-CRD-014`).
+
+      **Público y sin sesión**: no hay nada de nadie aquí, son las reglas de
+      la casa, y quien se está planteando registrarse tiene derecho a leerlas
+      antes. Por lo mismo se puede cachear en público.
+
+      **Las cifras salen de las mismas palancas que usa el motor**, no de una
+      copia. Y el ejemplo lo calcula la misma clase que cobra: si la fórmula
+      cambia, el ejemplo cambia solo.
+
+      **No consulta el saldo de nadie.** Es la explicación de las reglas, no
+      un estado.
+    security: []
+    responses:
+      '200':
+        description: La puntuación vigente.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+            description: '`public, max-age=3600`.'
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [earning, spending, overdraft, example]
+              properties:
+                earning:
+                  type: object
+                  required: [welcomeGrant, invitationReward, rewardedInvitationLimit, correctionPaysWhatItCosts]
+                  properties:
+                    welcomeGrant:
+                      type: integer
+                      description: Los créditos de bienvenida, una vez, al activar la cuenta.
+                    invitationReward:
+                      type: integer
+                      description: |
+                        Lo que cobra quien invita **cuando la persona invitada
+                        entrega su primera corrección** (`FEAT-CRD-005`), no
+                        al invitar.
+                    rewardedInvitationLimit:
+                      type: integer
+                      description: Cuántas invitaciones se pagan por persona.
+                    correctionPaysWhatItCosts:
+                      type: boolean
+                      description: |
+                        Siempre `true`, y está para declarar una ausencia: **no
+                        hay una cifra de «lo que se gana corrigiendo»** porque
+                        una corrección mueve créditos en vez de crearlos. El
+                        autor paga exactamente lo que el corrector cobra.
+                spending:
+                  type: object
+                  required: [minPrice, maxPrice, wordsPerReadingCredit, wordsPerWritingCredit, wordsPerUnboundedQuestion, chargedOn]
+                  properties:
+                    minPrice:
+                      type: integer
+                    maxPrice:
+                      type: integer
+                    wordsPerReadingCredit:
+                      type: integer
+                      description: El término de **lectura** del precio.
+                    wordsPerWritingCredit:
+                      type: integer
+                      description: El de **escritura**, sobre lo que exige el cuestionario.
+                    wordsPerUnboundedQuestion:
+                      type: integer
+                      description: El suelo de una pregunta que no declara mínimo.
+                    chargedOn:
+                      type: string
+                      enum: [FEEDBACK_DELIVERED]
+                      description: |
+                        **Cuándo se paga**, dicho sin ambigüedad: al entregarse
+                        cada corrección, no al abrir la obra a corrección
+                        (`decision:0006`, `FEAT-CRD-006`).
+                overdraft:
+                  type: object
+                  required: [weeklyQuota]
+                  properties:
+                    weeklyQuota:
+                      type: integer
+                example:
+                  type: object
+                  required: [words, requiredWords, price]
+                  description: La fórmula aplicada, calculada por el motor real.
+                  properties:
+                    words:
+                      type: integer
+                    requiredWords:
+                      type: integer
+                    price:
+                      type: integer

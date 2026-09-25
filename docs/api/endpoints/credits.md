@@ -10,6 +10,7 @@
 | Método y ruta | `operationId` | Propósito | Funcionalidad | Estado |
 |---|---|---|---|---|
 | `GET /api/v1/credits/balance` | `getCreditBalance` | Saldo del usuario autenticado | FEAT-CRD-001 | **Implementado** |
+| `GET /api/v1/credits/scoring` | `getCreditScoring` | Cómo se gana y cómo se gasta, **público** | FEAT-CRD-015 | **Implementado** |
 | `GET /credits/transactions` | `listCreditTransactions` | Historial de movimientos | FEAT-CRD-008 | PENDING |
 | `POST /api/v1/corrections/{correctionId}/tip` | `tipCorrection` | Propina a una corrección | FEAT-CRD-017 | **Implementado** |
 | `GET /api/v1/admin/credits/health` | `getEconomyHealth` | Estado agregado de la economía | FEAT-CRD-012 | **Implementado** |
@@ -266,3 +267,37 @@ Ninguno propio. `401` sin autenticar y `403` sin el rol.
 ### Efectos
 
 Ninguno. Es una lectura: no publica eventos ni mueve créditos.
+
+---
+
+## `GET /api/v1/credits/scoring`
+
+**`operationId`:** `getCreditScoring` · **Funcionalidad:** [`FEAT-CRD-015`](../../features/credits/FEAT-CRD-015-credit-scoring-screen.md)
+
+### Propósito
+
+Las reglas de la economía de créditos, con las cifras vigentes. Es el destino del botón «Ver
+puntuación de créditos» del modal de
+[`FEAT-CRD-014`](../../features/credits/FEAT-CRD-014-credits-info-modal.md).
+
+### Autorización
+
+**Pública.** Es de los pocos sitios de esta API donde eso es correcto: no hay nada de nadie
+aquí. Son las reglas de la casa, y quien se está planteando registrarse tiene derecho a
+leerlas antes. Se cachea en público.
+
+### Semántica
+
+**Las cifras salen de las mismas palancas de configuración que usa el motor de precios**, por
+inyección, y el ejemplo lo calcula `ChapterPricing`, la misma clase que cobra. Escribirlas a
+mano habría sido más corto y habría garantizado que un día la pantalla y el cobro dijeran
+cosas distintas — y quien lo descubre es alguien que esperaba cobrar otra cosa.
+
+`chargedOn: FEEDBACK_DELIVERED` resuelve la contradicción que `FEAT-CRD-014` había registrado:
+la maqueta sugería que los créditos se gastan al poner la obra en corrección, y no es así.
+
+`correctionPaysWhatItCosts` declara una **ausencia**: no hay una cifra de «lo que se gana
+corrigiendo» porque una corrección mueve créditos en vez de crearlos. El autor paga
+exactamente lo que el corrector cobra.
+
+No consulta el saldo de nadie: es la explicación de las reglas, no un estado.
