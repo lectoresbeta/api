@@ -37,7 +37,10 @@ final readonly class EditableProfileBody
             'name' => $profile->name,
             'description' => $profile->description,
             'avatarUrl' => MediaUrl::of($profile->avatarUrl),
-            'coverUrl' => $profile->coverUrl,
+            // El fondo de la página de autor (`FEAT-USR-016`). Pasa por
+            // `MediaUrl` igual que el avatar: lo guardado es la clave, y la
+            // dirección se calcula en un solo sitio.
+            'coverUrl' => MediaUrl::of($profile->coverUrl),
             'usernameChangeableOn' => $profile->usernameChangeableOn->format(\DATE_ATOM),
             'avatarCrop' => $profile->avatarCrop,
             'counters' => $counters,

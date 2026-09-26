@@ -249,7 +249,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | P-3 | ¿«Obra en corrección» es un estado del ciclo de vida de `Work`? | **Resuelta:** sí. Ver [`FEAT-WRK-016`](../features/work/FEAT-WRK-016-work-status.md) |
 | P-4 | ¿Qué es «0 Level»? | **Resuelta:** error del diseño. Se retira de la pantalla y de los modales de foto |
 | P-5 | ¿«Mi perfil» y la «página de autor» de `FEAT-USR-015` son la misma pantalla? | **Resuelta: sí.** Dos pantallas habrían sido dos textos que envejecen por separado y dos sitios donde la misma persona se describe distinto |
-| P-6 | ¿Sigue en alcance la personalización visual de `FEAT-USR-016`? | No aparece en estas capturas |
+| P-6 | ¿Sigue en alcance la personalización visual de `FEAT-USR-016`? | **Resuelta: sí**, con catálogo cerrado de temas y colores más un fondo subido. Ver [`FEAT-USR-016`](../features/user/FEAT-USR-016-customise-the-author-page.md) |
 | P-7 | Textos por unificar: «Enviar» frente a «Publicar»; el vacío de «Seguidos» describe también a los seguidores | Coherencia |
 | P-8 | ¿«Mis Amigos» es el nombre correcto? | Capturas posteriores lo escriben «Mis amigos», corrigiendo la mayúscula. El nombre sigue sugiriendo reciprocidad donde no la hay |
 | P-9 | ¿Las obras publicadas se validan de algún modo, o el autor declara lo que quiera? | Un perfil con méritos inventados afecta a la confianza |

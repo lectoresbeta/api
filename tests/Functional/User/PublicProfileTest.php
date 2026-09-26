@@ -42,7 +42,12 @@ final class PublicProfileTest extends EconomyScenario
                 // `links` son las referencias de la página de autor
                 // (`FEAT-USR-015`): la página de autor **es** este perfil, así
                 // que se leen aquí y no en un endpoint propio.
-                'avatarUrl', 'coverUrl', 'links', 'counters', 'isFollowing', 'isFollowedBy', 'isBlocked',
+                'avatarUrl', 'coverUrl', 'links',
+                // Y por lo mismo, `theme` y `accentColour`: cómo decidió el
+                // autor que se viera su página (`FEAT-USR-016`). Dos códigos
+                // de un catálogo cerrado, nunca CSS ni un hexadecimal.
+                'theme', 'accentColour',
+                'counters', 'isFollowing', 'isFollowedBy', 'isBlocked',
             ],
             array_keys($this->payload()),
         );

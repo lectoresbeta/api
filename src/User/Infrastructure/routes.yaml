@@ -352,6 +352,36 @@ updateMyAppearanceSettings:
     controller: LectoresBeta\User\Preferences\Infrastructure\Controller\AppearanceSettingsController::__invoke
     methods: [PUT]
 
+# Personalizar la página de autor (FEAT-USR-016), que **es** el perfil.
+#
+# Tema y color son códigos de un catálogo cerrado: nunca CSS y nunca un
+# hexadecimal. CSS escrito por un usuario y servido a terceros exfiltra datos
+# por selectores de atributo, permite superponer elementos y convierte cada
+# visita en una petición a un tercero (`U-5`).
+
+getMyAuthorPageStyle:
+    path: /api/v1/me/author-page-style
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\AuthorPageStyleController::__invoke
+    methods: [GET]
+
+updateMyAuthorPageStyle:
+    path: /api/v1/me/author-page-style
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\AuthorPageStyleController::__invoke
+    methods: [PUT]
+
+# El fondo es la portada de la cuenta, que existía desde FEAT-USR-014 y nunca
+# tuvo endpoint. Va junto al avatar porque es la otra imagen del perfil.
+
+updateProfileCover:
+    path: /api/v1/me/profile/cover
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\UpdateCoverController::__invoke
+    methods: [PUT]
+
+deleteProfileCover:
+    path: /api/v1/me/profile/cover
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\DeleteCoverController::__invoke
+    methods: [DELETE]
+
 # Entrar con Google (`FEAT-USR-002`). Sin sesión: no puede haberla todavía.
 #
 # El proveedor va en la ruta para que Facebook y LinkedIn encajen sin cambiar

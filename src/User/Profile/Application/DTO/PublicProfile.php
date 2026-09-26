@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace LectoresBeta\User\Profile\Application\DTO;
 
 use LectoresBeta\User\AuthorPage\Application\DTO\AuthorLinkView;
+use LectoresBeta\User\AuthorPage\Domain\Enum\AccentColour;
+use LectoresBeta\User\AuthorPage\Domain\Enum\AuthorPageTheme;
 
 /**
  * Un perfil ajeno, visto desde fuera (`FEAT-USR-014`).
@@ -48,6 +50,14 @@ final readonly class PublicProfile
         public ?bool $isFollowedBy = null,
         public ?bool $isBlocked = null,
         public array $links = [],
+        /**
+         * Cómo decidió el autor que se viera su página (`FEAT-USR-016`). Van
+         * aquí por lo mismo que las referencias: la página de autor es el
+         * perfil, y pedir su decoración aparte sería una petición más para
+         * pintar la misma pantalla.
+         */
+        public AuthorPageTheme $theme = AuthorPageTheme::CLASSIC,
+        public AccentColour $accentColour = AccentColour::SLATE,
     ) {
     }
 }

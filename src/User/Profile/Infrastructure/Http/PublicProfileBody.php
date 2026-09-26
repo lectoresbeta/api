@@ -38,7 +38,10 @@ final readonly class PublicProfileBody
             'name' => $profile->name,
             'description' => $profile->description,
             'avatarUrl' => MediaUrl::of($profile->avatarUrl),
-            'coverUrl' => $profile->coverUrl,
+            // El fondo de la página de autor (`FEAT-USR-016`). Pasa por
+            // `MediaUrl` igual que el avatar: lo guardado es la clave, y la
+            // dirección se calcula en un solo sitio.
+            'coverUrl' => MediaUrl::of($profile->coverUrl),
             // Las referencias de su página de autor (`FEAT-USR-015`): su web,
             // su cuenta en otra red, su blog. Van aquí y no en un endpoint
             // propio porque **la página de autor es este perfil**.
@@ -46,6 +49,10 @@ final readonly class PublicProfileBody
                 static fn (AuthorLinkView $link): array => ['label' => $link->label, 'url' => $link->url],
                 $profile->links,
             ),
+            // Y su decoración (`FEAT-USR-016`): dos códigos de un catálogo
+            // cerrado, nunca CSS ni un hexadecimal.
+            'theme' => $profile->theme->value,
+            'accentColour' => $profile->accentColour->value,
             'counters' => $counters,
             // Nulos sin sesión: quien los reciba así no tiene ningún botón de
             // relación que pintar, porque no hay nadie de quien hablar.

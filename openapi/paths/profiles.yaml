@@ -37,6 +37,14 @@ PublicProfile:
       type: [string, 'null']
     coverUrl:
       type: [string, 'null']
+      description: |
+        El fondo de su página de autor (`FEAT-USR-016`). Es la portada de la
+        cuenta: una imagen que sube el autor, reescrita en servidor y sin
+        metadatos.
+    theme:
+      $ref: '#/AuthorPageTheme'
+    accentColour:
+      $ref: '#/AccentColour'
     links:
       type: array
       description: |
@@ -420,3 +428,177 @@ share:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+AuthorPageTheme:
+  type: string
+  enum: [CLASSIC, INK, PARCHMENT, MIDNIGHT, LINEN, BOTANICAL]
+  description: |
+    Cómo se ve la página de autor (`FEAT-USR-016`).
+
+    **Un catálogo cerrado, y nunca CSS.** CSS escrito por un usuario y servido
+    a terceros no es decoración: un selector de atributo con una `url()`
+    detrás exfiltra datos letra a letra de la pantalla de quien mira,
+    `position` y `z-index` permiten superponer un botón falso sobre uno real,
+    y `@import` convierte cada visita en una petición a un tercero. Sanear eso
+    exige un parser con lista blanca que se queda corta en silencio con cada
+    versión del navegador; un enum no tiene ese problema.
+
+AccentColour:
+  type: string
+  enum: [SLATE, CRIMSON, AMBER, FOREST, OCEAN, PLUM]
+  description: |
+    El color de acento (`FEAT-USR-016`). **Un código, nunca un hexadecimal**:
+    un color libre acaba interpolado en un atributo `style`, y ahí una cadena
+    que no sea un color es una inyección de CSS por la puerta de atrás.
+
+AuthorPageStyle:
+  type: object
+  required: [theme, accentColour, updatedAt]
+  properties:
+    theme:
+      $ref: '#/AuthorPageTheme'
+    accentColour:
+      $ref: '#/AccentColour'
+    updatedAt:
+      type: string
+      format: date-time
+
+authorPageStyle:
+  get:
+    tags: [Account]
+    operationId: getMyAuthorPageStyle
+    summary: Cómo se ve mi página de autor
+    description: |
+      Quien nunca lo ha tocado recibe `CLASSIC` y `SLATE`, no un hueco: la
+      pantalla de edición tiene que poder marcar la opción activa el primer
+      día.
+
+      **No hay endpoint de catálogo**: los valores válidos son los del enum, y
+      pedirlos antes de pintar seis botones sería una petición de más.
+
+      El fondo no está aquí: es la portada del perfil, que tiene su propio
+      recurso porque es una subida de fichero.
+    responses:
+      '200':
+        description: El estilo de quien pregunta.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AuthorPageStyle'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+  put:
+    tags: [Account]
+    operationId: updateMyAuthorPageStyle
+    summary: Elegir tema y color
+    description: |
+      Los dos son **códigos de un catálogo cerrado**. Un valor desconocido se
+      rechaza nombrándolo en lugar de caer al por defecto: quien manda
+      `midnight` en minúsculas o un `#112233` cree que ha cambiado algo, y una
+      página que se queda igual sin decir nada es un error que se busca en el
+      sitio equivocado.
+
+      Un campo ausente no cambia nada: la pantalla tiene dos selectores y se
+      mueve uno cada vez.
+
+      No confundir con `PUT /me/appearance-settings` (`FEAT-USR-042`): aquello
+      es el tema de la aplicación, que elige cada quien y solo ve él; esto es
+      la página de autor, que elige el autor y ven los demás.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              theme:
+                $ref: '#/AuthorPageTheme'
+              accentColour:
+                $ref: '#/AccentColour'
+    responses:
+      '200':
+        description: El estilo como queda.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AuthorPageStyle'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_AUTHOR_PAGE_THEME` o `UNKNOWN_ACCENT_COLOUR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+profileCover:
+  put:
+    tags: [Account]
+    operationId: updateProfileCover
+    summary: Subir el fondo de la página de autor
+    description: |
+      `multipart/form-data` con `image`, y **sin `crop`**, que es la
+      diferencia con el avatar: un fondo es un banner, no un retrato, y su
+      proporción la decide quien diseña la pantalla.
+
+      **La imagen se reescribe siempre**, como el avatar y por lo mismo:
+      guardarla tal cual publicaría los metadatos EXIF, y una foto de fondo
+      puede llevar las coordenadas de dónde se tomó. El lado mayor se acota a
+      1600 px.
+
+      Lo que sustituye **se borra**, en vez de quedarse huérfano en el almacén.
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [image]
+            properties:
+              image:
+                type: string
+                format: binary
+    responses:
+      '200':
+        description: La dirección del fondo guardado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [coverUrl]
+              properties:
+                coverUrl:
+                  type: string
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '413':
+        description: '`code: COVER_TOO_LARGE`. El límite son 4 MB, y lo aplica el servidor.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: COVER_REQUIRED`, `UNSUPPORTED_COVER_TYPE` o
+          `UNREADABLE_COVER`. Los tres se distinguen a propósito: llevan a
+          acciones distintas — mandar la imagen, elegir otro fichero, o volver
+          a exportarlo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Account]
+    operationId: deleteProfileCover
+    summary: Quitar el fondo
+    description: |
+      Devuelve la página al tema sin imagen y **borra el fichero**: dejarlo
+      huérfano sería guardar una imagen que su dueño cree haber borrado.
+
+      Quitar un fondo que no hay responde igual: el estado que se pedía ya se
+      cumple.
+    responses:
+      '204':
+        description: Sin fondo.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

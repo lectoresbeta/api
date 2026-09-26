@@ -8,6 +8,7 @@ use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\User\Account\Domain\Entity\User;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\AuthorPage\Application\DTO\AuthorLinkView;
+use LectoresBeta\User\AuthorPage\Application\Service\StoredAuthorPageStyle;
 use LectoresBeta\User\AuthorPage\Domain\Entity\AuthorLink;
 use LectoresBeta\User\AuthorPage\Domain\Repository\AuthorLinkRepository;
 use LectoresBeta\User\Privacy\Domain\Enum\PrivacyAudience;
@@ -57,6 +58,7 @@ final readonly class VisibleProfile
         private AuthorFollowerRepository $followers,
         private BlockedPairRepository $blocks,
         private AuthorLinkRepository $links,
+        private StoredAuthorPageStyle $style,
     ) {
     }
 
@@ -71,6 +73,7 @@ final readonly class VisibleProfile
         }
 
         $viewer = $this->identify($viewerId);
+        $style = $this->style->of($user->id());
 
         return new PublicProfile(
             $user->id()->value(),
@@ -93,6 +96,10 @@ final readonly class VisibleProfile
                 static fn (AuthorLink $link): AuthorLinkView => new AuthorLinkView($link->label(), $link->url()),
                 $this->links->of($user->id()),
             ),
+            // Y su decoración (`FEAT-USR-016`), por lo mismo: la página de
+            // autor **es** este perfil. Sin fila, el tema de siempre.
+            $style->theme(),
+            $style->accentColour(),
         );
     }
 

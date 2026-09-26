@@ -237,7 +237,7 @@ una cifra que no se pueda leer viaja como `null`, que no es lo mismo que cero.
 | U-2 | ¿Se puede vincular varios proveedores externos a la misma cuenta? | Modelo de credenciales |
 | U-3 | ¿Qué ocurre con obras, feedback y créditos al eliminar la cuenta? (`V-4`, `J-7`) | Bloquea `FEAT-USR-012` |
 | U-4 | ¿Quién detecta que un invitado "ha participado": `User` escuchando a `Feedback`, o `Feedback` publicándolo? | **Resuelto:** ninguno de los dos. `Credits` recibe el par (`PlatformInvitationConsumed`) y el trabajo entregado (`FeedbackSubmitted`) y correlaciona solo (`FEAT-CRD-005`) |
-| U-5 | ¿La personalización de la página de autor tiene límites (temas cerrados o CSS libre)? | Riesgo de seguridad si es libre |
+| U-5 | ¿La personalización de la página de autor tiene límites (temas cerrados o CSS libre)? | **Resuelta: catálogo cerrado**, más un fondo subido. Nada de CSS: escrito por un usuario y servido a terceros exfiltra datos por selectores de atributo, permite superponer elementos y convierte cada visita en una petición a un tercero. Ver [`FEAT-USR-016`](../features/user/FEAT-USR-016-customise-the-author-page.md) |
 | U-8 | ¿Qué nombre se muestra públicamente? (`OB-2`) | **Resuelto:** el `Name` del onboarding. El aviso de privacidad solo afecta a la fecha de nacimiento |
 | U-6 | ¿Existe `Username`? | **Resuelto:** no. No se usa el concepto |
 | U-10 | ¿El `Name` debe ser único? | Sin unicidad, dos homónimos son indistinguibles. Recomendación: no exigirla y desambiguar con avatar y enlace al perfil |

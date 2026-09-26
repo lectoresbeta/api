@@ -33,8 +33,12 @@ final readonly class GetMediaFileController
      * `book-covers` son las portadas de las obras que alguien ya publicó
      * fuera (`FEAT-USR-029`): material promocional de un libro a la venta,
      * que aparece en perfiles que se abren sin sesión.
+     *
+     * `covers` son los fondos de las páginas de autor (`FEAT-USR-016`), y
+     * están aquí por lo mismo: la imagen que su dueño eligió como decoración
+     * de una página que cualquiera puede abrir.
      */
-    private const PUBLIC_FOLDERS = ['avatars', 'book-covers'];
+    private const PUBLIC_FOLDERS = ['avatars', 'book-covers', 'covers'];
 
     public function __construct(private FileStorage $storage)
     {

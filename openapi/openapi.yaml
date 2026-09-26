@@ -199,6 +199,15 @@ paths:
   /me/author-links:
     $ref: './paths/profiles.yaml#/authorLinks'
 
+  # Personalizar la página de autor (FEAT-USR-016): un tema y un color de
+  # catálogo cerrado, y el fondo, que es la portada del perfil.
+
+  /me/author-page-style:
+    $ref: './paths/profiles.yaml#/authorPageStyle'
+
+  /me/profile/cover:
+    $ref: './paths/profiles.yaml#/profileCover'
+
   # Cómo se ve un perfil compartido fuera (FEAT-USR-032). La tercera tarjeta,
   # después de la de una obra y la de una publicación.
   /users/{userId}/share:
