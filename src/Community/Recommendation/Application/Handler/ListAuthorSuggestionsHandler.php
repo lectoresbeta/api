@@ -11,6 +11,7 @@ use LectoresBeta\Community\Recommendation\Application\DTO\AuthorSuggestions;
 use LectoresBeta\Community\Recommendation\Application\Query\ListAuthorSuggestions;
 use LectoresBeta\Community\Recommendation\Domain\Repository\AuthorSuggestionRepository;
 use LectoresBeta\Community\Subscription\Domain\Repository\AuthorSubscriptionRepository;
+use LectoresBeta\User\Account\Application\Contract\ActiveAccounts;
 use LectoresBeta\User\Account\Application\Contract\VisibleProfiles;
 
 /**
@@ -30,6 +31,7 @@ final readonly class ListAuthorSuggestionsHandler
         private AuthorSuggestionRepository $suggestions,
         private AuthorSubscriptionRepository $subscriptions,
         private VisibleProfiles $profiles,
+        private ActiveAccounts $accounts,
         private int $minimum,
         private int $maximum,
     ) {
@@ -97,6 +99,13 @@ final readonly class ListAuthorSuggestionsHandler
         // vacía, no para ser la verdad sobre cómo se llama alguien.
         $cards = $this->profiles->visibleTo($memberId, $ids);
 
+        // Y `RN-7`: solo cuentas en uso. Es una pregunta distinta de la
+        // anterior y por eso son dos contratos — de alguien suspendido se
+        // siguen leyendo sus comentarios, y en cambio no hay que proponer
+        // seguirlo. La proyección de este contexto no conoce el estado de una
+        // cuenta, ni debería: es de `User`.
+        $active = array_flip($this->accounts->activeAmong($ids));
+
         $suggestions = [];
 
         foreach ($found as $author) {
@@ -105,8 +114,10 @@ final readonly class ListAuthorSuggestionsHandler
 
             // Quien ha dejado de ser visible para quien mira no se sugiere:
             // proponer seguir a alguien cuyo perfil no se puede abrir sería
-            // proponer un callejón sin salida.
-            if (null === $card) {
+            // proponer un callejón sin salida. Y quien no tiene la cuenta en
+            // uso tampoco: sin activar no puede publicar, y expulsado no
+            // volverá a hacerlo.
+            if (null === $card || !isset($active[$id])) {
                 continue;
             }
 

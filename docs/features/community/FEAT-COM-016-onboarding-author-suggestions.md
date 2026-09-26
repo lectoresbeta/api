@@ -264,7 +264,15 @@ Tres decisiones que la implementación obligó a tomar:
 - **seguir se hace con la operación de siempre.** La ficha nombraba rutas `/authors/...` de
   cuando `FEAT-COM-010` no existía; usarlas habría sido una segunda puerta a la misma acción.
 
-**Falta** el filtro de cuentas activadas (`RN-7`): la proyección de autores no distingue
-todavía una cuenta activada de una que no lo está, y arreglarlo pide un hecho que hoy
-`Community` no escucha. Mientras tanto sugiere a cualquiera que haya publicado una obra —lo
-que ya exige la cuenta activada, así que el agujero es estrecho, pero está.
+~~**Falta** el filtro de cuentas activadas (`RN-7`)~~ — **hecho** (2026-09-26), y no hizo
+falta ningún hecho nuevo: llega por **contrato publicado**, `ActiveAccounts`.
+
+Es una pregunta distinta de la que responde `VisibleProfiles` —que este mismo sitio ya usaba—
+y por eso son dos contratos y no uno con un parámetro. Se separan justo donde importa: los
+comentarios de alguien suspendido se siguen leyendo, con su firma visible, y en cambio no hay
+que proponer seguirlo.
+
+El agujero, además, no era el que esta línea decía. El de la cuenta sin activar es estrecho
+—publicar ya exige activarse—; el ancho era **la cuenta expulsada**, que había publicado antes
+de serlo y se seguía sugiriendo. `Community` no conoce el estado de una cuenta, y no debería:
+es de `User`.

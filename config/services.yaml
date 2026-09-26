@@ -543,6 +543,13 @@ services:
     LectoresBeta\User\Account\Application\Contract\ProfileCards:
         alias: LectoresBeta\User\Account\Application\Service\ShowVisibleProfiles
 
+    # Y la otra pregunta, que no es la misma: «¿tiene esta persona una cuenta
+    # en uso?» (FEAT-COM-016 RN-7). Se separan justo donde importa — los
+    # comentarios de alguien suspendido se siguen leyendo, y en cambio no hay
+    # que proponer seguirlo.
+    LectoresBeta\User\Account\Application\Contract\ActiveAccounts:
+        alias: LectoresBeta\User\Account\Application\Service\ListActiveAccounts
+
     LectoresBeta\User\Account\Application\Contract\ReaderMaturity:
         alias: LectoresBeta\User\Account\Application\Service\CheckReaderMaturity
 

@@ -102,7 +102,7 @@ Dos cosas que este inventario no había visto y aparecieron al hacerlo:
 | Ficha | Hueco | Tamaño |
 |---|---|---|
 | FEAT-CRD-002 `RN-7` | `GrantWelcomeCredits` no publica `CreditsAdded`. La clase existe, nadie la emite | Pequeño |
-| FEAT-COM-016 `RN-7` | Las sugerencias de autor no filtran cuentas sin activar | Pequeño |
+| ~~FEAT-COM-016 `RN-7`~~ | ~~Las sugerencias de autor no filtran cuentas sin activar~~ — **hecho** (2026-09-26). El agujero ancho no era ese: era **la cuenta expulsada**, que había publicado antes de serlo | Pequeño |
 | ~~FEAT-WRK-016~~ | ~~`Credits` no consume la apertura a corrección para recalcular corregibilidad~~ — **hecho** (2026-09-26). No faltaba un recálculo: faltaba **una condición**. Los capítulos de un borrador salían corregibles | Medio |
 | ~~FEAT-WRK-008 `RN-6`~~ | ~~Las palabras de un capítulo oculto siguen contando en el total de la obra~~ — **hecho** (2026-09-26) | Pequeño |
 | FEAT-WRK-012 `RN-8` | El catálogo no esconde las obras de quien te ha bloqueado | Medio |

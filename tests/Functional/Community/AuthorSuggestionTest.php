@@ -322,6 +322,43 @@ final class AuthorSuggestionTest extends EconomyScenario
         self::assertSame($enOnboarding, $enHome);
     }
 
+    /**
+     * `RN-7`: solo se sugieren cuentas **en uso**.
+     *
+     * Una sin activar no puede publicar, así que proponer seguirla no lleva a
+     * ninguna parte; y a una expulsada, menos. El agujero real no era la
+     * primera —publicar ya exige activarse— sino la segunda: quien publicó y
+     * después fue expulsado se seguía sugiriendo, porque la proyección de
+     * `Community` no conoce el estado de una cuenta. Y no debería: es de
+     * `User`, y llega por contrato.
+     */
+    public function testAnExpelledAuthorIsNoLongerSuggested(): void
+    {
+        $expulsada = $this->authorPublishing('expulsada', ['DRAMA']);
+        $this->authorPublishing('otra', ['DRAMA']);
+        $this->authorPublishing('tercera', ['DRAMA']);
+
+        $person = $this->onboarded('nueva', ['DRAMA', 'FANTASY', 'ROMANCE']);
+        $this->suggestions($person['token']);
+        self::assertContains($expulsada['userId'], $this->ids(), 'Antes de la sanción se sugiere.');
+
+        $moderadora = $this->moderator('moderadora');
+        $this->client->request('POST', '/api/v1/admin/sanctions', server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$moderadora['token'],
+        ], content: json_encode([
+            'userId' => $expulsada['userId'],
+            'type' => 'EXPULSION',
+            'reason' => 'Plagio reiterado',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $this->capture();
+        $this->consumeEverything();
+
+        $this->suggestions($person['token']);
+        self::assertNotContains($expulsada['userId'], $this->ids(), 'Después, no.');
+    }
+
     private function homeSuggestions(string $token): void
     {
         $this->client->request('GET', '/api/v1/home/author-suggestions', server: [

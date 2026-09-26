@@ -127,11 +127,18 @@ preferencias y presencia pública como autor.
 | `ProposalRecipients` | **Dos booleanos**: ¿admite que le inviten a leer? ¿y que le propongan ser writing buddy? Nunca el ajuste. Y, sobre uno mismo, si esas puertas están abiertas, para no dejar publicar lo que se tiene cerrado | `Reading`, `Community` |
 | `VisibleProfiles` | De estas personas, **las que quien pregunta puede ver**, como tarjeta de perfil | `Community` |
 | `ProfileCards` | Lo mismo **sin filtrar**, y con un solo uso legítimo: la lista de a quién has bloqueado | `Community` |
+| `ActiveAccounts` | De estas personas, **las que tienen la cuenta en uso**: `ACTIVE` y nada más. Nunca el estado en crudo | `Community` |
 
 Todos son de lectura y devuelven lo justo
 ([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md)). `ReaderMaturity`
 es el que más importa: la fecha de nacimiento es dato privado y **no sale de aquí**, así que lo
 que cruza la frontera es la respuesta a la única pregunta que los demás necesitan hacer.
+
+`VisibleProfiles` y `ActiveAccounts` parecen el mismo contrato con un parámetro y no lo son.
+«¿Puedo ver el perfil de esta persona?» y «¿tiene esta persona una cuenta en uso?» se separan
+justo donde importa: los comentarios de alguien suspendido se siguen leyendo, con su firma
+visible, y en cambio no hay que proponer seguirlo (`FEAT-COM-016` `RN-7`). Un contrato con un
+interruptor habría invitado a acertar el interruptor.
 
 `RegisteredUsers` nació con [`FEAT-RDG-004`](../features/reading/FEAT-RDG-004-invite-beta-reader.md):
 invitar a un identificador inventado crearía una invitación que nadie puede aceptar. Responde
