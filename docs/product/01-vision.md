@@ -65,7 +65,7 @@ Si alguna entra en alcance, se registra como ADR en [`../decisions/`](../decisio
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| V-1 | ¿Existe un rol de administración/moderación de la plataforma? | Define si hace falta un contexto o un conjunto de casos de uso administrativos |
+| V-1 | ¿Existe un rol de administración/moderación de la plataforma? | **Resuelta: sí**, y es un bounded context propio. `Moderation` está implementado: reclamaciones, cola con prioridad, moderadores, administradores, catálogo de sanciones y conversación con las partes (`FEAT-MOD-001` a `FEAT-MOD-012`) |
 | V-2 | ¿Los créditos se podrán comprar en algún momento? | Condiciona el diseño del contexto `Credits` y su auditoría |
 | V-3 | ¿La plataforma nace solo en español o multi-idioma? | Afecta a búsqueda, rankings y clasificación por extensión de texto |
 | V-4 | ¿Hay obligación legal de conservar las obras tras eliminar la cuenta? | Afecta al borrado de cuenta y a la retención de datos |

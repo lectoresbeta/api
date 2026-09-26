@@ -533,22 +533,36 @@ Ficha del contexto: [`../bounded-contexts/notification.md`](../bounded-contexts/
 
 ## Funcionalidades bloqueadas
 
-Resumen de lo que no se puede especificar hasta tomar una decisión de producto:
+Resumen de lo que no se puede especificar hasta tomar una decisión de producto.
+
+> **2026-09-26: se cerraron las ocho decisiones que quedaban vivas.** Ninguna ficha sigue
+> `BLOCKED` por falta de decisión; lo que queda es escribirlas e implementarlas. Las filas
+> tachadas de abajo se conservan porque la razón por la que estuvieron bloqueadas sigue siendo
+> la explicación de por qué se resolvieron así.
+>
+> `FEAT-COM-023` deja de estar `DEFERRED`: lo aplazaba `V-1` —«no hay moderación que las
+> atienda»— y `Moderation` está implementado entero. Se reactiva reutilizando la reclamación
+> que ya existe, con `POST` como tipo de objetivo.
+>
+> `FEAT-USR-003`, `FEAT-USR-006` y `FEAT-USR-019` también dejan de estar `DEFERRED`: la
+> decisión «solo Google en esta fase» se levanta ahora que el camino de OAuth está construido.
+> `FEAT-COM-025` entra igualmente. **`FEAT-COM-037` —vídeo— sigue `DEFERRED`**: es la única
+> que arrastra transcodificación y coste de almacenamiento (`C-2`).
 
 | Funcionalidad | Bloqueada por | Decisión necesaria |
 |---|---|---|
-| FEAT-COM-013/014/015 | `CM-4` | Fórmula de puntuación de cada ranking |
-| FEAT-WRK-009 | `W-1` | Cuándo se genera el registro de autoría |
-| FEAT-USR-013 | `V-4`, `U-3` | Qué se conserva al eliminar la cuenta. El nombre de usuario **sí** está decidido: queda bloqueado 30 días |
-| FEAT-COM-024 | `CM-4` | Fórmula de relevancia para ordenar el muro |
-| FEAT-COM-029, FEAT-COM-002 | `C-1` | Qué opciones tiene el selector de audiencia de una publicación |
+| ~~FEAT-COM-013/014/015~~ | ~~`CM-4`~~ | **Resuelto** (2026-09-26): señales con decaimiento a 90 días y pesos configurables en `config/services.yaml` |
+| ~~FEAT-WRK-009~~ | ~~`W-1`~~ | **Resuelto** (2026-09-26): al publicar y en cada cambio del contenido publicado, con hash encadenado |
+| ~~FEAT-USR-013~~ | ~~`V-4`, `U-3`~~ | **Resuelto** (2026-09-26): obras retiradas de circulación, correcciones conservadas y mensajes directos sin autor identificable |
+| ~~FEAT-COM-024~~ | ~~`CM-4`~~ | **Resuelto** (2026-09-26): la misma señal de los rankings, sobre publicaciones |
+| ~~FEAT-COM-029, FEAT-COM-002~~ | ~~`C-1`~~ | **Resuelto** (2026-09-26): `EVERYONE` y `FOLLOWERS`, las dos que el muro ya filtra |
 | FEAT-COM-002 | `C-2` | Si se admite vídeo, con qué límites y si se transcodifica |
 | FEAT-COM-019 | `C-3` | Si un repost es un puntero o una publicación con entidad propia |
-| FEAT-COM-006, FEAT-COM-024, rankings | `CM-4` | Una única fórmula de relevancia para el muro, los comentarios y los rankings |
+| ~~FEAT-COM-006, FEAT-COM-024, rankings~~ | ~~`CM-4`~~ | **Resuelto** (2026-09-26): una forma común y tres selecciones, no una única cifra |
 | ~~FEAT-WRK-016~~ | ~~`W-9`~~ | **Resuelto:** no lo sustituye. Son ejes distintos, y el de visibilidad se modelará cuando exista quien lea obras |
 | FEAT-COM-034 | `B-2`, `B-3` | Si bloquear revoca el acceso de lector beta y si puede terminar quien ya estaba corrigiendo, y qué pasa con el feedback que el autor **ya pagó** |
 | FEAT-USR-014 | `U-17` | Si el contador de correcciones es público y la lista no, de forma deliberada |
-| **FEAT-FBK-012** | `AF-1`, `AF-2` | Qué mecanismo antifraude, y si actúa antes o después del abono |
+| ~~**FEAT-FBK-012**~~ | ~~`AF-1`, `AF-2`~~ | **Resuelto** (2026-09-26): heurísticas que marcan, moderador que decide, y control **posterior** al abono con reversión |
 | ~~FEAT-WRK-014~~ | ~~`W-17`~~ | **Resuelto:** cada pregunta declara su alcance, `EVERY_CHAPTER` o `LAST_CHAPTER`, y el precio de un capítulo cuenta solo las que aplican en él |
 | FEAT-WRK-012 | `L-9` | Cómo llega la insignia de créditos al catálogo sin acoplar `Work` con `Credits` |
 | FEAT-CRD-019 | `C-28` | `C-42` resuelta (3 por semana). Queda cómo se avisa al autor de que puede quedar en deuda: es la única de las tres condiciones obligatorias que el backend no garantiza solo |

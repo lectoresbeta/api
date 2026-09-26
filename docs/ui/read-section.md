@@ -148,7 +148,7 @@ Resuelta: `L-5` (**hay footer** en todo el layout).
 | T-7 | ¿El «Aviso legal» se acepta o solo se publica? | No es lo mismo que las condiciones de uso |
 | L-6 | ¿El catálogo excluye las obras propias del usuario? | Corregirse a uno mismo no tiene sentido |
 | L-7 | ¿Se pueden combinar varios géneros y cómo? ¿`Y` o `O`? | Los chips activos muestran varios a la vez |
-| CM-4 | ¿Cómo se calcula «relevancia»? | Cuarto sitio que la necesita |
+| CM-4 | ¿Cómo se calcula «relevancia»? | **Resuelta (2026-09-26):** señales con decaimiento a 90 días y pesos configurables. Ver [`community.md`](../bounded-contexts/community.md) |
 
 ## Anomalías
 

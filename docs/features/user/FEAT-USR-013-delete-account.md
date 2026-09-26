@@ -96,7 +96,7 @@ solicitar la supresión del contenido concreto, no cambiar la regla general (`S-
 
 | # | Pregunta |
 |---|---|
-| `V-4` | ¿Qué ocurre con los mensajes directos? Borrarlos vacía la conversación del otro |
+| `V-4` | ¿Qué ocurre con los mensajes directos? | **Resuelta (2026-09-26): se conservan sin autor identificable.** La conversación del otro sigue completa y legible, el remitente aparece como «Usuario eliminado» sin enlace a ningún perfil, y no se puede responder ni abrir una conversación nueva. Es el mismo criterio que ya se aplicó a las correcciones pagadas y a los movimientos de crédito: se suprime la persona y se conserva lo que pertenece a terceros |
 | `U-3` | ¿Qué ocurre con las obras propias y con el feedback que otros les dedicaron? |
 | `S-33` | ¿Hay periodo de gracia para arrepentirse? |
 | `S-34` | ¿Qué pasa con los créditos del saldo? |
@@ -219,7 +219,7 @@ correcciones conservan sus efectos sin referenciarlas. `V-4` —qué ocurre con 
 directos, que forman parte de la conversación de otro— sigue abierta, pero no impide
 implementar la anonimización.
 
-**Implementación:** `BLOCKED` por `U-3` y `V-4`.
+**Implementación:** desbloqueada (2026-09-26). `U-3` y `V-4` resueltas: las obras se retiran de circulación conservando las correcciones, y los mensajes directos se conservan sin autor identificable.
 
 `S-32` está resuelta —se anonimiza— y con ella el fondo del asunto. Lo que falta son dos
 casos concretos:
@@ -230,7 +230,7 @@ casos concretos:
   irse. La combinación que suele funcionar: **retirar las obras de circulación y conservar
   las correcciones para quienes las escribieron**, sin acceso al texto original.
 - **`V-4`, los mensajes directos.** Borrarlos vacía la conversación del otro interlocutor,
-  que no ha pedido nada.
+  que no ha pedido nada. **Resuelta:** se conservan sin autor identificable.
 
 Sigue siendo de las pocas funcionalidades donde implementar antes de decidir es irreversible
 por partida doble: los datos borrados no vuelven, y los conservados después de prometer lo

@@ -58,7 +58,7 @@ seguimiento de autores, los mensajes directos y los rankings.
 |---|---|
 | `PostType` | Intención: `GENERAL`, `LOOKING_FOR_BETA_READERS`, `LOOKING_FOR_WRITING_BUDDY`, `OFFERING_AS_BETA_READER` |
 | `PostFormat` | Formato: `TEXT`, `IMAGE`, `VIDEO`, `LINK`, `WORK` |
-| `PostAudience` | Audiencia: solo se conoce «cualquiera» (`C-1`) |
+| `PostAudience` | Audiencia: `EVERYONE` y `FOLLOWERS`. **`C-1` resuelta (2026-09-26): son las dos, y no hay más.** `ONLY_ME` sería un borrador de publicación, que es otra funcionalidad; `BETA_READERS` obligaría a `Community` a preguntarle a `Reading` quién lee qué dentro de la consulta paginada del muro |
 | `RankingType` | `WRITERS`, `WORKS`, `READERS` |
 | `RankingPeriod` | Por definir (`CM-3`) |
 
@@ -184,7 +184,7 @@ la lista.
 | CM-1 | ¿Qué diferencia exactamente "reaccionar con emoji" de dar un "like"? El documento los lista por separado | Modelo de interacción |
 | CM-2 | ¿Qué emojis están disponibles? ¿Catálogo cerrado? | Modelo de `Reaction` |
 | CM-3 | ¿Qué periodos admiten los rankings: semana, mes, año, histórico? | Read models e índices |
-| CM-4 | ¿Cómo se puntúa cada **ranking**? El catálogo y los comentarios ya están resueltos ([`decision:0008`](../decisions/0008-catalogue-ordering.md) y `FEAT-COM-006`); faltan los rankings | Sin fórmula no hay clasificación |
+| CM-4 | ¿Cómo se puntúa cada **ranking**? | **Resuelta (2026-09-26): una forma común y tres selecciones, con decaimiento y pesos configurables.** Escritores: correcciones recibidas + propinas recibidas. Obras: la fórmula del catálogo ([`decision:0008`](../decisions/0008-catalogue-ordering.md)), que ya existía. Lectores: correcciones entregadas + valoraciones positivas + propinas recibidas. Decaimiento exponencial a 90 días en las tres, y los pesos como parámetros en `config/services.yaml`, igual que las palancas de precio: se reequilibra sin desplegar. El muro por relevancia (`FEAT-COM-024`) reutiliza la misma señal sobre publicaciones |
 | CM-5 | ¿El ranking de lectores se filtra por periodo? | El documento lo deja abierto |
 | CM-6 | ¿Los rankings se calculan en tiempo real o por proceso programado? (`D-5`) | Arquitectura del read model |
 | CM-7 | ¿Los mensajes directos necesitan tiempo real (WebSocket)? | Podría justificar separar `Messaging` (`BC-1`) |

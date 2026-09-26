@@ -158,7 +158,7 @@ tiene que viajar con la oferta.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| W-1 | ¿En qué momentos se genera el registro de autoría? ¿En cada edición, al publicar, o cuando lo decide el autor? | **El documento de origen deja esta pregunta abierta explícitamente** |
+| W-1 | ¿En qué momentos se genera el registro de autoría? | **Resuelta (2026-09-26): al publicar y en cada cambio del contenido ya publicado.** Cada registro guarda el hash SHA-256 del texto, la fecha y el hash del anterior, encadenados. Automático, sin botón: un registro que solo existe si el autor se acordó de pulsarlo falta justo cuando hace falta. No se sellan los guardados de un borrador. El sello lo emite la plataforma; un sellado externo (RFC 3161) queda para cuando haya motivo legal |
 | W-2 | ¿Se versiona el contenido al editar o se sobrescribe? (`D-4`, `P-3`) | Afecta a autoría y a la validez del feedback previo |
 | W-3 | ¿Qué formatos exactos se aceptan? El documento dice `.doc`, `.pdf`, `.txt`; ¿también `.docx`, `.odt`, `.epub`? | Adaptadores de ingesta |
 | ~~W-4~~ | ~~¿Cómo se dividen en fragmentos los ficheros subidos?~~ | **Resuelta** (`FEAT-WRK-002`): el servidor **propone** por los estilos de título del documento y el autor confirma. Como hay alguien revisando, el troceador puede permitirse ser simple |

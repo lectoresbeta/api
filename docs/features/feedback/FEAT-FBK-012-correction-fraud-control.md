@@ -48,8 +48,8 @@ dejará pasar entero.
 
 | # | Pregunta |
 |---|---|
-| `AF-1` | ¿Qué mecanismo: IA evaluando calidad, heurísticas, reputación del corrector, revisión humana, o una combinación? |
-| `AF-2` | ¿El control es **previo** al abono o **posterior**, con reversión? |
+| `AF-1` | ¿Qué mecanismo? | **Resuelta (2026-09-26): heurísticas que marcan, y un moderador que decide.** Texto muy corto para lo que se pagó, texto repetido entre correcciones del mismo lector, entrega en menos tiempo del que lleva leer el capítulo. Ninguna heurística resuelve por su cuenta: marcan, y la cola de moderación que ya existe (`FEAT-MOD-008`) las atiende |
+| `AF-2` | ¿Previo o posterior al abono? | **Resuelta (2026-09-26): posterior, con reversión.** El lector cobra al entregar, como hoy. Un control previo reintroduciría retenciones de crédito, que `decision:0006` quitó a propósito, y dejaría esperando a quien corrige bien. Confirmado el fraude se revierte el movimiento, y el saldo puede quedar negativo: ya está soportado (`FEAT-CRD-018`). El coste aceptado es que un defraudador cobra durante unos días |
 | `AF-3` | ¿Puede el autor rechazar una corrección y recuperar su crédito? |
 | `AF-4` | Si se revierte un abono, ¿qué pasa si el lector ya gastó esos créditos? |
 | `AF-5` | ¿Hay apelación? Un falso positivo deja a alguien sin cobrar por un trabajo real |

@@ -247,7 +247,7 @@ alcance de este documento.
 
 | # | Qué dice el diseño | Qué dice la documentación | Resolución |
 |---|---|---|---|
-| C-1 | Google, Facebook y LinkedIn | `use-cases.pdf` solo contempla Google y Facebook | **Resuelta:** en esta fase **solo Google**. Facebook y LinkedIn quedan `DEFERRED` |
+| C-1 | Google, Facebook y LinkedIn | `use-cases.pdf` solo contempla Google y Facebook | **Revisada (2026-09-26): los tres.** La decisión anterior —solo Google en esta fase— se levanta ahora que el camino de OAuth está construido (`FEAT-USR-002`, `FEAT-USR-005`) y añadir un proveedor es configurarlo, no inventarlo. Cada uno necesita sus credenciales de aplicación como variables de entorno |
 | C-2 | No se pide nombre de usuario | `use-cases.pdf` lo pedía; la ficha original exigía unicidad | **Resuelta:** el nombre de usuario **no existe** en la plataforma. El saludo usa un alias derivado del email |
 | C-3 | Registro en una sola pantalla | Nota del propio Figma: «Login con email: 01 → Introducir email, 02 → Contraseña» | Probablemente la nota describe el **login**, no el registro. Confirmar |
 | C-4 | Paso 3 sin botón de saltar | Nota del propio Figma: «(opcional, CTA para saltar)» | **Resuelta:** se añade «Saltar» |

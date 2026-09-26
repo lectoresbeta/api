@@ -105,7 +105,7 @@ De aquí salen dos preguntas de modelo, `C-3` y `C-4`.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **C-1** | **¿Qué opciones tiene el selector de audiencia?** Solo se ve «cualquiera» | **Bloqueante** para `FEAT-COM-029`: sin conocerlas no hay modelo ni filtrado |
+| **C-1** | **¿Qué opciones tiene el selector de audiencia?** | **Resuelta (2026-09-26): `EVERYONE` y `FOLLOWERS`**, las dos que el muro ya filtra en la consulta. Desbloquea `FEAT-COM-029` |
 | **C-2** | ¿Se admite vídeo? ¿Con qué límites de tamaño y duración? ¿Se transcodifica? | Coste de almacenamiento y proceso muy superior al de una imagen |
 | C-3 | ¿Los contadores de un repost son los del original o los suyos propios? | Define si el repost es una entidad con interacciones o un puntero |
 | C-4 | ¿Se puede repostear con comentario propio? El diseño no lo muestra | Cambia el modelo de `Repost` |
