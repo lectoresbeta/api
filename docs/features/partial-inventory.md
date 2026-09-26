@@ -101,19 +101,32 @@ Dos cosas que este inventario no había visto y aparecieron al hacerlo:
 
 | Ficha | Hueco | Tamaño |
 |---|---|---|
-| FEAT-CRD-002 `RN-7` | `GrantWelcomeCredits` no publica `CreditsAdded`. La clase existe, nadie la emite | Pequeño |
+| ~~FEAT-CRD-002 `RN-7`~~ | ~~`GrantWelcomeCredits` no publica `CreditsAdded`~~ — **caducado** (2026-09-26): lo publica, vía `AnnounceMovement`. Este inventario se equivocó | — |
 | ~~FEAT-COM-016 `RN-7`~~ | ~~Las sugerencias de autor no filtran cuentas sin activar~~ — **hecho** (2026-09-26). El agujero ancho no era ese: era **la cuenta expulsada**, que había publicado antes de serlo | Pequeño |
 | ~~FEAT-WRK-016~~ | ~~`Credits` no consume la apertura a corrección para recalcular corregibilidad~~ — **hecho** (2026-09-26). No faltaba un recálculo: faltaba **una condición**. Los capítulos de un borrador salían corregibles | Medio |
 | ~~FEAT-WRK-008 `RN-6`~~ | ~~Las palabras de un capítulo oculto siguen contando en el total de la obra~~ — **hecho** (2026-09-26) | Pequeño |
 | ~~FEAT-WRK-012 `RN-8`~~ | ~~El catálogo no esconde las obras de quien te ha bloqueado~~ — **hecho** (2026-09-26), y con él el carrusel de la Home: si uno las escondiera y el otro no, el bloqueo dependería de la pantalla | Medio |
-| FEAT-MOD-005 `MOD-47` | Desestimar un correo que no aporta nada reclamable no deja traza | Pequeño |
+| FEAT-MOD-005 `MOD-47` | Desestimar un correo que no aporta nada reclamable no deja traza | **No es código: es una pregunta de producto.** Ver abajo |
 | ~~FEAT-MOD-006 `MOD-25`~~ | ~~No hay cola de asuntos vivos: una suspensión indefinida se vuelve expulsión sin que nadie lo decida~~ — **hecha** (2026-09-26) | Medio |
 | ~~FEAT-MOD-006 `RN-9`~~ | ~~`Credits` no congela la deuda durante una suspensión parcial~~ — **hecho** (2026-09-26) | **Ver abajo** |
-| FEAT-CRD-006 | `CreditDebtCleared` — el evento existe y `Notification` lo escucha, pero **nada lo publica** | Pequeño |
+| ~~FEAT-CRD-006~~ | ~~`CreditDebtCleared` — el evento existe y `Notification` lo escucha, pero **nada lo publica**~~ — **caducado** (2026-09-26): lo publica `AnnounceMovement` en el cruce de vuelta. Este inventario se equivocó | — |
 
 **`MOD-006 RN-9` merece un párrafo**, porque no es un hueco cosmético sino una trampa: quien
 tiene saldo negativo y recibe una suspensión parcial queda atrapado. Corregir es la única forma
 de saldar la deuda, y la sanción se lo impide.
+
+**`MOD-47` no es un hueco de implementación**, y conviene sacarlo de esta lista: la ficha lo
+plantea como pregunta —«¿qué hace el moderador si el correo no aporta nada reclamable?»— y la
+respuesta decide qué se construye. Registrar una no-reclamación exige decidir qué se guarda de
+un correo que no llegó a ser un expediente, quién puede consultarlo y cuánto se conserva, y eso
+es material que acusa a alguien. La vía de registrar en nombre de otro ya existe
+(`POST /api/v1/admin/claims/on-behalf`); lo que falta es decidir si desestimar también se
+registra, y con qué.
+
+**Dos de esta tabla estaban mal medidos y no eran huecos** (2026-09-26): `FEAT-CRD-002` `RN-7`
+y el `CreditDebtCleared` de `FEAT-CRD-006`. Los dos los publica `AnnounceMovement`, que es el
+único sitio que conoce el saldo de antes y el de después. Verificado en el código antes de
+tocar nada, que es lo que este inventario debería haber hecho.
 
 **Hecho** (2026-09-26), y aquí este inventario se equivocó al medirlo: lo llamé «pequeño» y no
 lo es. Al abrirlo aparecieron tres cosas que no se ven desde fuera:

@@ -171,10 +171,12 @@ los 10 con motivo `WELCOME_GRANT` y escribe el movimiento junto a la fila de ded
 una sola transacción. Las dos protecciones —por evento y por usuario— están cubiertas en
 `tests/Unit/Credits/GrantWelcomeCreditsTest.php`.
 
-**Falta:**
+~~**Falta** publicar `CreditsAdded` (`RN-7`)~~ — **caducado** (revisado el 2026-09-26): se
+publica, y desde hace tiempo. El abono pasa por `AnnounceMovement`, que es el único sitio que
+conoce el saldo de antes y el de después, y de ahí salen `CreditsAdded`, `CreditBalanceChanged`
+y —cuando toca— los dos cruces del descubierto. Lo escucha `Notification`.
 
-- publicar `CreditsAdded` (`RN-7`). No hay todavía ningún consumidor, pero es parte del
-  contrato;
-- el índice `(user_id, reason)` **sí** está creado (`Version20260923190000`);
-- la comprobación de extremo a extremo contra RabbitMQ: hoy se prueba el handler, no el
-  transporte.
+El índice `(user_id, reason)` **sí** está creado (`Version20260923190000`).
+
+**Falta** la comprobación de extremo a extremo contra RabbitMQ: hoy se prueba el handler, no el
+transporte.

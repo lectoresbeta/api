@@ -201,3 +201,10 @@ sería mentir sobre algo que quien lo ordena va a comprobar mirando el saldo.
   ([`FEAT-MOD-004`](FEAT-MOD-004-moderator-role.md)) y no está compuesta aquí;
 - **lo que el moderador hace si el correo no aporta nada reclamable** (`MOD-47`): no
   registrarla también es una decisión, y hoy no deja traza.
+
+  **No es trabajo pendiente, es una pregunta sin responder** (anotado el 2026-09-26). Registrar
+  una no-reclamación exige decidir qué se guarda de un correo que nunca llegó a ser un
+  expediente, quién puede consultarlo y cuánto se conserva — y es material que acusa a alguien,
+  así que la respuesta cambia lo que se construye. La vía de registrar **en nombre de otro** ya
+  existe ([`FEAT-MOD-001`](FEAT-MOD-001-submit-claim.md) `RN-6d`); lo que falta es decidir si
+  desestimar también se registra, y con qué.
