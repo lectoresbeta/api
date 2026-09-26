@@ -1,0 +1,299 @@
+# Lo que se sirve por un enlace público (`FEAT-WRK-010`, `FEAT-FBK-008`).
+#
+# **Los tres únicos endpoints de una obra que no exigen sesión**, y la única
+# escritura de toda la API que no la exige. Lo que autoriza es el token; lo
+# que contiene, el tope del enlace.
+#
+# Todos llevan `X-Robots-Tag: noindex` y `Cache-Control: no-store`: es obra
+# inédita y no puede acabar en un buscador ni en un intermediario.
+#
+# Los tres responden `409 USE_THE_NORMAL_FLOW` a quien llega **con sesión**.
+# Sin esa regla, el autor podría pegar el enlace en su muro y conseguir que
+# usuarios registrados le corrigiesen gratis: él se ahorraría los créditos y
+# ellos perderían los suyos.
+
+page:
+  get:
+    tags: [PublicLink]
+    operationId: getPublicCorrectionPage
+    summary: Abrir un enlace público
+    security: []
+    description: |
+      La obra y sus capítulos **visibles**. Un capítulo que su autor ha
+      ocultado no sale aquí: el enlace abre una puerta, no la levanta.
+
+      Sin el texto: una novela entera en una respuesta son megabytes que casi
+      nadie lee de una sentada.
+    parameters:
+      - $ref: '#/TokenParameter'
+    responses:
+      '200':
+        description: La obra, para leerla.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [workId, title, synopsis, adultsOnly, chapters]
+              properties:
+                workId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                title:
+                  type: string
+                synopsis:
+                  type: [string, 'null']
+                adultsOnly:
+                  type: boolean
+                  description: |
+                    Aquí **no se puede comprobar la edad de nadie** —no hay
+                    cuenta—, así que lo único honesto es decirlo y que el
+                    cliente avise antes de enseñar nada.
+                chapters:
+                  type: array
+                  items:
+                    type: object
+                    required: [chapterId, position, title, wordCount, readingMinutes]
+                    properties:
+                      chapterId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      position:
+                        type: integer
+                      title:
+                        type: [string, 'null']
+                      wordCount:
+                        type: integer
+                      readingMinutes:
+                        type: integer
+      '404':
+        description: '`code: PUBLIC_LINK_NOT_FOUND`. Ese token nunca existió.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        $ref: '#/SignedInResponse'
+      '410':
+        $ref: '#/GoneResponse'
+      '429':
+        $ref: '#/ThrottledResponse'
+
+chapter:
+  get:
+    tags: [PublicLink]
+    operationId: getPublicChapter
+    summary: Leer un capítulo por el enlace
+    security: []
+    description: |
+      El texto y lo que su autor pregunta sobre él, ya filtrado para **este**
+      capítulo: una pregunta de alcance `LAST_CHAPTER` no aparece en el
+      primero.
+    parameters:
+      - $ref: '#/TokenParameter'
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '200':
+        description: El capítulo y su cuestionario.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chapterId, workId, workTitle, position, title, contentHtml, wordCount, readingMinutes, chapterVersion, questionnaireVersion, wouldBeWorth, questions]
+              properties:
+                chapterId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                workId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                workTitle:
+                  type: string
+                position:
+                  type: integer
+                title:
+                  type: [string, 'null']
+                contentHtml:
+                  type: string
+                wordCount:
+                  type: integer
+                readingMinutes:
+                  type: integer
+                chapterVersion:
+                  type: integer
+                questionnaireVersion:
+                  type: integer
+                wouldBeWorth:
+                  type: [integer, 'null']
+                  description: |
+                    Lo que valdría esta corrección si la escribiera alguien
+                    con cuenta. **Informativa y nada más**: por este camino no
+                    se mueve ni un crédito.
+                questions:
+                  type: array
+                  items:
+                    type: object
+                    required: [questionId, position, statement, example, required, minWords, maxWords]
+                    properties:
+                      questionId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      position:
+                        type: integer
+                      statement:
+                        type: string
+                      example:
+                        type: [string, 'null']
+                      required:
+                        type: boolean
+                      minWords:
+                        type: integer
+                      maxWords:
+                        type: [integer, 'null']
+      '404':
+        description: '`code: PUBLIC_LINK_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        $ref: '#/SignedInResponse'
+      '410':
+        $ref: '#/GoneResponse'
+      '429':
+        $ref: '#/ThrottledResponse'
+
+corrections:
+  post:
+    tags: [PublicLink]
+    operationId: submitPublicCorrection
+    summary: Corregir sin tener cuenta
+    security: []
+    description: |
+      Envía la corrección. **No mueve créditos en ninguna dirección**: no
+      cuesta nada al autor y no paga a nadie, porque al otro lado no hay
+      cuenta a la que abonar.
+
+      La respuesta incluye **lo que habría valido**, que es lo que alimenta el
+      mensaje de captación: «acabas de escribir una corrección que en Lectores
+      Beta vale 6 créditos». Es informativa: esos créditos **no se abonan**,
+      ni al registrarse después.
+
+      No abonarlos es deliberado. Hacerlo abriría el agujero evidente —publico
+      un texto con el cuestionario más exigente posible, abro un enlace que no
+      me cuesta nada, me corrijo a mí mismo de incógnito y me registro con
+      otra cuenta— y, más de fondo, convertiría un flujo sin apuestas en uno
+      con dinero, arrastrando hasta aquí todo el control antifraude que hoy no
+      necesita.
+    parameters:
+      - $ref: '#/TokenParameter'
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [answers, acceptedTerms]
+            properties:
+              answers:
+                type: array
+                items:
+                  type: object
+                  required: [questionId, text]
+                  properties:
+                    questionId:
+                      $ref: '../openapi.yaml#/components/schemas/Uuid'
+                    text:
+                      type: string
+              acceptedTerms:
+                type: boolean
+                description: |
+                  Quien envía está aportando un texto propio sin haber
+                  aceptado nada. **La casilla la comprueba el servidor**, no
+                  solo la pantalla.
+              name:
+                type: [string, 'null']
+                maxLength: 80
+                description: |
+                  Opcional y **sin verificar**. Al autor le importa distinguir
+                  la crítica de su hermana de la de un compañero de taller: es
+                  una etiqueta, no una identidad.
+    responses:
+      '201':
+        description: Entregada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correctionId, wouldHaveBeenWorth]
+              properties:
+                correctionId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                wouldHaveBeenWorth:
+                  type: [integer, 'null']
+      '404':
+        description: '`code: PUBLIC_LINK_NOT_FOUND` o `CHAPTER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: USE_THE_NORMAL_FLOW` —lleva `chapterId`—,
+          `PUBLIC_LINK_FULL` —lleva `maxCorrections`— o `NO_QUESTIONNAIRE`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '410':
+        $ref: '#/GoneResponse'
+      '422':
+        description: '`code: TERMS_NOT_ACCEPTED`, o un fallo de validación de las respuestas.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '429':
+        $ref: '#/ThrottledResponse'
+
+TokenParameter:
+  name: token
+  in: path
+  required: true
+  schema:
+    type: string
+  description: |
+    Opaco, largo y aleatorio. **Es la única credencial que protege obra
+    inédita**, así que no se deriva de nada: ni del identificador de la obra,
+    ni del autor, ni de una fecha.
+
+GoneResponse:
+  description: |
+    `code: PUBLIC_LINK_GONE`. Revocado, caducado o de una obra bloqueada por
+    moderación.
+
+    `410` y no `404` a propósito: quien tiene la URL sabe que existió, y
+    fingir lo contrario no protege nada.
+  content:
+    application/problem+json:
+      schema:
+        $ref: '../openapi.yaml#/components/schemas/Problem'
+
+SignedInResponse:
+  description: |
+    `code: USE_THE_NORMAL_FLOW`, con `workId`. Quien tiene sesión va al flujo
+    normal, donde su corrección **se paga**.
+  content:
+    application/problem+json:
+      schema:
+        $ref: '../openapi.yaml#/components/schemas/Problem'
+
+ThrottledResponse:
+  description: '`code: TOO_MANY_ATTEMPTS`. Lleva `Retry-After`.'
+  content:
+    application/problem+json:
+      schema:
+        $ref: '../openapi.yaml#/components/schemas/Problem'

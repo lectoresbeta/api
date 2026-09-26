@@ -1,0 +1,195 @@
+# Rutas del bounded context `Work`.
+#
+# Son las primeras escrituras **no exentas** de exigir cuenta activada: una
+# cuenta en PENDING_ACTIVATION recibe 403 aquí (FEAT-USR-025), sin que estos
+# controladores tengan que saberlo.
+
+createWork:
+    path: /api/v1/works
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\CreateWorkController::__invoke
+    methods: [POST]
+
+addChapter:
+    path: /api/v1/works/{workId}/chapters
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\AddChapterController::__invoke
+    methods: [POST]
+
+changeWorkStatus:
+    path: /api/v1/works/{workId}/status
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ChangeWorkStatusController::__invoke
+    methods: [PUT]
+
+# Lectura (FEAT-WRK-004). No exige cuenta activada: leer no es escribir.
+
+getWork:
+    path: /api/v1/works/{workId}
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\GetWorkController::__invoke
+    methods: [GET]
+
+getChapter:
+    path: /api/v1/chapters/{chapterId}
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\GetChapterController::__invoke
+    methods: [GET]
+
+setAccessMode:
+    path: /api/v1/works/{workId}/access-mode
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\SetAccessModeController::__invoke
+    methods: [PUT]
+
+# El cuestionario (FEAT-WRK-014). No es un accesorio de la obra: es el
+# instrumento con el que el autor fija el precio de su propia corrección.
+
+getWorkQuestionnaire:
+    path: /api/v1/works/{workId}/questionnaire
+    controller: LectoresBeta\Work\Questionnaire\Infrastructure\Controller\GetQuestionnaireController::__invoke
+    methods: [GET]
+
+updateWorkQuestionnaire:
+    path: /api/v1/works/{workId}/questionnaire
+    controller: LectoresBeta\Work\Questionnaire\Infrastructure\Controller\ReplaceQuestionnaireController::__invoke
+    methods: [PUT]
+
+listWorks:
+    path: /api/v1/works
+    controller: LectoresBeta\Work\Catalogue\Infrastructure\Controller\ListWorksController::__invoke
+    methods: [GET]
+
+setWorkGenres:
+    path: /api/v1/works/{workId}/genres
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\SetWorkGenresController::__invoke
+    methods: [PUT]
+
+# La clasificación de contenido sensible (FEAT-WRK-017). Va en el flujo de
+# publicación y no en un ajuste aparte: si se puede omitir, se omitirá.
+
+setWorkContentRating:
+    path: /api/v1/works/{workId}/content-rating
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\SetContentRatingController::__invoke
+    methods: [PUT]
+
+# Público, como el catálogo de temáticas: hace falta en pantallas que se ven
+# sin sesión.
+
+listContentWarnings:
+    path: /api/v1/content-warnings
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ListContentWarningsController::__invoke
+    methods: [GET]
+
+# Editar (`FEAT-WRK-005`). Hasta aquí una obra se creaba y ya no se podía
+# tocar: ni una errata.
+updateWork:
+    path: /api/v1/works/{workId}
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\UpdateWorkController::__invoke
+    methods: [PATCH]
+
+# `PUT` porque se sustituye el texto entero. Si alguien había empezado a
+# corregir esta versión, el guardado archiva una copia antes de pisarla.
+updateChapter:
+    path: /api/v1/chapters/{chapterId}
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\UpdateChapterController::__invoke
+    methods: [PUT]
+
+# Estructurar la obra (`FEAT-WRK-003`). La lista entera en el orden deseado,
+# no «mueve este de la 3 a la 7»: la lista completa es idempotente.
+reorderChapters:
+    path: /api/v1/works/{workId}/chapters/order
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\ReorderChaptersController::__invoke
+    methods: [PUT]
+
+# Solo capítulos que nadie ha corregido: los demás se ocultan.
+removeChapter:
+    path: /api/v1/chapters/{chapterId}
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\RemoveChapterController::__invoke
+    methods: [DELETE]
+
+# La visibilidad es **del capítulo**; la obra tiene estado (`FEAT-WRK-008`).
+setChapterVisibility:
+    path: /api/v1/chapters/{chapterId}/visibility
+    controller: LectoresBeta\Work\Chapter\Infrastructure\Controller\SetChapterVisibilityController::__invoke
+    methods: [PUT]
+
+# Retirar una obra (`FEAT-WRK-006`). El botón dice «Eliminar» y lo que ocurre
+# es un archivado: de una obra cuelgan correcciones pagadas y reclamaciones
+# resueltas, y borrarla destruiría lo que no es de su autor.
+archiveWork:
+    path: /api/v1/works/{workId}
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ArchiveWorkController::__invoke
+    methods: [DELETE]
+
+# Vuelve a borrador, nunca publicada: reabrir la puerta es otra decisión.
+restoreWork:
+    path: /api/v1/works/{workId}/restore
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\RestoreWorkController::__invoke
+    methods: [POST]
+
+# «Mis relatos» (`FEAT-WRK-015`). El único listado con los borradores dentro,
+# y el único con la insignia de estado: es gestión, no escaparate.
+listMyWorks:
+    path: /api/v1/me/works
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\ListMyWorksController::__invoke
+    methods: [GET]
+
+# El enlace público (`FEAT-WRK-010`). El autor cambia privacidad por feedback,
+# y por eso los controles para deshacerlo son suyos: crear, ver y revocar.
+createPublicLink:
+    path: /api/v1/works/{workId}/public-links
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\CreatePublicLinkController::__invoke
+    methods: [POST]
+
+listPublicLinks:
+    path: /api/v1/works/{workId}/public-links
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\ListPublicLinksController::__invoke
+    methods: [GET]
+
+# `DELETE` sobre el enlace y no sobre la obra: lo que se revoca es una puerta
+# concreta, y repartir uno por grupo es lo que permite cerrar solo el que se
+# fue de las manos.
+revokePublicLink:
+    path: /api/v1/public-links/{publicLinkId}
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\RevokePublicLinkController::__invoke
+    methods: [DELETE]
+
+# Y las dos lecturas sin sesión. Son las únicas de una obra que no la exigen,
+# y van en `access_control` con `PUBLIC_ACCESS` y no en un cortafuegos sin
+# seguridad: hace falta **leer** la sesión aunque no se exija, porque a quien
+# ya tiene cuenta se le manda al flujo normal, donde cobra (`FEAT-FBK-008`
+# `RN-1`).
+getPublicCorrectionPage:
+    path: /api/v1/public/{token}
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\GetPublicCorrectionPageController::__invoke
+    methods: [GET]
+
+getPublicChapter:
+    path: /api/v1/public/{token}/chapters/{chapterId}
+    controller: LectoresBeta\Work\PublicLink\Infrastructure\Controller\GetPublicChapterController::__invoke
+    methods: [GET]
+
+# Crear una obra subiendo un fichero (`FEAT-WRK-002`).
+#
+# **Dos pasos, y es la respuesta a `W-4`**: el servidor lee el fichero y
+# propone dónde acaba cada capítulo; el autor lo revisa y confirma. La obra
+# nace en el segundo, y sale igual que la de `FEAT-WRK-001`.
+#
+# El fichero original **no se guarda**: se extrae el texto y se descarta.
+
+uploadManuscript:
+    path: /api/v1/manuscript-uploads
+    controller: LectoresBeta\Work\Ingest\Infrastructure\Controller\UploadManuscriptController::__invoke
+    methods: [POST]
+
+confirmManuscript:
+    path: /api/v1/manuscript-uploads/{uploadId}/work
+    controller: LectoresBeta\Work\Ingest\Infrastructure\Controller\ConfirmManuscriptController::__invoke
+    methods: [POST]
+
+# Los metadatos con los que se pinta la previsualización al pegar el enlace de
+# una obra en una red social (FEAT-WRK-011).
+#
+# **No genera ningún enlace**: el enlace es la dirección canónica de siempre.
+# Esto solo dice qué poner en la tarjeta, y solo de obras visibles para
+# cualquiera — compartir no puede ser una puerta trasera a lo que la
+# visibilidad cierra.
+getWorkShareCard:
+    path: /api/v1/works/{workId}/share
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\GetWorkShareCardController::__invoke
+    methods: [GET]

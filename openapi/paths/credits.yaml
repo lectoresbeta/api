@@ -1,0 +1,515 @@
+# Saldo de créditos.
+#
+# Casi todo `Credits` funciona por eventos: no hay —ni debe haber— ninguna
+# operación para sumar o restar créditos desde fuera (decision:0002).
+
+balance:
+  get:
+    tags: [Credits]
+    operationId: getCreditBalance
+    summary: Consultar el saldo propio
+    description: |
+      Un **único** entero con signo. No hay «saldo disponible» frente a
+      «saldo total» porque el sistema no retiene créditos
+      (`decision:0006` §3): lo que se ve es lo que se tiene.
+
+      Dos cosas que el cliente debe respetar:
+
+      - **`balance` puede ser negativo** (`FEAT-CRD-018`). Un cliente que lo
+        trate como natural mostrará cifras equivocadas justo cuando la
+        persona más necesita entender qué pasa;
+      - **una cuenta sin movimientos devuelve `0`, no `404`.** Es el estado
+        normal de quien se ha registrado y aún no ha activado.
+
+      No existe forma de consultar el saldo de otra persona. La vista
+      agregada de la economía es `FEAT-CRD-012` y trabaja con totales.
+    responses:
+      '200':
+        description: Saldo del usuario autenticado.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+              examples: ['no-store, private']
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [balance]
+              properties:
+                balance:
+                  type: integer
+                  examples: [10]
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+movements:
+  get:
+    tags: [Credits]
+    operationId: listCreditMovements
+    summary: Mis movimientos de créditos
+    description: |
+      Todo lo que ha movido el saldo, de lo más reciente a lo más antiguo.
+
+      **Es la invariante del contexto, enseñada**: el saldo es la suma de sus
+      movimientos, y esta lista permite comprobarlo en vez de creérselo. Cada
+      apunte lleva el `balanceAfter` con el que quedó la cuenta, así que se
+      puede seguir hacia atrás sin sumar a mano.
+
+      Hace falta desde que una reclamación estimada puede **retirar créditos
+      ya cobrados**, días después y sin que su dueño haya hecho nada
+      ([`FEAT-MOD-002`](../../docs/features/moderation/FEAT-MOD-002-review-claim.md)).
+      Una reversión aparece como **dos apuntes nuevos**, nunca como una
+      corrección del original: los movimientos son inmutables.
+
+      **El objeto va por referencia, no por nombre.** `Credits` no conoce el
+      título de ninguna obra y no va a conocerlo: pedírselo a `Work` sería la
+      dependencia que su aislamiento prohíbe. Quien pinte la pantalla resuelve
+      los títulos donde viven.
+
+      Cada uno ve **solo el suyo**. No hay forma de consultar el historial de
+      otra persona, ni siquiera en parte.
+    parameters:
+      - name: reason
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Los movimientos propios. Lista vacía y saldo cero si no hay cuenta todavía.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [movements]
+              properties:
+                movements:
+                  type: array
+                  items:
+                    type: object
+                    required: [movementId, amount, reason, balanceAfter, occurredAt, reconstructedPrice]
+                    properties:
+                      movementId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      amount:
+                        type: integer
+                        description: Con signo. Negativo es un cargo.
+                      reason:
+                        type: string
+                      balanceAfter:
+                        type: integer
+                        description: El saldo con el que quedó la cuenta tras este apunte.
+                      occurredAt:
+                        type: string
+                        format: date-time
+                      correctionId:
+                        type: [string, 'null']
+                      chapterId:
+                        type: [string, 'null']
+                      workId:
+                        type: [string, 'null']
+                      claimId:
+                        type: [string, 'null']
+                      reconstructedPrice:
+                        type: boolean
+                        description: |
+                          El precio se reconstruyó porque su cotización no
+                          estaba. Una reparación que no deja rastro es
+                          indistinguible de lo real cuando alguien audita
+                          meses después.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+
+tip:
+  post:
+    tags: [Credits]
+    operationId: tipCorrection
+    summary: Propinar una corrección
+    description: |
+      El autor da créditos **de su propio saldo** a una corrección que le ha
+      servido.
+
+      Sustituye a la bonificación automática por «feedback valorado
+      positivamente», y la mejora en dos frentes: **no crea créditos** —lo que
+      sale del autor entra en el corrector, masa constante— y **cuesta algo a
+      quien lo da**, que es lo que la convierte en una señal de calidad. Dos
+      cuentas que se valoran mutuamente no ganan nada: lo que A da, A lo
+      pierde, así que el fraude no tiene premio que repartir.
+
+      **No genera descubierto**, al revés que el pago de una corrección. El
+      descubierto existe para que un lector nunca trabaje sin cobrar, y
+      endeudarse por ser generoso sería una trampa.
+
+      Es **irrevocable** y **única** por corrección. Como cualquier
+      movimiento, no se deshace: se compensa con otro, y aquí no hay
+      compensación posible.
+
+      Una corrección recibida **por enlace público** no admite propina: quien
+      la escribió no tiene cuenta a la que abonar.
+
+      Devuelve el saldo resultante, porque quien acaba de dar créditos quiere
+      ver lo que le queda.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: Idempotency-Key
+        in: header
+        required: false
+        schema:
+          type: string
+        description: |
+          Es un movimiento de créditos, y un reintento de red no debe leerse
+          como un segundo gesto. Repetir la petición con la misma llave
+          devuelve `200` con el saldo; repetirla sin llave, o con otra, es una
+          segunda propina y se rechaza con `ALREADY_TIPPED`.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [amount]
+            properties:
+              amount:
+                type: integer
+                minimum: 1
+                maximum: 5
+                description: |
+                  De uno a cinco. Por encima de cinco la propina se parece al
+                  precio de una corrección y deja de leerse como un extra.
+    responses:
+      '200':
+        description: |
+          Propinada, con el saldo que queda. También es la respuesta a un
+          reintento con la misma `Idempotency-Key`, que no mueve nada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [balance]
+              properties:
+                balance:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: CORRECTION_NOT_FOUND`. No existe, no es suya, o no se ha
+          cobrado todavía: **las tres responden igual**, porque distinguirlas
+          diría algo sobre las correcciones de otra persona.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: INSUFFICIENT_CREDITS` —lleva `balance`—, `ALREADY_TIPPED` o
+          `NOBODY_TO_TIP`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: TIP_OUT_OF_RANGE`. Lleva `minimumTip` y `maximumTip`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+health:
+  get:
+    tags: [Credits]
+    operationId: getEconomyHealth
+    summary: Salud de la economía de créditos
+    description: |
+      Cuatro métricas y una invariante (`FEAT-CRD-012`). **No es un panel
+      bonito: es el instrumento que dice cuál de las palancas hay que mover.**
+
+      Un sistema de créditos sin medición se descubre roto por las quejas, y
+      las dos formas de morir —nadie tiene créditos, o los créditos no valen
+      nada— tardan semanas en manifestarse y son caras de revertir, porque
+      para entonces los saldos ya están formados.
+
+      **No confundir con `GET /health`**, que es público y lo consultan sondas
+      sin credenciales. Este suma sobre todo el histórico de movimientos y
+      cuenta cómo está repartida la economía: una sonda no debe contarle a un
+      desconocido que el sistema de créditos está roto.
+
+      Todas las cifras salen del registro de movimientos y de los saldos. No
+      hay contadores paralelos que mantener y, por tanto, ninguno que pueda
+      desviarse — que es exactamente el fallo que la invariante detecta.
+
+      **Nada identifica a nadie**: el saldo más bajo del sistema es un número,
+      no una persona.
+    parameters:
+      - name: from
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+        description: |
+          Acota las cifras **de periodo**, que hoy son los ajustes manuales.
+          La invariante y el reparto de saldos son una foto de ahora y no se
+          ven afectados.
+      - name: to
+        in: query
+        required: false
+        schema:
+          type: string
+          format: date-time
+    responses:
+      '200':
+        description: |
+          El estado actual. `Cache-Control: no-store`: es una foto de ahora
+          mismo, y quien la lee está mirando si algo acaba de cambiar.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invariant, period, accounts, overdraft, manualAdjustments, correctableChapters, alerts]
+              properties:
+                invariant:
+                  type: object
+                  description: |
+                    Tres cifras que tienen que coincidir, y **por dos caminos
+                    distintos**: `issued` es lo que emitieron los grifos,
+                    `moved` la suma de todos los movimientos y `balances` la
+                    suma de los saldos guardados, que se calcula sin mirar los
+                    movimientos.
+
+                    Que `issued` y `moved` difieran significa que hay un
+                    movimiento que cobra sin pagar. Que difieran `moved` y
+                    `balances`, que un saldo se ha desviado de su propia
+                    historia.
+                  required: [holds, failure, issued, moved, balances]
+                  properties:
+                    holds:
+                      type: boolean
+                    failure:
+                      type: [string, 'null']
+                      enum: [TRANSFERS_DO_NOT_NET_TO_ZERO, BALANCES_DRIFTED_FROM_HISTORY, null]
+                    issued:
+                      type: integer
+                    moved:
+                      type: integer
+                    balances:
+                      type: integer
+                period:
+                  type: object
+                  required: [from, to]
+                  properties:
+                    from:
+                      type: [string, 'null']
+                      format: date-time
+                    to:
+                      type: [string, 'null']
+                      format: date-time
+                accounts:
+                  type: object
+                  required: [total, atZeroOrBelow, inDebt, deepestDebt, shareAtZeroOrBelow]
+                  properties:
+                    total:
+                      type: integer
+                    atZeroOrBelow:
+                      type: integer
+                    inDebt:
+                      type: integer
+                    deepestDebt:
+                      type: integer
+                      description: Cero o negativo. El saldo más bajo que hay ahora.
+                    shareAtZeroOrBelow:
+                      type: number
+                      description: |
+                        La métrica de concentración: si sube, el saldo se está
+                        acumulando en pocas manos.
+                overdraft:
+                  type: object
+                  required: [granted, settled, recoveryRate]
+                  properties:
+                    granted:
+                      type: integer
+                    settled:
+                      type: integer
+                    recoveryRate:
+                      type: [number, 'null']
+                      description: |
+                        **Un descubierto que nunca se salda es emisión pura.**
+                        Nulo mientras no se haya concedido ninguno: un cero
+                        diría que ninguno se recupera, que es una afirmación
+                        sobre datos que no existen.
+                manualAdjustments:
+                  type: object
+                  description: |
+                    La única vía de crédito que no es transferencia ni regla
+                    automática. Si hacen falta muchos, algo de más arriba no
+                    está funcionando.
+                  required: [count, net]
+                  properties:
+                    count:
+                      type: integer
+                    net:
+                      type: integer
+                correctableChapters:
+                  type: integer
+                  description: |
+                    Cuántos capítulos admiten corrección ahora. Es la mitad de
+                    «capítulos corregibles por corrector activo»: la otra
+                    mitad la sabe `Feedback`, y este contexto no la pregunta.
+                alerts:
+                  type: array
+                  description: |
+                    Qué umbral se ha cruzado. Sin umbral, una métrica es
+                    decorativa: dice una cifra y no dice si está bien.
+                  items:
+                    type: string
+                    enum:
+                      - ACCOUNTING_INVARIANT_BROKEN
+                      - DEBT_TOO_DEEP
+                      - TOO_MANY_EMPTY_ACCOUNTS
+                      - OVERDRAFT_NOT_RECOVERED
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Solo el backoffice.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+scoring:
+  get:
+    tags: [Credits]
+    operationId: getCreditScoring
+    summary: Cómo se gana y cómo se gasta
+    description: |
+      Las reglas de la economía de créditos, con las cifras vigentes
+      (`FEAT-CRD-015`). Es el destino del botón «Ver puntuación de créditos»
+      del modal informativo (`FEAT-CRD-014`).
+
+      **Público y sin sesión**: no hay nada de nadie aquí, son las reglas de
+      la casa, y quien se está planteando registrarse tiene derecho a leerlas
+      antes. Por lo mismo se puede cachear en público.
+
+      **Las cifras salen de las mismas palancas que usa el motor**, no de una
+      copia. Y el ejemplo lo calcula la misma clase que cobra: si la fórmula
+      cambia, el ejemplo cambia solo.
+
+      **No consulta el saldo de nadie.** Es la explicación de las reglas, no
+      un estado.
+    security: []
+    responses:
+      '200':
+        description: La puntuación vigente.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+            description: '`public, max-age=3600`.'
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [earning, spending, overdraft, example]
+              properties:
+                earning:
+                  type: object
+                  required: [welcomeGrant, invitationReward, rewardedInvitationLimit, correctionPaysWhatItCosts]
+                  properties:
+                    welcomeGrant:
+                      type: integer
+                      description: Los créditos de bienvenida, una vez, al activar la cuenta.
+                    invitationReward:
+                      type: integer
+                      description: |
+                        Lo que cobra quien invita **cuando la persona invitada
+                        entrega su primera corrección** (`FEAT-CRD-005`), no
+                        al invitar.
+                    rewardedInvitationLimit:
+                      type: integer
+                      description: Cuántas invitaciones se pagan por persona.
+                    correctionPaysWhatItCosts:
+                      type: boolean
+                      description: |
+                        Siempre `true`, y está para declarar una ausencia: **no
+                        hay una cifra de «lo que se gana corrigiendo»** porque
+                        una corrección mueve créditos en vez de crearlos. El
+                        autor paga exactamente lo que el corrector cobra.
+                spending:
+                  type: object
+                  required: [minPrice, maxPrice, wordsPerReadingCredit, wordsPerWritingCredit, wordsPerUnboundedQuestion, chargedOn]
+                  properties:
+                    minPrice:
+                      type: integer
+                    maxPrice:
+                      type: integer
+                    wordsPerReadingCredit:
+                      type: integer
+                      description: El término de **lectura** del precio.
+                    wordsPerWritingCredit:
+                      type: integer
+                      description: El de **escritura**, sobre lo que exige el cuestionario.
+                    wordsPerUnboundedQuestion:
+                      type: integer
+                      description: El suelo de una pregunta que no declara mínimo.
+                    chargedOn:
+                      type: string
+                      enum: [FEEDBACK_DELIVERED]
+                      description: |
+                        **Cuándo se paga**, dicho sin ambigüedad: al entregarse
+                        cada corrección, no al abrir la obra a corrección
+                        (`decision:0006`, `FEAT-CRD-006`).
+                overdraft:
+                  type: object
+                  required: [weeklyQuota]
+                  properties:
+                    weeklyQuota:
+                      type: integer
+                example:
+                  type: object
+                  required: [words, requiredWords, price]
+                  description: La fórmula aplicada, calculada por el motor real.
+                  properties:
+                    words:
+                      type: integer
+                    requiredWords:
+                      type: integer
+                    price:
+                      type: integer

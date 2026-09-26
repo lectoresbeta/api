@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Moderation\ModeratorRole\Domain\Entity\ModeratorRole"
+            table="moderator_role" schema="moderation_ctx">
+
+        <indexes>
+            <!-- Who to email when a claim arrives (`RN-8`). -->
+            <index name="idx_moderator_alerts" columns="email_alerts,revoked_at"/>
+        </indexes>
+
+        <id name="userId" column="user_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="level" type="string" length="16"
+               enum-type="LectoresBeta\Moderation\ModeratorRole\Domain\Enum\ModeratorLevel"/>
+        <field name="emailAlerts" column="email_alerts" type="boolean"/>
+        <field name="grantedBy" column="granted_by" type="guid"/>
+        <field name="grantedAt" column="granted_at" type="datetime_immutable"/>
+        <field name="revokedAt" column="revoked_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

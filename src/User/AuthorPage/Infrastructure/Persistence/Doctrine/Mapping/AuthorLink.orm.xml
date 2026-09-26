@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Las referencias de la página de autor (`FEAT-USR-015`). Filas y no
+         una columna JSON en la cuenta: se leen en lista, se ordenan, y una
+         de ellas puede tener que retirarse sola el día que una moderación lo
+         pida. -->
+    <entity name="LectoresBeta\User\AuthorPage\Domain\Entity\AuthorLink"
+            table="author_link" schema="user_ctx">
+
+        <indexes>
+            <!-- Se leen siempre todas las de una persona, en su orden. -->
+            <index name="idx_author_link_owner" columns="user_id,position"/>
+        </indexes>
+
+        <id name="id" column="id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="userId" column="user_id" type="guid"/>
+        <field name="label" type="string" length="60"/>
+        <field name="url" type="string" length="512"/>
+        <field name="position" type="integer"/>
+
+    </entity>
+
+</doctrine-mapping>

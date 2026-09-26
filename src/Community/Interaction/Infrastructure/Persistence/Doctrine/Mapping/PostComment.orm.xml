@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Community\Interaction\Domain\Entity\PostComment"
+            table="post_comment" schema="community_ctx">
+
+        <indexes>
+            <index name="idx_post_comment_post" columns="post_id,created_at"/>
+            <index name="idx_post_comment_parent" columns="parent_comment_id"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="postId" column="post_id" type="guid"/>
+        <field name="authorId" column="author_id" type="guid"/>
+        <field name="parentCommentId" column="parent_comment_id" type="guid" nullable="true"/>
+        <field name="body" type="text"/>
+        <field name="replyCount" column="reply_count" type="integer"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+        <field name="editedAt" column="edited_at" type="datetime_immutable" nullable="true"/>
+        <field name="likeCount" column="like_count" type="integer"/>
+        <field name="deletedAt" column="deleted_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

@@ -1,0 +1,75 @@
+# Especificaciones de interfaz (Figma)
+
+Aquí se documenta lo que cada pantalla de Figma revela sobre el comportamiento de la
+plataforma. **Este backend no implementa la interfaz**, pero el diseño es la fuente más
+precisa de qué funcionalidades existen y cómo se comportan.
+
+## Pantallas documentadas
+
+| Documento | Flujo | Funcionalidades | Estado |
+|---|---|---|---|
+| [app-layout-and-navigation.md](app-layout-and-navigation.md) | Layout común: menú lateral, cabecera, bloque de créditos | `FEAT-CRD-001`, `FEAT-CRD-014`, `FEAT-NOT-009` | `DRAFT` |
+| [account-creation.md](account-creation.md) | Registro, activación por email y onboarding de tres pasos | `FEAT-USR-001`, `019`–`025`, `FEAT-COM-016`, `FEAT-NOT-008` | `DRAFT` |
+| [home.md](home.md) | Home: recomendaciones, muro, estado vacío, tour y modal de créditos | `FEAT-COM-017`–`025`, `FEAT-USR-026`, `FEAT-CRD-013`–`015` | `DRAFT` |
+| [my-profile.md](my-profile.md) | Mi perfil: cabecera, pestañas y sus cinco estados vacíos | `FEAT-USR-028`–`032`, `FEAT-COM-026`, `FEAT-COM-027`, `FEAT-FBK-010` | `DRAFT` |
+| [profile-photo.md](profile-photo.md) | Gestionar la foto de perfil: subir, reencuadrar, cambiar y eliminar | `FEAT-USR-037` | `DRAFT` |
+| [create-post.md](create-post.md) | Modal de publicación, audiencia, adjuntos y renderizado de un repost | `FEAT-COM-002`, `019`, `028`, `029` | `DRAFT` |
+| [post-interactions.md](post-interactions.md) | Comentar, valorar un comentario, responder y mencionar | `FEAT-COM-006`, `030`–`032` | `DRAFT` |
+| [my-works.md](my-works.md) | «Mis relatos»: filtros por estado, ordenación y estados de una obra | `FEAT-WRK-015`, `FEAT-WRK-016` | `DRAFT` |
+| [profile-more-info.md](profile-more-info.md) | «Más info»: obras publicadas y premios | `FEAT-USR-029`, `FEAT-USR-030` | `DRAFT` |
+| [user-profile.md](user-profile.md) | Perfil ajeno: pestañas, relación, seguir, silenciar, bloquear y denunciar | `FEAT-USR-014`, `FEAT-COM-033`–`035` | `DRAFT` |
+| [read-section.md](read-section.md) | Sección «Leer»: filtros, ordenación, paginación numerada y pie de página | `FEAT-WRK-012`, `FEAT-CRD-013` | `DRAFT` |
+| [read-chapter.md](read-chapter.md) | Leer un capítulo, comentarlo y **corregirlo** con el cuestionario del autor | `FEAT-FBK-003`, `FEAT-FBK-011`, `FEAT-FBK-012`, `FEAT-WRK-014`, `FEAT-COM-036`, `FEAT-CRD-016` | `DRAFT` |
+| [settings.md](settings.md) | Configuración: perfil, cuenta, notificaciones, privacidad y apariencia | `FEAT-USR-008`, `013`, `037`–`042` | `DRAFT` |
+
+El resto se irá incorporando a medida que lleguen las páginas de Figma.
+
+## Para qué sirve esta carpeta
+
+Una pantalla de Figma contiene información que no está en ningún otro sitio: qué datos se
+muestran juntos, qué acciones existen, qué estados tiene cada elemento, qué se valida y qué
+se le dice al usuario cuando algo falla.
+
+Traducir eso a requisitos de backend es el trabajo que se documenta aquí.
+
+## Flujo de trabajo al incorporar una página
+
+1. **Leer la pantalla** e identificar todo lo que implique backend: datos mostrados,
+   acciones disponibles, estados, validaciones, mensajes de error, paginación, permisos.
+2. **Crear el documento de pantalla** a partir de
+   [`../_templates/ui-screen.md`](../_templates/ui-screen.md).
+3. **Contrastar con el registro maestro**:
+   - ¿Existe ya la funcionalidad? Se enlaza y se detalla su ficha.
+   - ¿Es nueva? Se añade al registro con un `FEAT-` nuevo.
+   - ¿Contradice lo documentado? **Se marca la contradicción de forma explícita** y se
+     resuelve antes de seguir. Una contradicción silenciada se convierte en un bug.
+4. **Detallar las fichas** afectadas: reglas de negocio, flujos, errores, criterios de
+   aceptación.
+5. **Definir el contrato de API** que la pantalla necesita, en `api/endpoints/` y `openapi/`.
+6. **Actualizar el estado** de la ficha, normalmente de `PENDING` a `DRAFT` o `REVIEW`.
+
+## Qué mirar en una pantalla
+
+| Aspecto | Qué revela |
+|---|---|
+| Datos mostrados | Qué debe devolver el endpoint, y qué **no** debe devolver |
+| Acciones y botones | Qué operaciones existen y cuándo están disponibles |
+| Estados vacíos | Qué ocurre sin datos, y si es un caso de negocio distinto |
+| Estados de carga | Si la operación es asíncrona |
+| Mensajes de error | Qué validaciones y reglas de negocio existen |
+| Listas | Paginación, filtros, ordenación y su valor por defecto |
+| Elementos deshabilitados | Reglas de autorización o de estado |
+| Contadores y agregados | Read models o campos calculados |
+| Diferencias entre roles | Reglas de autorización |
+| Formularios | Campos obligatorios, formatos, límites |
+
+La pregunta más productiva ante cualquier pantalla: **¿qué tiene que ser cierto en el
+backend para que esto se pueda dibujar?**
+
+## Convenciones
+
+- Un documento por pantalla o por flujo coherente.
+- Nombre en inglés y `kebab-case`: `work-editor.md`, `beta-reader-requests.md`.
+- Cada documento enlaza las funcionalidades que cubre, y cada ficha enlaza de vuelta.
+- Se anotan siempre las **preguntas que la pantalla no responde**. Son tan valiosas como
+  lo que sí resuelve.

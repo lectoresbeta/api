@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Community\Interaction\Domain\Entity\PostCommentLike"
+            table="post_comment_like" schema="community_ctx">
+
+        <indexes>
+            <index name="idx_post_comment_like_member" columns="member_id"/>
+        </indexes>
+
+        <!-- La identidad es el par, que es lo que hace que «uno por persona»
+             no dependa de que nadie se acuerde: una segunda fila no cabe. -->
+        <id name="commentId" column="comment_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="memberId" column="member_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="likedAt" column="liked_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

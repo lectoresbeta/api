@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Credits\Account\Domain\Entity\CreditTransaction"
+            table="credit_transaction" schema="credits_ctx">
+
+        <indexes>
+            <!-- The movement history of one account, newest first. -->
+            <index name="idx_credit_transaction_account" columns="user_id,occurred_at"/>
+            <!-- `FEAT-CRD-012` adds up the taps to check the accounting
+                 invariant, and reads by reason. -->
+            <index name="idx_credit_transaction_reason" columns="reason,occurred_at"/>
+            <index name="idx_credit_transaction_event" columns="event_id"/>
+            <!-- «¿Este usuario ya tiene un WELCOME_GRANT?» se pregunta en
+                 cada activación (`FEAT-CRD-002` `RN-3`), y sin este índice
+                 la respuesta recorre todo el historial de la cuenta. -->
+            <index name="idx_credit_transaction_user_reason" columns="user_id,reason"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="userId" column="user_id" type="guid"/>
+        <field name="amount" type="integer"/>
+        <field name="reason" type="string" length="32"
+               enum-type="LectoresBeta\Credits\Account\Domain\Enum\CreditTransactionReason"/>
+        <field name="eventId" column="event_id" type="guid" nullable="true"/>
+        <field name="metadata" type="json">
+            <options>
+                <option name="jsonb">true</option>
+            </options>
+        </field>
+        <field name="occurredAt" column="occurred_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

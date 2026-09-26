@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Projection of the settings that live in `User` (`FEAT-USR-039`), so
+         that delivery can decide without reading another context's tables. -->
+    <entity name="LectoresBeta\Notification\Preference\Domain\Entity\RecipientPreference"
+            table="recipient_preference" schema="notification_ctx">
+
+        <id name="recipientId" column="recipient_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="topic" column="topic" type="string" length="48">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="channel" column="channel" type="string" length="16">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="enabled" type="boolean"/>
+        <field name="allMuted" column="all_muted" type="boolean"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

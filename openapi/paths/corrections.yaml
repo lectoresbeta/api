@@ -1,0 +1,1128 @@
+# Correcciones (FEAT-FBK-003).
+#
+# Es la operación central del producto: enviar una corrección es **el único
+# hecho que mueve créditos**. Todo lo demás —descubrir obras, pedir acceso,
+# leer— existe para que esto ocurra.
+#
+# Las rutas cuelgan del **capítulo**, que es la unidad que se corrige. El
+# cuestionario lo define el autor para la obra (FEAT-WRK-014), pero se
+# responde capítulo a capítulo.
+#
+# Ninguna respuesta de este fichero lleva una cifra de créditos. El abono es
+# asíncrono y lo decide `Credits`; devolver un importe aquí obligaría a
+# `Feedback` a conocer sus reglas (decision:0002).
+
+questionnaire:
+  get:
+    tags: [Corrections]
+    operationId: getChapterQuestionnaire
+    summary: Cuestionario a responder y borrador del lector
+    description: |
+      Lo que el autor pregunta sobre **este** capítulo, y lo que quien llama
+      hubiera escrito ya.
+
+      Es la otra mitad de `getWorkQuestionnaire`, que es la vista del autor.
+      Las dos describen el mismo objeto y no son la misma representación: el
+      autor ve cómo está configurado el formulario; el lector, lo que necesita
+      para responderlo.
+
+      **Las preguntas vienen filtradas por capítulo.** Una de alcance
+      `LAST_CHAPTER` no aparece en el capítulo 3, porque allí no tiene
+      respuesta posible y el autor no debe pagarla (`FEAT-WRK-014` `W-17`).
+
+      Es una lectura pura: abrir el cuestionario **no ocupa** ninguno de los
+      tres sitios de corrección del capítulo ni fija precio alguno. Para eso
+      está `startCorrection`.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: El cuestionario y lo escrito hasta ahora.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chapterId, workId, questionnaireVersion, status, questions]
+              properties:
+                chapterId:
+                  type: string
+                  format: uuid
+                workId:
+                  type: string
+                  format: uuid
+                questionnaireVersion:
+                  type: integer
+                  description: |
+                    La versión que se está respondiendo. Una corrección ya
+                    empezada conserva la suya aunque el autor publique otra.
+                correctionId:
+                  type: string
+                  format: uuid
+                  nullable: true
+                status:
+                  type: string
+                  enum: [NOT_STARTED, DRAFT, SUBMITTED]
+                questions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/PanelQuestion'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          No puede corregir esta obra. `code: NOT_A_BETA_READER` si la obra no
+          es `PUBLIC` y no tiene acceso concedido, `AUTHOR_CANNOT_CORRECT` si
+          es su propia obra.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '409':
+        description: |
+          La obra no admite correcciones. `code: WORK_NOT_IN_CORRECTION` o
+          `WORK_WITHOUT_QUESTIONNAIRE`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+start:
+  post:
+    tags: [Corrections]
+    operationId: startCorrection
+    summary: Empezar una corrección
+    description: |
+      «Empezar corrección». **Ocupa uno de los tres sitios del capítulo y fija
+      el precio** que se cobrará y se abonará al entregarla
+      ([`FEAT-CRD-009`](../../docs/features/credits/FEAT-CRD-009-balance-check-on-correction-start.md)),
+      por eso es una escritura y no un efecto lateral de leer el cuestionario:
+      un `GET` que hiciera esto convertiría recargar la página en cerrar un
+      capítulo.
+
+      **No retiene créditos.** El saldo del autor sigue intacto y disponible;
+      lo que queda escrito es una cotización que no caduca. El lector no tiene
+      plazo para entregar.
+
+      En una obra `PUBLIC`, esta llamada **es** el permiso: concede el acceso
+      de lector beta sin solicitud previa ni espera (`R-4`). En `ON_REQUEST` y
+      `PRIVATE` hace falta tenerlo de antes.
+
+      Llamarla dos veces devuelve la misma corrección: es el lector volviendo
+      a un panel que dejó abierto.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '201':
+        description: Corrección empezada, en estado `DRAFT`.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correctionId]
+              properties:
+                correctionId:
+                  type: string
+                  format: uuid
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: NOT_A_BETA_READER`, `AUTHOR_CANNOT_CORRECT` o
+          `ACCOUNT_NOT_ACTIVATED`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '409':
+        description: |
+          `code: WORK_NOT_IN_CORRECTION`, `WORK_WITHOUT_QUESTIONNAIRE`,
+          `CHAPTER_NOT_TAKING_CORRECTIONS` —el capítulo ya tiene todas las
+          correcciones que admite a la vez, o su autor no puede pagarlas— o
+          `CORRECTION_ALREADY_SUBMITTED`.
+
+          **No se dice cuál de los dos motivos** en el caso de
+          `CHAPTER_NOT_TAKING_CORRECTIONS`: distinguirlos contaría a un
+          desconocido cómo va el saldo del autor.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+collection:
+  post:
+    tags: [Corrections]
+    operationId: submitCorrection
+    summary: Enviar una corrección
+    description: |
+      **El hecho que mueve los créditos.** Al enviarse se publica
+      `FeedbackSubmitted`, y `Credits` carga al autor y abona al lector el
+      importe anotado al empezar.
+
+      La respuesta **no espera** a que eso ocurra ni incluye cifra alguna: lo
+      que el lector necesita saber es que su trabajo ha quedado registrado.
+
+      Se valida lo que el autor pidió: las preguntas obligatorias tienen que
+      estar respondidas y cada respuesta respeta el mínimo y el máximo de
+      palabras de su pregunta. El mínimo es la primera defensa contra cobrar
+      por «ok, muy bueno»; no es un control antifraude
+      ([`FEAT-FBK-012`](../../docs/features/feedback/FEAT-FBK-012-correction-fraud-control.md)).
+
+      Una corrección enviada es **inmutable**: no se edita ni se borra,
+      porque el autor ya ha pagado por ella.
+
+      Enviar sin haber llamado antes a `startCorrection` funciona: la
+      corrección se abre y se entrega en el mismo acto.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [answers]
+            properties:
+              answers:
+                type: array
+                items:
+                  type: object
+                  required: [questionId, text]
+                  properties:
+                    questionId:
+                      type: string
+                      format: uuid
+                    text:
+                      type: string
+    responses:
+      '201':
+        description: Corrección entregada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correctionId, status]
+              properties:
+                correctionId:
+                  type: string
+                  format: uuid
+                status:
+                  type: string
+                  enum: [SUBMITTED]
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: NOT_A_BETA_READER`, `AUTHOR_CANNOT_CORRECT` o
+          `ACCOUNT_NOT_ACTIVATED`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '409':
+        description: |
+          `code: CORRECTION_ALREADY_SUBMITTED` —ya envió una corrección de
+          este capítulo— o `WORK_NOT_IN_CORRECTION`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          Las respuestas no cumplen lo que el autor pidió.
+          `code: MISSING_REQUIRED_ANSWER`, `ANSWER_TOO_SHORT`,
+          `ANSWER_TOO_LONG` o `UNKNOWN_QUESTION`. El `detail` dice **qué
+          pregunta**: un formulario que solo dice «algo está mal» manda al
+          lector a buscar entre veinte campos.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+draft:
+  put:
+    tags: [Corrections]
+    operationId: saveCorrectionDraft
+    summary: Guardar el borrador de una corrección
+    description: |
+      Conservar lo escrito sin entregarlo, para seguir en otra sesión. Una
+      corrección seria de una obra larga no se escribe de una sentada, y sin
+      esto el lector tiene dos salidas —escribir en otro sitio y pegar, o
+      perder el trabajo— que empeoran las dos el feedback, que es el producto.
+
+      **No publica nada ni mueve un solo crédito.** Un borrador a medias no es
+      un hecho de negocio, y avisar de que alguien está escribiendo sería
+      justo lo que la privacidad del borrador evita: el autor sabría que hay
+      una crítica en camino y el lector sentiría la presión de enviarla.
+
+      **Solo se valida el techo de palabras**, no el mínimo ni la
+      obligatoriedad: está a medias por definición, y rechazar un borrador por
+      corto sería impedir guardar.
+
+      Guardar en un capítulo que no se había empezado **lo empieza**, con
+      todos los efectos de `startCorrection`: escribir es la señal más clara
+      posible de que alguien está corrigiendo.
+
+      El borrador es **privado del lector**. El autor no lo ve ni sabe que
+      existe por ninguna vía de la API.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [answers]
+            properties:
+              answers:
+                type: array
+                items:
+                  type: object
+                  required: [questionId, text]
+                  properties:
+                    questionId:
+                      type: string
+                      format: uuid
+                    text:
+                      type: string
+    responses:
+      '200':
+        description: Borrador sobrescrito.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedDraft'
+      '201':
+        description: Borrador creado. Este guardado ha empezado la corrección.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedDraft'
+      '400':
+        $ref: '../openapi.yaml#/components/responses/BadRequest'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: NOT_A_BETA_READER`, `AUTHOR_CANNOT_CORRECT` o
+          `ACCOUNT_NOT_ACTIVATED`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '409':
+        description: '`code: CORRECTION_ALREADY_SUBMITTED` o `WORK_NOT_IN_CORRECTION`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          Una respuesta supera el máximo de palabras de su pregunta.
+          `code: ANSWER_TOO_LONG` o `UNKNOWN_QUESTION`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Corrections]
+    operationId: discardCorrectionDraft
+    summary: Descartar el borrador
+    description: |
+      Guardar no es un hecho de negocio y **descartar sí**, porque empezar
+      había ocupado dos cosas que ahora se sueltan: la cotización del precio
+      —y con ella uno de los tres sitios de corrección del capítulo— y el
+      acceso de lector beta, si nació de esta corrección.
+
+      Descartar un borrador que no existe devuelve `204` igual: lo que se
+      pedía —que no haya borrador— ya se cumple.
+
+      **No se exige seguir pudiendo corregir.** Cerrarle la salida a quien
+      perdió el acceso, o cuya obra se cerró, dejaría borradores imposibles de
+      borrar ocupando sitio para siempre.
+    parameters:
+      - name: chapterId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: No queda borrador.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: CORRECTION_ALREADY_SUBMITTED`. Una corrección entregada es
+          inmutable: el autor ya ha pagado por ella.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+received:
+  get:
+    tags: [Feedback]
+    operationId: listCorrectionsReceived
+    summary: Las correcciones que he recibido
+    description: |
+      La bandeja del autor, con lo de todas sus obras y de lo más reciente a
+      lo más antiguo.
+
+      **Sin el contenido de ninguna corrección.** Quien abre esta pantalla
+      está decidiendo cuál leer, y devolver veinte correcciones enteras de
+      una novela sería una respuesta de cientos de miles de palabras.
+
+      Una corrección retenida por descubierto **aparece igual**, con
+      `visibility: LOCKED`: esconderla haría creer al autor que nadie le ha
+      corregido, cuando lo que ocurre es que debe créditos
+      ([`FEAT-CRD-018`](../../docs/features/credits/FEAT-CRD-018-negative-balance.md)).
+
+      Tampoco lleva lo que costó. Los importes viven en el historial de
+      créditos.
+    parameters:
+      - name: workId
+        in: query
+        required: false
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: chapterId
+        in: query
+        required: false
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: unread
+        in: query
+        required: false
+        description: Solo las que el autor todavía no ha abierto.
+        schema:
+          type: boolean
+          default: false
+      - name: hidden
+        in: query
+        required: false
+        description: |
+          **La segunda bandeja**: solo las apartadas (`FEAT-FBK-007`). Son dos
+          listas y no una con filtro — las apartadas no salen en la normal, y
+          sin esta nadie podría deshacerlo, porque nadie recuerda el
+          identificador de algo que apartó hace tres meses.
+        schema:
+          type: boolean
+          default: false
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Las correcciones entregadas al autor.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [corrections]
+              properties:
+                corrections:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ReceivedCorrection'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+item:
+  get:
+    tags: [Feedback]
+    operationId: getCorrection
+    summary: Una corrección entregada
+    description: |
+      La leen **dos personas y nadie más**: su destinatario y quien la
+      escribió. Cualquier otra recibe `404`, igual que si no existiera — ni
+      siquiera otro lector beta de la misma obra, que podría deducir de ella
+      qué le va a preguntar el autor.
+
+      Los enunciados son **los de la versión que se respondió**, no los de
+      ahora: el autor puede haber reescrito el cuestionario mientras el lector
+      escribía, y una respuesta bajo una pregunta que ya no existe es una
+      respuesta sin pregunta.
+
+      Abrirla la marca como leída, y solo la primera vez. Una retenida por
+      descubierto **no se marca**, porque no se ha leído nada: llega la
+      cabecera con `answers` vacío y `visibility: LOCKED`.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '200':
+        description: La corrección, con sus respuestas.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrectionDetail'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CORRECTION_NOT_FOUND`. No existe, o no es suya para leerla.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterText:
+  get:
+    tags: [Feedback]
+    operationId: getCorrectedChapterText
+    summary: El capítulo tal y como lo leyó quien corrigió
+    description: |
+      Va aparte del detalle porque son decenas de miles de palabras que casi
+      nunca hacen falta: quien abre una corrección quiere leer la corrección.
+
+      **`isCurrentVersion` es el dato que importa.** A `true` significa «esto
+      es lo que hay ahora, y puede no ser lo que se leyó». Mientras el
+      capítulo no se versione
+      ([`FEAT-WRK-005`](../../docs/features/work/FEAT-WRK-005-edit-work-and-chapter.md))
+      siempre es así, y decirlo es mejor que no responder.
+
+      La autorización es la misma que la del detalle, y vive en `Feedback`:
+      quién puede ver ese texto depende de quién corrigió ese capítulo, y eso
+      no lo sabe `Work`.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '200':
+        description: El texto del capítulo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [correctionId, chapterId, contentHtml, wordCount, version, isCurrentVersion]
+              properties:
+                correctionId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                chapterId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                title:
+                  type: [string, 'null']
+                contentHtml:
+                  type: string
+                wordCount:
+                  type: integer
+                version:
+                  type: integer
+                isCurrentVersion:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CORRECTION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CORRECTION_LOCKED`. Retenida por descubierto.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+reply:
+  put:
+    tags: [Feedback]
+    operationId: replyToCorrection
+    summary: Contestar a una corrección
+    description: |
+      Una respuesta por corrección. Volver a enviarla **sustituye** la que
+      había y no vuelve a avisar: recibir tres notificaciones porque alguien
+      corrige sus erratas es ruido.
+
+      **No es una conversación**: quien corrigió no replica. Poner a autor y
+      corrector a discutir sobre un texto es crear el conflicto que la
+      moderación existe para resolver, y quien discrepe tiene dos salidas
+      mejores — no valorarla, o reclamarla si es fraudulenta.
+
+      No se puede contestar a una corrección retenida por descubierto (no se
+      ha leído) ni a una llegada por enlace público (no hay cuenta a la que
+      dirigirse).
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                minLength: 1
+                maxLength: 4000
+    responses:
+      '204':
+        description: Guardada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CORRECTION_NOT_FOUND`. No existe, o no es suya.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CORRECTION_LOCKED` o `CORRECTION_HAS_NO_AUTHOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: EMPTY_REPLY`. Para no decir nada ya está no contestar.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Feedback]
+    operationId: deleteCorrectionReply
+    summary: Retirar la respuesta
+    description: |
+      Lo que se dijo deja de estar. No se conserva un historial visible de lo
+      dicho y retirado: un rastro de «aquí había algo» invita a imaginar lo
+      peor.
+
+      **No se avisa a quien corrigió**: recibir «te han quitado la respuesta»
+      es peor que no enterarse.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Retirada. También cuando no había ninguna.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CORRECTION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+rating:
+  put:
+    tags: [Feedback]
+    operationId: rateCorrection
+    summary: Valorar una corrección como útil o no útil
+    description: |
+      **Binaria**, y ese es el diseño: una escala fina invita a puntuar a la
+      baja por desacuerdo literario, y la pregunta aquí es «¿te ha servido?»,
+      no «¿cuánto te ha gustado lo que dice?».
+
+      Se puede cambiar las veces que haga falta. **Solo la primera valoración
+      positiva avisa**: decirle a alguien que su corrección ha dejado de ser
+      útil es una crueldad sin función.
+
+      **No mueve créditos.** La propina
+      ([`FEAT-CRD-017`](../../docs/features/credits/FEAT-CRD-017-author-tip.md))
+      es otra decisión y otra operación; un abono automático convertiría el
+      pulgar en un botón de dinero.
+
+      Una corrección llegada por enlace público **sí** se valora, y no avisa a
+      nadie: al autor le sirve igual para ordenar lo que ha recibido.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [helpful]
+            properties:
+              helpful:
+                type: boolean
+    responses:
+      '204':
+        description: Guardada. También cuando no cambiaba nada.
+      '400':
+        description: '`helpful` no es `true` ni `false`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: CORRECTION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: CORRECTION_LOCKED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+mine:
+  get:
+    tags: [Feedback]
+    operationId: listMyCorrections
+    summary: Lo que he corregido
+    description: |
+      **Para que corregir no sea escribir en un buzón.** Quien se molesta en
+      responder a un cuestionario necesita ver qué escribió, qué ganó y qué
+      hizo el autor con ello.
+
+      Incluye **los borradores propios**, distinguidos por `status`: un
+      borrador es trabajo empezado, y quien lo dejó a medias necesita
+      encontrarlo. Es privado suyo y no aparece en ninguna lista de nadie más.
+
+      `earnedCredits` viene de una proyección alimentada por los hechos de
+      `Credits` —ese contexto no publica contratos, ni siquiera de consulta—,
+      así que **puede ir un instante por detrás**. Mientras no ha llegado es
+      `null`, nunca `0`: un cero es una afirmación falsa sobre el trabajo de
+      alguien. Una reclamación estimada lo deja en `0`, que entonces sí es
+      cierto.
+
+      **No dice si el autor la ha leído.** Es información sobre otra persona,
+      y convertiría una entrega en una conversación que nadie ha aceptado
+      tener.
+
+      No hay forma de listar las correcciones de otra persona: el **contador**
+      del perfil es público, la **lista** no.
+    parameters:
+      - name: workId
+        in: query
+        required: false
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [DRAFT, SUBMITTED]
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Las correcciones propias, de la más reciente a la más antigua.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [corrections]
+              properties:
+                corrections:
+                  type: array
+                  items:
+                    type: object
+                    required: [correctionId, workId, workTitle, chapterId, chapterPosition, status, replied, tipped]
+                    properties:
+                      correctionId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      workId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      workTitle:
+                        type: string
+                      chapterId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      chapterTitle:
+                        type: [string, 'null']
+                      chapterPosition:
+                        type: integer
+                      status:
+                        type: string
+                        enum: [DRAFT, SUBMITTED]
+                      submittedAt:
+                        type: [string, 'null']
+                        format: date-time
+                      earnedCredits:
+                        type: [integer, 'null']
+                        description: '`null` mientras el importe no ha llegado. Nunca es un cero que signifique «pendiente».'
+                      helpful:
+                        type: [boolean, 'null']
+                      replied:
+                        type: boolean
+                      tipped:
+                        type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+components:
+  schemas:
+    SavedDraft:
+      type: object
+      required: [correctionId, questionnaireVersion, questionnaireVersionChanged]
+      properties:
+        correctionId:
+          type: string
+          format: uuid
+        questionnaireVersion:
+          type: integer
+          description: La versión que este borrador responde.
+        questionnaireVersionChanged:
+          type: boolean
+          description: |
+            El autor ha publicado una versión nueva del cuestionario desde que
+            este borrador empezó. Lo que se sigue respondiendo es la antigua,
+            y el lector tiene derecho a enterarse antes de seguir escribiendo.
+
+    PanelQuestion:
+      type: object
+      required: [questionId, position, statement, required, minWords, answer]
+      properties:
+        questionId:
+          type: string
+          format: uuid
+        position:
+          type: integer
+        statement:
+          type: string
+        example:
+          type: string
+          nullable: true
+          description: Texto de ayuda que el lector ve como marcador.
+        required:
+          type: boolean
+        minWords:
+          type: integer
+          description: |
+            Palabras. **Cero significa que el autor no declaró mínimo**, algo
+            que un cuestionario creado hoy no puede producir: declararlo es
+            obligatorio desde `C-14`.
+        maxWords:
+          type: integer
+          nullable: true
+        answer:
+          type: string
+          description: Lo escrito hasta ahora. Cadena vacía si no hay nada.
+
+    ReceivedCorrection:
+      type: object
+      required: [correctionId, workId, chapterId, chapterPosition, visibility, questionnaireVersion, submittedAt, read]
+      properties:
+        correctionId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        workId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        chapterId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        chapterTitle:
+          type: [string, 'null']
+        chapterPosition:
+          type: integer
+        readerId:
+          oneOf:
+            - $ref: '../openapi.yaml#/components/schemas/Uuid'
+            - type: 'null'
+          description: Nulo en una corrección llegada por enlace público, que no tiene cuenta detrás.
+        authorLabel:
+          type: [string, 'null']
+          description: El nombre que tecleó quien corrigió por enlace público. **No es una identidad.**
+        visibility:
+          type: string
+          enum: [VISIBLE, LOCKED, HIDDEN_BY_AUTHOR]
+        questionnaireVersion:
+          type: integer
+        submittedAt:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+        helpful:
+          type: [boolean, 'null']
+          description: Lo que el autor decidió. Nulo mientras no la haya valorado.
+        replied:
+          type: boolean
+
+    CorrectionDetail:
+      type: object
+      required: [correctionId, workId, chapterId, origin, visibility, questionnaireVersion, submittedAt, read, answers]
+      properties:
+        correctionId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        workId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        chapterId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        chapterTitle:
+          type: [string, 'null']
+        readerId:
+          oneOf:
+            - $ref: '../openapi.yaml#/components/schemas/Uuid'
+            - type: 'null'
+        authorLabel:
+          type: [string, 'null']
+        origin:
+          type: string
+          enum: [BETA_READER, PUBLIC_LINK]
+        visibility:
+          type: string
+          enum: [VISIBLE, LOCKED, HIDDEN_BY_AUTHOR]
+        questionnaireVersion:
+          type: integer
+        submittedAt:
+          type: string
+          format: date-time
+        read:
+          type: [boolean, 'null']
+          description: |
+            Si su destinatario la ha abierto. **Nulo para quien la escribió**:
+            saberlo sería una confirmación de lectura entre dos personas que no
+            han elegido tener una conversación.
+        helpful:
+          type: [boolean, 'null']
+        reply:
+          type: [string, 'null']
+          description: Lo que contestó el autor, si contestó. La ven las dos partes.
+        answers:
+          type: array
+          description: '**Vacío** cuando `visibility` es `LOCKED`: la corrección existe y su contenido se retiene.'
+          items:
+            type: object
+            required: [questionId, position, statement, text, wordCount]
+            properties:
+              questionId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+              position:
+                type: integer
+              statement:
+                type: string
+                description: El enunciado **de la versión que se respondió**.
+              text:
+                type: string
+              wordCount:
+                type: integer
+
+# Valorar una obra (`FEAT-FBK-002`).
+
+workRating:
+  put:
+    tags: [Feedback]
+    operationId: rateWork
+    summary: Valorar una obra de 1 a 5
+    description: |
+      **Solo valora quien la ha corregido**, y es la regla que da sentido al
+      número. Una media abierta a cualquiera que pueda abrir la obra mide
+      cuánta gente pasó por allí; una de quienes entregaron una corrección
+      dice lo que opina quien de verdad la leyó y se molestó en escribir
+      sobre ella.
+
+      Un **borrador no cuenta**: lo que acredita haber leído es el trabajo
+      entregado, no el empezado.
+
+      `PUT` y no `POST` porque fija un estado: hay una valoración por lector y
+      obra, y volver a valorar **sustituye** la anterior. Cambiar de opinión
+      tras leer más capítulos es exactamente lo que se espera, y acumular
+      notas del mismo lector le daría más voz que a los demás.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [rating]
+            properties:
+              rating:
+                type: integer
+                minimum: 1
+                maximum: 5
+    responses:
+      '200':
+        description: Valorada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rating]
+              properties:
+                rating:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: CORRECTION_REQUIRED_TO_RATE` si no has entregado ninguna
+          corrección de esta obra — se dice por qué, porque quien llega aquí
+          ya la ve y «corrige un capítulo y podrás valorarla» es una
+          instrucción, no un muro. `code: CANNOT_RATE_YOUR_OWN_WORK` si eres
+          su autor.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND`. No existe, o no se puede ver: una obra
+          inédita ajena no se distingue de una que no está.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'Fuera de 1 a 5. `code: VALIDATION_FAILED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# Apartar de la bandeja una corrección recibida (`FEAT-FBK-007`).
+
+correctionVisibility:
+  put:
+    tags: [Feedback]
+    operationId: setCorrectionVisibility
+    summary: Apartar de la bandeja una corrección recibida, o devolverla
+    description: |
+      **Apartar no es borrar.** Una corrección entregada no se elimina nunca:
+      alguien la escribió, cobró por ella y la tiene en «Mis correcciones». Lo
+      que el autor decide es qué sigue viendo él.
+
+      De ahí las dos reglas que sostienen la funcionalidad:
+
+      - **no se le quita a quien la escribió.** Su lista no cambia, su
+        contador no baja y lo que cobró no se toca. Si apartar afectara a la
+        otra parte, sería una forma de castigar una corrección que no gustó;
+      - **se puede deshacer**, y por eso las apartadas tienen su propia lista
+        en `GET /me/corrections/received?hidden=true`.
+
+      `PUT` con `hidden` y no dos rutas: fija un estado, las dos direcciones
+      son la misma decisión vista al derecho y al revés, y repetirla no cambia
+      nada.
+
+      Solo el destinatario. Quien la escribió no aparta nada: no es su
+      bandeja.
+    parameters:
+      - name: correctionId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [hidden]
+            properties:
+              hidden:
+                type: boolean
+    responses:
+      '200':
+        description: La visibilidad resultante, para repintar el botón sin otra petición.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [visibility]
+              properties:
+                visibility:
+                  type: string
+                  enum: [VISIBLE, HIDDEN_BY_AUTHOR]
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: CORRECTION_NOT_FOUND`. No existe, o no eres su destinatario:
+          que exista es información sobre una obra que no es tuya.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: CORRECTION_IS_LOCKED`. Una retenida por descubierto no se
+          puede apartar: apartar es una decisión sobre algo que se ha leído, y
+          de una retenida no se ha leído nada. Reponer saldo la libera.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

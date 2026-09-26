@@ -1,0 +1,194 @@
+# El contexto `Notification`: la bandeja y el contador (`FEAT-NOT-009`).
+#
+# Las cuatro operaciones cuelgan de `/me` y ninguna nombra a un destinatario.
+# No es estilo: el destinatario sale de la sesión, así que **no existe forma
+# de pedir la bandeja de otra persona**.
+
+inbox:
+  get:
+    tags: [Notifications]
+    operationId: listMyNotifications
+    summary: Mi bandeja de avisos
+    description: |
+      Los avisos propios, del más reciente al más antiguo, paginados por
+      cursor.
+
+      **El texto no lo compone el servidor.** Cada aviso viaja con su `kind` y
+      su `payload`, y la frase la construye el cliente. Eso es lo que permite
+      traducirla sin desplegar el backend y cambiar la redacción sin migrar
+      nada de lo ya guardado.
+
+      El `payload` es una **instantánea** de cuando el hecho ocurrió
+      (`FEAT-NOT-001` `RN-5`): lleva el nombre y el título de entonces aunque
+      hoy sean otros, porque un aviso describe algo que pasó.
+
+      **Nunca lleva contenido** — ni texto de obra, ni de corrección, ni de
+      mensaje (`RN-4`). Lleva lo justo para una frase y un enlace.
+
+      No exige la cuenta activada: la bandeja es de los primeros sitios donde
+      alguien sin activar necesita entrar, porque ahí está el aviso de que
+      active.
+    parameters:
+      - name: unreadOnly
+        in: query
+        required: false
+        description: |
+          Solo lo pendiente. Por omisión `false` —la bandeja entera—, aunque
+          la pantalla enseñe lo contrario: el filtro es decisión de quien
+          pinta, y un endpoint que oculta por omisión hace que «mis avisos»
+          signifique dos cosas.
+        schema:
+          type: boolean
+          default: false
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Sus avisos, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/Notification'
+                pageInfo:
+                  $ref: '../openapi.yaml#/components/schemas/PageInfo'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+unreadCount:
+  get:
+    tags: [Notifications]
+    operationId: getUnreadNotificationCount
+    summary: Cuántos avisos tengo sin leer
+    description: |
+      Operación aparte de la bandeja porque la campana de la cabecera se pinta
+      en **todas** las pantallas: cargar veinte filas para enseñar un `2` sería
+      pagar la lista entera en cada navegación.
+
+      **Cuenta todos, sin tope y sin «99+»**. El recorte es de presentación, y
+      un backend que devuelva `99` cuando hay 1.480 obliga a la pantalla a
+      mentir dos veces: al enseñar el número y cuando alguien abre la bandeja
+      y cuenta.
+    responses:
+      '200':
+        description: Cuántos avisos sin leer hay.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [unreadCount]
+              properties:
+                unreadCount:
+                  type: integer
+                  minimum: 0
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+allRead:
+  put:
+    tags: [Notifications]
+    operationId: markAllNotificationsRead
+    summary: Marcar todos los avisos como leídos
+    description: |
+      **Un contador que no se puede vaciar es un contador que acaba
+      ignorado**, y una campana siempre en rojo deja de avisar de nada.
+
+      Siempre `204`, también cuando no quedaba nada que marcar: fallar con el
+      contador ya a cero sería poner una pega a lo único que lo vacía.
+    responses:
+      '204':
+        description: No queda ninguno sin leer.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+read:
+  put:
+    tags: [Notifications]
+    operationId: markNotificationRead
+    summary: Marcar un aviso como leído
+    description: |
+      `PUT` y no `POST` porque marcar como leído **fija un estado**: repetirlo
+      deja el mundo igual. La pantalla lo repite —marca al abrir y además
+      ofrece el gesto explícito—, así que la segunda llamada llega sola y no
+      puede ser un error: no falla y no mueve la fecha.
+
+      Un aviso ajeno responde `404`, **nunca `403`**. Distinguirlos permitiría,
+      probando identificadores, ir descubriendo lo que le ocurre a otra
+      persona: que le han revocado un acceso, que alguien le ha corregido un
+      capítulo.
+    parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: El aviso queda leído. Igual si ya lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: NOTIFICATION_NOT_FOUND`. No existe, o no es suyo: las dos
+          cosas responden igual.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+Notification:
+  type: object
+  required: [notificationId, kind, payload, read, createdAt]
+  properties:
+    notificationId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    kind:
+      type: string
+      description: |
+        Qué ha pasado. **Es lo que elige la frase**, junto con el `payload`.
+
+        La lista crece: un cliente que reciba un `kind` que no conoce debe
+        ignorar ese aviso, no romperse.
+      enum:
+        - ACCESS_REQUESTED
+        - ACCESS_REQUEST_RESOLVED
+        - BETA_READER_INVITATION
+        - BETA_READER_ACCESS_REVOKED
+        - CORRECTION_RECEIVED
+    payload:
+      type: object
+      additionalProperties: true
+      description: |
+        Lo que la frase necesita, y **nada más**. Sus claves dependen del
+        `kind`:
+
+        | `kind` | Claves |
+        |---|---|
+        | `ACCESS_REQUESTED` | `actorId`, `actorName`, `actorUsername`, `workId`, `workTitle`, `accessRequestId` |
+        | `ACCESS_REQUEST_RESOLVED` | `outcome` (`GRANTED` o `REJECTED`), `workId`, `workTitle`; con `GRANTED` además `actorId`, `actorName`, `actorUsername` y `accessId`; con `REJECTED`, `accessRequestId` |
+        | `BETA_READER_INVITATION` | `actorId`, `actorName`, `actorUsername`, `workId`, `workTitle`, `invitationId` |
+        | `BETA_READER_ACCESS_REVOKED` | `workId`, `workTitle` |
+        | `CORRECTION_RECEIVED` | `actorId`, `actorName`, `actorUsername`, `workId`, `workTitle`, `correctionId`, `chapterId` |
+
+        `actorName` y `workTitle` pueden ser `null`: una cuenta eliminada o
+        una obra que ya no está no tienen nombre que enseñar, y el aviso sigue
+        siendo cierto.
+    read:
+      type: boolean
+    readAt:
+      type: [string, 'null']
+      format: date-time
+    createdAt:
+      type: string
+      format: date-time

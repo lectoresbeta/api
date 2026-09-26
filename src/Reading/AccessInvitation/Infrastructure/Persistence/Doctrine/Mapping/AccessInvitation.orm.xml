@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Reading\AccessInvitation\Domain\Entity\AccessInvitation"
+            table="access_invitation" schema="reading_ctx">
+
+        <indexes>
+            <index name="idx_access_invitation_invitee" columns="invitee_id,status"/>
+            <index name="idx_access_invitation_work" columns="work_id,status"/>
+        </indexes>
+
+        <unique-constraints>
+            <unique-constraint name="uniq_access_invitation_pending" columns="work_id,invitee_id">
+                <options>
+                    <option name="where">((status)::text = 'PENDING'::text)</option>
+                </options>
+            </unique-constraint>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="workId" column="work_id" type="guid"/>
+        <field name="authorId" column="author_id" type="guid"/>
+        <field name="inviteeId" column="invitee_id" type="guid"/>
+        <field name="status" type="string" length="16"
+               enum-type="LectoresBeta\Reading\AccessInvitation\Domain\Enum\AccessInvitationStatus"/>
+        <field name="message" type="text" nullable="true"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+        <field name="resolvedAt" column="resolved_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

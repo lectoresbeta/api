@@ -1,0 +1,604 @@
+# El perfil ajeno, por identificador o por nombre de usuario.
+#
+# Las dos rutas devuelven **lo mismo**: piden el mismo recurso por caminos
+# distintos, y dos formas obligarían al cliente a saber por cuál entró.
+
+ProfileResolution:
+  type: string
+  enum: [USER_ID, USERNAME, ALIAS]
+  description: |
+    Por dónde se ha llegado. `ALIAS` es el que importa: significa que el
+    enlace lleva un nombre que su titular ya no usa, y que conviene sustituir
+    la URL por la canónica.
+
+PublicProfile:
+  type: object
+  required: [userId, username, canonicalUsername, resolvedVia]
+  properties:
+    userId:
+      type: string
+      format: uuid
+    username:
+      type: string
+      description: El nombre por el que se preguntó.
+    canonicalUsername:
+      type: string
+      description: |
+        El nombre actual de su titular. Va **siempre**, no solo al resolver
+        por alias, para que el cliente pueda comparar sin preguntarse si el
+        campo aplica.
+    resolvedVia:
+      $ref: '#/ProfileResolution'
+    name:
+      type: [string, 'null']
+    description:
+      type: [string, 'null']
+    avatarUrl:
+      type: [string, 'null']
+    coverUrl:
+      type: [string, 'null']
+      description: |
+        El fondo de su página de autor (`FEAT-USR-016`). Es la portada de la
+        cuenta: una imagen que sube el autor, reescrita en servidor y sin
+        metadatos.
+    theme:
+      $ref: '#/AuthorPageTheme'
+    accentColour:
+      $ref: '#/AccentColour'
+    links:
+      type: array
+      description: |
+        Las referencias de su página de autor (`FEAT-USR-015`): su web, su
+        cuenta en otra red, su blog.
+
+        Van aquí y no en un endpoint propio porque **la página de autor es
+        este perfil**.
+      items:
+        $ref: '#/AuthorLink'
+    counters:
+      $ref: '#/ProfileCounters'
+    isFollowing:
+      type: [boolean, 'null']
+      description: Si quien pregunta le sigue. **Nulo sin sesión.**
+    isFollowedBy:
+      type: [boolean, 'null']
+      description: |
+        Si le sigue a quien pregunta — el «Te sigue» de la cabecera. Seguir es
+        **unilateral**, así que esto y `isFollowing` son preguntas distintas.
+    isBlocked:
+      type: [boolean, 'null']
+      description: Si hay un bloqueo entre los dos. **Nulo sin sesión.**
+  description: |
+    Lo que importa de esta respuesta es **lo que no lleva**: ni correo ni
+    fecha de nacimiento, nunca. Son datos privados y no salen de su contexto.
+
+    Tampoco lleva la **lista** de correcciones, aunque sí su contador: cuántas
+    ha hecho alguien funciona como reputación, y cuáles revelaría qué está
+    leyendo y, con ello, qué obras hay en corrección y quién las está
+    criticando.
+
+    Los tres campos de relación son **nulos sin sesión**, que no es lo mismo
+    que falsos: no hay relación que contar con un visitante anónimo.
+
+ProfileCounters:
+  type: object
+  required: [following, followers, works, corrections, tips]
+  description: |
+    Las cifras de la cabecera. **Ninguna es de `User`**: seguidos y seguidores
+    son de `Community`, los relatos de `Work`, las correcciones de `Feedback`
+    y las propinas recibidas también de `Community`, que las proyecta desde
+    los hechos de `Credits`.
+
+    **Un `null` significa «no se ha podido saber», y no es lo mismo que
+    cero.** Si un contexto no contesta, su cifra viaja nula y el perfil se
+    pinta igual; un cliente que los trate igual enseñará un 0 donde debería
+    enseñar un hueco.
+  properties:
+    following:
+      type: [integer, 'null']
+    followers:
+      type: [integer, 'null']
+    works:
+      type: [integer, 'null']
+    corrections:
+      type: [integer, 'null']
+      description: |
+        Solo las **entregadas**, y nunca las que llegan por enlace público:
+        quien tenga una agenda grande parecería mucho más corregido que quien
+        no la tiene.
+    tips:
+      type: [integer, 'null']
+      description: |
+        Créditos recibidos en propinas, **agregados**. Nunca corrección a
+        corrección: exponer quién recibe reconocimiento y quién no desanima al
+        corrector novato.
+
+byUserId:
+  get:
+    tags: [User]
+    operationId: getUserProfile
+    summary: Ver el perfil público de un usuario
+    security: []
+    description: |
+      **Público.** Un perfil que su dueño no ha restringido es una URL que se
+      comparte, y exigir sesión para abrirla haría inútil compartirla.
+
+      Si hay sesión se lee, y sirve para una sola cosa: que su titular se vea
+      siempre a sí mismo. Esconderle su propio perfil sería absurdo, y es lo
+      que permite deshacer el ajuste — quien lo cierra sigue entrando a
+      abrirlo.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: El perfil público.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PublicProfile'
+      '404':
+        description: |
+          `code: PROFILE_NOT_FOUND`. **Cuatro situaciones, una respuesta**: no
+          existe, el identificador está mal escrito, la cuenta está eliminada
+          —y anonimizada, así que no queda nada que enseñar— o su titular ha
+          restringido el perfil.
+
+          La última obliga a que sean la misma. Un `403` confirmaría que la
+          cuenta existe, y para un ajuste cuya razón de ser es **no ser
+          encontrado** eso lo deja sin efecto: bastaría leer el código de
+          estado para saber si alguien está en la plataforma.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+byUsername:
+  get:
+    tags: [User]
+    operationId: getProfileByUsername
+    summary: Ver el perfil público por nombre de usuario
+    security: []
+    description: |
+      Resuelve **primero entre los nombres en uso** y solo después entre los
+      alias, de modo que un alias nunca tape a quien tenga ese nombre ahora.
+
+      Un alias solo resuelve si está **vigente**. Es la regla crítica de toda
+      esta funcionalidad: comprobar que la fila existe en lugar de que siga en
+      plazo haría que un enlace caducado funcionase durante días, que es justo
+      lo que el mes de reserva pretende acotar.
+
+      Los alias que dejó una cuenta eliminada **bloquean el nombre y nunca
+      resuelven**: no hay perfil al que llevar.
+
+      **No redirige.** Sería natural responder `301` a la URL canónica, y no
+      se hace porque este endpoint sirve datos y no páginas: quien construye
+      la barra de direcciones es el cliente. Con `canonicalUsername` y
+      `resolvedVia` puede sustituir la URL sin recargar.
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: |
+          El perfil público. Con `resolvedVia: ALIAS`, el nombre pedido ya no
+          es el de su titular.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PublicProfile'
+      '404':
+        description: |
+          `code: PROFILE_NOT_FOUND`. Nadie usa ese nombre, el alias caducó, el
+          alias es de una cuenta eliminada, la cuenta está eliminada o su
+          titular ha restringido el perfil. **Una sola respuesta para todas.**
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# Buscar personas (`FEAT-USR-017`).
+
+search:
+  get:
+    tags: [Account]
+    operationId: searchAuthors
+    summary: Buscar personas por nombre o temática
+    description: |
+      **Con sesión**, al contrario que abrir un perfil suelto. No es
+      incoherente: abrir el perfil que alguien te ha pasado es una cosa, y
+      poder recorrer el padrón de la plataforma es otra. Un buscador de
+      personas abierto es una superficie de extracción de datos, y quien la
+      use no deja rastro de quién es.
+
+      **No busca por correo, nunca.** Responder si una dirección tiene cuenta
+      es exactamente lo que el alta y la recuperación de contraseña se cuidan
+      de no decir.
+
+      No es la **búsqueda global** del encabezado, que busca también obras y
+      publicaciones: esa es `FEAT-COM-025` y está en backlog. Ni el buscador
+      del **backoffice**, que sí busca por correo, devuelve cuentas en
+      cualquier estado y deja traza de cada consulta.
+
+      La privacidad manda: quien tiene el perfil en `NOBODY` no aparece, quien
+      lo tiene en `FOLLOWERS` aparece solo para quien le sigue, y un bloqueo
+      esconde en los dos sentidos. Quien busca sí se ve a sí mismo.
+
+      **Sin criterios no devuelve nada**, y no es un error: un buscador que
+      con la caja vacía devuelve el padrón entero **es** el padrón entero.
+    parameters:
+      - name: q
+        in: query
+        required: false
+        description: Texto contra el nombre y el nombre de usuario. Sin distinguir mayúsculas, y un `%` es solo un carácter.
+        schema:
+          type: string
+      - name: genre
+        in: query
+        required: false
+        description: |
+          Código de género, de los que esa persona declaró en sus preferencias
+          literarias. Se puede repetir, y basta con que coincida uno.
+
+          Son los géneros que **declaró**, no los de las obras que ha escrito:
+          eso lo responde `Work` y es otra pregunta (`U-24`).
+        schema:
+          type: array
+          items:
+            type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 20
+    responses:
+      '200':
+        description: Las personas que encajan y que se pueden enseñar a quien pregunta.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [authors]
+              properties:
+                authors:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, username, name, avatarUrl]
+                    properties:
+                      userId: { type: string, format: uuid }
+                      username: { type: string }
+                      name:
+                        type: [string, 'null']
+                        description: Nulo mientras no haya terminado el onboarding.
+                      avatarUrl: { type: [string, 'null'] }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+authorLinks:
+  put:
+    tags: [User]
+    operationId: updateAuthorLinks
+    summary: Las referencias de mi página de autor
+    description: |
+      Su web, su cuenta en otra red, su blog (`FEAT-USR-015`).
+
+      **No hay un `GET` hermano, y esa ausencia es la funcionalidad.** La
+      página de autor **es** el perfil, así que las referencias se leen en
+      `GET /users/{userId}` con todo lo demás de esa persona. Un endpoint
+      aparte habría sido el primer paso hacia dos perfiles que mantener y que
+      se contradicen.
+
+      `PUT` y la lista entera: lo que el formulario manda es «estas son mis
+      referencias», con su orden, que es del usuario. La lista vacía las quita
+      todas.
+
+      **Solo `http` y `https`**, y el servidor no visita la dirección: es una
+      regla de seguridad, porque la escribe un usuario y la pulsa cualquiera
+      que abra su perfil.
+
+      Una referencia **sin etiqueta se rechaza** en vez de rellenarse con su
+      dirección: un enlace que no dice a dónde lleva es el que se pulsa por
+      error, y poner la URL como texto visible invita a disfrazar el destino.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [links]
+            properties:
+              links:
+                type: array
+                maxItems: 6
+                description: |
+                  Hasta seis. Un perfil con veinte enlaces deja de ser una
+                  página de autor y pasa a ser un directorio de enlaces.
+                items:
+                  type: object
+                  required: [label, url]
+                  properties:
+                    label:
+                      type: string
+                      maxLength: 60
+                      description: Se sanea; el marcado se retira en vez de rechazarse.
+                    url:
+                      type: string
+                      format: uri
+                      maxLength: 512
+    responses:
+      '200':
+        description: Las referencias guardadas, en su orden.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [links]
+              properties:
+                links:
+                  type: array
+                  items:
+                    $ref: '#/AuthorLink'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: |
+          `code: INVALID_AUTHOR_LINK`, `AUTHOR_LINK_WITHOUT_LABEL` o
+          `TOO_MANY_AUTHOR_LINKS`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+AuthorLink:
+  type: object
+  required: [label, url]
+  properties:
+    label:
+      type: string
+    url:
+      type: string
+      format: uri
+
+share:
+  get:
+    tags: [Account]
+    operationId: getProfileShareCard
+    summary: Cómo se ve el perfil compartido fuera
+    description: |
+      Los metadatos con los que WhatsApp, Twitter o LinkedIn pintan la
+      previsualización cuando alguien pega el enlace de un perfil
+      (`FEAT-USR-032`).
+
+      **No genera ningún enlace.** La `url` es la dirección canónica del
+      perfil, la de siempre: sin token, sin caducidad y sin abrir nada que no
+      fuera ya público. Un enlace con credencial dentro circulando por redes
+      sociales es exactamente la puerta trasera que la privacidad cierra.
+
+      **Solo para perfiles visibles para cualquiera.** Un perfil en
+      `FOLLOWERS`, uno en `NOBODY` y una cuenta eliminada responden `404`,
+      igual que uno inexistente — un rastreador no sigue a nadie. La regla no
+      se comprueba aparte: se pide el perfil sin espectador, que es la misma
+      puerta que atiende a un visitante anónimo.
+
+      A diferencia de la tarjeta de una obra o de una publicación, esta sí
+      lleva a una persona dentro, y es coherente: **aquí el perfil es el
+      contenido**, y el nombre, la foto y la biografía son justamente lo que
+      su titular publicó para que se viera.
+
+      La imagen viaja **absoluta**, al revés que en el resto de la API: una
+      `og:image` la lee un rastreador que no sabe contra qué origen habla.
+    security: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: |
+          La tarjeta. Se cachea **en público** cinco minutos: no hay nada en
+          la respuesta que no fuera ya visible para cualquiera.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+              example: 'max-age=300, public'
+        content:
+          application/json:
+            schema:
+              $ref: '../paths/works.yaml#/ShareCard'
+      '404':
+        description: |
+          No hay perfil que enseñar: no existe, está eliminado, o su titular
+          no lo abre a cualquiera. Los cuatro casos responden lo mismo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+AuthorPageTheme:
+  type: string
+  enum: [CLASSIC, INK, PARCHMENT, MIDNIGHT, LINEN, BOTANICAL]
+  description: |
+    Cómo se ve la página de autor (`FEAT-USR-016`).
+
+    **Un catálogo cerrado, y nunca CSS.** CSS escrito por un usuario y servido
+    a terceros no es decoración: un selector de atributo con una `url()`
+    detrás exfiltra datos letra a letra de la pantalla de quien mira,
+    `position` y `z-index` permiten superponer un botón falso sobre uno real,
+    y `@import` convierte cada visita en una petición a un tercero. Sanear eso
+    exige un parser con lista blanca que se queda corta en silencio con cada
+    versión del navegador; un enum no tiene ese problema.
+
+AccentColour:
+  type: string
+  enum: [SLATE, CRIMSON, AMBER, FOREST, OCEAN, PLUM]
+  description: |
+    El color de acento (`FEAT-USR-016`). **Un código, nunca un hexadecimal**:
+    un color libre acaba interpolado en un atributo `style`, y ahí una cadena
+    que no sea un color es una inyección de CSS por la puerta de atrás.
+
+AuthorPageStyle:
+  type: object
+  required: [theme, accentColour, updatedAt]
+  properties:
+    theme:
+      $ref: '#/AuthorPageTheme'
+    accentColour:
+      $ref: '#/AccentColour'
+    updatedAt:
+      type: string
+      format: date-time
+
+authorPageStyle:
+  get:
+    tags: [Account]
+    operationId: getMyAuthorPageStyle
+    summary: Cómo se ve mi página de autor
+    description: |
+      Quien nunca lo ha tocado recibe `CLASSIC` y `SLATE`, no un hueco: la
+      pantalla de edición tiene que poder marcar la opción activa el primer
+      día.
+
+      **No hay endpoint de catálogo**: los valores válidos son los del enum, y
+      pedirlos antes de pintar seis botones sería una petición de más.
+
+      El fondo no está aquí: es la portada del perfil, que tiene su propio
+      recurso porque es una subida de fichero.
+    responses:
+      '200':
+        description: El estilo de quien pregunta.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AuthorPageStyle'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+  put:
+    tags: [Account]
+    operationId: updateMyAuthorPageStyle
+    summary: Elegir tema y color
+    description: |
+      Los dos son **códigos de un catálogo cerrado**. Un valor desconocido se
+      rechaza nombrándolo en lugar de caer al por defecto: quien manda
+      `midnight` en minúsculas o un `#112233` cree que ha cambiado algo, y una
+      página que se queda igual sin decir nada es un error que se busca en el
+      sitio equivocado.
+
+      Un campo ausente no cambia nada: la pantalla tiene dos selectores y se
+      mueve uno cada vez.
+
+      No confundir con `PUT /me/appearance-settings` (`FEAT-USR-042`): aquello
+      es el tema de la aplicación, que elige cada quien y solo ve él; esto es
+      la página de autor, que elige el autor y ven los demás.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              theme:
+                $ref: '#/AuthorPageTheme'
+              accentColour:
+                $ref: '#/AccentColour'
+    responses:
+      '200':
+        description: El estilo como queda.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AuthorPageStyle'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_AUTHOR_PAGE_THEME` o `UNKNOWN_ACCENT_COLOUR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+profileCover:
+  put:
+    tags: [Account]
+    operationId: updateProfileCover
+    summary: Subir el fondo de la página de autor
+    description: |
+      `multipart/form-data` con `image`, y **sin `crop`**, que es la
+      diferencia con el avatar: un fondo es un banner, no un retrato, y su
+      proporción la decide quien diseña la pantalla.
+
+      **La imagen se reescribe siempre**, como el avatar y por lo mismo:
+      guardarla tal cual publicaría los metadatos EXIF, y una foto de fondo
+      puede llevar las coordenadas de dónde se tomó. El lado mayor se acota a
+      1600 px.
+
+      Lo que sustituye **se borra**, en vez de quedarse huérfano en el almacén.
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [image]
+            properties:
+              image:
+                type: string
+                format: binary
+    responses:
+      '200':
+        description: La dirección del fondo guardado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [coverUrl]
+              properties:
+                coverUrl:
+                  type: string
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '413':
+        description: '`code: COVER_TOO_LARGE`. El límite son 4 MB, y lo aplica el servidor.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: COVER_REQUIRED`, `UNSUPPORTED_COVER_TYPE` o
+          `UNREADABLE_COVER`. Los tres se distinguen a propósito: llevan a
+          acciones distintas — mandar la imagen, elegir otro fichero, o volver
+          a exportarlo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Account]
+    operationId: deleteProfileCover
+    summary: Quitar el fondo
+    description: |
+      Devuelve la página al tema sin imagen y **borra el fichero**: dejarlo
+      huérfano sería guardar una imagen que su dueño cree haber borrado.
+
+      Quitar un fondo que no hay responde igual: el estado que se pedía ya se
+      cumple.
+    responses:
+      '204':
+        description: Sin fondo.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

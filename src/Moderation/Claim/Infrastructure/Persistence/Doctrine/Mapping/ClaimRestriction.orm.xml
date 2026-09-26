@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Moderation\Claim\Domain\Entity\ClaimRestriction"
+            table="claim_restriction" schema="moderation_ctx">
+
+        <id name="userId" column="user_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="dismissedClaims" column="dismissed_claims" type="smallint"/>
+        <field name="blockedUntil" column="blocked_until" type="datetime_immutable" nullable="true"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

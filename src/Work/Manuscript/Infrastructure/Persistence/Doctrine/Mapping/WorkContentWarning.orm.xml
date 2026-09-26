@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Work\Manuscript\Domain\Entity\WorkContentWarning"
+            table="work_content_warning" schema="work_ctx">
+
+        <indexes>
+            <index name="idx_work_warning" columns="warning"/>
+        </indexes>
+
+        <id name="workId" column="work_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="warning" column="warning" type="string" length="32">
+            <generator strategy="NONE"/>
+        </id>
+
+    </entity>
+
+</doctrine-mapping>

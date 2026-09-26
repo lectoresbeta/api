@@ -1,0 +1,137 @@
+# Salud del sistema.
+#
+# Fuera de `/api/v1` a propósito: la dirección de una sonda acaba escrita en
+# orquestadores, balanceadores y sistemas de monitorización, que actualiza
+# gente que no lee las notas de versión. No puede moverse cuando cambie la
+# versión de la API.
+#
+# Semántica en docs/architecture/07-observability-and-operations.md.
+
+ready:
+  servers:
+    - url: https://api.lectoresbeta.com
+      description: Producción
+    - url: http://localhost:8000
+      description: Desarrollo
+  get:
+    tags: [Health]
+    operationId: checkReadiness
+    summary: ¿Puede el sistema atender peticiones?
+    description: |
+      Comprueba PostgreSQL y RabbitMQ y devuelve `200` o `503`.
+
+      **No dice por qué ha fallado nada.** El endpoint es público, y un
+      mensaje de error de driver regala la topología del sistema. El motivo
+      está en el log.
+
+      Un chequeo puede salir `skipped` cuando no aplica: en entorno de test el
+      transporte es in-memory y no hay RabbitMQ al que llegar. Un `skipped`
+      **no** cuenta como fallo.
+
+      No la use como sonda de vida: una sonda de vida que consulta la base de
+      datos convierte un hipo de PostgreSQL en el reinicio simultáneo de todos
+      los contenedores. Para eso está `/health/live`.
+    security: []
+    responses:
+      '200':
+        description: Todo lo que hace falta responde.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+              const: 'no-store, private'
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/HealthReport'
+            example:
+              status: up
+              checkedAt: '2026-09-24T10:00:00+00:00'
+              checks:
+                database:
+                  status: up
+                  durationMs: 1.42
+                message_broker:
+                  status: up
+                  durationMs: 3.08
+      '503':
+        description: Alguna dependencia no responde.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/HealthReport'
+            example:
+              status: down
+              checkedAt: '2026-09-24T10:00:00+00:00'
+              checks:
+                database:
+                  status: up
+                  durationMs: 1.42
+                message_broker:
+                  status: down
+                  durationMs: 5000.0
+
+live:
+  servers:
+    - url: https://api.lectoresbeta.com
+      description: Producción
+    - url: http://localhost:8000
+      description: Desarrollo
+  get:
+    tags: [Health]
+    operationId: checkLiveness
+    summary: ¿Está vivo el proceso?
+    description: |
+      Responde `200` sin tocar nada. Una sonda que puede fallar por un motivo
+      distinto de «este proceso está atascado» no es una sonda de vida.
+    security: []
+    responses:
+      '200':
+        description: El proceso responde.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  const: up
+
+media:
+  get:
+    tags: [Health]
+    operationId: getMediaFile
+    summary: Servir un fichero guardado
+    description: |
+      Los ficheros que alguien ha subido y que son **públicos por
+      naturaleza**: hoy, los avatares recortados. Aparecen en perfiles que se
+      abren sin sesión, así que exigirla haría imposible pintarlos.
+
+      **Solo sirve lo que está en una carpeta pública.** Lo que no lo está no
+      se entrega aunque se conozca su clave: las fotos originales viven en
+      otra y su único camino es `getMyAvatarOriginal`, que comprueba de quién
+      son.
+
+      Las claves son impredecibles y cada fichero estrena la suya, así que la
+      respuesta se puede cachear indefinidamente: una foto nueva es otra
+      dirección.
+    security: []
+    parameters:
+      - name: key
+        in: path
+        required: true
+        description: La clave del fichero, con su carpeta. Lleva barras dentro.
+        schema:
+          type: string
+        example: avatars/9f2c8e4a71b5d2c86b5d2c8e4a71b5d2.webp
+    responses:
+      '200':
+        description: El fichero.
+        content:
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      '404':
+        description: No existe, o no es de una carpeta pública.

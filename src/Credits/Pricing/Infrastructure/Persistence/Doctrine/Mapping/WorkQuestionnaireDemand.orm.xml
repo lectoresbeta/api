@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Credits\Pricing\Domain\Entity\WorkQuestionnaireDemand"
+            table="work_questionnaire_demand" schema="credits_ctx">
+
+        <id name="workId" column="work_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <!-- La versión del cuestionario que produjo estas cifras. Es lo que
+             permite descartar una reentrega tardía: la cola no promete orden. -->
+        <field name="version" type="smallint"/>
+        <field name="requiredWords" column="required_words" type="integer"/>
+        <field name="requiredWordsForEveryChapter" column="required_words_for_every_chapter" type="integer"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

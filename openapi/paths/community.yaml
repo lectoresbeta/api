@@ -1,0 +1,3023 @@
+# El contexto `Community`: por ahora, seguir a un autor.
+#
+# La interfaz dice «Seguir»; el glosario llama al concepto `AuthorSubscription`
+# y es normativo, así que la ruta y los `operationId` usan su vocabulario.
+
+subscription:
+  get:
+    tags: [Community]
+    operationId: getAuthorSubscription
+    summary: ¿Sigo a esta persona?
+    description: |
+      Lo que necesita el botón «Seguir» de un perfil, y **solo sobre quien
+      pregunta**. A quién sigue otra persona, y quién la sigue a ella, son las
+      listas de `FEAT-COM-027`, y si son públicas sigue sin decidirse.
+
+      Responde `subscribed: false` para un identificador que no existe, en vez
+      de `404`: la pregunta es sobre *mi* relación con él, y «no le sigo» es
+      cierto. Un `404` contaría además si esa cuenta existe a cualquiera que
+      pruebe identificadores.
+    parameters:
+      - $ref: '#/UserIdParam'
+    responses:
+      '200':
+        description: Si le sigo y desde cuándo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subscribed]
+              properties:
+                subscribed:
+                  type: boolean
+                subscribedAt:
+                  type: [string, 'null']
+                  format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  put:
+    tags: [Community]
+    operationId: subscribeToAuthor
+    summary: Seguir a un autor
+    description: |
+      **Idempotente**: seguir a quien ya sigues deja el mundo igual y responde
+      lo mismo. De ahí el `PUT` — con `POST` tocaría devolver `201` la primera
+      vez y `409` después, y ese `409` sería decirle a alguien que ha fallado
+      cuando lo que pedía ya se cumple.
+
+      **Seguir no concede acceso a nada**: no abre obras, no da acceso de
+      lector beta y no inicia una conversación. Lo que cambia es qué avisos se
+      reciben y qué audiencias incluyen a esa persona — entre ellas los
+      ajustes `FOLLOWERS` de `FEAT-USR-038`, que se aplican **en diferido**:
+      entre seguir a alguien y poder comentar sus textos pasa lo que tarde la
+      cola.
+    parameters:
+      - $ref: '#/UserIdParam'
+    responses:
+      '204':
+        description: Ahora le sigue. Igual si ya le seguía.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: USER_NOT_FOUND`. No hay ninguna cuenta con ese identificador.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CANNOT_SUBSCRIBE_TO_YOURSELF`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: unsubscribeFromAuthor
+    summary: Dejar de seguir a un autor
+    description: |
+      Siempre `204`, se siguiera o no: dejar de seguir a quien no se sigue no
+      es un fallo, porque el estado que se pedía ya se cumple.
+
+      Retira a esa persona de las audiencias `FOLLOWERS` de quien deja de
+      seguir, también en diferido.
+    parameters:
+      - $ref: '#/UserIdParam'
+    responses:
+      '204':
+        description: Ya no le sigue. Igual si no le seguía.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+UserIdParam:
+  name: userId
+  in: path
+  required: true
+  description: La persona a la que se sigue o se deja de seguir.
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+PersonCard:
+  type: object
+  required: [userId, username, subscribedAt]
+  description: |
+    Una persona, **como tarjeta de perfil**. Una lista de identificadores
+    obligaría al cliente a una petición por fila para poder pintarla.
+  properties:
+    userId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    username:
+      type: string
+    name:
+      type: [string, 'null']
+      description: Nulo mientras no haya terminado el onboarding.
+    avatarUrl:
+      type: [string, 'null']
+    subscribedAt:
+      type: string
+      format: date-time
+      description: Cuándo empezó ese seguimiento. Es el orden de la lista.
+
+PeoplePage:
+  type: object
+  required: [data, pageInfo]
+  description: |
+    **Una página puede traer menos filas que el `limit` pedido, o ninguna, y
+    seguir teniendo siguiente.** El filtro de privacidad se aplica después de
+    paginar, así que quien no sea visible para quien pregunta deja un hueco.
+
+    Lo que dice si hay más es `pageInfo.nextCursor`, **nunca** cuántos
+    elementos llegaron.
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/PersonCard'
+    pageInfo:
+      type: object
+      required: [nextCursor, hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
+subscriptions:
+  get:
+    tags: [Community]
+    operationId: listAuthorSubscriptions
+    summary: A quién sigue esta persona
+    description: |
+      La sub-pestaña «Seguidos» de «Amigos», en su perfil o en el propio.
+
+      **Se ve tanto como el perfil que la tiene** (`CM-14`, resuelta en
+      `FEAT-COM-027`): si puedes abrir su perfil, puedes ver esta lista; si su
+      perfil te responde `404` porque lo tiene restringido, esta también.
+
+      Y **cada fila se ve tanto como la persona que la ocupa**: quien tiene su
+      perfil cerrado no aparece en la lista de nadie. Es la mitad que se
+      olvidaría, y sin ella cerrar el perfil no serviría de nada — bastaría
+      con mirar los seguidores de cualquier autor conocido para encontrar a
+      quien no quiere ser encontrado.
+
+      Pública: no hace falta sesión, y con ella se ve además lo que la sesión
+      permita.
+    security: []
+    parameters:
+      - $ref: '#/UserIdParam'
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Las personas a las que sigue, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PeoplePage'
+      '404':
+        description: |
+          `code: PROFILE_NOT_FOUND`. Ese perfil no existe **o no es visible
+          para quien pregunta**, que responden igual a propósito: un `403`
+          confirmaría que la cuenta está ahí.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal
+          escrito (`FEAT-COM-009` `RN-8`). Un filtro inválido **se rechaza**,
+          no se ignora: devolver el muro entero porque alguien escribió mal
+          una fecha le haría creer lo contrario de lo que ve.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+subscribers:
+  get:
+    tags: [Community]
+    operationId: listSubscribers
+    summary: Quién sigue a esta persona
+    description: |
+      La sub-pestaña «Seguidores». La misma tabla que `listAuthorSubscriptions`
+      leída por el otro extremo, y con **las mismas dos reglas de
+      visibilidad**: la lista se ve tanto como el perfil que la tiene, y cada
+      fila tanto como la persona que la ocupa.
+
+      Dos endpoints y no uno con un parámetro `direction`: son dos preguntas
+      distintas sobre la misma tabla, y un parámetro que cambia el significado
+      de la respuesta acaba mal documentado.
+    security: []
+    parameters:
+      - $ref: '#/UserIdParam'
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Quienes le siguen, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PeoplePage'
+      '404':
+        description: '`code: PROFILE_NOT_FOUND`. No existe o no es visible.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal escrito.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+block:
+  put:
+    tags: [Community]
+    operationId: blockUser
+    summary: Bloquear a alguien
+    description: |
+      Cortar el contacto. A diferencia de silenciar, **bloquear es una regla
+      de acceso** y sus efectos atraviesan varios contextos.
+
+      Lo que hace de inmediato: guarda el bloqueo y **deshace los dos
+      seguimientos**, si los había. Lo demás lo aplica cada contexto al
+      recibir el hecho — `Reading` retira el acceso de lector beta del
+      bloqueado a las obras del bloqueador, y `User` deja de aceptar
+      comentarios entre ambos, **por encima de cualquier ajuste de
+      privacidad**.
+
+      **No se avisa al bloqueado.** Descubrirlo por el comportamiento es lo
+      habitual; avisarle convierte el bloqueo en una confrontación.
+
+      Idempotente: bloquear a quien ya está bloqueado deja el mundo igual.
+
+      > **Lo que esto se lleva por delante, dicho de frente.** Si el bloqueado
+      > estaba corrigiendo una obra del bloqueador, **pierde ese trabajo y no
+      > cobra**, porque nunca llegó a entregarlo. Su borrador se conserva. Lo
+      > ya entregado no se toca: el autor lo pagó y el lector lo ganó.
+    parameters:
+      - $ref: '#/UserIdParam'
+    responses:
+      '204':
+        description: Bloqueado. Igual si ya lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: USER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: CANNOT_BLOCK_YOURSELF`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: unblockUser
+    summary: Levantar un bloqueo
+    description: |
+      Siempre `204`, estuviera bloqueado o no.
+
+      **No restaura los seguimientos** que el bloqueo deshizo ni devuelve un
+      acceso de lector beta revocado: lo que se recupera es la posibilidad de
+      empezar otra vez, no el pasado.
+    parameters:
+      - $ref: '#/UserIdParam'
+    responses:
+      '204':
+        description: Ya no está bloqueado. Igual si no lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+blockedUsers:
+  get:
+    tags: [Community]
+    operationId: listBlockedUsers
+    summary: A quién tengo bloqueado
+    description: |
+      **Hace falta**: sin esta lista el bloqueo sería irreversible en la
+      práctica, porque quien bloqueó a alguien hace tres meses no recuerda su
+      `@usuario` y no puede encontrarlo para deshacerlo.
+
+      Por eso, y a diferencia de las listas de seguidos y seguidores, **no se
+      filtra por privacidad**: quien cerró su perfil después de ser bloqueado
+      sigue apareciendo aquí. Quien pregunta ya sabe quiénes son — los bloqueó
+      él.
+
+      Solo la propia. Quién ha bloqueado otra persona no es asunto de nadie, y
+      no hay endpoint que lo pregunte.
+    parameters:
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: A quién tiene bloqueado, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, username, blockedAt]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      username:
+                        type: string
+                      name:
+                        type: [string, 'null']
+                      avatarUrl:
+                        type: [string, 'null']
+                      blockedAt:
+                        type: string
+                        format: date-time
+                pageInfo:
+                  type: object
+                  required: [nextCursor, hasNextPage]
+                  properties:
+                    nextCursor:
+                      type: [string, 'null']
+                    hasNextPage:
+                      type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal escrito.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# ---------------------------------------------------------------------------
+# El muro y lo que se escribe en él (`FEAT-COM-001`, `FEAT-COM-002`).
+# ---------------------------------------------------------------------------
+
+PostAudience:
+  type: string
+  description: |
+    Quién puede ver una publicación. **Se fija al publicar y no cambia
+    después**: permitir ampliarla más tarde haría que algo escrito para un
+    círculo cerrado apareciera de pronto ante todos, que es la clase de
+    sorpresa que hace que la gente deje de publicar.
+
+    Comparte valores con los ajustes de privacidad menos `NOBODY`, que aquí no
+    significa nada: una publicación que nadie puede ver no es una publicación.
+  enum:
+    - EVERYONE
+    - FOLLOWERS
+
+PostType:
+  type: string
+  description: |
+    Para **qué** se publica. Es una dimensión distinta del formato: una
+    publicación buscando lectores beta puede llevar imagen, enlace o nada.
+  enum:
+    - GENERAL
+    - LOOKING_FOR_BETA_READERS
+    - LOOKING_FOR_WRITING_BUDDY
+    - OFFERING_AS_BETA_READER
+
+PostFormat:
+  type: string
+  description: |
+    Qué lleva dentro. **Se deriva del adjunto y no se envía**: pedirle al
+    cliente que lo declare es pedirle que repita algo que ya está diciendo, y
+    abrir la puerta a que lo diga mal.
+
+    `VIDEO` está en la enumeración y no se puede producir todavía: adjuntar
+    vídeo es `FEAT-COM-037`, fuera de alcance por su coste de transcodificación
+    y almacenamiento.
+  enum:
+    - TEXT
+    - IMAGE
+    - VIDEO
+    - LINK
+    - WORK
+
+EmbeddedWork:
+  type: object
+  required: [workId, authorId, title, status, chapterCount, readingMinutes, adultsOnly, contentWarnings, genres]
+  description: |
+    Una obra de la plataforma, como se pinta dentro de la publicación que la
+    cita (`FEAT-COM-028`).
+
+    **Metadatos y ninguna palabra del texto.** Quién puede leer la obra es
+    otra decisión, y se toma en `GET /works/{workId}`.
+
+    Tampoco lleva la modalidad de acceso: cómo tiene el autor cerrada su obra
+    no es algo que deba leer todo el que pase por el muro.
+  properties:
+    workId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    authorId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    title:
+      type: string
+    synopsis:
+      type: [string, 'null']
+    status:
+      type: string
+      description: El estado de la obra. Siempre uno visible para cualquiera.
+    chapterCount:
+      type: integer
+    readingMinutes:
+      type: integer
+      description: |
+        Calculado, no en palabras. La fórmula es de `Work` (`FEAT-WRK-013`) y
+        mandar el dato crudo obligaría al cliente a aprendérsela.
+    adultsOnly:
+      type: boolean
+    contentWarnings:
+      type: array
+      items:
+        type: string
+      description: |
+        Lo que la obra declara contener. Va en la tarjeta y no solo dentro:
+        una advertencia que solo aparece cuando ya estás leyendo no advierte
+        de nada (`FEAT-WRK-017` `RN-8`).
+    genres:
+      type: array
+      items:
+        type: string
+
+PostCard:
+  type: object
+  required: [postId, author, body, type, format, audience, commentCount, likeCount, likedByViewer, repostCount, edited, createdAt]
+  description: |
+    Una tarjeta del muro. El autor viaja **resuelto** —nombre, `@usuario`,
+    avatar— porque una tarjeta con un identificador no se puede pintar.
+
+    Los contadores vienen de la propia publicación, no de un recuento por
+    tarjeta: un muro que cuenta comentarios en cada carga se degrada justo
+    cuando la plataforma empieza a funcionar.
+  properties:
+    postId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    author:
+      type: object
+      required: [userId, username]
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    body:
+      type: string
+      description: Texto plano y saneado. Puede venir vacío si la publicación es solo un adjunto.
+    type:
+      $ref: '#/PostType'
+    format:
+      $ref: '#/PostFormat'
+    audience:
+      $ref: '#/PostAudience'
+    imageUrl:
+      type: [string, 'null']
+      description: |
+        Apunta a `/posts/{postId}/image`, **no al almacén público**. Una
+        publicación para seguidores es una regla de privacidad, y una clave
+        difícil de adivinar no es una comprobación: se filtra el día que
+        aparece en un registro o en una captura de pantalla.
+    linkUrl:
+      type: [string, 'null']
+      description: |
+        La dirección, **sin previsualización**. El título y la descripción de
+        una tarjeta de artículo los generaría el servidor visitando la URL que
+        escribió alguien, y eso es una capacidad que se decide aparte.
+    workId:
+      type: [string, 'null']
+      description: |
+        El relato que promociona, **por identificador**. Se queda aunque
+        `work` venga a `null`: dice qué obra citó quien publicó, aunque hoy ya
+        no se pueda enseñar.
+    work:
+      oneOf:
+        - $ref: '#/EmbeddedWork'
+        - type: 'null'
+      description: |
+        La obra citada, **con sus datos de ahora mismo** (`FEAT-COM-028`).
+
+        Es la diferencia con `linkUrl`: un enlace externo guardaría una
+        previsualización que envejece; esto se resuelve en cada lectura, así
+        que si el autor cambia el título, la publicación de hace un mes enseña
+        el nuevo.
+
+        **`null` en dos casos distintos**, y el cliente los trata igual: la
+        publicación no cita ninguna obra (`workId` también es `null`), o la
+        que citaba ha dejado de ser visible —borrada, archivada o bloqueada
+        por moderación— y entonces `workId` sigue ahí. La publicación **no
+        desaparece** por eso: el texto es de quien lo escribió.
+    commentCount:
+      type: integer
+    likedByViewer:
+      type: boolean
+      description: |
+        Si quien mira lo ha apoyado, para que el botón salga resaltado
+        (`FEAT-COM-008`). Viaja en la tarjeta y no se pregunta aparte: una
+        petición por corazón serían veinte por muro.
+    likeCount:
+      type: integer
+    repostCount:
+      type: integer
+    edited:
+      type: boolean
+      description: |
+        Si su texto cambió después de publicarse. Quien lee un comentario
+        tiene derecho a saber que lo que hay encima no es lo que había cuando
+        se escribió.
+    createdAt:
+      type: string
+      format: date-time
+    repostedBy:
+      type: [object, 'null']
+      description: |
+        Quién ha vuelto a sacarla, cuando la entrada es un repost. **El resto
+        de la tarjeta sigue siendo del original**: su autor, su texto y sus
+        contadores. Un repost es una referencia, no una publicación aparte,
+        así que lo único que añade es esta cabecera.
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    repostComment:
+      type: [string, 'null']
+      description: El texto que añadió quien reposteó, si añadió alguno.
+    repostedAt:
+      type: [string, 'null']
+      format: date-time
+      description: La entrada se ordena por esta fecha, no por la del original.
+    mentions:
+      type: array
+      items:
+        $ref: '#/MentionView'
+
+WallPage:
+  type: object
+  required: [posts, pageInfo]
+  description: |
+    **Una página puede traer menos tarjetas que el `limit` pedido y seguir
+    teniendo siguiente**: el perfil de un autor que ha dejado de ser visible
+    deja un hueco, igual que en las listas de personas.
+
+    Sin total: contar aquí sería contar lo que ve cada persona, una cifra
+    distinta por visitante y una consulta cara en la pantalla que más se abre.
+  properties:
+    posts:
+      type: array
+      items:
+        $ref: '#/PostCard'
+    pageInfo:
+      type: object
+      required: [nextCursor, hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
+MentionView:
+  type: object
+  required: [position]
+  description: |
+    Alguien nombrado en el texto, **servido aparte y no incrustado en él**:
+    que cliente y servidor tengan que coincidir en cómo se parsea una cadena
+    es una fuente clásica de discrepancias, y aquí la discrepancia sería un
+    enlace apuntando a quien no es.
+
+    `name` es **el de ahora**. Se guarda el identificador y no el texto, así
+    que cambiar de nombre actualiza todas las menciones pasadas a la vez, y
+    cambiar de `@usuario` no mueve ninguna de sitio — un nombre de usuario se
+    recicla a los 30 días y una mención guardada como texto acabaría
+    atribuyendo palabras a quien no las dijo.
+
+    Los dos vienen a `null` cuando el mencionado ya no está: la mención se
+    pinta de forma neutra, sin enlace, en vez de llevar a ninguna parte.
+  properties:
+    userId:
+      type: [string, 'null']
+    name:
+      type: [string, 'null']
+    position:
+      type: integer
+      description: Dónde empieza en el texto, en caracteres.
+
+MentionInput:
+  type: object
+  required: [userId, position]
+  description: |
+    Una mención tal y como se envía: **el identificador de a quién se
+    seleccionó**, nunca el nombre que se escribió. Si el servidor la
+    resolviera leyendo el texto, cualquiera podría fabricar una que pareciera
+    apuntar a otra persona.
+
+    Un identificador que no existe **rechaza la publicación entera**: quien
+    escribe cree que ha nombrado a alguien, y guardar el texto sin la mención
+    le enseñaría el resultado cuando ya no puede corregirlo.
+  properties:
+    userId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    position:
+      type: integer
+
+PostIdParam:
+  name: postId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+RecommendedWorkCard:
+  type: object
+  required: [workId, title, status, chapterCount, readingMinutes, adultsOnly, contentWarnings, genres, credits, correctionsReceived]
+  description: |
+    Una obra del carrusel de la Home (`FEAT-COM-017`).
+
+    **Metadatos y ni una palabra del texto.** Que una obra salga aquí no
+    significa que quien la ve pueda abrirla: eso se decide al intentarlo.
+  properties:
+    workId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    title:
+      type: string
+    synopsis:
+      type: [string, 'null']
+      description: Recortada a 280 caracteres. Cuánto cabe en una tarjeta es cosa de la pantalla.
+    status:
+      type: string
+      description: Siempre `IN_CORRECTION`; el carrusel solo propone lo que se puede corregir.
+    chapterCount:
+      type: integer
+    readingMinutes:
+      type: integer
+      description: |
+        Derivado del número de palabras a 200 por minuto (`FEAT-WRK-013`). No
+        lo introduce el autor.
+    adultsOnly:
+      type: boolean
+    contentWarnings:
+      type: array
+      items:
+        type: string
+    genres:
+      type: array
+      items:
+        type: string
+    credits:
+      type: integer
+      description: |
+        La insignia de `FEAT-CRD-013`: **el mínimo** de lo que pagan sus
+        capítulos corregibles, no la media. Una tarjeta que promete más de lo
+        que luego se abona es peor que no enseñar nada. Cero significa que
+        ahora mismo no se puede corregir.
+    correctionsReceived:
+      type: integer
+
+platformPosts:
+  post:
+    tags: [Community]
+    operationId: publishPlatformPost
+    summary: Publicar en nombre de la plataforma
+    description: |
+      La cuenta «Lectores Beta», con la que habla el producto (`FEAT-COM-038`).
+
+      **Es una cuenta normal con una marca**, no un tipo de publicación
+      aparte, y de ahí sale todo lo demás: la publicación llega a todo el
+      mundo sin seguir a nadie porque su audiencia es `EVERYONE` y el muro lo
+      compone la audiencia, no el seguimiento. Se comenta, se apoya y se
+      repostea como cualquier otra, sin una sola rama nueva.
+
+      **Quien administra firma la acción; quien aparece en la tarjeta es la
+      cuenta institucional**, y la publicación no sale en el muro propio de
+      quien la publicó.
+
+      La audiencia **no se acepta del cuerpo**: un anuncio de la plataforma
+      para seguidores no significa nada, porque a la cuenta institucional no
+      se la sigue para enterarse.
+
+      Exige `ROLE_ADMIN` y no `ROLE_MODERATOR`: hablar con la voz de la
+      plataforma no es moderar. La cuenta se designa por consola
+      (`lectoresbeta:platform:account`), nunca desde la API.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              body:
+                type: string
+                maxLength: 5000
+              type:
+                $ref: '#/PostType'
+              linkUrl:
+                type: string
+                format: uri
+              workId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '201':
+        description: Publicada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [postId]
+              properties:
+                postId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: Sin `ROLE_ADMIN`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: NO_PLATFORM_ACCOUNT`. Nadie ha designado todavía la cuenta
+          con la que habla la plataforma. Es un estado normal de una
+          instalación recién puesta en marcha, no una avería: falta ejecutar
+          el comando de consola.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: Validación.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+recommendedWorks:
+  get:
+    tags: [Community]
+    operationId: listRecommendedWorks
+    summary: El carrusel de obras recomendadas de la Home
+    description: |
+      Lo primero que se ve al entrar, y la vía principal para empezar a
+      corregir (`FEAT-COM-017`).
+
+      Son obras de los géneros que esa persona eligió, **abiertas a
+      corrección** y ordenadas por la fórmula de reparto de `decision:0008`:
+      capacidad de pago × desatención × frescura. No es popularidad, y es
+      deliberado — aparecer arriba consume lo que te puso arriba, así que las
+      correcciones se reparten en vez de concentrarse.
+
+      Nunca incluye obras propias, ni borradores, ni obras bloqueadas: la
+      visibilidad la resuelve `Work` y no se vuelve a resolver aquí.
+
+      **`shouldDisplay` lo decide el servidor.** Por debajo de un mínimo se
+      rellena con obras de cualquier género, y si aun así no hay ninguna la
+      sección no se enseña y la Home empieza por el muro. Si lo decidiera el
+      cliente, el umbral viviría en dos sitios y uno se quedaría atrás.
+
+      **Funciona con la cuenta sin activar**: es solo lectura.
+    parameters:
+      - name: howMany
+        in: query
+        required: false
+        description: Cuántas pedir. El servidor acota el máximo.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 24
+    responses:
+      '200':
+        description: El carrusel, o la decisión de no enseñarlo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shouldDisplay, reason, works]
+              properties:
+                shouldDisplay:
+                  type: boolean
+                reason:
+                  type: [string, 'null']
+                  enum: [NOTHING_TO_CORRECT_YET, null]
+                  description: |
+                    Por qué no hay carrusel, cuando no lo hay. Un solo valor:
+                    al llegar ahí ya se ha mirado el catálogo entero, así que
+                    decir que el problema son los géneros de esa persona sería
+                    culparla de una plataforma vacía.
+                works:
+                  type: array
+                  items:
+                    $ref: '#/RecommendedWorkCard'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+myPosts:
+  get:
+    tags: [Community]
+    operationId: listMyPosts
+    summary: Mi muro
+    description: |
+      Lo que he publicado y reposteado, de lo más reciente a lo más antiguo
+      (`FEAT-COM-026`).
+
+      **Es el muro general con un filtro**, no una consulta aparte, y la
+      respuesta es idéntica campo por campo. Eso es lo que permite que la
+      pestaña del perfil reutilice el componente del muro.
+
+      En el muro propio se ve **todo lo propio**, incluidas las publicaciones
+      `FOLLOWERS`, aunque uno no se siga a sí mismo. Y no lo afecta a quién
+      haya bloqueado uno: bloquear a alguien no borra lo que escribí.
+
+      **Los reposts cuentan**: lo que alguien saca a su muro es suyo aunque el
+      texto sea de otro, y llega con `repostedBy`.
+    parameters:
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+      - name: type
+        in: query
+        description: |
+          Acota por **intención** (`FEAT-COM-009`), no por formato: la
+          intención dice qué quiere quien publica, que es lo que se busca; el
+          formato dice cómo se pinta.
+        schema:
+          $ref: '#/PostType'
+      - name: q
+        in: query
+        description: |
+          Busca en el texto, con búsqueda de texto completo **en español**:
+          busca por raíz, así que «escribir» encuentra «escribiendo».
+        schema:
+          type: string
+          maxLength: 200
+      - name: authorId
+        in: query
+        description: |
+          Quien **escribió** la publicación. No es lo mismo que el muro de una
+          persona: allí un repost cuenta como de quien lo saca, aquí como de
+          quien lo escribió.
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: from
+        in: query
+        description: Desde esta fecha, **incluida**.
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: |
+          Hasta esta fecha, **incluida**. En una entrada que es un repost, la
+          fecha que cuenta es la del repost: es cuando apareció en el muro y
+          es por la que se ordena.
+        schema:
+          type: string
+          format: date-time
+    responses:
+      '200':
+        description: Una página de mi muro.
+        content:
+          application/json:
+            schema:
+              $ref: '#/WallPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal escrito.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+userPosts:
+  get:
+    tags: [Community]
+    operationId: listUserPosts
+    summary: El muro de una persona
+    description: |
+      La misma pantalla mirando el perfil de otro (`FEAT-COM-026`).
+
+      **Enseña lo que esa persona te dejaría ver en el muro general**: lo
+      `EVERYONE` siempre, y lo `FOLLOWERS` solo si la sigues. No es una
+      comprobación aparte: es la misma consulta, así que no puede divergir.
+
+      Con un bloqueo por medio, **sale vacío en los dos sentidos**
+      (`FEAT-COM-034`), y lo mismo si la privacidad de perfil de esa persona
+      no te alcanza (`FEAT-USR-014`).
+
+      El muro de quien no existe **está vacío, no da `404`**: decir «no
+      existe» convertiría esto en un comprobador de quién tiene cuenta.
+
+      Exige sesión, por lo mismo que el muro general.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+      - name: type
+        in: query
+        description: |
+          Acota por **intención** (`FEAT-COM-009`), no por formato: la
+          intención dice qué quiere quien publica, que es lo que se busca; el
+          formato dice cómo se pinta.
+        schema:
+          $ref: '#/PostType'
+      - name: q
+        in: query
+        description: |
+          Busca en el texto, con búsqueda de texto completo **en español**:
+          busca por raíz, así que «escribir» encuentra «escribiendo».
+        schema:
+          type: string
+          maxLength: 200
+      - name: authorId
+        in: query
+        description: |
+          Quien **escribió** la publicación. No es lo mismo que el muro de una
+          persona: allí un repost cuenta como de quien lo saca, aquí como de
+          quien lo escribió.
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: from
+        in: query
+        description: Desde esta fecha, **incluida**.
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: |
+          Hasta esta fecha, **incluida**. En una entrada que es un repost, la
+          fecha que cuenta es la del repost: es cuando apareció en el muro y
+          es por la que se ordena.
+        schema:
+          type: string
+          format: date-time
+    responses:
+      '200':
+        description: Una página de su muro, o una lista vacía.
+        content:
+          application/json:
+            schema:
+              $ref: '#/WallPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal escrito.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+posts:
+  get:
+    tags: [Community]
+    operationId: listPosts
+    summary: El muro principal
+    description: |
+      Las publicaciones de la comunidad, de la más reciente a la más antigua.
+
+      **Lo compone la audiencia, no el seguimiento**: se ve todo lo
+      `EVERYONE`, lo `FOLLOWERS` de quienes sigue quien mira, y lo suyo propio.
+      En un muro restringido a quienes sigues las dos audiencias serían
+      indistinguibles y el selector del modal sería un adorno.
+
+      **El filtrado es de servidor.** Una publicación que quien mira no debe
+      ver no se envía para que el cliente la esconda.
+
+      Ordena por fecha. «Más relevante» necesita una fórmula que nadie ha
+      definido y es otra funcionalidad.
+
+      Exige sesión: sin saber quién mira no se puede resolver `FOLLOWERS`.
+    parameters:
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+      - name: type
+        in: query
+        description: |
+          Acota por **intención** (`FEAT-COM-009`), no por formato: la
+          intención dice qué quiere quien publica, que es lo que se busca; el
+          formato dice cómo se pinta.
+        schema:
+          $ref: '#/PostType'
+      - name: q
+        in: query
+        description: |
+          Busca en el texto, con búsqueda de texto completo **en español**:
+          busca por raíz, así que «escribir» encuentra «escribiendo».
+        schema:
+          type: string
+          maxLength: 200
+      - name: authorId
+        in: query
+        description: |
+          Quien **escribió** la publicación. No es lo mismo que el muro de una
+          persona: allí un repost cuenta como de quien lo saca, aquí como de
+          quien lo escribió.
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: from
+        in: query
+        description: Desde esta fecha, **incluida**.
+        schema:
+          type: string
+          format: date-time
+      - name: to
+        in: query
+        description: |
+          Hasta esta fecha, **incluida**. En una entrada que es un repost, la
+          fecha que cuenta es la del repost: es cuando apareció en el muro y
+          es por la que se ordena.
+        schema:
+          type: string
+          format: date-time
+    responses:
+      '200':
+        description: Una página del muro.
+        content:
+          application/json:
+            schema:
+              $ref: '#/WallPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`. El cursor no lo produjo esta API.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  post:
+    tags: [Community]
+    operationId: createPost
+    summary: Publicar en el muro
+    description: |
+      Texto, un adjunto, o ambos. **Vacía se rechaza**; sin texto no, porque
+      una foto sola es una publicación legítima y obligar a escribir algo junto
+      a ella solo consigue que la gente escriba un punto.
+
+      **Un adjunto como máximo** —imagen, enlace o relato—, y dos se rechazan
+      en vez de quedarse con el primero: quien manda dos cree que va a publicar
+      dos.
+
+      El **formato no se envía**: se deriva del adjunto. El **autor tampoco**:
+      es quien tiene la sesión, aunque el cuerpo diga otra cosa.
+
+      **`type: LOOKING_FOR_BETA_READERS` exige una obra** (`FEAT-COM-003`),
+      tuya y ya publicada. Es la única intención que impone algo, y por lo que
+      significa: las otras tres describen lo que alguien quiere; esta pide
+      algo concreto sobre un texto concreto, y sin él nadie puede atenderla.
+      Anunciar un borrador mandaría a quien responda a una puerta cerrada —
+      para él la obra no existe—, y reclutar para lo que escribió otro sería
+      decidir por él a quién enseña su texto.
+
+      Dos sobres para el mismo comando: `multipart/form-data` cuando hay
+      imagen, JSON cuando no.
+
+      La imagen **se reescribe al guardarla** y pierde sus metadatos EXIF, que
+      es donde va escrito dónde se tomó una foto.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              body:
+                type: string
+                maxLength: 5000
+                description: Texto plano. El marcado se retira en vez de rechazarse; los emojis se conservan.
+              type:
+                $ref: '#/PostType'
+              audience:
+                $ref: '#/PostAudience'
+              linkUrl:
+                type: string
+                description: Solo `http` y `https`. Cualquier otro esquema es una forma de que el cliente ejecute algo al pulsar.
+              workId:
+                $ref: '../openapi.yaml#/components/schemas/Uuid'
+              mentions:
+                type: array
+                maxItems: 10
+                description: |
+                  A quién se nombra en el texto. El tope está para lo que se
+                  ve venir: sin él, una publicación con doscientas menciones
+                  es un envío masivo de avisos que cualquiera puede disparar.
+
+                  **Solo por JSON.** Una publicación con imagen viaja en un
+                  formulario, y meter una lista de objetos en un campo de
+                  formulario sería inventarse una codificación.
+                items:
+                  $ref: '#/MentionInput'
+        multipart/form-data:
+          schema:
+            type: object
+            properties:
+              body:
+                type: string
+                maxLength: 5000
+              type:
+                $ref: '#/PostType'
+              audience:
+                $ref: '#/PostAudience'
+              image:
+                type: string
+                format: binary
+    responses:
+      '201':
+        description: Publicada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [postId]
+              properties:
+                postId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: ACCOUNT_NOT_ACTIVATED` —publicar es escribir— o
+          `NOT_YOUR_WORK` si buscas lectores beta para la obra de otra
+          persona.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND`. El relato no existe o no es visible para
+          quien publica. Se nombra el motivo porque quien publica **eligió**
+          esa obra, y decirle que la publicación no existe sería contestarle a
+          otra cosa.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '413':
+        description: '`code: FILE_TOO_LARGE`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: WORK_NOT_VISIBLE`. Buscas lectores beta para una obra que
+          todavía no se puede ver: publícala primero.
+
+          O `code: RECEPTION_CLOSED` (`FEAT-COM-004`, `FEAT-COM-005`): pides
+          en el muro lo que tienes cerrado en `PUT /me/reception-settings`.
+          `LOOKING_FOR_WRITING_BUDDY` exige `writingBuddyProposals` abierto y
+          `OFFERING_AS_BETA_READER` exige `betaReaderInvitations`.
+
+          Publicar una petición que nadie puede atender manda contra un muro a
+          todo el que responda, y quien publicó no se entera nunca de por qué
+          no le escribe nadie. **El ajuste no se abre solo**: publicar no es
+          consentir. Se comprueba al publicar, así que cerrar la recepción
+          después no retira lo publicado.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: EMPTY_POST` si no lleva ni texto ni adjunto,
+          `TOO_MANY_ATTACHMENTS` si lleva dos, `UNSUPPORTED_FILE_TYPE` si el
+          fichero no es una imagen legible, `INVALID_VALUE` si el texto pasa
+          del máximo o el enlace no es `http`/`https`,
+          `MENTIONED_USER_NOT_FOUND` si se nombra a alguien que no existe,
+          `TOO_MANY_MENTIONS`, o `WORK_REQUIRED` si buscas lectores beta sin
+          decir para qué obra.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+post:
+  patch:
+    tags: [Community]
+    operationId: editPost
+    summary: Cambiar el texto de una publicación propia
+    description: |
+      **Solo el texto.** La audiencia y el adjunto se fijan al publicar:
+      ampliar la audiencia haría aparecer ante todos algo escrito para un
+      círculo cerrado, y cambiar el adjunto alteraría aquello a lo que la gente
+      ya respondió.
+
+      La publicación queda **marcada como editada**.
+
+      La de otra persona responde `404`, no `403`: un permiso denegado
+      confirmaría que existe, y eso ya es información sobre quien la escribió.
+    parameters:
+      - $ref: '#/PostIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              body:
+                type: string
+                maxLength: 5000
+    responses:
+      '204':
+        description: Cambiada, o ya estaba así.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: POST_NOT_FOUND`. No existe, está eliminada, o es de otra persona.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: EMPTY_POST`. Vaciar del todo una publicación sin adjunto es
+          eliminarla, y para eso hay una operación que dice lo que hace.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: deletePost
+    summary: Retirar una publicación propia
+    description: |
+      **Definitivo y para todos**, incluido su autor. No hay papelera:
+      «eliminar» tiene que significar lo que la gente cree que significa.
+
+      Eliminar lo ya eliminado responde `404`, como cualquier otra publicación
+      que ya no existe.
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '204':
+        description: Retirada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+postImage:
+  get:
+    tags: [Community]
+    operationId: getPostImage
+    summary: La imagen de una publicación
+    description: |
+      Comprueba **lo mismo que el muro**: si esa publicación no existe para
+      quien pregunta, su imagen tampoco.
+
+      Se sirve con `Cache-Control: private` a propósito: la respuesta depende
+      de quién pregunta, así que una caché compartida entregaría la foto de una
+      publicación cerrada a quien no debía verla.
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '200':
+        description: La imagen.
+        content:
+          image/*:
+            schema:
+              type: string
+              format: binary
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: POST_NOT_FOUND`. No existe, no lleva imagen, o no es para quien pregunta.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# ---------------------------------------------------------------------------
+# Comentarios y respuestas (`FEAT-COM-006`).
+# ---------------------------------------------------------------------------
+
+CommentIdParam:
+  name: commentId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+CommentCard:
+  type: object
+  required: [commentId, author, body, replyCount, likeCount, likedByViewer, mine, edited, createdAt]
+  description: |
+    Un comentario o una respuesta. Lleva **sus acciones** para que el cliente
+    no tenga que pedirlas aparte por cada fila.
+  properties:
+    commentId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    author:
+      type: object
+      required: [userId, username]
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    body:
+      type: string
+    parentCommentId:
+      type: [string, 'null']
+      description: |
+        El comentario del que cuelga, si es una respuesta. **Siempre de primer
+        nivel**: responder a una respuesta cuelga del mismo raíz, y el cliente
+        no necesita saber cuál es porque lo resuelve el servidor.
+    likeCount:
+      type: integer
+      description: |
+        Independiente del de la publicación (`FEAT-COM-030`). No es la
+        «valoración positiva» de `Feedback`, que otorga créditos.
+    likedByViewer:
+      type: boolean
+    replyCount:
+      type: integer
+    mine:
+      type: boolean
+      description: Si lo escribió quien pregunta, que es quien puede editarlo o retirarlo.
+    edited:
+      type: boolean
+    createdAt:
+      type: string
+      format: date-time
+    mentions:
+      type: array
+      items:
+        $ref: '#/MentionView'
+
+CommentsPage:
+  type: object
+  required: [comments, pageInfo]
+  properties:
+    comments:
+      type: array
+      items:
+        $ref: '#/CommentCard'
+    pageInfo:
+      type: object
+      required: [nextCursor, hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
+postComments:
+  get:
+    tags: [Community]
+    operationId: listPostComments
+    summary: Los comentarios de una publicación
+    description: |
+      Solo los de **primer nivel**: las respuestas cuelgan de su comentario y
+      se piden aparte, porque mezclarlas obligaría al cliente a reconstruir el
+      árbol desde una lista plana.
+
+      Si la publicación no existe para quien pregunta, sus comentarios
+      tampoco: es la misma regla que impide comentarla, preguntada por el otro
+      lado.
+
+      `sort` admite `RECENT` (por defecto), `OLDEST` y `RELEVANT`.
+
+      `RELEVANT` es el que la pantalla enseña por defecto y ordena por
+      `apoyos + 2 × respuestas`: una respuesta pesa el doble que un apoyo
+      porque cuesta más, y sin ese peso sería «más gustados» con otro nombre.
+      Su cursor **no es intercambiable** con el de los otros dos — lleva la
+      puntuación dentro, porque el instante allí ya es solo el desempate.
+    parameters:
+      - $ref: '#/PostIdParam'
+      - name: sort
+        in: query
+        schema:
+          type: string
+          enum: [RECENT, OLDEST, RELEVANT]
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Una página de comentarios.
+        content:
+          application/json:
+            schema:
+              $ref: '#/CommentsPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: POST_NOT_FOUND`. No existe, o su audiencia excluye a quien pregunta.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNSUPPORTED_SORT`, que lleva `supportedSorts`, o
+          `INVALID_CURSOR`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  post:
+    tags: [Community]
+    operationId: createPostComment
+    summary: Comentar una publicación
+    description: |
+      **Solo comenta quien puede ver la publicación.** Con audiencias
+      distintas de «cualquiera», comentar es la otra vía por la que alguien
+      tocaría contenido que no debería ver.
+
+      El autor es quien tiene la sesión. El texto se guarda plano, conserva
+      los emojis y no puede estar vacío: un comentario no lleva adjunto, así
+      que sin texto no hay comentario.
+
+      Comentar **no mueve créditos**. Los créditos se mueven con el feedback
+      sobre obras, que es otra cosa que la interfaz llama parecido.
+    parameters:
+      - $ref: '#/PostIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                maxLength: 1000
+              mentions:
+                type: array
+                maxItems: 10
+                items:
+                  $ref: '#/MentionInput'
+    responses:
+      '201':
+        description: Comentado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [commentId]
+              properties:
+                commentId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: INVALID_VALUE` si está vacío o pasa del máximo,
+          `MENTIONED_USER_NOT_FOUND` si se nombra a alguien que no existe, o
+          `TOO_MANY_MENTIONS`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+comment:
+  patch:
+    tags: [Community]
+    operationId: editPostComment
+    summary: Cambiar el texto de un comentario propio
+    description: |
+      Solo el texto, y queda marcado como editado. El de otra persona responde
+      `404`, no `403`.
+    parameters:
+      - $ref: '#/CommentIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                maxLength: 1000
+    responses:
+      '204':
+        description: Cambiado, o ya estaba así.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: COMMENT_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: INVALID_VALUE`. Un comentario no puede quedarse vacío: para eso está eliminarlo.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: deletePostComment
+    summary: Retirar un comentario propio
+    description: |
+      Retirar un comentario raíz **se lleva sus respuestas**: lo contrario
+      dejaría respuestas contestando a una pregunta que nadie puede leer.
+
+      El contador de la publicación baja por todo lo que se va, porque cuenta
+      la conversación entera.
+    parameters:
+      - $ref: '#/CommentIdParam'
+    responses:
+      '204':
+        description: Retirado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: COMMENT_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+commentReplies:
+  get:
+    tags: [Community]
+    operationId: listCommentReplies
+    summary: Las respuestas de un comentario
+    description: |
+      **Siempre de la más antigua a la más reciente**, sin desplegable que lo
+      cambie: un hilo se lee en el orden en que se dijo, y del revés obligaría
+      a leer hacia arriba para entender a qué contesta cada cosa.
+
+      Si `commentId` es una respuesta, el servidor **resuelve al comentario
+      raíz**: los hilos son planos, así que «las respuestas de esta respuesta»
+      son las del hilo entero. El cliente no necesita saber cuál es el raíz.
+    parameters:
+      - $ref: '#/CommentIdParam'
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Una página de respuestas.
+        content:
+          application/json:
+            schema:
+              $ref: '#/CommentsPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: COMMENT_NOT_FOUND` o `POST_NOT_FOUND`. Un comentario no tiene
+          audiencia propia: hereda entera la de su publicación, así que si esa
+          no existe para quien pregunta, el comentario tampoco.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: INVALID_CURSOR`, o `VALIDATION_ERROR` si un filtro está mal escrito.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  post:
+    tags: [Community]
+    operationId: replyToComment
+    summary: Responder a un comentario
+    description: |
+      La respuesta **cuelga siempre del comentario raíz**, nunca de otra
+      respuesta. Es una invariante y no un detalle: un hilo plano se pagina y
+      uno arbitrariamente profundo, no.
+
+      La **mención precargada** a quien se responde la manda el cliente como
+      cualquier otra: es una comodidad del compositor, no una obligación, y se
+      puede borrar antes de enviar.
+
+      Valen las mismas reglas que comentar: audiencia, saneado, cuenta
+      activada y ningún efecto en créditos.
+    parameters:
+      - $ref: '#/CommentIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                maxLength: 1000
+              mentions:
+                type: array
+                maxItems: 10
+                items:
+                  $ref: '#/MentionInput'
+    responses:
+      '201':
+        description: Respondido.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [commentId]
+              properties:
+                commentId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: COMMENT_NOT_FOUND` o `POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: INVALID_VALUE`, `MENTIONED_USER_NOT_FOUND` o
+          `TOO_MANY_MENTIONS`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+repost:
+  post:
+    tags: [Community]
+    operationId: repostPost
+    summary: Volver a sacar una publicación
+    description: |
+      **El botón alterna**: volver a pulsarlo deshace el repost, como un «me
+      gusta». Responde `200` con el estado en que queda, y no `201`, porque la
+      misma llamada puede dejar las dos cosas y un código que diga «creado»
+      estaría mintiendo la mitad de las veces.
+
+      **No se repostea lo que no se puede ver**, y un original invisible
+      responde igual que uno inexistente: distinguirlos revelaría que existe
+      una publicación que esa persona no debería conocer.
+
+      Repostear **no amplía la audiencia del original**. Quien no podía verlo
+      sigue sin poder, porque el muro comprueba siempre el original y no la
+      referencia.
+
+      Se puede repostear lo propio: sirve para volver a sacar algo antiguo.
+    parameters:
+      - $ref: '#/PostIdParam'
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              comment:
+                type: string
+                maxLength: 5000
+                description: Texto propio opcional, que es lo que separa reenviar de citar.
+    responses:
+      '200':
+        description: Si ha quedado reposteada o si el mismo gesto la ha deshecho.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reposted]
+              properties:
+                reposted:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: POST_NOT_FOUND`. No existe, o su audiencia excluye a quien pregunta.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: undoRepost
+    summary: Retirar un repost propio
+    description: |
+      Existe además del botón que alterna porque dicen cosas distintas: aquél
+      es «cambia lo que haya», este es «quítalo».
+
+      **No comprueba la audiencia del original**, a diferencia de repostear:
+      deshacer algo propio tiene que funcionar aunque el autor haya
+      restringido el original después, o quedaría un repost que su dueño no
+      puede quitar.
+
+      Deshacer lo ya deshecho no es un error.
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '204':
+        description: Retirado, o ya no estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+homeAuthorSuggestions:
+  get:
+    tags: [Community]
+    operationId: listHomeAuthorSuggestions
+    summary: El bloque «todavía no sigues a ningún autor»
+    description: |
+      Cierra el cabo suelto del onboarding: el paso 3 es opcional y además
+      **se omite solo** cuando no hay autores suficientes, así que sin este
+      bloque quien lo saltara se quedaría con un muro pobre y sin una vía
+      evidente de arreglarlo.
+
+      **Es el mismo caso de uso que `listAuthorSuggestions`**: mismas
+      tarjetas, mismo criterio, misma cadena de relleno. Lo que cambia es
+      dónde se pinta, cuántas caben —cuatro, no diez— y una condición: el
+      bloque **solo aparece a quien no sigue a nadie**, y desaparece en cuanto
+      sigue a alguien.
+
+      Son dos rutas y un solo motor a propósito: el contexto de uso es
+      distinto y es previsible que el tamaño diverja, pero duplicar el
+      criterio sería tener dos sitios donde cambiarlo.
+
+      Sin candidatos el bloque no se muestra: no se sustituye por un mensaje
+      vacío que no ofrece salida.
+    responses:
+      '200':
+        description: Las sugerencias, o la instrucción de no pintar el bloque.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shouldDisplay, reason, suggestions]
+              properties:
+                shouldDisplay:
+                  type: boolean
+                reason:
+                  type: [string, 'null']
+                  enum: [NOT_ENOUGH_AUTHORS, ALREADY_FOLLOWING_ALL, ALREADY_FOLLOWING_SOMEBODY, null]
+                  description: |
+                    `ALREADY_FOLLOWING_SOMEBODY` es el caso normal: el bloque
+                    ha cumplido su función y no hace falta.
+                suggestions:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, followerCount, publicationCount, matchedGenres, following]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      displayName:
+                        type: [string, 'null']
+                      avatarUrl:
+                        type: [string, 'null']
+                      followerCount:
+                        type: integer
+                      publicationCount:
+                        type: integer
+                      matchedGenres:
+                        type: array
+                        items:
+                          type: string
+                      following:
+                        type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+# Los «me gusta» (`FEAT-COM-008`, `FEAT-COM-030`).
+#
+# **Ojo con el nombre**: en `Feedback` una «valoración positiva» de un
+# comentario de corrección otorga créditos (`FEAT-FBK-006`). Esto es un gesto
+# social sin ningún efecto económico. Comparten palabra y no concepto, y por
+# eso viven en contextos distintos.
+
+postLike:
+  put:
+    tags: [Community]
+    operationId: likePost
+    summary: Apoyar una publicación
+    description: |
+      `PUT` y no `POST` porque **fija un estado**: la publicación acaba
+      apoyada por quien llama, haya pulsado una vez o cinco. Repetirlo no
+      suma.
+
+      **No se puede apoyar lo que no se puede ver**, y responde igual que si
+      no existiera: es el agujero clásico de los contadores — no hace falta
+      leer una publicación para saber, por el error que devuelve, que está
+      ahí.
+
+      Se puede apoyar la propia. Suena raro y es lo correcto: nadie lo prohíbe
+      en ninguna red, y prohibirlo obligaría a explicar por qué.
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '200':
+        description: Apoyada, con el contador para repintar sin otra petición.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe, o no puedes verla. `code: POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: unlikePost
+    summary: Retirar el apoyo a una publicación
+    description: |
+      Idempotente: retirar lo que no se puso responde bien. El estado que se
+      pedía ya se cumple, y quien borra dos veces suele ser un reintento.
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '200':
+        description: Ya no está apoyada. Igual si no lo estaba.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe, o no puedes verla. `code: POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+commentLike:
+  put:
+    tags: [Community]
+    operationId: likePostComment
+    summary: Apoyar un comentario o una respuesta
+    description: |
+      Lo mismo sobre un comentario, con su contador **independiente** del de
+      la publicación.
+
+      Vale igual para un comentario de primer nivel y para una respuesta: son
+      la misma entidad con un padre, así que no hay nada que distinguir.
+
+      Un comentario no tiene audiencia propia —hereda entera la de su
+      publicación—, así que tampoco se apoya el de algo que no se puede ver.
+      Y un comentario borrado no se alcanza: su texto ya no está, y apoyarlo
+      sería la forma de averiguar que estuvo ahí.
+    parameters:
+      - $ref: '#/CommentIdParam'
+    responses:
+      '200':
+        description: Apoyado, con el contador del comentario.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe, se borró, o no puedes ver su publicación. `code: COMMENT_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: unlikePostComment
+    summary: Retirar el apoyo a un comentario
+    description: Idempotente, igual que el de la publicación.
+    parameters:
+      - $ref: '#/CommentIdParam'
+    responses:
+      '200':
+        description: Ya no está apoyado. Igual si no lo estaba.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe, se borró, o no puedes ver su publicación. `code: COMMENT_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+PostIdParam:
+  name: postId
+  in: path
+  required: true
+  schema:
+    type: string
+    format: uuid
+
+CommentIdParam:
+  name: commentId
+  in: path
+  required: true
+  schema:
+    type: string
+    format: uuid
+
+LikeState:
+  type: object
+  required: [liked, likeCount]
+  properties:
+    liked:
+      type: boolean
+    likeCount:
+      type: integer
+
+# Mensajes directos (`FEAT-COM-011`, `FEAT-COM-012`).
+
+ConversationCard:
+  type: object
+  required: [conversationId, other, lastMessage, lastMessageAt, lastMessageIsMine, unreadCount]
+  description: |
+    Una fila de «Mensajes». `lastMessage` es **un extracto de 140 caracteres**,
+    no el mensaje entero: la lista enseña una línea, y mandar cuatro mil
+    caracteres por fila para recortarlos en el cliente sería mandar una
+    conversación entera por una lista.
+  properties:
+    conversationId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    other:
+      type: [object, 'null']
+      description: |
+        Con quién es la conversación. **Nulo cuando esa cuenta ya no existe**:
+        el hilo sigue, porque borrarlo reescribiría una conversación que su
+        dueño sí tuvo.
+      required: [userId, username]
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    lastMessage:
+      type: [string, 'null']
+    lastMessageAt:
+      type: [string, 'null']
+      format: date-time
+    lastMessageIsMine:
+      type: boolean
+      description: Para pintar el «Tú:» delante del extracto.
+    unreadCount:
+      type: integer
+
+MessageCard:
+  type: object
+  required: [messageId, senderId, mine, body, sentAt, read]
+  properties:
+    messageId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    senderId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    mine:
+      type: boolean
+    body:
+      type: string
+      description: Texto plano, sin marcado.
+    sentAt:
+      type: string
+      format: date-time
+    read:
+      type: boolean
+      description: |
+        Si el destinatario lo ha leído. En un mensaje propio es el acuse; en
+        uno recibido, si ya se abrió el hilo.
+
+directMessages:
+  post:
+    tags: [Community]
+    operationId: sendDirectMessage
+    summary: Escribir a una persona
+    description: |
+      **Se escribe a una persona, no a una conversación.** Quien pulsa «Enviar
+      mensaje» en un perfil no sabe si ya hay hilo abierto, y abrir o
+      continuar es la misma operación vista desde fuera: el servidor devuelve
+      el `conversationId`, sea el de siempre o uno nuevo.
+
+      Dos puertas, y significan cosas distintas. El ajuste de privacidad
+      (`FEAT-USR-010`) gobierna **abrir** una conversación; endurecerlo no
+      cierra los hilos ya abiertos. El bloqueo corta siempre, en los dos
+      sentidos y esté la conversación abierta o no.
+
+      `MESSAGES_NOT_ACCEPTED` **no dice por qué**. Si distinguiera «lo tiene
+      en solo seguidores» de «lo tiene cerrado» de «te ha bloqueado»,
+      cualquiera podría averiguar los ajustes de privacidad de otro probando a
+      escribirle.
+    parameters:
+      - $ref: '#/UserIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                maxLength: 4000
+                description: Texto plano. Se recortan los espacios de los extremos.
+    responses:
+      '201':
+        description: Enviado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [conversationId, messageId, sentAt]
+              properties:
+                conversationId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                messageId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                sentAt:
+                  type: string
+                  format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: MESSAGES_NOT_ACCEPTED`. Esa persona no admite que le
+          escribas, y no se dice por qué.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: CONVERSATION_NOT_FOUND`. Ese destinatario no existe o no está
+          activado, y **no se distingue cuál de las dos**: distinguirlo
+          confirmaría quién está en la plataforma.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: VALIDATION_FAILED` si el mensaje viene vacío o pasa de 4000
+          caracteres; `code: CANNOT_MESSAGE_YOURSELF` si el destinatario eres
+          tú.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+myConversations:
+  get:
+    tags: [Community]
+    operationId: listMyConversations
+    summary: Mis conversaciones
+    description: |
+      Bajo `/me/` porque **no existe la versión de otra persona**: con quién
+      habla alguien no es una lista que se pueda pedir.
+
+      De la conversación con actividad más reciente hacia atrás. Con quien hay
+      bloqueo no aparece, en ninguno de los dos sentidos, y **no se borra**:
+      el bloqueo se puede deshacer y el hilo vuelve entero.
+    parameters:
+      - name: cursor
+        in: query
+        required: false
+        description: |
+          Opaco, como el resto del proyecto. Lleva fecha **e identificador**:
+          dos conversaciones pueden tener su último mensaje en el mismo
+          instante, y ordenar solo por él dejaría el desempate al azar — entre
+          dos páginas, eso es una conversación repetida o una que desaparece.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Las conversaciones de quien pregunta.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/ConversationCard'
+                pageInfo:
+                  $ref: '../openapi.yaml#/components/schemas/PageInfo'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+conversationMessages:
+  get:
+    tags: [Community]
+    operationId: listConversationMessages
+    summary: Los mensajes de una conversación
+    description: |
+      Del más reciente hacia atrás, que es como se lee una conversación: al
+      abrirla hace falta lo último, no lo primero.
+
+      Una conversación ajena responde `404` igual que una que no existe: un
+      `403` confirmaría que existe, y con ella que esas dos personas hablan.
+    parameters:
+      - $ref: '#/ConversationIdParam'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Los mensajes, del más reciente hacia atrás.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: '#/MessageCard'
+                pageInfo:
+                  $ref: '../openapi.yaml#/components/schemas/PageInfo'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es tuya. `code: CONVERSATION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+conversationRead:
+  put:
+    tags: [Community]
+    operationId: markConversationRead
+    summary: Marcar una conversación como leída
+    description: |
+      **Lo recibido, nunca lo enviado.** Marcar como leído lo propio no
+      significa nada, y contarlo haría que el contador de quien escribe bajara
+      al abrir su propio hilo.
+
+      `PUT` porque fija un estado: la pantalla marca al abrir y también con un
+      gesto, así que la segunda llamada llega sola y no debe significar nada
+      distinto. No mueve la fecha de lo que ya estaba leído.
+    parameters:
+      - $ref: '#/ConversationIdParam'
+    responses:
+      '200':
+        description: Leída. `unreadCount` es cero.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [unreadCount]
+              properties:
+                unreadCount:
+                  type: integer
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe, o no es tuya. `code: CONVERSATION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+ConversationIdParam:
+  name: conversationId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+# Las interacciones sociales bajo el texto de un capítulo (`FEAT-COM-036`).
+
+ChapterIdParam:
+  name: chapterId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+ChapterCommentIdParam:
+  name: commentId
+  in: path
+  required: true
+  schema:
+    $ref: '../openapi.yaml#/components/schemas/Uuid'
+
+ChapterCommentCard:
+  type: object
+  required: [commentId, author, body, parentCommentId, replyCount, mine, createdAt]
+  properties:
+    commentId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    author:
+      type: object
+      required: [userId, username]
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    body:
+      type: string
+      description: Texto plano, hasta 1000 caracteres.
+    parentCommentId:
+      type: [string, 'null']
+      description: |
+        El comentario raíz del hilo, si es una respuesta. **Los hilos son
+        planos**: responder a una respuesta cuelga del raíz, nunca de la
+        respuesta.
+    replyCount:
+      type: integer
+    mine:
+      type: boolean
+    createdAt:
+      type: string
+      format: date-time
+
+ChapterCommentPage:
+  type: object
+  required: [comments, pageInfo]
+  description: |
+    Una página puede venir más corta que el `limit` pedido: quien ha dejado de
+    ser visible para quien mira deja un hueco. Lo que dice si hay más es
+    `pageInfo.nextCursor`.
+  properties:
+    comments:
+      type: array
+      items:
+        $ref: '#/ChapterCommentCard'
+    pageInfo:
+      $ref: '../openapi.yaml#/components/schemas/PageInfo'
+
+chapterLike:
+  put:
+    tags: [Community]
+    operationId: likeChapter
+    summary: Apoyar un capítulo
+    description: |
+      `PUT` y no `POST` porque fija un estado: el capítulo acaba apoyado por
+      quien llama, haya pulsado una vez o cinco.
+
+      **No se apoya lo que no se puede leer.** Un capítulo que quien pregunta
+      no puede ver responde `404`, igual que uno que no existe.
+    parameters:
+      - $ref: '#/ChapterIdParam'
+    responses:
+      '200':
+        description: Apoyado, con el contador del capítulo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: COMMENTS_NOT_ACCEPTED`. El autor no admite interacciones de
+          esta persona (`FEAT-USR-038`).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: 'No existe o no puedes leerlo. `code: CHAPTER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [Community]
+    operationId: unlikeChapter
+    summary: Retirar el apoyo a un capítulo
+    description: |
+      Idempotente. **No exige que el autor siga admitiendo comentarios**:
+      quien apoyó algo y después se encontró con el buzón cerrado tiene que
+      poder deshacer lo suyo — un gesto que no se puede retirar no era un
+      gesto.
+    parameters:
+      - $ref: '#/ChapterIdParam'
+    responses:
+      '200':
+        description: Ya no está apoyado. Igual si no lo estaba.
+        content:
+          application/json:
+            schema:
+              $ref: '#/LikeState'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe o no puedes leerlo. `code: CHAPTER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterComments:
+  post:
+    tags: [Community]
+    operationId: commentOnChapter
+    summary: Comentar un capítulo
+    description: |
+      **Comentar un capítulo no es corregirlo.** Esto es una reacción libre
+      bajo el texto, caben las que sean y **no mueve un solo crédito**. La
+      corrección es `POST /chapters/{chapterId}/corrections`: es el
+      cuestionario del autor, hay una por lector y capítulo, y sí los mueve.
+      Conviven en la misma pantalla y son dos cosas distintas.
+
+      `parentCommentId` convierte el comentario en una respuesta. Los hilos
+      son planos: responder a una respuesta cuelga del comentario raíz, y el
+      cliente no necesita saber cuál es.
+
+      Sin menciones, a diferencia de los comentarios del muro: nombrar a
+      alguien bajo un capítulo lo arrastraría a una obra que quizá no puede
+      leer.
+    parameters:
+      - $ref: '#/ChapterIdParam'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [body]
+            properties:
+              body:
+                type: string
+                maxLength: 1000
+              parentCommentId:
+                type: [string, 'null']
+                format: uuid
+    responses:
+      '201':
+        description: Comentado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [commentId]
+              properties:
+                commentId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'El autor no admite comentarios de esta persona. `code: COMMENTS_NOT_ACCEPTED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          El capítulo no existe o no puedes leerlo
+          (`code: CHAPTER_NOT_FOUND`), o el comentario al que respondes no
+          está en este capítulo (`code: COMMENT_NOT_FOUND`).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'Vacío o de más de 1000 caracteres. `code: VALIDATION_FAILED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  get:
+    tags: [Community]
+    operationId: listChapterComments
+    summary: Los comentarios de un capítulo
+    description: |
+      Del más reciente al más antiguo, y **solo los de primer nivel**: las
+      respuestas cuelgan de su comentario y se piden aparte.
+
+      **No hay «Más relevantes»** todavía, aunque la maqueta lo muestre: esa
+      ordenación necesita la fórmula de relevancia que `CM-4` deja sin
+      definir, la misma que tiene bloqueados los rankings y el orden del muro.
+    parameters:
+      - $ref: '#/ChapterIdParam'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Los comentarios del capítulo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ChapterCommentPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe o no puedes leerlo. `code: CHAPTER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterEngagement:
+  get:
+    tags: [Community]
+    operationId: getChapterEngagement
+    summary: Las cifras sociales de un capítulo
+    description: |
+      Lo que pinta la cabecera de la pantalla de lectura.
+
+      **Endpoint aparte del capítulo** y no dos campos más en
+      `GET /chapters/{chapterId}`: el capítulo lo sirve `Work` y estas cifras
+      son de `Community`. Meterlas en la misma respuesta obligaría a uno de
+      los dos contextos a conocer al otro.
+
+      Trae apoyos y comentarios, **no lecturas**: qué cuenta como «lectura»
+      sigue sin definirse (`H-3`), y un contador que nadie sabe qué mide es
+      peor que no tenerlo.
+    parameters:
+      - $ref: '#/ChapterIdParam'
+    responses:
+      '200':
+        description: Las cifras, y si quien mira lo ha apoyado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [chapterId, likeCount, commentCount, likedByViewer]
+              properties:
+                chapterId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                likeCount:
+                  type: integer
+                commentCount:
+                  type: integer
+                  description: La conversación entera, respuestas incluidas.
+                likedByViewer:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe o no puedes leerlo. `code: CHAPTER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterCommentReplies:
+  get:
+    tags: [Community]
+    operationId: listChapterCommentReplies
+    summary: Las respuestas de un comentario de capítulo
+    description: |
+      **De la más antigua a la más reciente**, al revés que la lista de
+      comentarios: un hilo se lee en el orden en que se dijo.
+    parameters:
+      - $ref: '#/ChapterCommentIdParam'
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+    responses:
+      '200':
+        description: Las respuestas del hilo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ChapterCommentPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          El comentario no existe (`code: COMMENT_NOT_FOUND`) o su capítulo no
+          se puede leer (`code: CHAPTER_NOT_FOUND`).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+chapterComment:
+  delete:
+    tags: [Community]
+    operationId: deleteChapterComment
+    summary: Retirar un comentario propio de un capítulo
+    description: |
+      El propio, y solo el propio. El de otra persona responde `404`, igual
+      que uno que no existe.
+
+      **Retirar un comentario raíz se lleva sus respuestas**: lo contrario
+      dejaría respuestas colgando de algo que ya no está, contestando a una
+      pregunta que nadie puede leer.
+
+      Que el autor de la obra pueda **ocultar** lo que le dicen es otra cosa
+      (`FEAT-FBK-007`), con otra semántica: ahí el comentario sigue
+      existiendo para quien lo escribió.
+    parameters:
+      - $ref: '#/ChapterCommentIdParam'
+    responses:
+      '204':
+        description: Retirado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: 'No existe o no es tuyo. `code: COMMENT_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+postShare:
+  get:
+    tags: [Community]
+    operationId: getPostShareCard
+    summary: La tarjeta con la que se comparte una publicación
+    description: |
+      La hermana de `getWorkShareCard` para una publicación del muro
+      (`FEAT-COM-020`).
+
+      **Solo las de audiencia `EVERYONE`.** Una tarjeta es pública por
+      definición —la pide un rastreador sin sesión y acaba en la caché de una
+      red social—, así que darle una a una publicación para seguidores sería
+      convertir compartir en la puerta de atrás de la audiencia que su autor
+      eligió.
+
+      Una `FOLLOWERS`, una eliminada y una que no existe responden lo mismo.
+
+      **Si la publicación cita una obra, manda la obra**: quien comparte
+      «mirad esto» con un relato dentro quiere que se vea el relato. Y si esa
+      obra deja de ser visible, la tarjeta vuelve a hablar de la publicación
+      en vez de romperse.
+    security: []
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '200':
+        description: La tarjeta.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+            description: '`public, max-age=300`.'
+        content:
+          application/json:
+            schema:
+              $ref: '../paths/works.yaml#/ShareCard'
+      '404':
+        description: No existe, está eliminada, o su audiencia no es `EVERYONE`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# ---------------------------------------------------------------------------
+# Lo que cada quien decide sobre su propio muro (FEAT-COM-021, FEAT-COM-022,
+# FEAT-COM-033).
+#
+# Las tres son preferencias **privadas** de quien mira: no se cuentan, no se
+# anuncian y nadie más las ve. Ninguna publica evento y ninguna aparece en la
+# tarjeta de la publicación.
+#
+# Las tres de activar son `PUT` y no `POST`: lo que se dice es «esto está
+# guardado / escondido / silenciado», no «añade una fila».
+# ---------------------------------------------------------------------------
+
+savedPost:
+  put:
+    tags: [Community]
+    operationId: savePost
+    summary: Guardar una publicación
+    description: |
+      Apartarla para volver a ella.
+
+      **No es un «me gusta».** Un «me gusta» le habla al autor y se cuenta;
+      esto es una nota para uno mismo, no se cuenta y su autor no se entera. De
+      ahí que no exista `savedCount` ni una lista de quién guardó qué: un
+      contador convertiría la nota privada en una señal pública, y entonces la
+      gente dejaría de usarla para lo que sirve.
+
+      **Solo se guarda lo que se puede ver**: una publicación que no te alcanza
+      responde como si no existiera.
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Guardada. Repetirlo no cambia nada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: POST_NOT_FOUND`. No existe, se borró, o no te alcanza.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Community]
+    operationId: unsavePost
+    summary: Quitar de guardados
+    description: |
+      **No pregunta si la publicación se puede ver**, al revés que guardar. Una
+      que dejó de alcanzarte tiene que poder salir de tu lista, o quedarían
+      filas que nadie puede borrar.
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: No está en guardados. Quitar lo que no estaba responde igual.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+savedPosts:
+  get:
+    tags: [Community]
+    operationId: listSavedPosts
+    summary: Mis guardados
+    description: |
+      **Es el muro con un filtro**, no una consulta aparte, y la respuesta es
+      idéntica campo por campo a la del muro. Eso es lo que permite reutilizar
+      el mismo componente.
+
+      Y de ahí sale gratis lo que importa: **guardar no conserva acceso**. Una
+      publicación que se hizo privada, cuyo autor te bloqueó o que se borró
+      deja de aparecer aquí.
+
+      La consecuencia de esa decisión: **el orden es el del muro**, por fecha
+      de publicación descendente, no por cuándo se guardó.
+
+      **Los reposts no salen**: lo que se guarda es una publicación, y
+      enseñarla con la cabecera de quien la reposteó diría algo sobre por qué
+      está ahí que no es verdad.
+    parameters:
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Una página de guardados, con la forma del muro.
+        content:
+          application/json:
+            schema:
+              $ref: '#/WallPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+hiddenPost:
+  put:
+    tags: [Community]
+    operationId: hidePost
+    summary: Ocultar una publicación del muro
+    description: |
+      «Esto no me interesa.» La tarjeta desaparece del muro de quien la oculta
+      y de nadie más.
+
+      **No es borrar** —la publicación sigue existiendo para todo el mundo—,
+      **no es denunciar** y **no es silenciar a su autor**: oculta esa
+      publicación, no las demás. No se avisa a nadie y no se cuenta.
+
+      No vuelve **por ningún camino** del muro: ni reposteada, ni en el muro
+      del perfil de su autor, ni en los guardados. Si reaparecer bastara con
+      visitar un perfil, el botón sería un gesto sin efecto.
+
+      **No es una regla de acceso**: comentarla, repostearla o pedir su tarjeta
+      de compartir siguen funcionando.
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Oculta. Repetirlo no cambia nada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Community]
+    operationId: unhidePost
+    summary: Volver a mostrarla
+    description: |
+      **No hay lista de ocultas**, a propósito: una pantalla de «lo que
+      escondiste» convierte un gesto de un segundo en una bandeja que
+      gestionar.
+
+      Deshacerlo solo necesita el identificador, y quien acaba de ocultar lo
+      tiene: el «deshacer» del aviso que sale justo después. Funciona aunque la
+      tarjeta ya no esté en el muro, que es precisamente el caso.
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Vuelve al muro. Mostrar lo que no estaba oculto responde igual.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+mutedUser:
+  put:
+    tags: [Community]
+    operationId: muteUser
+    summary: Silenciar a un usuario
+    description: |
+      Dejar de verle en el muro **sin cortar nada**.
+
+      **Silenciar no es bloquear** (`FEAT-COM-034`), y la diferencia es el
+      alcance entero de esta operación:
+
+      | | Silenciar | Bloquear |
+      |---|---|---|
+      | Sus publicaciones y reposts en mi muro | Desaparecen | Desaparecen |
+      | Sigo siguiéndole | **Sí** | No |
+      | Puede comentarme, escribirme, mencionarme | **Sí** | No |
+      | Sus comentarios en hilos ajenos | **Los veo** | No |
+      | Su perfil y sus obras | **Los veo** | No |
+      | Acceso de lector beta y créditos | **Nada** | Se revoca |
+
+      **No se aplica en su propio perfil**: si visito el perfil de alguien a
+      quien silencié, veo sus publicaciones. Silenciar dice «no me lo pongas
+      delante sin pedirlo», y entrar en su perfil es pedirlo.
+
+      No se le avisa, y no se publica ningún hecho: esto no significa nada
+      fuera de `Community`.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Silenciado. Repetirlo no cambia nada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: CANNOT_MUTE_YOURSELF` o `USER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Community]
+    operationId: unmuteUser
+    summary: Dejar de silenciar
+    description: |
+      No comprueba que esa persona siga existiendo: quien se dio de baja
+      también merece salir de la lista, o la fila se quedaría ahí sin forma de
+      quitarla.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Ya no está silenciado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+mutedUsers:
+  get:
+    tags: [Community]
+    operationId: listMutedUsers
+    summary: A quién tengo silenciado
+    description: |
+      **Hace falta**, y aquí más que en la de bloqueados: quien silenció a
+      alguien hace tres meses no recuerda su `@usuario` y, además, ya no le ve
+      pasar por el muro — que es justamente el efecto. Sin esta lista,
+      silenciar sería irreversible en la práctica.
+
+      Igual que la de bloqueados, **no se filtra por privacidad**: quien cerró
+      su perfil después de ser silenciado sigue apareciendo. Quien pregunta ya
+      sabe quiénes son.
+
+      Solo la propia.
+    parameters:
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: A quién tiene silenciado, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, username, mutedAt]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      username:
+                        type: string
+                      name:
+                        type: [string, 'null']
+                      avatarUrl:
+                        type: [string, 'null']
+                      mutedAt:
+                        type: string
+                        format: date-time
+                pageInfo:
+                  type: object
+                  required: [nextCursor, hasNextPage]
+                  properties:
+                    nextCursor:
+                      type: [string, 'null']
+                    hasNextPage:
+                      type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

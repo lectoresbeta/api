@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Work\Manuscript\Domain\Entity\WorkGenre"
+            table="work_genre" schema="work_ctx">
+
+        <indexes>
+            <!-- La consulta del catálogo: obras de estas temáticas. -->
+            <index name="idx_work_genre_code" columns="genre_code"/>
+        </indexes>
+
+        <!-- La clave es el par: una obra no declara dos veces la misma
+             temática, y eso lo garantiza la base de datos, no el código. -->
+        <id name="workId" column="work_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="genreCode" column="genre_code" type="string" length="32">
+            <generator strategy="NONE"/>
+        </id>
+
+    </entity>
+
+</doctrine-mapping>

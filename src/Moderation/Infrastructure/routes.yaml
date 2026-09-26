@@ -1,0 +1,170 @@
+# Rutas del bounded context `Moderation`. Todavía ninguna.
+#
+# El fichero existe vacío a propósito: quien añada el primer endpoint de
+# `Moderation` no tiene que averiguar dónde va, y `config/routes.yaml` —que lo
+# importa— sigue siendo el censo de contextos que exponen API.
+#
+# El nombre de cada ruta es su `operationId` de OpenAPI. No es cosmético: es
+# lo que permite comprobar de forma mecánica que lo implementado y el contrato
+# publicado no se han separado, y hay un test que lo hace
+# (`tests/Unit/Architecture/RoutingConventionTest.php`).
+#
+# Formato:
+#
+#     <operationId>:
+#         path: /api/v1/...
+#         controller: LectoresBeta\Moderation\<Concepto>\Infrastructure\Controller\<Algo>Controller::__invoke
+#         methods: [POST]
+#
+# Convención completa: docs/api/conventions/routing.md
+
+# El backoffice (`FEAT-MOD-004`). Todo lo que cuelga de `/api/v1/admin` exige
+# `ROLE_MODERATOR` por `security.yaml`, y conceder roles exige además
+# `ROLE_ADMIN`: los dos se resuelven contra la base de datos en cada petición,
+# porque el token no lleva roles (`decision:0007`).
+listModerators:
+    path: /api/v1/admin/moderators
+    controller: LectoresBeta\Moderation\ModeratorRole\Infrastructure\Controller\ListModeratorsController::__invoke
+    methods: [GET]
+
+# `PUT` porque fija un estado: qué es esa cuenta en moderación. `level: null`
+# la deja en nada.
+setModeratorRole:
+    path: /api/v1/admin/users/{userId}/moderator-role
+    controller: LectoresBeta\Moderation\ModeratorRole\Infrastructure\Controller\SetModeratorRoleController::__invoke
+    methods: [PUT]
+
+# Cuelga de `/me` y no de `/admin` a propósito: es cómo prefiere trabajar el
+# moderador, no una decisión de administración (`RN-3`).
+setModeratorAlerts:
+    path: /api/v1/me/moderator-alerts
+    controller: LectoresBeta\Moderation\ModeratorRole\Infrastructure\Controller\SetModeratorAlertsController::__invoke
+    methods: [PUT]
+
+# Presentar una reclamación (`FEAT-MOD-001`). No produce ningún efecto: pide
+# que alguien mire algo.
+submitClaim:
+    path: /api/v1/claims
+    controller: LectoresBeta\Moderation\Claim\Infrastructure\Controller\SubmitClaimController::__invoke
+    methods: [POST]
+
+# Para que denunciar no sea gritar a un buzón (`FEAT-MOD-010`).
+listMyClaims:
+    path: /api/v1/me/claims
+    controller: LectoresBeta\Moderation\Claim\Infrastructure\Controller\ListMyClaimsController::__invoke
+    methods: [GET]
+
+# La cola del moderador (`FEAT-MOD-002`). Excluye las reclamaciones en las que
+# es parte: no basta con rechazar la acción, no debe verlas (`RN-1`).
+listClaims:
+    path: /api/v1/admin/claims
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\ListClaimsController::__invoke
+    methods: [GET]
+
+# Tomar y resolver, en un solo paso. No hay «asignármela» aparte: lo que
+# impide que dos moderadores resuelvan la misma es el bloqueo de la fila
+# mientras se decide (`RN-8`), no un estado intermedio.
+reviewClaim:
+    path: /api/v1/admin/claims/{claimId}/review
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\ReviewClaimController::__invoke
+    methods: [POST]
+
+# El registro de auditoría (`FEAT-MOD-007`). **Solo `ADMIN`**: un moderador no
+# audita a sus compañeros. Se escribía desde el primer día y nadie podía
+# leerlo, que es la peor forma de tener un registro — invita a confiar en que
+# hay control sin que lo haya.
+listAuditLog:
+    path: /api/v1/admin/audit-log
+    controller: LectoresBeta\Moderation\AuditLog\Infrastructure\Controller\ListAuditLogController::__invoke
+    methods: [GET]
+
+# Levantar un bloqueo (`FEAT-MOD-003` `RN-7`). Hasta aquí un bloqueo era
+# definitivo **de hecho**: la regla decía que un moderador podía revocarlo y
+# no había por dónde pedirlo.
+liftModerationBlock:
+    path: /api/v1/admin/moderation-blocks/lift
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\LiftWorkBlockController::__invoke
+    methods: [POST]
+
+# El catálogo de sanciones (`FEAT-MOD-006`).
+#
+# `Moderation` registra la sanción y `User` la aplica: aquí no se toca la
+# cuenta de nadie. Si este contexto la marcara directamente habría dos dueños
+# del estado del usuario.
+# La cola de asuntos vivos (`FEAT-MOD-006` `MOD-25`). Va **antes** que la de
+# imponer porque `/open` es una ruta más específica que `/sanctions`, y con
+# métodos distintos el orden no cambia nada — pero leerlo en este orden sí.
+#
+# Una suspensión total no caduca sola: sin esta pantalla se convierte en una
+# expulsión silenciosa que ningún moderador decidió.
+listOpenSanctions:
+    path: /api/v1/admin/sanctions/open
+    controller: LectoresBeta\Moderation\Sanction\Infrastructure\Controller\ListOpenSanctionsController::__invoke
+    methods: [GET]
+
+imposeSanction:
+    path: /api/v1/admin/sanctions
+    controller: LectoresBeta\Moderation\Sanction\Infrastructure\Controller\ImposeSanctionController::__invoke
+    methods: [POST]
+
+# `POST` y no `DELETE`: levantar una sanción no la borra, la cierra — su
+# rastro se queda en el historial, y lleva motivo.
+liftSanction:
+    path: /api/v1/admin/sanctions/{sanctionId}/lift
+    controller: LectoresBeta\Moderation\Sanction\Infrastructure\Controller\LiftSanctionController::__invoke
+    methods: [POST]
+
+# La conversación con las partes (`FEAT-MOD-009`).
+#
+# Tiene forma de estrella, no de sala: cada parte tiene un hilo privado con
+# moderación y no sabe qué dice la otra, ni siquiera si hay otra. Poner a
+# denunciante y denunciado a discutir crearía el conflicto que la moderación
+# existe para evitar.
+writeToClaimParty:
+    path: /api/v1/admin/claims/{claimId}/messages
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\WriteToClaimPartyController::__invoke
+    methods: [POST]
+
+# La ruta de la parte **no elige hilo**: el suyo se deduce de quién pregunta.
+listMyClaimThread:
+    path: /api/v1/me/claims/{claimId}/messages
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\MyClaimThreadController::__invoke
+    methods: [GET]
+
+replyToModeration:
+    path: /api/v1/me/claims/{claimId}/messages
+    controller: LectoresBeta\Moderation\Review\Infrastructure\Controller\MyClaimThreadController::__invoke
+    methods: [POST]
+
+# El backoffice de usuarios (`FEAT-MOD-005`). **Mira, no posee**: `Moderation`
+# no es dueño de las cuentas —lo es `User`— y lo que ofrece aquí es una vista
+# compuesta y la capacidad de ordenar acciones que ejecutan otros.
+#
+# Las dos lecturas quedan auditadas (`RN-1`): saber quién miró la ficha de un
+# usuario importa tanto como saber quién la cambió.
+searchUsers:
+    path: /api/v1/admin/users
+    controller: LectoresBeta\Moderation\Administration\Infrastructure\Controller\SearchUsersController::__invoke
+    methods: [GET]
+
+getUserSheet:
+    path: /api/v1/admin/users/{userId}
+    controller: LectoresBeta\Moderation\Administration\Infrastructure\Controller\GetUserSheetController::__invoke
+    methods: [GET]
+
+# Mover créditos es la única acción del backoffice que crea o destruye valor
+# de la nada, así que es **solo de `Admin`** y no de cualquier moderador. Y
+# **ordena**, no ajusta: lo aplica `Credits` al recibir el hecho, porque ese
+# contexto no recibe llamadas de nadie (`decision:0002`).
+orderCreditAdjustment:
+    path: /api/v1/admin/users/{userId}/credit-adjustment
+    controller: LectoresBeta\Moderation\Administration\Infrastructure\Controller\OrderCreditAdjustmentController::__invoke
+    methods: [POST]
+
+# Registrar una reclamación por alguien que tiene el botón bloqueado y escribe
+# por correo (`FEAT-MOD-001` `RN-6d`). Queda marcada con quién la registró, y
+# esa marca impide que sea él quien la resuelva.
+submitClaimOnBehalf:
+    path: /api/v1/admin/claims/on-behalf
+    controller: LectoresBeta\Moderation\Administration\Infrastructure\Controller\SubmitClaimOnBehalfController::__invoke
+    methods: [POST]

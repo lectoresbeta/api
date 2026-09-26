@@ -1,0 +1,42 @@
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            # Eventos de integración entre bounded contexts.
+            # RabbitMQ es el transporte del proyecto (AGENTS.md).
+            integration:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                # Ni la serialización nativa de PHP ni la de Symfony. Las
+                # dos escriben el nombre de la clase en una cabecera, y eso
+                # obliga al consumidor a tener esa misma clase: un contexto
+                # importando las clases de otro, que es justo lo que la
+                # arquitectura prohíbe.
+                #
+                # El nuestro escribe el **nombre del hecho** y un payload
+                # plano. Cada contexto declara su propia clase para el mismo
+                # hecho, y renombrarla deja de ser un cambio incompatible.
+                serializer: LectoresBeta\Shared\Infrastructure\Messenger\IntegrationEventSerializer
+                options:
+                    exchange:
+                        name: lectoresbeta.events
+                        type: topic
+                retry_strategy:
+                    max_retries: 3
+                    delay: 1000
+                    multiplier: 3
+
+            failed:
+                dsn: 'doctrine://default?queue_name=failed'
+
+        routing:
+            # Todo evento de integración lleva el marcador y va a RabbitMQ.
+            # Los handlers viven en el contexto que consume, nunca en el que
+            # publica.
+            LectoresBeta\Shared\Domain\Event\IntegrationEvent: integration
+
+when@test:
+    framework:
+        messenger:
+            transports:
+                integration: 'in-memory://'

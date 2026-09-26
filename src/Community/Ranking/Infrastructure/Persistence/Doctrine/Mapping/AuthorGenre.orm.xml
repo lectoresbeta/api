@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Community\Ranking\Domain\Entity\AuthorGenre"
+            table="author_genre" schema="community_ctx">
+
+        <indexes>
+            <index name="idx_author_genre_code" columns="genre_code"/>
+        </indexes>
+
+        <id name="authorId" column="author_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="genreCode" column="genre_code" type="string" length="32">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="works" type="integer"/>
+
+    </entity>
+
+</doctrine-mapping>

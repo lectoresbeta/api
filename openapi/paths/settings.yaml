@@ -1,0 +1,1409 @@
+# Los ajustes que el usuario controla sobre sí mismo.
+#
+# Los de privacidad **no son preferencias de visualización: son reglas de
+# autorización**. Esa es la única lectura correcta y determina dónde se
+# aplican: en el servidor, en cada operación, y no escondiendo botones.
+
+PrivacyAudience:
+  type: string
+  enum: [EVERYONE, FOLLOWERS, NOBODY]
+  description: |
+    Los tres ajustes comparten los mismos tres valores a propósito: son la
+    misma pregunta —¿hasta dónde llega esto?— aplicada a tres cosas.
+
+    **`FOLLOWERS` significa quien sigue a esta persona** (`FEAT-COM-010`), y
+    se aplica **en diferido**: entre seguir a alguien y entrar en su audiencia
+    pasa lo que tarde la cola de integración.
+
+    Conviene saber lo que promete: seguir es **unilateral**, así que «solo mis
+    seguidores» es, en la práctica, «cualquiera que pulse Seguir». Lo que sí
+    está garantizado es que seguir a alguien **no abre lo que ha cerrado**: con
+    `NOBODY` no ve el perfil ni comenta nadie, seguidor o no.
+
+PrivacySettings:
+  type: object
+  required: [profileVisibility, commentPermission, messagePermission, updatedAt]
+  properties:
+    profileVisibility:
+      allOf:
+        - $ref: '#/PrivacyAudience'
+      description: |
+        Quién puede encontrarme y abrir mi perfil. En `NOBODY`, **la cuenta se
+        vuelve invisible**: deja de aparecer al buscar a quién invitar, y el
+        perfil responde de forma que no confirme que existe.
+    commentPermission:
+      allOf:
+        - $ref: '#/PrivacyAudience'
+      description: |
+        Quién puede comentar mis textos. Es un **techo** sobre la modalidad de
+        cada obra: el perfil pone el máximo y una obra puede bajarlo, nunca
+        subirlo. En `NOBODY` no se puede corregir ninguna obra propia, sea cual
+        sea su modalidad, **ni siquiera por quien ya tiene acceso concedido** —
+        lo que se cierra es la puerta de comentar, no la de entrar.
+
+        No interrumpe lo que ya está en marcha: quien empezó una corrección,
+        entrega y cobra.
+    messagePermission:
+      allOf:
+        - $ref: '#/PrivacyAudience'
+      description: |
+        Quién puede mandarme mensajes directos. Se guarda ya, y se aplicará en
+        cuanto exista la mensajería.
+    updatedAt:
+      type: string
+      format: date-time
+
+privacySettings:
+  get:
+    tags: [User]
+    operationId: getMyPrivacySettings
+    summary: Mis ajustes de privacidad
+    description: |
+      **Solo los propios.** No hay endpoint para consultar los de otra
+      persona, y no es un olvido: saber que alguien tiene el perfil restringido
+      ya es información sobre esa persona. El efecto de esos ajustes se ve en
+      las respuestas de los demás endpoints, no preguntando por ellos.
+
+      Una cuenta nace con los tres en `EVERYONE`, escritos de forma explícita
+      en el mismo momento del alta: un ajuste ausente no puede interpretarse
+      como «todo permitido».
+
+      «Visibilidad de actividad» **no aparece todavía**. La etiqueta no dice
+      qué es «actividad» y los candidatos tienen consecuencias muy distintas,
+      así que ofrecer un interruptor que nada lee sería peor que no ofrecerlo.
+    responses:
+      '200':
+        description: Los ajustes del titular.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PrivacySettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  put:
+    tags: [User]
+    operationId: updateMyPrivacySettings
+    summary: Cambiar mis ajustes de privacidad
+    description: |
+      **Lo que no se envía se queda como estaba.** La pantalla manda un
+      desplegable cada vez, y obligar a enviar los tres haría que el cliente
+      reenviase valores que no ha leído — que es como se pierde un ajuste sin
+      que nadie lo toque.
+
+      No reescribe el pasado: no borra lo ya publicado, no revoca accesos ya
+      concedidos y no interrumpe una corrección en curso. Y **no modifica la
+      modalidad guardada de cada obra**: las dos se guardan como están y la
+      autorización evalúa las dos quedándose con la más restrictiva, de modo
+      que relajar el perfil devuelve a cada obra la modalidad que su autor
+      eligió.
+
+      No exige cuenta activada, al contrario que el resto de escrituras:
+      cerrar la puerta es lo último que conviene dificultarle a nadie.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              profileVisibility:
+                $ref: '#/PrivacyAudience'
+              commentPermission:
+                $ref: '#/PrivacyAudience'
+              messagePermission:
+                $ref: '#/PrivacyAudience'
+    responses:
+      '200':
+        description: |
+          Cómo han quedado **los tres**, no solo el que se tocó: quien acaba de
+          mover un desplegable quiere ver el estado completo.
+        content:
+          application/json:
+            schema:
+              $ref: '#/PrivacySettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: |
+          `code: UNKNOWN_AUDIENCE`. Un valor desconocido **se rechaza, nunca se
+          interpreta**: tomarlo por «todos» abriría una puerta que su dueño
+          cree cerrada, y tomarlo por «nadie» cerraría una que cree abierta.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+ProfileCounters:
+  type: object
+  required: [following, followers, works, corrections]
+  description: |
+    Las cuatro cifras de la cabecera de «Mi perfil» (`FEAT-USR-028`).
+
+    **Ninguna es de `User`**: seguidos y seguidores los cuenta `Community`,
+    los relatos `Work` y las correcciones `Feedback`. Se ensamblan al
+    responder, cada una por el contrato publicado de su contexto.
+
+    **`null` significa «no se ha podido saber», y no es lo mismo que cero.**
+    Si un contexto no responde, su cifra viaja nula y el perfil se devuelve
+    igual: un contador caído no tumba la pantalla. Un cliente que trate `null`
+    como `0` enseñará un cero donde debería dejar un hueco.
+  properties:
+    following:
+      type: [integer, 'null']
+      description: |
+        A cuántas personas sigue. **Cuenta todas**, también las que tienen el
+        perfil cerrado, así que puede ser mayor que las filas que devuelve
+        `listAuthorSubscriptions`: filtrar la cifra la haría distinta para
+        cada visitante.
+    followers:
+      type: [integer, 'null']
+      description: Cuántas le siguen, con la misma advertencia.
+    works:
+      type: [integer, 'null']
+      description: |
+        Cuántas obras tiene, **de cualquier estado**. Es su propio perfil y
+        sus borradores son suyos; el día que este contador salga en el perfil
+        ajeno hará falta otra pregunta, no esta.
+    corrections:
+      type: [integer, 'null']
+      description: |
+        Cuántas correcciones ha **entregado**. Una empezada y sin enviar no
+        cuenta: no es trabajo hecho, y contarla haría un número que sube y
+        baja solo.
+
+EditableProfile:
+  type: object
+  required: [userId, username, usernameChangeableOn, counters]
+  properties:
+    userId:
+      type: string
+      format: uuid
+    username:
+      type: string
+      description: |
+        **De solo lectura aquí.** Se enseña junto a los demás campos porque la
+        pantalla lo hace, y se cambia por su propio endpoint: sus reglas —una
+        vez cada 30 días, y el nombre anterior reservado como alias— no son
+        negociables por compartir formulario.
+    name:
+      type: [string, 'null']
+      maxLength: 80
+      description: El nombre **público**. No es único y no es identidad.
+    description:
+      type: [string, 'null']
+      maxLength: 300
+      description: |
+        La biografía, y es **el mismo campo** que la descripción que se edita
+        en línea bajo la foto del perfil. Un solo texto con dos puntos de
+        edición: si uno admitiera más que el otro, alguien escribiría algo que
+        después no puede guardar.
+    avatarUrl:
+      type: [string, 'null']
+    coverUrl:
+      type: [string, 'null']
+    usernameChangeableOn:
+      type: string
+      format: date-time
+      description: |
+        Desde cuándo se puede volver a cambiar el nombre de usuario
+        (`FEAT-USR-034`). Va aquí, en la lectura que abre la pantalla, para
+        que el campo pueda salir ya desactivado: enterarse con un `429`
+        después de escribir un nombre es enterarse tarde.
+
+        Con una cuenta que nunca lo ha cambiado es el momento actual.
+    counters:
+      $ref: '#/ProfileCounters'
+    avatarCrop:
+      type: [object, 'null']
+      description: |
+        El encuadre con el que se guardó la foto —escala, rotación y
+        desplazamiento— para **reabrir el editor donde se dejó**
+        (`FEAT-USR-037`). El recorte ya está aplicado en la imagen: esto no se
+        aplica nunca.
+
+        Va solo aquí, en el perfil propio: es material de trabajo de su dueño,
+        no algo que enseñar en el perfil que ven los demás.
+      additionalProperties:
+        type: number
+
+myProfile:
+  get:
+    tags: [User]
+    operationId: getMyProfile
+    summary: Mi perfil editable
+    description: |
+      Lo que «Configuración › Perfil» necesita para abrirse.
+
+      No lleva correo ni fecha de nacimiento: el primero se cambia por su
+      propio camino y la segunda no se cambia, y mezclarlos haría de una
+      pantalla de presentación una pantalla de seguridad.
+    responses:
+      '200':
+        description: Mi perfil.
+        content:
+          application/json:
+            schema:
+              $ref: '#/EditableProfile'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  patch:
+    tags: [User]
+    operationId: updateMyProfile
+    summary: Cambiar mi nombre o mi biografía
+    description: |
+      `PATCH` y no `PUT` porque el mismo recurso se edita **campo a campo**
+      desde el perfil y **en bloque** desde Configuración. Un `PUT` obligaría
+      a la edición en línea a reenviar campos que no está tocando, que es como
+      se borra una biografía sin querer.
+
+      **Lo que no se envía se queda como estaba; enviar `description: null` la
+      borra.** Son cosas distintas y el cuerpo las distingue por la presencia
+      de la clave, no por su valor.
+
+      **El nombre de usuario y la foto no viajan aquí**, y no por purismo:
+      mezclados, una biografía se quedaría sin guardar porque el nombre de
+      usuario que alguien quería está ocupado, o porque falló una subida. Un
+      solo «Guardar» en la interfaz no obliga a una sola llamada.
+
+      **Exige cuenta activada.** La biografía es texto libre que aparece en un
+      perfil público, y dejar publicarlo a una cuenta cuyo correo nadie ha
+      verificado es justo lo que la regla de activación existe para impedir.
+      Leer el propio perfil sí se puede sin activar: es solo lectura.
+
+      La biografía se guarda **como texto plano**: el marcado se retira en vez
+      de rechazarse, porque lo que hay que garantizar es que no sobreviva nada
+      que un cliente pueda interpretar. La respuesta devuelve lo que ha
+      quedado guardado, que no siempre es lo que se escribió.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+                maxLength: 80
+                description: |
+                  No puede quedar vacío: es lo que identifica a la persona en
+                  toda la interfaz. **No enviarlo** lo deja como estaba, que
+                  es distinto de enviarlo vacío.
+              description:
+                type: [string, 'null']
+                maxLength: 300
+    responses:
+      '200':
+        description: |
+          El perfil **tal y como ha quedado**, no tal y como se envió: la
+          biografía puede haber perdido marcado, y verlo ahora evita
+          descubrirlo más tarde y por sorpresa.
+        content:
+          application/json:
+            schema:
+              $ref: '#/EditableProfile'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: INVALID_VALUE`. El nombre enviado vacío o de más de 80
+          caracteres, o una biografía de más de 300 **una vez retirado el
+          marcado** — contar las etiquetas contra el límite castigaría a quien
+          pega desde un procesador de textos por algo que ni siquiera se
+          guarda.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+username:
+  put:
+    tags: [User]
+    operationId: changeUsername
+    summary: Cambiar mi nombre de usuario
+    description: |
+      **Una vez cada 30 días.** El nombre que se deja no queda libre: se
+      reserva como **alias** de la cuenta durante 30 días.
+
+      Esa reserva no está solo para que los enlaces ya compartidos sigan
+      funcionando —que también—, sino sobre todo para que **nadie más pueda
+      ocupar el nombre y heredar el tráfico dirigido a otra persona**.
+
+      **Recuperar un nombre propio que siga reservado se permite aunque no
+      hayan pasado los 30 días**, y renueva el plazo. Las dos mitades
+      importan: sin la primera, arrepentirse de un cambio obligaría a esperar
+      un mes con un nombre que no se quiere; sin la segunda se podría alternar
+      entre dos nombres indefinidamente, y cada vuelta rompería los enlaces
+      que el plazo existe para proteger.
+
+      Pedir el nombre que ya se tiene **no es un cambio**: se acepta sin
+      efecto y sin gastar el cupo. Guardar dos veces el formulario sin tocar
+      este campo no puede costar treinta días.
+
+      Tiene endpoint propio aunque la pantalla lo enseñe junto al nombre y la
+      biografía: un fallo aquí no debe llevarse por delante lo que sí se podía
+      guardar.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [username]
+            properties:
+              username:
+                type: string
+                minLength: 3
+                maxLength: 30
+                pattern: '^[a-z0-9_]+$'
+    responses:
+      '200':
+        description: |
+          Cómo ha quedado. `changeableOn` va **siempre**, incluso cuando no ha
+          habido cambio, para que el formulario pueda desactivarse sin fallar
+          primero.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, changeableOn]
+              properties:
+                username:
+                  type: string
+                previousUsername:
+                  type: [string, 'null']
+                  description: Nulo cuando no ha habido cambio.
+                aliasExpiresAt:
+                  type: [string, 'null']
+                  format: date-time
+                  description: |
+                    Hasta cuándo el nombre anterior sigue llevando a este
+                    perfil y sigue sin estar disponible para nadie.
+                changeableOn:
+                  type: string
+                  format: date-time
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: USERNAME_TAKEN`. Alguien lo usa, **o** un alias vigente lo
+          retiene — incluido el de una cuenta eliminada.
+
+          Los dos casos devuelven el mismo código **a propósito**:
+          distinguirlos contaría que alguien tuvo ese nombre y lo dejó hace
+          menos de un mes, que es información sobre una persona y no sobre la
+          disponibilidad de una palabra.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: USERNAME_RESERVED` para los nombres que nadie puede tener
+          —los que se confundirían con una voz oficial—, o `INVALID_VALUE` si
+          el formato no encaja.
+
+          El reservado **sí** se distingue del ocupado: ahí no hay nadie a
+          quien proteger, y quien lo pide merece saber que no es cuestión de
+          esperar.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '429':
+        description: |
+          `code: USERNAME_CHANGE_TOO_SOON`, con **`availableOn`** como miembro
+          de extensión. La fecha es el motivo de que esto sea un `429` y no un
+          conflicto: un cliente que no pueda saberla dejará el formulario
+          activo y permitirá reintentar mañana, y pasado, que es justo lo que
+          el límite pretende evitar.
+        content:
+          application/problem+json:
+            schema:
+              allOf:
+                - $ref: '../openapi.yaml#/components/schemas/Problem'
+                - type: object
+                  properties:
+                    availableOn:
+                      type: string
+                      format: date-time
+
+literaryPreferences:
+  get:
+    tags: [User]
+    operationId: getMyLiteraryPreferences
+    summary: Mis preferencias literarias
+    description: |
+      Los géneros que me interesan: **los mismos** que eligió el paso 2 del
+      onboarding (`FEAT-USR-023` `RN-6`). Un solo dato con dos puertas, no dos
+      copias que puedan discrepar — dos discreparían, y las recomendaciones
+      acabarían contradiciendo lo que la persona cree haber elegido.
+
+      **Solo las propias.** Los géneros de otra persona son parte de su perfil,
+      y qué enseña un perfil lo deciden `FEAT-USR-014` y sus ajustes de
+      privacidad.
+
+      Devuelve el nombre y no solo el código a propósito: un género **retirado**
+      ya no aparece en `listGenres`, así que cruzar ambas respuestas dejaría sin
+      nombre justo lo que hay que seguir enseñando. Y de ahí sale también cómo
+      reconocerlo: lo que está aquí y no en el catálogo es un género retirado.
+    responses:
+      '200':
+        description: Los géneros elegidos, en el orden del catálogo.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/GenreList'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  put:
+    tags: [User]
+    operationId: updateLiteraryPreferences
+    summary: Cambiar mis preferencias literarias
+    description: |
+      **Sustituye la selección entera.** `PUT` y no `PATCH` porque el dato *es*
+      la lista: una lista parcial no significa nada, y quien quita un género
+      espera que desaparezca.
+
+      Mínimo **tres**, los mismos que en el onboarding. Un mínimo que solo
+      rigiera el primer día no sería un mínimo: bastaría con terminar el
+      onboarding y volver aquí para quedarse con uno.
+
+      Los duplicados se normalizan en vez de rechazarse — mandar dos veces el
+      mismo género es un fallo del cliente, no una decisión de nadie—, con una
+      consecuencia que conviene conocer: `['POETRY','poetry']` **no** llega al
+      mínimo de tres, porque es un género.
+
+      **Un género retirado que ya era tuyo se conserva**; uno retirado que no
+      lo era se rechaza. Conservar no es elegir, y un guardado no debe caerse
+      por un campo que quien guarda no estaba editando.
+
+      Endpoint propio aunque la pantalla lo enseñe junto al nombre y la
+      biografía, por lo mismo que el nombre de usuario: comparten «Guardar»,
+      pero no comparten sus reglas.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [genres]
+            properties:
+              genres:
+                type: array
+                minItems: 3
+                items:
+                  type: string
+                  examples: ['SCIENCE_FICTION']
+    responses:
+      '200':
+        description: Cómo ha quedado la selección, con los nombres, para repintar sin volver a preguntar.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/GenreList'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          Menos de tres géneros (`code: NOT_ENOUGH_GENRES`) o alguno que no
+          está disponible (`code: UNKNOWN_GENRE`, que **los nombra**: uno
+          desconocido se rechaza, nunca se ignora en silencio).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+avatar:
+  put:
+    tags: [User]
+    operationId: updateAvatar
+    summary: Subir o reencuadrar mi foto de perfil
+    description: |
+      `multipart/form-data` con `image` —la imagen **ya recortada por el
+      navegador**— y, la primera vez, `original`. Al reencuadrar basta con la
+      primera: la original ya está guardada y volver a subirla sería mandar
+      por la red algo que no ha cambiado.
+
+      **Subir y reencuadrar son la misma operación**: llega una imagen
+      cuadrada nueva y sustituye a la anterior. La distinción entre «Cambiar»
+      y «Editar» es de interfaz.
+
+      El servidor **reescribe siempre** las imágenes: normaliza el formato,
+      redimensiona y **elimina los metadatos**. Que el navegador la haya
+      recortado antes no exime — recortar y sanear son cosas distintas, y los
+      metadatos de una foto llevan dónde se tomó. Lo guardado es WebP
+      cuadrado.
+
+      El servidor **no recorta ni gira**: `crop` solo se guarda, para reabrir
+      el editor donde el usuario lo dejó.
+
+      Subir una foto nueva **borra la anterior**.
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [image]
+            properties:
+              image:
+                type: string
+                format: binary
+                description: La imagen recortada, cuadrada. Máximo 2 MB.
+              original:
+                type: string
+                format: binary
+                description: |
+                  La imagen sin recortar, para que «Editar» pueda alejar y
+                  desplazar sin degradarla. Solo la primera vez.
+              crop:
+                type: string
+                description: |
+                  JSON con `scale`, `rotation`, `offsetX` y `offsetY`. **No se
+                  aplica**: se guarda para reabrir el editor.
+    responses:
+      '200':
+        description: La dirección de la foto ya procesada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [avatarUrl]
+              properties:
+                avatarUrl:
+                  type: string
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '413':
+        description: |
+          `code: FILE_TOO_LARGE`. Más de 2 MB. **El límite lo aplica el
+          servidor**: que el modal lo anuncie es una cortesía.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNSUPPORTED_FILE_TYPE` si no es una imagen de un formato
+          admitido —JPEG, PNG o WebP, **decidido por el contenido y no por la
+          extensión ni por el `Content-Type`**—, o `INVALID_IMAGE` si lo
+          parece y no se puede leer.
+
+          HEIC, el formato por defecto de la cámara de iOS, cae hoy en el
+          primero.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  delete:
+    tags: [User]
+    operationId: deleteAvatar
+    summary: Quitar mi foto de perfil
+    description: |
+      Devuelve al avatar por defecto, que no es un fichero de nadie sino el
+      marcador de la interfaz, y **borra los dos ficheros**: dejar la original
+      huérfana sería guardar una imagen personal que su dueño cree haber
+      borrado.
+
+      Idempotente: quitar una foto que no hay responde igual.
+    responses:
+      '204':
+        description: Ya no tiene foto. Igual si no la tenía.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+avatarOriginal:
+  get:
+    tags: [User]
+    operationId: getMyAvatarOriginal
+    summary: Mi foto sin recortar
+    description: |
+      La imagen que carga el editor al pulsar «Editar», **solo para quien la
+      subió**.
+
+      Tiene endpoint propio en vez de viajar como una URL dentro del perfil, y
+      es una decisión de privacidad: la original puede enseñar mucho más que
+      el encuadre que su dueño eligió mostrar, y una URL acaba copiada donde
+      la ve alguien más. Tampoco se sirve por `getMediaFile`, que solo entrega
+      lo que es público.
+
+      Responde el fichero, no JSON.
+    responses:
+      '200':
+        description: La imagen original.
+        content:
+          image/webp:
+            schema:
+              type: string
+              format: binary
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: PROFILE_NOT_FOUND`. No hay original que editar: o no tiene
+          foto, o la subió antes de que se guardaran las originales.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+password:
+  put:
+    tags: [Account]
+    operationId: changeMyPassword
+    summary: Cambiar o establecer la contraseña
+    description: |
+      **Exige la contraseña actual** (`RN-1`). Una sesión abierta no basta:
+      cambiarla echa a todas las demás sesiones, así que sin ese campo quien
+      se siente ante un portátil desbloqueado se queda con la cuenta.
+
+      El único caso en que puede faltar es una cuenta **sin contraseña** —la
+      de quien entró con Google—, y entonces el mismo formulario la
+      **establece** por primera vez. En cuanto la tiene, vuelve a ser
+      obligatoria: este camino no sirve para saltarse la regla anterior, y lo
+      comprueba el servidor.
+
+      Establecerla **no desvincula Google**: quedan dos formas de entrar.
+
+      Al cambiarla se **cierran todas las sesiones** y se manda un **aviso por
+      correo** que no se puede desactivar. En una cuenta de Google esas dos
+      cosas son la única defensa que queda, porque ahí no hay contraseña
+      actual que demostrar.
+
+      Hay limitación de frecuencia sobre los intentos **fallidos**: sin ella
+      este formulario sería un sitio donde probar contraseñas contra una
+      sesión robada, sin las protecciones del login.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [newPassword]
+            properties:
+              currentPassword:
+                type: [string, 'null']
+                description: |
+                  Obligatoria salvo que la cuenta no tenga contraseña.
+              newPassword:
+                type: string
+                format: password
+                minLength: 8
+    responses:
+      '204':
+        description: Contraseña cambiada. Hay que volver a iniciar sesión.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: INCORRECT_PASSWORD` si la actual no coincide, o
+          `code: CURRENT_PASSWORD_REQUIRED` si se ha dejado vacía en una
+          cuenta que sí tiene contraseña.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: WEAK_PASSWORD`, con los requisitos incumplidos, o
+          `code: PASSWORD_UNCHANGED` si la nueva es la que ya había.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '429':
+        $ref: '../openapi.yaml#/components/responses/TooManyRequests'
+
+emailChange:
+  post:
+    tags: [Account]
+    operationId: requestEmailChange
+    summary: Pedir el cambio de correo
+    description: |
+      **Cambiar el correo no es editar un campo.** Es la identidad de la
+      cuenta: con él se inicia sesión, por él se recupera la contraseña y de
+      él salió el nombre de usuario. Por eso son dos pasos con verificación.
+
+      Exige la **contraseña actual**: sin ella, quien se siente ante una
+      sesión ajena apunta la cuenta a su propio buzón y se queda con ella vía
+      «he olvidado mi contraseña».
+
+      Salen **dos correos**: el enlace de confirmación a la dirección nueva y
+      un **aviso a la anterior**, que es la única defensa de quien ha perdido
+      el control de su sesión. Ninguno de los dos se puede desactivar.
+
+      **La dirección no cambia todavía**: hasta confirmar, la válida sigue
+      siendo la anterior, y la cuenta funciona con normalidad. Una segunda
+      solicitud anula la primera.
+
+      El nombre de usuario **no cambia** y la cuenta **no vuelve a estar sin
+      activar**.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email, currentPassword]
+            properties:
+              email:
+                type: string
+                format: email
+              currentPassword:
+                type: string
+                format: password
+    responses:
+      '202':
+        description: Solicitud registrada. Los dos correos salen después.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: INCORRECT_PASSWORD`, o `code: CURRENT_PASSWORD_REQUIRED` en
+          una cuenta sin contraseña — para esas, `S-8` sigue sin decidir qué
+          sustituye a la contraseña actual, así que este camino está cerrado.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: EMAIL_CHANGE_REFUSED`. **Un solo código para dos casos a
+          propósito**: que la dirección ya la tenga otra cuenta y que sea la
+          que ya tienes. Decir cuál convertiría esto en un comprobador de
+          quién tiene cuenta.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+emailChangeConfirm:
+  post:
+    tags: [Account]
+    operationId: confirmEmailChange
+    summary: Confirmar el cambio de correo
+    description: |
+      **No requiere sesión**, aunque cuelgue de `/me`: el enlace se abre donde
+      esté abierto el buzón nuevo, que muchas veces es otro dispositivo. Lo
+      que autoriza es el token, de un solo uso y atado a esa solicitud.
+
+      Al confirmar se **cierran todas las sesiones**, así que después hay que
+      entrar otra vez, ya con la dirección nueva.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [token]
+            properties:
+              token:
+                type: string
+    responses:
+      '204':
+        description: Correo cambiado. Hay que iniciar sesión.
+      '404':
+        description: '`code: INVALID_EMAIL_CHANGE_TOKEN`. Ese enlace no existe.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '410':
+        description: |
+          `code: EMAIL_CHANGE_LINK_NO_LONGER_VALID`. Usado, caducado o anulado
+          por una solicitud posterior: para quien está delante los tres
+          significan lo mismo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: EMAIL_CHANGE_REFUSED`. La dirección se ocupó entre pedir y confirmar.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+sessionContext:
+  get:
+    tags: [Account]
+    operationId: getSessionContext
+    summary: El contexto de sesión que necesita el layout
+    description: |
+      **Una petición por navegación en vez de cuatro.** Identidad, estado de
+      la cuenta, onboarding, saldo y avisos sin leer son lo que el menú
+      lateral y la cabecera necesitan en todas las pantallas, y pedirlos por
+      separado sería pagar cuatro viajes para pintar algo que no cambia.
+
+      Es de **solo lectura** y solo del propio contexto: no hay forma de pedir
+      el de otra persona. No lleva correo ni fecha de nacimiento.
+
+      Funciona con la cuenta **sin activar**: es justo entonces cuando hace
+      falta para avisar del estado.
+
+      `credits.balance` y `unreadNotifications` pueden venir a **`null`**, y
+      no es un error: significa «ahora mismo no se sabe». Que no se pueda
+      pintar el saldo no debe impedir navegar.
+
+      El saldo llega de una copia que se actualiza por eventos, así que
+      **puede ir un poco retrasado**. Quien necesite el número exacto —para
+      gastar— lo pide a `GET /credits/balance`.
+    responses:
+      '200':
+        description: El contexto del usuario autenticado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, username, accountStatus, onboardingStatus, credits, pendingTours, theme]
+              properties:
+                userId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+                username:
+                  type: string
+                name:
+                  type: [string, 'null']
+                avatarUrl:
+                  type: [string, 'null']
+                accountStatus:
+                  type: string
+                  enum: [PENDING_ACTIVATION, ACTIVE, BLOCKED, DELETED]
+                onboardingStatus:
+                  type: string
+                credits:
+                  type: object
+                  required: [balance]
+                  properties:
+                    balance:
+                      type: [integer, 'null']
+                      description: |
+                        Un solo número, que **puede ser negativo**
+                        (`FEAT-CRD-018`). `null` mientras no se conozca.
+                unreadNotifications:
+                  type: [integer, 'null']
+                  minimum: 0
+                pendingTours:
+                  type: array
+                  items:
+                    type: string
+                  description: |
+                    Los tours guiados que esta persona no ha visto todavía
+                    (`FEAT-USR-026`). Van aquí y no en una petición aparte
+                    porque el layout ya pide esta respuesta en cada carga.
+
+                    La lista vacía significa que no hay ninguno pendiente.
+                theme:
+                  $ref: '#/AppearanceTheme'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+AppearanceTheme:
+  type: string
+  enum: [LIGHT, DARK, SYSTEM]
+  description: |
+    De qué color se pinta la aplicación (`FEAT-USR-042`). `SYSTEM` por
+    defecto, y no decide por nadie: quien tiene el móvil en oscuro ya dijo lo
+    que quería.
+
+appearanceSettings:
+  get:
+    tags: [Account]
+    operationId: getMyAppearanceSettings
+    summary: Mi tema
+    description: |
+      Quien nunca lo ha tocado recibe `SYSTEM`, no un hueco: la pantalla tiene
+      que poder pintar el selector el primer día.
+
+      El mismo valor viaja en `GET /me/context`, que es donde lo lee el
+      layout. Este endpoint es para la pantalla de Configuración.
+    responses:
+      '200':
+        description: El tema de quien pregunta.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AppearanceSettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+  put:
+    tags: [Account]
+    operationId: updateMyAppearanceSettings
+    summary: Cambiar el tema
+    description: |
+      **Se guarda en el servidor y no en el navegador** porque tiene que
+      sobrevivir al dispositivo: quien eligió oscuro en el portátil y abre el
+      móvil espera oscuro, y una preferencia en `localStorage` no viaja.
+
+      `PUT` y no `PATCH`: hay un solo campo, y no existe la diferencia entre
+      «no lo toques» y «cámbialo» cuando solo hay uno. Por eso **el campo es
+      obligatorio**: ausente solo puede ser un error de quien llama, y
+      aceptarlo en silencio dejaría creer que se cambió algo.
+
+      **No hace falta la cuenta activada**: es una preferencia de pantalla, no
+      una operación sobre contenido.
+
+      No es la apariencia de la página de autor, que es `FEAT-USR-016`:
+      aquella la elige el autor y la ven los demás; esta la elige cada quien y
+      solo la ve él.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [theme]
+            properties:
+              theme:
+                $ref: '#/AppearanceTheme'
+    responses:
+      '200':
+        description: El tema como queda.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AppearanceSettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: |
+          `code: UNKNOWN_THEME`. Un valor desconocido se rechaza nombrándolo
+          en lugar de caer al por defecto: quien manda `oscuro` cree que ha
+          cambiado algo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+AppearanceSettings:
+  type: object
+  required: [theme, updatedAt]
+  properties:
+    theme:
+      $ref: '#/AppearanceTheme'
+    updatedAt:
+      type: string
+      format: date-time
+
+tour:
+  get:
+    tags: [User]
+    operationId: getTourState
+    summary: Si hay que enseñar el tour de bienvenida
+    description: |
+      El backend aporta poco pero imprescindible: **recordar si ya lo vio**
+      (`FEAT-USR-026`). Sin eso, el tour reaparece en cada visita.
+
+      **Consultarlo no escribe nada**: la ausencia de registro significa
+      «pendiente», así que cerrar la pestaña a mitad sin pulsar nada lo deja
+      pendiente y se vuelve a mostrar.
+
+      El mismo estado viaja en `GET /me/context`, para no añadir una petición
+      más en cada carga del layout.
+    parameters:
+      - name: tourId
+        in: query
+        required: false
+        description: |
+          Por defecto el de la Home, el único que hay hoy. Va en la petición y
+          no en la ruta para que añadir un tour no sea añadir dos endpoints.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: El estado de ese tour.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tourId, pending, lastStep]
+              properties:
+                tourId:
+                  type: string
+                pending:
+                  type: boolean
+                lastStep:
+                  type: [integer, 'null']
+                  description: |
+                    Por dónde iba. Está para la métrica de en qué paso
+                    abandona la gente, y para que quien cerró la pestaña a
+                    mitad vuelva por donde iba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_TOUR`. Ese tour no existe.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+tourCompletion:
+  post:
+    tags: [User]
+    operationId: completeTour
+    summary: Dar el tour por visto
+    description: |
+      **Cerrarlo y terminarlo son la misma operación con distinto
+      `dismissed`**, y las dos cuentan como visto (`RN-2`): quien lo cierra en
+      el primer globo ha decidido que no le interesa, y volver a enseñárselo
+      mañana sería no haberle escuchado.
+
+      Lo que la distinción guarda es la única métrica que dice si el tour
+      funciona: cuánta gente llega al final y cuánta lo cierra enseguida.
+
+      **Se guarda en el servidor, no en el navegador** (`RN-3`). En local, el
+      tour reaparecería en cada dispositivo y desaparecería al limpiarlo.
+
+      **Funciona con la cuenta sin activar** (`RN-6`): no es publicar
+      contenido, es decir que ya has visto algo.
+
+      Es idempotente: repetirlo no reabre nada.
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              tourId:
+                type: string
+              lastStep:
+                type: integer
+                minimum: 1
+                description: El paso alcanzado. Fuera del rango del tour, `422`.
+              dismissed:
+                type: boolean
+                description: '`true` si se cerró, `false` o ausente si se terminó.'
+    responses:
+      '204':
+        description: Anotado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_TOUR` o `UNKNOWN_TOUR_STEP`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+# Lo que una persona ha decidido no ver (FEAT-USR-043).
+#
+# La lista vacía es el estado normal de quien nunca ha entrado aquí: por
+# defecto no se filtra nada. No es «no ha contestado» — no hay nada que
+# contestar hasta que alguien quiera excluir algo.
+#
+# Lo no apto para menores no aparece aquí: eso no es una preferencia, es una
+# regla, y se aplica aunque esta lista esté vacía (FEAT-USR-044).
+ContentPreferences:
+  type: object
+  required: [excludedWarnings]
+  properties:
+    excludedWarnings:
+      type: array
+      items:
+        $ref: './works.yaml#/ContentWarning'
+
+contentPreferences:
+  get:
+    tags: [Settings]
+    operationId: getMyContentPreferences
+    summary: Qué contenidos he decidido no ver
+    description: |
+      La otra mitad de la clasificación de contenido
+      ([`FEAT-WRK-017`](../../docs/features/work/FEAT-WRK-017-content-rating.md)):
+      el autor declara qué hay, el lector decide qué quiere.
+
+      **Por defecto no se filtra nada**, así que una lista vacía es el estado
+      normal de quien nunca ha entrado aquí — no un dato que falte.
+
+      Lo que la edad impone **no sale por aquí y no se puede desactivar**: eso
+      no es una preferencia, es una regla
+      ([`FEAT-USR-044`](../../docs/features/user/FEAT-USR-044-age-based-content-filtering.md)).
+    responses:
+      '200':
+        description: Las etiquetas excluidas.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ContentPreferences'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+  put:
+    tags: [Settings]
+    operationId: updateMyContentPreferences
+    summary: Elegir qué no ver
+    description: |
+      Sustituye la lista entera, que es como se ve en pantalla.
+
+      **El filtrado lo hace el servidor** en cada consulta: un filtro de
+      cliente significaría que el contenido viaja hasta el navegador de quien
+      pidió no verlo, y para material sensible eso no sirve de nada.
+
+      Una etiqueta que no está en el catálogo se **rechaza** en vez de
+      guardarse: una exclusión que no coincide con ninguna real no filtra nada
+      y parece que sí, que es la peor manera de fallar en algo que la gente
+      configura precisamente para no llevarse un disgusto.
+
+      Un **enlace directo** a una obra excluida no la oculta: advierte y pide
+      confirmación. Filtrar no es censurar, y ocultarla sin explicación haría
+      pensar que la obra no existe.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [excludedWarnings]
+            properties:
+              excludedWarnings:
+                type: array
+                items:
+                  $ref: './works.yaml#/ContentWarning'
+    responses:
+      '200':
+        description: Las etiquetas excluidas, ya guardadas.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ContentPreferences'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_CONTENT_WARNING`. Lleva `unknownWarnings`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+notificationPreferences:
+  get:
+    tags: [Settings]
+    operationId: getMyNotificationPreferences
+    summary: Qué avisos quiero recibir y por dónde
+    description: |
+      Devuelve **el catálogo entero con sus canales**, no solo los valores
+      (`FEAT-USR-039`). Si el cliente llevase la lista codificada, cada aviso
+      nuevo exigiría desplegar el frontal.
+
+      **No hay matriz completa**: un aviso puede existir en un canal y no en
+      el otro. Nadie quiere un correo por cada mensaje directo, y un consejo
+      de uso no es un aviso de actividad — así que cada tipo dice en qué
+      canales existe.
+
+      Por defecto **todo está activado salvo las actualizaciones de la
+      plataforma**.
+
+      `allMuted` va aparte y no plegado en los valores: el interruptor general
+      **suspende**, no sobrescribe. Con él puesto, las casillas siguen
+      diciendo lo que su dueño eligió, que es lo que recuperará al quitarlo.
+
+      **El catálogo solo contiene lo silenciable.** Activación,
+      restablecimiento de contraseña, cambios de correo, sanciones, bloqueos
+      de obra y comunicaciones legales no están, y no es un olvido: son
+      operativos y quedan fuera de estas preferencias, incluido el interruptor
+      general. Un catálogo que los incluyera invitaría a apagarlos, y el
+      primero que faltase dejaría a alguien sin poder recuperar su cuenta.
+    responses:
+      '200':
+        description: El catálogo y lo que su dueño ha elegido.
+        content:
+          application/json:
+            schema:
+              $ref: '#/NotificationPreferences'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  put:
+    tags: [Settings]
+    operationId: updateMyNotificationPreferences
+    summary: Cambiar qué avisos recibo
+    description: |
+      **Parcial a propósito**: llega lo que se ha tocado, no el catálogo
+      entero. Una pantalla con veinte avisos y dos canales manda dos campos al
+      pulsar una casilla, no cuarenta.
+
+      Devuelve la foto completa, que es lo que la pantalla necesita para
+      repintarse sin una segunda petición.
+
+      Las preferencias **se comprueban al entregar**, no al publicar el hecho,
+      así que un cambio surte efecto en el acto.
+
+      Silenciar un aviso **no impide que el hecho ocurra**: quien silencia los
+      mensajes sigue recibiéndolos, solo no se le avisa. No querer enterarse y
+      no querer recibir son cosas distintas.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              allMuted:
+                type: boolean
+                description: |
+                  Suspende todo lo silenciable. **No alcanza a los mensajes
+                  operativos**, y el texto de la pantalla que promete lo
+                  contrario hay que corregirlo.
+              preferences:
+                type: array
+                items:
+                  type: object
+                  required: [topic, channel, enabled]
+                  properties:
+                    topic:
+                      type: string
+                    channel:
+                      type: string
+                      enum: [EMAIL, PLATFORM]
+                    enabled:
+                      type: boolean
+    responses:
+      '200':
+        description: Guardado, con la foto completa.
+        content:
+          application/json:
+            schema:
+              $ref: '#/NotificationPreferences'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: |
+          `code: UNKNOWN_NOTIFICATION_TOPIC`, `UNKNOWN_NOTIFICATION_CHANNEL` o
+          `CHANNEL_NOT_AVAILABLE_FOR_TOPIC`.
+
+          El último se rechaza en vez de guardarse en silencio: aceptar una
+          casilla de correo en un aviso que no existe por correo sería
+          prometer algo que nunca va a llegar.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+NotificationPreferences:
+  type: object
+  required: [allMuted, topics]
+  properties:
+    allMuted:
+      type: boolean
+    topics:
+      type: array
+      items:
+        type: object
+        required: [topic, channels]
+        properties:
+          topic:
+            type: string
+          channels:
+            type: object
+            description: |
+              Los canales en los que **existe** este aviso, con su valor
+              actual. Un canal que no está aquí no se puede configurar.
+            additionalProperties:
+              type: boolean
+
+# Qué propuestas admite cada persona (`FEAT-USR-011`).
+
+ReceptionSettings:
+  type: object
+  required: [betaReaderInvitations, writingBuddyProposals, updatedAt]
+  properties:
+    betaReaderInvitations:
+      type: boolean
+      description: Si admite que le inviten a leer una obra como lector beta.
+    writingBuddyProposals:
+      type: boolean
+      description: Si admite que le propongan ser *writing buddy*.
+    updatedAt:
+      type: string
+      format: date-time
+
+receptionSettings:
+  get:
+    tags: [Settings]
+    operationId: getMyReceptionSettings
+    summary: Qué propuestas admito
+    description: |
+      **No son preferencias de aviso sino de recepción**, y la diferencia
+      importa: no es lo mismo no querer enterarse que no querer recibirlas.
+      Una invitación silenciada seguiría esperando respuesta en algún sitio;
+      con esto cerrado, no llega a existir.
+
+      Quien nunca los ha tocado recibe los **valores por defecto**, que son
+      los dos abiertos. La pantalla tiene que poder pintar dos interruptores
+      el primer día.
+    responses:
+      '200':
+        description: Los dos interruptores.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ReceptionSettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+  put:
+    tags: [Settings]
+    operationId: updateMyReceptionSettings
+    summary: Cambiar qué propuestas admito
+    description: |
+      **Un campo ausente no cambia nada.** La pantalla tiene dos
+      interruptores y se mueve uno cada vez; exigir los dos en cada petición
+      haría que mover uno pisara el otro con lo que el cliente tuviera
+      cargado, que es como se pierden ajustes sin que nadie lo note.
+
+      Cerrar una puerta **no deshace lo que ya llegó**: una invitación
+      pendiente sigue esperando respuesta. El ajuste dice quién puede
+      proponer a partir de ahora, no borra lo que alguien propuso de buena fe.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              betaReaderInvitations:
+                type: boolean
+              writingBuddyProposals:
+                type: boolean
+    responses:
+      '200':
+        description: Cómo han quedado los dos.
+        content:
+          application/json:
+            schema:
+              $ref: '#/ReceptionSettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

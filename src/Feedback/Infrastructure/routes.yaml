@@ -1,0 +1,121 @@
+# Rutas del bounded context `Feedback`.
+#
+# El nombre de cada ruta es su `operationId` de OpenAPI. No es cosmético: es
+# lo que permite comprobar de forma mecánica que lo implementado y el contrato
+# publicado no se han separado, y hay un test que lo hace
+# (`tests/Unit/Architecture/RoutingConventionTest.php`).
+#
+# Formato:
+#
+#     <operationId>:
+#         path: /api/v1/...
+#         controller: LectoresBeta\Feedback\<Concepto>\Infrastructure\Controller\<Algo>Controller::__invoke
+#         methods: [POST]
+#
+# Convención completa: docs/api/conventions/routing.md
+
+getChapterQuestionnaire:
+    path: /api/v1/chapters/{chapterId}/questionnaire
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\GetCorrectionPanelController::__invoke
+    methods: [GET]
+
+startCorrection:
+    path: /api/v1/chapters/{chapterId}/corrections/start
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\StartCorrectionController::__invoke
+    methods: [POST]
+
+submitCorrection:
+    path: /api/v1/chapters/{chapterId}/corrections
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\SubmitCorrectionController::__invoke
+    methods: [POST]
+
+saveCorrectionDraft:
+    path: /api/v1/chapters/{chapterId}/correction/draft
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\SaveCorrectionDraftController::__invoke
+    methods: [PUT]
+
+discardCorrectionDraft:
+    path: /api/v1/chapters/{chapterId}/correction/draft
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\DiscardCorrectionDraftController::__invoke
+    methods: [DELETE]
+
+# Leer lo que se ha recibido (`FEAT-FBK-004`). Hasta aquí el autor pagaba por
+# una corrección que no podía abrir por ninguna vía.
+listCorrectionsReceived:
+    path: /api/v1/me/corrections/received
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\ListCorrectionsReceivedController::__invoke
+    methods: [GET]
+
+# La leen dos personas: su destinatario y quien la escribió.
+getCorrection:
+    path: /api/v1/corrections/{correctionId}
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\GetCorrectionController::__invoke
+    methods: [GET]
+
+# Aparte del detalle porque son decenas de miles de palabras que casi nunca
+# hacen falta.
+getCorrectedChapterText:
+    path: /api/v1/corrections/{correctionId}/chapter-text
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\GetCorrectedChapterTextController::__invoke
+    methods: [GET]
+
+# Contestar a una corrección (`FEAT-FBK-005`). `PUT` porque es **una**
+# respuesta y no una lista: enviarla dos veces deja una.
+replyToCorrection:
+    path: /api/v1/corrections/{correctionId}/reply
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\ReplyToCorrectionController::__invoke
+    methods: [PUT]
+
+deleteCorrectionReply:
+    path: /api/v1/corrections/{correctionId}/reply
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\ReplyToCorrectionController::__invoke
+    methods: [DELETE]
+
+# Útil o no útil, y nada más (`FEAT-FBK-006`). Una escala fina invita a
+# puntuar a la baja por desacuerdo literario.
+rateCorrection:
+    path: /api/v1/corrections/{correctionId}/rating
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\RateCorrectionController::__invoke
+    methods: [PUT]
+
+# Lo que yo he corregido (`FEAT-FBK-010`). La simétrica de «Mis
+# reclamaciones», y existe por lo mismo: corregir no puede ser escribir en un
+# buzón.
+listMyCorrections:
+    path: /api/v1/me/corrections
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\ListMyCorrectionsController::__invoke
+    methods: [GET]
+
+# Corregir por un enlace público, sin cuenta (`FEAT-FBK-008`). **La única
+# escritura de la API que no exige sesión**: lo que autoriza es el token y lo
+# que contiene es el tope del enlace.
+#
+# Cuelga de `/public/{token}` y no de `/chapters/{chapterId}` a propósito: sin
+# el token delante, sería un endpoint anónimo sobre cualquier capítulo.
+submitPublicCorrection:
+    path: /api/v1/public/{token}/chapters/{chapterId}/corrections
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\SubmitPublicCorrectionController::__invoke
+    methods: [POST]
+
+# Valorar una obra de 1 a 5 (`FEAT-FBK-002`).
+#
+# `PUT` y no `POST`: hay una valoración por lector y obra, y volver a valorar
+# sustituye la anterior. Cambiar de opinión después de leer más capítulos es
+# exactamente lo que se espera.
+rateWork:
+    path: /api/v1/works/{workId}/rating
+    controller: LectoresBeta\Feedback\Rating\Infrastructure\Controller\RateWorkController::__invoke
+    methods: [PUT]
+
+# Apartar de la bandeja una corrección recibida (`FEAT-FBK-007`).
+#
+# **Apartar no es borrar**: una corrección entregada no se elimina nunca, y
+# quien la escribió la sigue teniendo en «Mis correcciones». Lo que el autor
+# decide es qué sigue viendo él.
+#
+# `PUT` con `hidden` y no dos rutas: las dos direcciones son la misma decisión
+# vista al derecho y al revés.
+setCorrectionVisibility:
+    path: /api/v1/corrections/{correctionId}/visibility
+    controller: LectoresBeta\Feedback\Correction\Infrastructure\Controller\SetCorrectionVisibilityController::__invoke
+    methods: [PUT]

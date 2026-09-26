@@ -1,0 +1,936 @@
+openapi: 3.1.0
+
+info:
+  title: Lectores Beta API
+  version: 0.1.0
+  description: |
+    Contrato público del backend de Lectores Beta.
+
+    La semántica de cada operación (autorización, reglas de negocio, efectos) se documenta
+    en `docs/api/endpoints/`. Este fichero define únicamente la forma de las peticiones y
+    las respuestas.
+
+    Estado: esqueleto. Las operaciones se añaden conforme su funcionalidad alcanza
+    `spec_status: APPROVED` en `docs/features/README.md`.
+
+servers:
+  - url: https://api.lectoresbeta.com/api/v1
+    description: Producción
+  - url: http://localhost:8000/api/v1
+    description: Desarrollo
+
+tags:
+  - name: Auth
+    description: Registro, login y recuperación de contraseña
+  - name: Account
+    description: Cuenta, preferencias y página de autor
+  - name: Works
+    description: Obras, fragmentos, cuestionario y enlaces
+  - name: PublicLink
+    description: Lo que se lee y se corrige sin cuenta, por un enlace repartido fuera
+  - name: Reading
+    description: Accesos de lector beta, grupos y writing buddies
+  - name: Feedback
+    description: Comentarios, respuestas y valoraciones
+  - name: Community
+    description: Muro, publicaciones, mensajes directos y rankings
+  - name: Credits
+    description: Saldo e historial de créditos
+  - name: Notifications
+    description: Notificaciones y preferencias
+  - name: Moderation
+    description: Reclamaciones, moderadores y backoffice
+  - name: Health
+    description: Salud del sistema. Fuera de la versión de la API
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # —— Salud ————————————————————————————————————————————————————————————
+  # Fuera de `/api/v1`: cada operación declara sus propios `servers`, porque
+  # la dirección de una sonda no puede cambiar con la versión de la API.
+
+  /health:
+    $ref: './paths/health.yaml#/ready'
+
+  /health/live:
+    $ref: './paths/health.yaml#/live'
+
+  # —— Primer corte de implementación ——————————————————————————————————
+  # Registro → activación → abono de bienvenida. Atraviesa User, Notification
+  # y Credits, y prueba el camino asíncrono entre contextos.
+
+  /auth/register:
+    $ref: './paths/auth.yaml#/register'
+
+  /auth/activate:
+    $ref: './paths/auth.yaml#/activate'
+
+  /auth/activation/resend:
+    $ref: './paths/auth.yaml#/resend'
+
+  /auth/login:
+    $ref: './paths/auth.yaml#/login'
+
+  # Entrar con Google (FEAT-USR-002). El proveedor va en la ruta para que
+  # Facebook y LinkedIn encajen sin cambiar el contrato cuando se retomen.
+
+  /auth/oauth/{provider}:
+    $ref: './paths/auth.yaml#/oauthStart'
+
+  /auth/oauth/{provider}/callback:
+    $ref: './paths/auth.yaml#/oauthCallback'
+
+  /legal/documents:
+    $ref: './paths/auth.yaml#/legalDocuments'
+
+  /me/legal-acceptances:
+    $ref: './paths/auth.yaml#/legalAcceptances'
+
+  /auth/password/forgotten:
+    $ref: './paths/auth.yaml#/passwordForgotten'
+
+  /auth/password/reset:
+    $ref: './paths/auth.yaml#/passwordReset'
+
+  /auth/refresh:
+    $ref: './paths/auth.yaml#/refresh'
+
+  /auth/logout:
+    $ref: './paths/auth.yaml#/logout'
+
+  /me/onboarding:
+    $ref: './paths/onboarding.yaml#/state'
+
+  /me/onboarding/profile:
+    $ref: './paths/onboarding.yaml#/profile'
+
+  /me/onboarding/genres:
+    $ref: './paths/onboarding.yaml#/genres'
+
+  /me/onboarding/complete:
+    $ref: './paths/onboarding.yaml#/complete'
+
+  /onboarding/author-suggestions:
+    $ref: './paths/onboarding.yaml#/authorSuggestions'
+
+  /genres:
+    $ref: './paths/onboarding.yaml#/catalogue'
+
+  # El tour de bienvenida (FEAT-USR-026). Su estado también viaja en
+  # /me/context, para no añadir una petición en cada carga del layout.
+  /me/tour:
+    $ref: './paths/settings.yaml#/tour'
+
+  /me/tour/completion:
+    $ref: './paths/settings.yaml#/tourCompletion'
+
+  /me/context:
+    $ref: './paths/settings.yaml#/sessionContext'
+
+  # El tema (FEAT-USR-042). En el servidor y no en el navegador porque tiene
+  # que sobrevivir al dispositivo.
+  /me/appearance-settings:
+    $ref: './paths/settings.yaml#/appearanceSettings'
+
+  /me/profile:
+    $ref: './paths/settings.yaml#/myProfile'
+
+  /me/username:
+    $ref: './paths/settings.yaml#/username'
+
+  /me/password:
+    $ref: './paths/settings.yaml#/password'
+
+  /me/email-change:
+    $ref: './paths/settings.yaml#/emailChange'
+
+  /me/email-change/confirm:
+    $ref: './paths/settings.yaml#/emailChangeConfirm'
+
+  /me/literary-preferences:
+    $ref: './paths/settings.yaml#/literaryPreferences'
+
+  /me/profile/avatar:
+    $ref: './paths/settings.yaml#/avatar'
+
+  /me/profile/avatar/original:
+    $ref: './paths/settings.yaml#/avatarOriginal'
+
+  /media/{key}:
+    $ref: './paths/health.yaml#/media'
+
+  /me/content-preferences:
+    $ref: './paths/settings.yaml#/contentPreferences'
+
+  # Qué propuestas admite cada persona (FEAT-USR-011). Recepción, no aviso:
+  # una invitación silenciada seguiría esperando respuesta en algún sitio.
+  /me/reception-settings:
+    $ref: './paths/settings.yaml#/receptionSettings'
+
+  /me/notification-preferences:
+    $ref: './paths/settings.yaml#/notificationPreferences'
+
+  /me/privacy-settings:
+    $ref: './paths/settings.yaml#/privacySettings'
+
+  # Invitar a gente a la plataforma (FEAT-USR-018), y qué fue de lo invitado.
+  # El premio no está aquí: se cobra cuando el invitado entrega su primera
+  # corrección, y eso lo lleva `Credits` por su cuenta (FEAT-CRD-005).
+  /invitations:
+    $ref: './paths/invitations.yaml#/collection'
+
+  /me/invitations:
+    $ref: './paths/invitations.yaml#/mine'
+
+  /users/{userId}:
+    $ref: './paths/profiles.yaml#/byUserId'
+
+  /profiles/{username}:
+    $ref: './paths/profiles.yaml#/byUsername'
+
+  /authors:
+    $ref: './paths/profiles.yaml#/search'
+
+  # Las referencias de la página de autor (FEAT-USR-015). No hay un `GET`
+  # hermano: la página de autor **es** el perfil, y se leen con él.
+  /me/author-links:
+    $ref: './paths/profiles.yaml#/authorLinks'
+
+  # Personalizar la página de autor (FEAT-USR-016): un tema y un color de
+  # catálogo cerrado, y el fondo, que es la portada del perfil.
+
+  /me/author-page-style:
+    $ref: './paths/profiles.yaml#/authorPageStyle'
+
+  /me/profile/cover:
+    $ref: './paths/profiles.yaml#/profileCover'
+
+  # Cómo se ve un perfil compartido fuera (FEAT-USR-032). La tercera tarjeta,
+  # después de la de una obra y la de una publicación.
+  /users/{userId}/share:
+    $ref: './paths/profiles.yaml#/share'
+
+  # La bibliografía del autor (FEAT-USR-029). Una obra publicada **no es una
+  # `Work`**: está editada y a la venta fuera, no tiene contenido aquí y no
+  # cuenta como «Relato» en ningún contador.
+
+  /users/{userId}/published-books:
+    $ref: './paths/published-books.yaml#/list'
+
+  /me/published-books:
+    $ref: './paths/published-books.yaml#/collection'
+
+  /me/published-books/{publishedBookId}:
+    $ref: './paths/published-books.yaml#/item'
+
+  /me/published-books/{publishedBookId}/cover:
+    $ref: './paths/published-books.yaml#/cover'
+
+  # La otra sub-pestaña de «Más info» (FEAT-USR-030). Sin imagen y sin
+  # reordenar: el orden lo pone el año descendente.
+
+  /users/{userId}/awards:
+    $ref: './paths/awards.yaml#/list'
+
+  /me/awards:
+    $ref: './paths/awards.yaml#/collection'
+
+  /me/awards/{awardId}:
+    $ref: './paths/awards.yaml#/item'
+
+  # Las tarjetas de previsualización de lo que se comparte fuera
+  # (FEAT-WRK-011, FEAT-COM-020). No generan enlace: la dirección es la
+  # canónica de siempre, y solo responden por lo que ya era público.
+  /works/{workId}/share:
+    $ref: './paths/works.yaml#/share'
+
+  /posts/{postId}/share:
+    $ref: './paths/community.yaml#/postShare'
+
+  # La cuenta con la que habla la plataforma (FEAT-COM-038).
+  /admin/platform-posts:
+    $ref: './paths/community.yaml#/platformPosts'
+
+  # Lo primero que se ve al entrar (FEAT-COM-017).
+  /home/recommended-works:
+    $ref: './paths/community.yaml#/recommendedWorks'
+
+  # El muro de una persona (FEAT-COM-026): el muro general con un filtro, y
+  # con la misma respuesta campo por campo.
+  /me/posts:
+    $ref: './paths/community.yaml#/myPosts'
+
+  /users/{userId}/posts:
+    $ref: './paths/community.yaml#/userPosts'
+
+  /users/{userId}/subscription:
+    $ref: './paths/community.yaml#/subscription'
+
+  /users/{userId}/subscriptions:
+    $ref: './paths/community.yaml#/subscriptions'
+
+  /users/{userId}/subscribers:
+    $ref: './paths/community.yaml#/subscribers'
+
+  /users/{userId}/block:
+    $ref: './paths/community.yaml#/block'
+
+  /me/blocked-users:
+    $ref: './paths/community.yaml#/blockedUsers'
+
+  # Lo que cada quien decide sobre su propio muro (FEAT-COM-021, FEAT-COM-022,
+  # FEAT-COM-033). Tres preferencias privadas: ni se cuentan, ni se anuncian,
+  # ni las ve nadie más.
+
+  /posts/{postId}/saved:
+    $ref: './paths/community.yaml#/savedPost'
+
+  /me/saved-posts:
+    $ref: './paths/community.yaml#/savedPosts'
+
+  /posts/{postId}/hidden:
+    $ref: './paths/community.yaml#/hiddenPost'
+
+  /users/{userId}/muted:
+    $ref: './paths/community.yaml#/mutedUser'
+
+  /me/muted-users:
+    $ref: './paths/community.yaml#/mutedUsers'
+
+  /home/author-suggestions:
+    $ref: './paths/community.yaml#/homeAuthorSuggestions'
+
+  # Los «me gusta» (FEAT-COM-008, FEAT-COM-030). Un gesto social, sin efecto
+  # económico: la «valoración positiva» que da créditos es de `Feedback`.
+
+  /posts/{postId}/like:
+    $ref: './paths/community.yaml#/postLike'
+
+  /comments/{commentId}/like:
+    $ref: './paths/community.yaml#/commentLike'
+
+  /posts:
+    $ref: './paths/community.yaml#/posts'
+
+  /posts/{postId}:
+    $ref: './paths/community.yaml#/post'
+
+  /posts/{postId}/image:
+    $ref: './paths/community.yaml#/postImage'
+
+  /posts/{postId}/comments:
+    $ref: './paths/community.yaml#/postComments'
+
+  /posts/{postId}/repost:
+    $ref: './paths/community.yaml#/repost'
+
+  /comments/{commentId}:
+    $ref: './paths/community.yaml#/comment'
+
+  /comments/{commentId}/replies:
+    $ref: './paths/community.yaml#/commentReplies'
+
+  # Mensajes directos (FEAT-COM-011, FEAT-COM-012). Se escribe a una persona
+  # y no a una conversación: abrir o continuar es la misma operación vista
+  # desde fuera.
+
+  /users/{userId}/messages:
+    $ref: './paths/community.yaml#/directMessages'
+
+  /me/conversations:
+    $ref: './paths/community.yaml#/myConversations'
+
+  /conversations/{conversationId}/messages:
+    $ref: './paths/community.yaml#/conversationMessages'
+
+  /conversations/{conversationId}/read:
+    $ref: './paths/community.yaml#/conversationRead'
+
+  # La barra social bajo el texto de un capítulo (FEAT-COM-036). Comentar un
+  # capítulo no es corregirlo: esto no mueve créditos, el cuestionario sí.
+
+  /chapters/{chapterId}/like:
+    $ref: './paths/community.yaml#/chapterLike'
+
+  /chapters/{chapterId}/comments:
+    $ref: './paths/community.yaml#/chapterComments'
+
+  /chapters/{chapterId}/engagement:
+    $ref: './paths/community.yaml#/chapterEngagement'
+
+  /chapter-comments/{commentId}/replies:
+    $ref: './paths/community.yaml#/chapterCommentReplies'
+
+  /chapter-comments/{commentId}:
+    $ref: './paths/community.yaml#/chapterComment'
+
+  # Crear una obra subiendo un fichero (FEAT-WRK-002). Dos pasos: el servidor
+  # propone el troceado y el autor lo confirma.
+
+  /manuscript-uploads:
+    $ref: './paths/works.yaml#/manuscriptUploads'
+
+  /manuscript-uploads/{uploadId}/work:
+    $ref: './paths/works.yaml#/manuscriptUploadWork'
+
+  /works:
+    $ref: './paths/works.yaml#/collection'
+
+  /me/works:
+    $ref: './paths/works.yaml#/myWorks'
+
+  /works/{workId}:
+    $ref: './paths/works.yaml#/work'
+
+  /chapters/{chapterId}:
+    $ref: './paths/works.yaml#/chapter'
+
+  /works/{workId}/restore:
+    $ref: './paths/works.yaml#/workRestore'
+
+  /works/{workId}/chapters/order:
+    $ref: './paths/works.yaml#/chapterOrder'
+
+  /chapters/{chapterId}/visibility:
+    $ref: './paths/works.yaml#/chapterVisibility'
+
+  /works/{workId}/chapters:
+    $ref: './paths/works.yaml#/chapters'
+
+  /works/{workId}/status:
+    $ref: './paths/works.yaml#/status'
+
+  /works/{workId}/access-mode:
+    $ref: './paths/works.yaml#/accessMode'
+
+  /works/{workId}/genres:
+    $ref: './paths/works.yaml#/genres'
+
+  /works/{workId}/content-rating:
+    $ref: './paths/works.yaml#/contentRating'
+
+  /content-warnings:
+    $ref: './paths/works.yaml#/contentWarnings'
+
+  /works/{workId}/access-requests:
+    $ref: './paths/reading.yaml#/collection'
+
+  /me/access-requests:
+    $ref: './paths/reading.yaml#/mine'
+
+  /access-requests/{requestId}:
+    $ref: './paths/reading.yaml#/request'
+
+  /access-requests/{requestId}/resolution:
+    $ref: './paths/reading.yaml#/resolution'
+
+  /works/{workId}/beta-reader-invitations:
+    $ref: './paths/reading.yaml#/invitations'
+
+  /me/beta-reader-invitations:
+    $ref: './paths/reading.yaml#/myInvitations'
+
+  /beta-reader-invitations/{invitationId}:
+    $ref: './paths/reading.yaml#/invitation'
+
+  /beta-reader-invitations/{invitationId}/resolution:
+    $ref: './paths/reading.yaml#/invitationResolution'
+
+  /works/{workId}/beta-readers:
+    $ref: './paths/reading.yaml#/workBetaReaders'
+
+  /works/{workId}/beta-readers/{readerId}:
+    $ref: './paths/reading.yaml#/workBetaReader'
+
+  /works/{workId}/invitable-readers:
+    $ref: './paths/reading.yaml#/invitableReaders'
+
+  # Writing buddy (FEAT-RDG-008, FEAT-RDG-009). El vínculo no habilita nada:
+  # quien quiera leer al otro lo invita, que pasa por donde tiene que pasar.
+
+  /users/{userId}/writing-buddy-proposals:
+    $ref: './paths/reading.yaml#/writingBuddyProposals'
+
+  /writing-buddy-proposals/{linkId}/resolution:
+    $ref: './paths/reading.yaml#/writingBuddyResolution'
+
+  /me/writing-buddies:
+    $ref: './paths/reading.yaml#/myWritingBuddies'
+
+  # La agenda del autor (FEAT-RDG-007). Un grupo no concede nada: es una lista
+  # de contactos, y lo que se hace con ella es invitar en bloque.
+
+  /me/beta-reader-groups:
+    $ref: './paths/reading.yaml#/betaReaderGroups'
+
+  /beta-reader-groups/{groupId}:
+    $ref: './paths/reading.yaml#/betaReaderGroup'
+
+  /beta-reader-groups/{groupId}/members/{readerId}:
+    $ref: './paths/reading.yaml#/betaReaderGroupMember'
+
+  /works/{workId}/group-invitations:
+    $ref: './paths/reading.yaml#/groupInvitations'
+
+  /works/{workId}/questionnaire:
+    $ref: './paths/works.yaml#/questionnaire'
+
+  /works/{workId}/public-links:
+    $ref: './paths/works.yaml#/publicLinks'
+
+  /public-links/{publicLinkId}:
+    $ref: './paths/works.yaml#/publicLink'
+
+  # Lo que se sirve por el enlace: los tres únicos endpoints de una obra que
+  # no exigen sesión (FEAT-WRK-010, FEAT-FBK-008).
+  /public/{token}:
+    $ref: './paths/public-link.yaml#/page'
+
+  /public/{token}/chapters/{chapterId}:
+    $ref: './paths/public-link.yaml#/chapter'
+
+  /public/{token}/chapters/{chapterId}/corrections:
+    $ref: './paths/public-link.yaml#/corrections'
+
+  /chapters/{chapterId}/questionnaire:
+    $ref: './paths/corrections.yaml#/questionnaire'
+
+  /chapters/{chapterId}/corrections:
+    $ref: './paths/corrections.yaml#/collection'
+
+  /me/corrections:
+    $ref: './paths/corrections.yaml#/mine'
+
+  /me/corrections/received:
+    $ref: './paths/corrections.yaml#/received'
+
+  /corrections/{correctionId}:
+    $ref: './paths/corrections.yaml#/item'
+
+  /corrections/{correctionId}/reply:
+    $ref: './paths/corrections.yaml#/reply'
+
+  /corrections/{correctionId}/rating:
+    $ref: './paths/corrections.yaml#/rating'
+
+  /corrections/{correctionId}/chapter-text:
+    $ref: './paths/corrections.yaml#/chapterText'
+
+  /chapters/{chapterId}/corrections/start:
+    $ref: './paths/corrections.yaml#/start'
+
+  /chapters/{chapterId}/correction/draft:
+    $ref: './paths/corrections.yaml#/draft'
+
+  # Valorar la obra entera (FEAT-FBK-002), que no es valorar una corrección
+  # (FEAT-FBK-006): aquella la pone el autor sobre lo que recibe, esta la
+  # pone quien corrigió sobre lo que leyó.
+  /works/{workId}/rating:
+    $ref: './paths/corrections.yaml#/workRating'
+
+  /corrections/{correctionId}/visibility:
+    $ref: './paths/corrections.yaml#/correctionVisibility'
+
+  /me/notifications:
+    $ref: './paths/notifications.yaml#/inbox'
+
+  /me/notifications/unread-count:
+    $ref: './paths/notifications.yaml#/unreadCount'
+
+  /me/notifications/read:
+    $ref: './paths/notifications.yaml#/allRead'
+
+  /me/notifications/{notificationId}/read:
+    $ref: './paths/notifications.yaml#/read'
+
+  /claims:
+    $ref: './paths/moderation.yaml#/claims'
+
+  /me/claims:
+    $ref: './paths/moderation.yaml#/myClaims'
+
+  /admin/claims:
+    $ref: './paths/moderation.yaml#/adminClaims'
+
+  /admin/claims/{claimId}/review:
+    $ref: './paths/moderation.yaml#/claimReview'
+
+  /admin/users:
+    $ref: './paths/moderation.yaml#/adminUsers'
+
+  /admin/users/{userId}:
+    $ref: './paths/moderation.yaml#/adminUser'
+
+  /admin/users/{userId}/credit-adjustment:
+    $ref: './paths/moderation.yaml#/creditAdjustment'
+
+  /admin/claims/on-behalf:
+    $ref: './paths/moderation.yaml#/claimOnBehalf'
+
+  /admin/audit-log:
+    $ref: './paths/moderation.yaml#/auditLog'
+
+  /admin/claims/{claimId}/messages:
+    $ref: './paths/moderation.yaml#/claimMessages'
+
+  /me/claims/{claimId}/messages:
+    $ref: './paths/moderation.yaml#/myClaimThread'
+
+  /admin/sanctions:
+    $ref: './paths/moderation.yaml#/sanctions'
+
+  /admin/sanctions/open:
+    $ref: './paths/moderation.yaml#/openSanctions'
+
+  /admin/sanctions/{sanctionId}/lift:
+    $ref: './paths/moderation.yaml#/sanctionLift'
+
+  /admin/moderation-blocks/lift:
+    $ref: './paths/moderation.yaml#/blockLift'
+
+  /admin/moderators:
+    $ref: './paths/moderation.yaml#/moderators'
+
+  /admin/users/{userId}/moderator-role:
+    $ref: './paths/moderation.yaml#/moderatorRole'
+
+  /me/moderator-alerts:
+    $ref: './paths/moderation.yaml#/moderatorAlerts'
+
+  /credits/movements:
+    $ref: './paths/credits.yaml#/movements'
+
+  # Las reglas de la economía, sin sesión (FEAT-CRD-015).
+  /credits/scoring:
+    $ref: './paths/credits.yaml#/scoring'
+
+  /admin/credits/health:
+    $ref: './paths/credits.yaml#/health'
+
+  /corrections/{correctionId}/tip:
+    $ref: './paths/credits.yaml#/tip'
+
+  /credits/balance:
+    $ref: './paths/credits.yaml#/balance'
+
+  /auth/oauth/{provider}/callback:
+    $ref: './paths/auth.yaml#/oauthCallback'
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT de **15 minutos** más un token de refresco revocable
+        (`decision:0007`).
+
+        Consecuencia que conviene conocer: **la revocación tarda hasta ese
+        cuarto de hora**. Se asume a cambio de no mantener estado de sesión.
+        Las operaciones de **escritura** comprueban además el estado de la
+        cuenta contra la base de datos, así que para ellas la ventana es cero:
+        nadie publica ni corrige quince minutos después de ser expulsado.
+
+        El token **no lleva roles ni datos personales**: meter roles en él
+        haría que un permiso retirado siguiera vigente hasta su caducidad.
+
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Cursor opaco devuelto en `pageInfo.nextCursor`.
+      schema:
+        type: string
+
+  schemas:
+
+    HealthStatus:
+      type: string
+      enum: [up, down, skipped]
+      description: |
+        `skipped` es un chequeo que no aplica —no hay RabbitMQ al que llegar
+        cuando el transporte configurado es in-memory—. **No cuenta como
+        fallo**: la diferencia entre «funciona» y «no se ha preguntado»
+        importa.
+
+    HealthCheckResult:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthStatus'
+        durationMs:
+          type: number
+          format: double
+          description: Lo que tardó el chequeo, en milisegundos.
+        detail:
+          type: string
+          description: |
+            Solo aparece cuando hay algo que explicar que no revele nada:
+            por qué un chequeo se ha saltado, por ejemplo. **Nunca contiene el
+            mensaje de un error**, porque este endpoint es público.
+
+    HealthReport:
+      type: object
+      required: [status, checkedAt, checks]
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthStatus'
+          description: |
+            Pesimista: una sola dependencia caída basta para que sea `down`.
+        checkedAt:
+          $ref: '#/components/schemas/Timestamp'
+        checks:
+          type: object
+          description: Cada dependencia, por su nombre estable.
+          additionalProperties:
+            $ref: '#/components/schemas/HealthCheckResult'
+
+    GenreList:
+      type: object
+      description: |
+        Una lista de géneros, **con la misma forma en los tres sitios que la
+        devuelven**: el catálogo (`listGenres`), las preferencias de alguien y
+        la respuesta a guardarlas. El cliente pinta chips con lo que recibe, y
+        una forma distinta según de dónde venga es cómo acaba una pantalla con
+        unos chips con nombre y otros sin él.
+      required: [genres]
+      properties:
+        genres:
+          type: array
+          items:
+            type: object
+            required: [code, name]
+            properties:
+              code:
+                type: string
+                description: |
+                  El identificador estable. Es lo que viaja en los payloads y
+                  hacia otros contextos.
+                examples: ['SCIENCE_FICTION']
+              name:
+                type: string
+                description: |
+                  Lo que lee una persona. Puede reescribirse sin romper nada.
+                examples: ['Ciencia ficción']
+
+    Uuid:
+      type: string
+      format: uuid
+      description: UUID v7.
+      examples: ['0192f8a1-4c3b-7e2a-9f10-6b5d2c8e4a71']
+
+    Timestamp:
+      type: string
+      format: date-time
+      examples: ['2026-09-21T10:15:30Z']
+
+    Session:
+      type: object
+      required: [accessToken, refreshToken, expiresIn]
+      properties:
+        accessToken:
+          type: string
+          description: JWT. Caduca a los 900 segundos.
+        refreshToken:
+          type: string
+          description: Revocable. Es el único elemento de la sesión con estado.
+        expiresIn:
+          type: integer
+          examples: [900]
+
+    LegalAcceptance:
+      type: object
+      description: |
+        Versiones concretas aceptadas. Se guarda **la versión**, no una
+        referencia genérica al documento: si no, la aceptación no demuestra
+        qué se aceptó (`FEAT-USR-024` `RN-T3`).
+      required: [termsOfUse, privacyPolicy]
+      properties:
+        termsOfUse:
+          type: string
+          examples: ['2026-01-15']
+        privacyPolicy:
+          type: string
+          examples: ['2026-01-15']
+
+    RegisterRequest:
+      type: object
+      required: [email, password, acceptedLegalVersions]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 4096
+          description: |
+            No se devuelve nunca, no se registra en logs y no viaja en ningún
+            evento.
+        acceptedLegalVersions:
+          $ref: '#/components/schemas/LegalAcceptance'
+        invitationToken:
+          type: [string, 'null']
+          maxLength: 128
+          description: |
+            El token del enlace de invitación, si se llega por uno
+            (`FEAT-USR-018`). Lo extrae la página de alta del frontend de la
+            URL y lo manda **en el cuerpo**, para que no quede en los logs del
+            servidor ni en el historial del navegador.
+
+            **Un token inválido o ya usado no impide el alta**: se ignora en
+            silencio (`FEAT-USR-001` `RN-13`). Quien llega con un enlace viejo
+            viene a registrarse, no a canjear nada.
+
+            No abona nada por sí solo: deja apuntado quién invitó a quién, y
+            la recompensa llega cuando esta persona entrega su primera
+            corrección (`FEAT-CRD-005`).
+
+    PageInfo:
+      type: object
+      required: [hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
+    Problem:
+      type: object
+      description: |
+        Error según RFC 9457. **Nunca** expone trazas, SQL, nombres de clase
+        internos ni rutas de fichero (`AGENTS.md`).
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri
+          examples: ['https://api.lectoresbeta.com/problems/validation-error']
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        code:
+          type: string
+          description: |
+            Estable y legible por máquina. **El cliente decide por `code`**,
+            nunca por `title` ni por `detail`, que son para personas y pueden
+            cambiar sin que sea un cambio incompatible.
+          examples: ['WEAK_PASSWORD']
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      required: [field, code]
+      properties:
+        field:
+          type: string
+        code:
+          type: string
+        message:
+          type: string
+
+    Visibility:
+      type: string
+      enum: [VISIBLE, HIDDEN]
+
+    BetaReaderAccessMode:
+      type: string
+      enum: [PUBLIC, ON_REQUEST, PRIVATE]
+
+    TextTier:
+      type: string
+      description: Nivel de extensión del texto. Ver docs/bounded-contexts/credits.md.
+      enum:
+        - MICRO_STORY
+        - BRIEF_TALE
+        - SHORT_STORY
+        - MEDIUM_TALE
+        - LONG_TALE
+        - MICRO_NOVEL
+        - SHORT_NOVEL
+        - MEDIUM_NOVEL
+
+    RequestStatus:
+      type: string
+      enum: [PENDING, ACCEPTED, REJECTED, CANCELLED, EXPIRED]
+
+    PostType:
+      type: string
+      enum:
+        - GENERAL
+        - LOOKING_FOR_BETA_READERS
+        - LOOKING_FOR_WRITING_BUDDY
+        - OFFERING_AS_BETA_READER
+
+  responses:
+    BadRequest:
+      description: Petición malformada
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unauthorized:
+      description: Sin autenticar
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Sin permiso
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: No existe, o no debe revelarse que existe
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: Conflicto con el estado actual
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    UnprocessableEntity:
+      description: Contenido inválido o regla de negocio incumplida
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+    ValidationError:
+      description: La petición no cumple las reglas de validación.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    TooManyRequests:
+      description: Se ha superado el límite de frecuencia.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

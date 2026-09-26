@@ -1,0 +1,1672 @@
+# Quién puede leer qué, y cómo llegó a poder hacerlo.
+#
+# Convertirse en lector beta de una obra PUBLIC no aparece aquí y no es un
+# olvido: no tiene endpoint. Es el efecto de empezar una corrección
+# (FEAT-RDG-001). Los tres caminos producen el mismo acceso; solo dos son
+# pantallas.
+
+AccessRequestStatus:
+  type: string
+  enum: [PENDING, ACCEPTED, REJECTED, CANCELLED]
+
+AccessRequest:
+  type: object
+  required: [requestId, workId, readerId, status, requestedAt]
+  properties:
+    requestId:
+      type: string
+      format: uuid
+    workId:
+      type: string
+      format: uuid
+    workTitle:
+      type: [string, 'null']
+      description: |
+        Nulo solo si la obra ha dejado de existir y el cierre de sus
+        solicitudes todavía no ha llegado. Una fila sin título es mejor que
+        una lista que falla.
+    readerId:
+      type: string
+      format: uuid
+      description: Quién pide. El autor lo mira; el propio solicitante, no.
+    status:
+      $ref: '#/AccessRequestStatus'
+    message:
+      type: [string, 'null']
+      description: |
+        Lo que el lector escribió para convencer. Es lo único que convierte
+        una lista de identificadores en una decisión que se pueda tomar.
+    requestedAt:
+      type: string
+      format: date-time
+    resolvedAt:
+      type: [string, 'null']
+      format: date-time
+
+AccessRequestPage:
+  type: object
+  required: [requests, pageInfo]
+  properties:
+    requests:
+      type: array
+      items:
+        $ref: '#/AccessRequest'
+    pageInfo:
+      type: object
+      required: [nextCursor, hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+          description: Opaco. No se construye a mano.
+        hasNextPage:
+          type: boolean
+
+collection:
+  post:
+    tags: [Reading]
+    operationId: requestBetaReaderAccess
+    summary: Pedir ser lector beta de una obra
+    description: |
+      El camino de entrada a una obra **abierta a solicitud**, que es la
+      modalidad con la que nace toda obra.
+
+      Una solicitud **no concede nada**: es una pregunta con acuse de recibo,
+      y lo único que produce por sí sola es un aviso al autor. Quien decide es
+      él.
+
+      Se puede volver a pedir después de un rechazo. No hay enfriamiento:
+      cerrar la puerta tras un «no» lo convertiría en un «nunca», y el caso
+      normal —una obra que ya tiene diez lectores hoy y no dentro de dos
+      meses— dejaría de tener salida.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: false
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                description: |
+                  Opcional, y lo que hace que el autor pueda decidir. En
+                  blanco cuenta como no escrito.
+    responses:
+      '201':
+        description: La solicitud queda pendiente.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestId, status]
+              properties:
+                requestId: { type: string, format: uuid }
+                status: { $ref: '#/AccessRequestStatus' }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND`. **Cuatro situaciones, una respuesta**: la
+          obra no existe, es el borrador de otra persona, está bloqueada por
+          reclamación, o es para adultos y quien pregunta no tiene edad
+          declarada. Distinguirlas sería decirle a un desconocido algo de
+          obra que no está publicada.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: ALREADY_A_BETA_READER` si ya tiene acceso vivo, o
+          `REQUEST_ALREADY_PENDING` si ya hay una solicitud abierta suya sobre
+          esta obra.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: WORK_DOES_NOT_TAKE_REQUESTS` cuando la obra es `PUBLIC` o
+          `PRIVATE`. Caen en el mismo error por motivos opuestos: en una no
+          hace falta pedir nada —basta con ponerse a corregir— y en la otra
+          pedir no es la vía de entrada.
+
+          `AUTHOR_CANNOT_BE_BETA_READER` cuando es el autor quien pide. Aquí
+          **no** se finge que la obra no existe: la está viendo, y mentirle
+          sobre algo suyo le confundiría.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  get:
+    tags: [Reading]
+    operationId: listWorkAccessRequests
+    summary: Quién quiere leer mi obra
+    description: |
+      La bandeja del autor. Por defecto enseña **lo pendiente**, que es lo que
+      se viene a mirar; el histórico está a un filtro de distancia.
+
+      La obra de otra persona responde `404`, igual que una inexistente.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        description: |
+          `ALL` para el histórico entero. Un valor que no existe devuelve
+          `422` en lugar de ignorarse: servir otra lista dejaría a quien
+          pregunta sin forma de notarlo.
+        schema:
+          type: string
+          enum: [PENDING, ACCEPTED, REJECTED, CANCELLED, ALL]
+          default: PENDING
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    responses:
+      '200':
+        description: |
+          Una página de solicitudes, por cursor: es una bandeja cronológica y
+          no un catálogo sobre el que se salte. Tampoco lleva total — nadie
+          necesita saber que tiene 413 solicitudes, necesita las veinte
+          siguientes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AccessRequestPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: '`code: UNKNOWN_FILTER_VALUE` o `INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+mine:
+  get:
+    tags: [Reading]
+    operationId: listMyBetaReaderAccessRequests
+    summary: Lo que he pedido
+    parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [PENDING, ACCEPTED, REJECTED, CANCELLED, ALL]
+          default: PENDING
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    responses:
+      '200':
+        description: Mis solicitudes, de la más reciente a la más antigua.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AccessRequestPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_FILTER_VALUE` o `INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+request:
+  delete:
+    tags: [Reading]
+    operationId: cancelBetaReaderAccessRequest
+    summary: Retirar mi solicitud
+    description: |
+      Retirarse de la cola mientras siga pendiente. **No avisa al autor**:
+      nadie estaba esperando una pregunta que quien la hizo ha retirado. Es la
+      asimetría deliberada con el rechazo, que sí se cuenta.
+
+      Cancelar deja la vía libre para volver a pedir.
+    parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Retirada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: ACCESS_REQUEST_NOT_FOUND`. La solicitud de otra persona
+          responde lo mismo que una inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: REQUEST_ALREADY_RESOLVED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+resolution:
+  put:
+    tags: [Reading]
+    operationId: resolveBetaReaderAccessRequest
+    summary: Aceptar o rechazar una solicitud
+    description: |
+      **Aceptar concede el acceso en el acto**, en la misma transacción que
+      cierra la solicitud: los dos agregados son del mismo contexto, así que
+      no hay ventana en la que la solicitud esté aceptada y el acceso todavía
+      no exista. A partir de ahí el lector lee la obra **sea cual sea su
+      modalidad**.
+
+      Rechazar la cierra y se lo dice al lector. **No se pide motivo**: si
+      decir que no costara escribir una justificación, la salida fácil sería
+      no contestar nunca, y el lector se quedaría sin acceso y sin respuesta.
+
+      Un `PUT` con la decisión, y no dos rutas `accept` y `reject`: es una
+      transición de estado con dos valores, igual que el estado de una obra.
+
+      **No se comprueba la modalidad de la obra.** Entre la solicitud y su
+      respuesta el autor pudo cambiarla, y aceptar igual es lo correcto: la
+      modalidad gobierna quién puede entrar a partir de ahora, no quién ya
+      estaba pidiendo entrar. Si cambió de opinión, tiene el rechazo delante.
+    parameters:
+      - name: requestId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [decision]
+            properties:
+              decision:
+                type: string
+                enum: [ACCEPTED, REJECTED]
+    responses:
+      '200':
+        description: Cómo ha quedado la solicitud.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestId, status]
+              properties:
+                requestId: { type: string, format: uuid }
+                status: { $ref: '#/AccessRequestStatus' }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: ACCESS_REQUEST_NOT_FOUND`. La solicitud de la obra de otra
+          persona responde igual que una inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: REQUEST_ALREADY_RESOLVED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '410':
+        description: |
+          `code: WORK_GONE`. La obra se borró mientras la solicitud esperaba.
+          `410` y no `404` porque quien resuelve conoce esa obra —es suya— y
+          fingir que nunca existió sería mentirle sobre algo que hizo él.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNKNOWN_DECISION`. **Nunca se interpreta como un rechazo**:
+          adivinar en una operación que concede acceso a obra inédita es
+          exactamente donde no conviene adivinar.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+AccessInvitationStatus:
+  type: string
+  enum: [PENDING, ACCEPTED, DECLINED, CANCELLED]
+
+BetaReaderInvitation:
+  type: object
+  required: [invitationId, workId, adultsOnly, contentWarnings, authorId, readerId, status, invitedAt]
+  properties:
+    invitationId:
+      type: string
+      format: uuid
+    workId:
+      type: string
+      format: uuid
+    workTitle:
+      type: [string, 'null']
+    workSynopsis:
+      type: [string, 'null']
+      description: |
+        Sin truncar, al contrario que en la tarjeta del catálogo: quien decide
+        si acepta **no ha podido ojear la obra** —puede ser privada o un
+        borrador— y esto es lo único que tiene para decidir.
+    adultsOnly:
+      type: boolean
+      description: |
+        Una obra que ha dejado de existir sale marcada como para adultos: ante
+        la duda, el aviso prudente es el que no promete que algo es
+        inofensivo.
+    contentWarnings:
+      type: array
+      items:
+        $ref: './works.yaml#/ContentWarning'
+      description: |
+        **Antes de aceptar**, que es cuando sirve de algo. Es el único sitio
+        del producto donde alguien decide leer algo sin haberlo visto en el
+        catálogo.
+    authorId:
+      type: string
+      format: uuid
+    readerId:
+      type: string
+      format: uuid
+    status:
+      $ref: '#/AccessInvitationStatus'
+    message:
+      type: [string, 'null']
+      description: |
+        Lo que el autor escribió con la oferta. En una obra inédita, «te
+        invito a leer lo que llevo» dice mucho más que un aviso seco.
+    invitedAt:
+      type: string
+      format: date-time
+    resolvedAt:
+      type: [string, 'null']
+      format: date-time
+
+BetaReaderInvitationPage:
+  type: object
+  required: [invitations, pageInfo]
+  properties:
+    invitations:
+      type: array
+      items:
+        $ref: '#/BetaReaderInvitation'
+    pageInfo:
+      type: object
+      required: [nextCursor, hasNextPage]
+      properties:
+        nextCursor:
+          type: [string, 'null']
+        hasNextPage:
+          type: boolean
+
+invitations:
+  post:
+    tags: [Reading]
+    operationId: inviteBetaReader
+    summary: Invitar a alguien a ser lector beta
+    description: |
+      El autor elige a quién quiere dentro. Es el **único camino de entrada a
+      una obra privada** y el único de los tres que empieza por el autor.
+
+      Una invitación no concede nada: es una oferta, y decide quien la recibe.
+
+      **Se puede invitar en cualquier modalidad, incluida la abierta**, aunque
+      solicitar en una obra abierta se rechace. La asimetría parece
+      incoherente hasta que se mira quién trabaja: una solicitud le pide al
+      autor que haga algo por alguien que ya podía entrar solo, y una
+      invitación es el autor decidiendo hacerlo. Además dice algo que la
+      modalidad no dice: *quiero que tú la leas*.
+
+      **Y se puede invitar a un borrador**, que es probablemente el caso más
+      valioso. El invitado acepta y **no lee nada hasta que la obra se
+      publique**: la invitación espera.
+
+      Se invita por identificador de usuario, no por correo. Invitar por
+      correo sería otra cosa —una invitación a la plataforma— y conviene no
+      mezclarlas: una ofrece leer una obra, la otra ofrece una cuenta.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [userId]
+            properties:
+              userId:
+                type: string
+                format: uuid
+              message:
+                type: string
+    responses:
+      '201':
+        description: La invitación queda pendiente.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invitationId, status]
+              properties:
+                invitationId: { type: string, format: uuid }
+                status: { $ref: '#/AccessInvitationStatus' }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND`. La obra de otra persona responde igual que
+          una inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: |
+          `code: ALREADY_A_BETA_READER`, `INVITATION_ALREADY_PENDING`, o
+          `REQUEST_ALREADY_PENDING` si esa persona ya pidió acceso — ahí lo
+          que toca es aceptar su solicitud, no crear un segundo objeto que
+          significa lo mismo.
+
+          `READER_CANNOT_SEE_THIS_WORK` si esa persona no podría abrirla: hoy,
+          una obra no apta para menores y alguien que no es mayor de edad
+          ([`FEAT-USR-044`](../../docs/features/user/FEAT-USR-044-age-based-content-filtering.md)).
+          Se comprueba **al invitar** y no solo al leer, porque una invitación
+          que se cursa y falla después deja al autor viendo a alguien aceptar
+          y no poder entrar. **No dice por qué**: la edad de otra persona no
+          es asunto de quien invita, y un mensaje que lo insinuara convertiría
+          el botón de invitar en un comprobador de quién es menor.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: USER_NOT_FOUND` si no existe esa persona — se nombra el
+          motivo porque el autor la eligió, y decirle que la obra no existe
+          sería contestar a otra cosa. `AUTHOR_CANNOT_BE_BETA_READER` si se
+          invita a sí mismo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+  get:
+    tags: [Reading]
+    operationId: listWorkBetaReaderInvitations
+    summary: A quién le he ofrecido mi obra
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [PENDING, ACCEPTED, DECLINED, CANCELLED, ALL]
+          default: PENDING
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    responses:
+      '200':
+        description: Una página de invitaciones, por cursor.
+        content:
+          application/json:
+            schema:
+              $ref: '#/BetaReaderInvitationPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'
+      '422':
+        description: '`code: UNKNOWN_FILTER_VALUE` o `INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+myInvitations:
+  get:
+    tags: [Reading]
+    operationId: listMyBetaReaderInvitations
+    summary: Lo que me han ofrecido
+    description: |
+      Cada fila lleva **sinopsis y clasificación de contenido** de la obra,
+      además del mensaje de quien invita. No es adorno: aceptar una invitación
+      es el único momento del producto en que alguien se compromete a leer
+      algo que no ha podido ojear.
+    parameters:
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum: [PENDING, ACCEPTED, DECLINED, CANCELLED, ALL]
+          default: PENDING
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+    responses:
+      '200':
+        description: Mis invitaciones, de la más reciente a la más antigua.
+        content:
+          application/json:
+            schema:
+              $ref: '#/BetaReaderInvitationPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: UNKNOWN_FILTER_VALUE` o `INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+invitation:
+  delete:
+    tags: [Reading]
+    operationId: cancelBetaReaderInvitation
+    summary: Retirar una invitación
+    description: |
+      Solo el autor, y solo mientras siga pendiente.
+
+      **No avisa al invitado**, y es discutible: ya recibió el aviso y puede
+      llegar a una oferta que ya no está. Se ha preferido no inventar un
+      evento cuyo consumidor no está especificado, y que quien llegue tarde
+      reciba un `409` claro.
+    parameters:
+      - name: invitationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Retirada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: INVITATION_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: INVITATION_ALREADY_RESOLVED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+invitationResolution:
+  put:
+    tags: [Reading]
+    operationId: resolveBetaReaderInvitation
+    summary: Aceptar o rechazar una invitación
+    description: |
+      **Aceptar concede el acceso en el acto**, en la misma transacción que
+      cierra la invitación. A partir de ahí se lee la obra sea cual sea su
+      modalidad — salvo que siga siendo un borrador, en cuyo caso la
+      invitación queda aceptada y se espera a la publicación.
+
+      Rechazar la cierra y **sí se lo dice al autor**, al contrario que
+      cancelar una solicitud. No es incoherente: quien cancela retira una
+      pregunta suya y nadie esperaba; quien rechaza contesta a alguien que sí,
+      y un autor que ofreció su obra inédita a una persona concreta merece
+      saber que es un no.
+
+      `DECLINED` y no `REJECTED`: un autor **rechaza** la petición de un
+      desconocido, un lector **declina** una oferta que le han hecho.
+
+      Solo el destinatario resuelve. Ni siquiera el autor que la envió — él la
+      retira.
+    parameters:
+      - name: invitationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [decision]
+            properties:
+              decision:
+                type: string
+                enum: [ACCEPTED, DECLINED]
+    responses:
+      '200':
+        description: Cómo ha quedado la invitación.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invitationId, status]
+              properties:
+                invitationId: { type: string, format: uuid }
+                status: { $ref: '#/AccessInvitationStatus' }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: INVITATION_NOT_FOUND`. La invitación dirigida a otra persona
+          responde igual que una inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: INVITATION_ALREADY_RESOLVED`, también si el autor la retiró.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '410':
+        description: '`code: WORK_GONE`. Le invitaron a algo que existió.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: UNKNOWN_DECISION`. Nunca se interpreta como un rechazo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+invitableReaders:
+  get:
+    tags: [Reading]
+    operationId: searchInvitableBetaReaders
+    summary: Buscar a quién invitar
+    description: |
+      Escritura anticipada para la pantalla de invitar: el autor teclea un
+      nombre y elige de una lista corta.
+
+      **No es un buscador de personas nuevo.** El índice es del contexto que
+      posee los perfiles; lo que esta operación añade es el descarte — quita
+      de la lista al propio autor, a quien ya es lector beta de la obra y a
+      quien tiene una invitación o una solicitud abierta. Enseñar a alguien
+      para después negar su invitación sería peor que no enseñarlo.
+
+      Que cuelgue de la obra no es decorativo: liga recorrer personas a **un
+      autor con una obra**, que es la única razón legítima para hacerlo aquí.
+
+      Se busca por **nombre y nombre de usuario, nunca por correo**. Un
+      buscador que acepta una dirección responde sin querer a otra pregunta
+      —«¿esta persona tiene cuenta aquí?»— y convierte el formulario en un
+      comprobador de direcciones.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: query
+        in: query
+        required: false
+        description: |
+          Mínimo **dos caracteres**. Menos devuelve lista vacía y no un error:
+          el cliente manda la consulta en cada pulsación, y la primera letra
+          de un nombre no es una equivocación de nadie.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: |
+          Hasta **diez** personas. **Sin paginación y sin total**, como
+          excepción justificada a la convención: no es una colección que
+          alguien recorre, es una ayuda a escribir un nombre. Con cursor,
+          veinte peticiones devolverían el directorio entero igual, solo que
+          más despacio — y un directorio de personas que se puede enumerar es
+          uno que alguien acabará descargando.
+
+          Cada fila es **una tarjeta de perfil y nada más**: ni correo, ni
+          fecha de nacimiento, ni estado de la cuenta.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [readers]
+              properties:
+                readers:
+                  type: array
+                  maxItems: 10
+                  items:
+                    type: object
+                    required: [userId, username]
+                    properties:
+                      userId: { type: string, format: uuid }
+                      username: { type: string }
+                      name: { type: [string, 'null'] }
+                      avatarUrl: { type: [string, 'null'] }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND`. La obra de otra persona responde igual que
+          una inexistente.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+workBetaReaders:
+  get:
+    tags: [Reading]
+    operationId: listWorkBetaReaders
+    summary: Quién puede leer mi obra
+    description: |
+      Los lectores beta con acceso vivo a una obra, **con el camino por el que
+      entró cada uno**: eso es lo que permite responder, meses después, por
+      qué esa persona puede leerla.
+
+      Hace falta tanto como la revocación: se entra por tres caminos —empezar
+      a corregir una obra pública, una solicitud aceptada y una invitación—,
+      así que sin esta lista el autor no sabe a quién le ha dado acceso.
+
+      Solo el autor. Una obra ajena responde `404` y no `403`: un `403`
+      confirmaría que esa obra existe.
+
+      **No se filtra por privacidad**: quien tiene acceso a una obra inédita
+      aparece aquí aunque haya cerrado su perfil después. Lo contrario
+      convertiría cerrar el perfil en una forma de volverse invisible para el
+      autor cuya obra se está leyendo.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Quién puede leerla, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, username, source, earned, grantedAt]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      username:
+                        type: string
+                      name:
+                        type: [string, 'null']
+                      avatarUrl:
+                        type: [string, 'null']
+                      source:
+                        type: string
+                        enum: [PUBLIC_JOIN, REQUEST_APPROVED, AUTHOR_INVITATION]
+                        description: Por dónde entró.
+                      earned:
+                        type: boolean
+                        description: |
+                          Si ya entregó una corrección de esta obra. Un acceso
+                          ganado no se pierde al descartar un borrador — pero
+                          **sí se puede revocar**.
+                      grantedAt:
+                        type: string
+                        format: date-time
+                pageInfo:
+                  type: object
+                  required: [nextCursor, hasNextPage]
+                  properties:
+                    nextCursor:
+                      type: [string, 'null']
+                    hasNextPage:
+                      type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: WORK_NOT_FOUND`. No existe, o no es suya.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+workBetaReader:
+  delete:
+    tags: [Reading]
+    operationId: revokeBetaReaderAccess
+    summary: Retirar el acceso de un lector beta
+    description: |
+      El autor retira a alguien el acceso a una obra suya, **desde ese
+      instante**.
+
+      Idempotente: si esa persona no tiene acceso vivo, no pasa nada.
+
+      Lo que se lleva por delante es lo mismo que un bloqueo: **una corrección
+      en curso deja de poder entregarse**, y quien la estaba escribiendo no
+      cobra, porque nunca entregó. Su borrador se conserva. Lo ya entregado no
+      se toca: el autor lo pagó y el lector lo ganó.
+
+      También se puede retirar un acceso **ganado** —el de quien ya entregó
+      una corrección—. Lo que ganó no se le quita; lo que se retira es la
+      lectura futura de un texto ajeno.
+
+      > **Revocar no es expulsar.** En una obra `PUBLIC`, esta persona vuelve
+      > a tener acceso en cuanto empiece otra corrección. Para dejar a alguien
+      > fuera hay que cerrar la modalidad de la obra —afecta a todos— o
+      > bloquearle —afecta solo a esa persona, y en todas partes—.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+      - name: readerId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Ya no puede leerla. Igual si no podía.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: 'La cuenta no está activada. `code: ACCOUNT_NOT_ACTIVATED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: WORK_NOT_FOUND`. No existe, o no es suya.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# Writing buddy (`FEAT-RDG-008`, `FEAT-RDG-009`).
+
+WritingBuddyCard:
+  type: object
+  required: [linkId, other, status, proposedByMe, proposedAt]
+  properties:
+    linkId:
+      $ref: '../openapi.yaml#/components/schemas/Uuid'
+    other:
+      type: [object, 'null']
+      description: |
+        La otra parte. **Nula cuando esa cuenta ya no existe**: la fila sigue,
+        porque el vínculo existió.
+      required: [userId, username]
+      properties:
+        userId:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+        username:
+          type: string
+        name:
+          type: [string, 'null']
+        avatarUrl:
+          type: [string, 'null']
+    status:
+      type: string
+      enum: [PROPOSED, ACCEPTED]
+    proposedByMe:
+      type: boolean
+      description: |
+        Lo que decide si la pantalla enseña «Aceptar / Rechazar» o «Esperando
+        respuesta». Sin él, el cliente tendría que comparar identificadores.
+    proposedAt:
+      type: string
+      format: date-time
+
+writingBuddyProposals:
+  post:
+    tags: [Reading]
+    operationId: proposeWritingBuddy
+    summary: Proponer a alguien ser writing buddy
+    description: |
+      **El vínculo no habilita nada** (`R-3`, resuelta). No concede acceso de
+      lector beta a las obras del otro, no salta la modalidad que cada autor
+      eligió y no salta la clasificación por edad. Es un vínculo declarado:
+      se ve, se anuncia y ahí acaba. Quien quiera leer al otro lo invita
+      (`FEAT-RDG-004`), que cuesta un clic y pasa por donde tiene que pasar.
+
+      La propuesta **no concede ni siquiera el vínculo**: es una oferta, y
+      quien decide es quien la recibe.
+
+      Uno vivo por par, en cualquiera de las dos direcciones: el par se guarda
+      ordenado.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        description: A quién se le propone.
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '201':
+        description: Propuesta enviada.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [linkId]
+              properties:
+                linkId:
+                  $ref: '../openapi.yaml#/components/schemas/Uuid'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: PROPOSALS_NOT_ACCEPTED`. Esa persona no admite propuestas, y
+          **no se dice por qué**: si distinguiera el ajuste de un bloqueo,
+          cualquiera podría averiguar los ajustes de otro probando a
+          proponerle cosas.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: |
+          `code: WRITING_BUDDY_LINK_NOT_FOUND`. Esa persona no existe o no
+          está activada, y no se distingue cuál de las dos.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: 'Ya hay uno vivo con esa persona. `code: WRITING_BUDDY_ALREADY_LIVE`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'El destinatario eres tú. `code: CANNOT_BE_YOUR_OWN_BUDDY`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+writingBuddyResolution:
+  put:
+    tags: [Reading]
+    operationId: resolveWritingBuddyProposal
+    summary: Aceptar o rechazar una propuesta de writing buddy
+    description: |
+      Una ruta y no dos: las dos decisiones son la misma operación con
+      distinto desenlace, igual que al resolver una invitación de lector beta.
+
+      **Solo la resuelve quien la recibió.** Para quien la propuso responde
+      `404`, igual que para alguien ajeno: quién le ha propuesto qué a quién
+      no se le debe a nadie que no sea parte.
+
+      **Aceptar anuncia; rechazar, no.** Avisar a alguien de que le han dicho
+      que no convertiría una respuesta discreta en un desaire con acuse de
+      recibo. Quien propuso lo ve en su lista, que es donde fue a mirar.
+
+      Y aceptar **no abre ninguna puerta**: el vínculo queda declarado y nada
+      más.
+    parameters:
+      - name: linkId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [decision]
+            properties:
+              decision:
+                type: string
+                enum: [ACCEPT, DECLINE]
+    responses:
+      '200':
+        description: Cómo ha quedado.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [ACCEPTED, DECLINED]
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: WRITING_BUDDY_LINK_NOT_FOUND`. No existe, no es tuya, o ya
+          estaba resuelta: los tres responden igual.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: 'Decisión desconocida. `code: UNKNOWN_DECISION`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+myWritingBuddies:
+  get:
+    tags: [Reading]
+    operationId: listMyWritingBuddies
+    summary: Mis writing buddies
+    description: |
+      Los vivos: propuestos y aceptados, **en una sola lista** porque son una
+      sola pantalla. Lo que cambia por fila es si hay que decidir algo o si
+      toca esperar, y eso lo dicen `status` y `proposedByMe`.
+
+      Los resueltos no salen. Un vínculo rechazado hace dos meses no es una
+      fila que nadie quiera volver a ver, y guardarlo a la vista sería un
+      histórico de desaires.
+
+      Bajo `/me/` porque no existe la versión de otra persona: con quién tiene
+      alguien un vínculo de escritura no es una lista que se pueda pedir.
+    parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Los vínculos vivos de quien pregunta.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [writingBuddies]
+              properties:
+                writingBuddies:
+                  type: array
+                  items:
+                    $ref: '#/WritingBuddyCard'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+# ---------------------------------------------------------------------------
+# La agenda del autor (FEAT-RDG-007).
+#
+# Un grupo **no concede nada** (R-4). Es una lista de contactos privada, y lo
+# que se hace con ella es invitar en bloque: una invitación normal por miembro,
+# con sus mismas reglas y su mismo evento.
+# ---------------------------------------------------------------------------
+
+BetaReaderGroupSummary:
+  type: object
+  required: [groupId, name, memberCount, createdAt]
+  properties:
+    groupId:
+      type: string
+      format: uuid
+    name:
+      type: string
+      maxLength: 80
+    memberCount:
+      type: integer
+      minimum: 0
+      maximum: 200
+    createdAt:
+      type: string
+      format: date-time
+
+BetaReaderGroupMember:
+  type: object
+  required: [userId, addedAt]
+  properties:
+    userId:
+      type: string
+      format: uuid
+    username:
+      type: [string, 'null']
+      description: |
+        Nulo solo si la cuenta ha dejado de existir. La fila se queda con el
+        identificador para que el autor pueda quitarla: una lista de la que no
+        se puede borrar a nadie sería peor que una fila incompleta.
+    name:
+      type: [string, 'null']
+    avatarUrl:
+      type: [string, 'null']
+    addedAt:
+      type: string
+      format: date-time
+
+BetaReaderGroupDetail:
+  allOf:
+    - $ref: '#/BetaReaderGroupSummary'
+    - type: object
+      required: [members]
+      properties:
+        members:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/BetaReaderGroupMember'
+
+GroupInvitationResult:
+  type: object
+  required: [groupId, invited, skipped]
+  description: |
+    **Un resultado parcial, a propósito.** Unos miembros se invitan y otros no,
+    y aquí se dice cuáles y por qué. Devolver `422` porque uno de doce no se
+    puede invitar dejaría al autor sin los once que sí.
+  properties:
+    groupId:
+      type: string
+      format: uuid
+    invited:
+      type: array
+      description: A quién se ha cursado invitación.
+      items:
+        type: string
+        format: uuid
+    skipped:
+      type: array
+      description: |
+        A quién no, con el **mismo código** que habría devuelto la invitación
+        individual. Un vocabulario distinto para el caso en bloque obligaría al
+        cliente a conocer dos.
+      items:
+        type: object
+        required: [userId, reason]
+        properties:
+          userId:
+            type: string
+            format: uuid
+          reason:
+            type: string
+            enum:
+              - USER_NOT_FOUND
+              - ALREADY_A_BETA_READER
+              - INVITATION_ALREADY_PENDING
+              - REQUEST_ALREADY_PENDING
+              - INVITATIONS_NOT_ACCEPTED
+              - READER_CANNOT_SEE_THIS_WORK
+              - AUTHOR_CANNOT_BE_BETA_READER
+
+betaReaderGroups:
+  get:
+    tags: [Reading]
+    operationId: listMyBetaReaderGroups
+    summary: Mis grupos de lectores beta
+    description: |
+      Las listas que el autor mantiene, con cuánta gente hay en cada una.
+
+      **Sin paginación**, como excepción justificada a la convención: el tope
+      son cincuenta grupos y caben en una pantalla. Lo que sí admite es buscar
+      por nombre.
+
+      Son privadas: no existe la versión de otra persona, y el miembro no sabe
+      que está en un grupo.
+    parameters:
+      - name: query
+        in: query
+        required: false
+        description: Filtra por nombre, sin distinguir mayúsculas.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Los grupos del autor, por nombre.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groups]
+              properties:
+                groups:
+                  type: array
+                  maxItems: 50
+                  items:
+                    $ref: '#/BetaReaderGroupSummary'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+  post:
+    tags: [Reading]
+    operationId: createBetaReaderGroup
+    summary: Crear un grupo de lectores beta
+    description: |
+      Una lista vacía con un nombre. Los miembros entran después, uno a uno.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+                maxLength: 80
+    responses:
+      '201':
+        description: El grupo recién creado, todavía vacío.
+        content:
+          application/json:
+            schema:
+              $ref: '#/BetaReaderGroupSummary'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '409':
+        description: |
+          `code: GROUP_NAME_ALREADY_USED` — dos listas con el mismo nombre no
+          se pueden elegir en un desplegable. `code: TOO_MANY_GROUPS` — el tope
+          son cincuenta.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: GROUP_NAME_REQUIRED` o `GROUP_NAME_TOO_LONG`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+betaReaderGroup:
+  get:
+    tags: [Reading]
+    operationId: getBetaReaderGroup
+    summary: Ver un grupo y sus miembros
+    description: |
+      El grupo con quién hay dentro, sin paginar: el tope son doscientos
+      miembros.
+
+      Los miembros se leen **sin filtrar por privacidad**, a diferencia de un
+      muro o un buscador. Quien pregunta ya sabe quiénes son porque los metió
+      él, y si filtrara, un miembro que cierre su perfil desaparecería de la
+      lista y el autor no podría ni quitarlo.
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: El grupo y sus miembros.
+        content:
+          application/json:
+            schema:
+              $ref: '#/BetaReaderGroupDetail'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: GROUP_NOT_FOUND`. El grupo de otra persona responde igual que
+          uno inexistente: confirmar que existe ya diría quién tiene apuntado a
+          quién.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  patch:
+    tags: [Reading]
+    operationId: renameBetaReaderGroup
+    summary: Renombrar un grupo
+    description: |
+      Lo único que se puede cambiar de un grupo es su nombre. Los miembros
+      entran y salen por su propio recurso.
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+                maxLength: 80
+    responses:
+      '200':
+        description: El nombre nuevo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupId, name]
+              properties:
+                groupId: { type: string, format: uuid }
+                name: { type: string }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: GROUP_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: GROUP_NAME_ALREADY_USED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: GROUP_NAME_REQUIRED` o `GROUP_NAME_TOO_LONG`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Reading]
+    operationId: deleteBetaReaderGroup
+    summary: Borrar un grupo
+    description: |
+      Se lleva a sus miembros y **no toca ninguna invitación ya cursada**: lo
+      que se invitó, invitado está. El grupo era el atajo, no la puerta.
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Borrado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: GROUP_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+betaReaderGroupMember:
+  put:
+    tags: [Reading]
+    operationId: addBetaReaderGroupMember
+    summary: Añadir a alguien al grupo
+    description: |
+      **No le concede acceso a ninguna obra** y esa persona no se entera: un
+      grupo es una anotación privada del autor, no una relación entre dos
+      personas.
+
+      Es `PUT` y no `POST` porque lo que el autor quiere decir es «esta persona
+      está en el grupo», no «añade una fila». Repetirlo no cambia nada.
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: readerId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Está en el grupo.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: GROUP_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: TOO_MANY_GROUP_MEMBERS` — el tope son doscientos.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: USER_NOT_FOUND` — una agenda llena de identificadores
+          inventados falla el día que se usa, en bloque.
+          `code: AUTHOR_CANNOT_BE_A_MEMBER`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Reading]
+    operationId: removeBetaReaderGroupMember
+    summary: Quitar a alguien del grupo
+    description: |
+      **No le quita ningún acceso.** Quien ya sea lector beta de una obra lo
+      sigue siendo: retirar el acceso es otra operación (`FEAT-RDG-010`).
+
+      Quitar a quien no está también responde `204`: el desenlace es el mismo.
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: readerId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: No está en el grupo.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: GROUP_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+groupInvitations:
+  post:
+    tags: [Reading]
+    operationId: inviteBetaReaderGroup
+    summary: Invitar a un grupo entero a una obra
+    description: |
+      Recorre los miembros del grupo y cursa **una invitación normal por cada
+      uno**, exactamente la de `FEAT-RDG-004`: mismas comprobaciones, mismo
+      aviso, misma resolución. Lo que ahorra el grupo es el clic, no las
+      reglas.
+
+      **El resultado es parcial y descrito.** Responde `200` y no `201` porque
+      no se ha creado un recurso: se han cursado unas cuantas invitaciones y se
+      ha omitido a unos cuantos, y eso es lo que cuenta el cuerpo.
+
+      Un grupo vacío responde `200` con las dos listas vacías. La obra se
+      comprueba igual, así que invitar un grupo vacío a la obra de otro sigue
+      siendo `404`.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [groupId]
+            properties:
+              groupId:
+                type: string
+                format: uuid
+              message:
+                type: [string, 'null']
+                description: |
+                  El mismo mensaje para todos. Es lo que convierte una
+                  invitación en una invitación y no en un aviso.
+    responses:
+      '200':
+        description: Lo invitado y lo omitido.
+        content:
+          application/json:
+            schema:
+              $ref: '#/GroupInvitationResult'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND` — la obra de otra persona responde igual que
+          una inexistente. `code: GROUP_NOT_FOUND`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

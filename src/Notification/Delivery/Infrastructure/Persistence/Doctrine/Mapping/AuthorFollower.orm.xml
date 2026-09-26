@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!--
+        El grafo de seguidores, proyectado desde `Community` (`FEAT-NOT-004`).
+
+        El par es la clave primaria, y en este orden: se pregunta siempre por
+        autor, y `(author_id, follower_id)` sirve además para continuar la
+        página por el segundo componente sin un índice aparte.
+
+        Sin claves ajenas: es una copia de hechos ajenos, y una copia que
+        restringe a su origen es una copia que lo bloquea.
+    -->
+    <entity name="LectoresBeta\Notification\Delivery\Domain\Entity\AuthorFollower"
+            table="author_follower" schema="notification_ctx">
+
+        <id name="authorId" column="author_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <id name="followerId" column="follower_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="followedAt" column="followed_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Append only: a re-assessment is a new row (`FEAT-FBK-012`). -->
+    <entity name="LectoresBeta\Feedback\Correction\Domain\Entity\CorrectionAssessment"
+            table="correction_assessment" schema="feedback_ctx">
+
+        <indexes>
+            <index name="idx_assessment_correction" columns="correction_id,assessed_at"/>
+            <index name="idx_assessment_outcome" columns="outcome,assessed_at"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="correctionId" column="correction_id" type="guid"/>
+        <field name="mechanism" type="string" length="48"/>
+        <field name="mechanismVersion" column="mechanism_version" type="string" length="16"/>
+        <field name="outcome" type="string" length="16"
+               enum-type="LectoresBeta\Feedback\Correction\Domain\Enum\AssessmentOutcome"/>
+        <field name="reason" type="text" nullable="true"/>
+        <field name="assessedAt" column="assessed_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

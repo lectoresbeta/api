@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Moderation\ContentReview\Domain\Entity\ContentReview"
+            table="content_review" schema="moderation_ctx">
+
+        <indexes>
+            <index name="idx_content_review_target" columns="target_type,target_id,reviewed_at"/>
+            <index name="idx_content_review_outcome" columns="outcome,reviewed_at"/>
+        </indexes>
+
+        <unique-constraints>
+            <!-- Un texto se revisa **una vez** (`RN-9`), y lo que lo
+                 identifica es su cifrado y no su versión: un capítulo puede
+                 editarse sin cambiar de versión. No es una optimización — es
+                 lo que impide que una reentrega de RabbitMQ abra una segunda
+                 reclamación sobre el mismo capítulo. -->
+            <unique-constraint name="uniq_content_review_hash" columns="target_type,target_id,content_hash"/>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="targetType" column="target_type" type="string" length="24"
+               enum-type="LectoresBeta\Moderation\Claim\Domain\Enum\ClaimTargetType"/>
+        <field name="targetId" column="target_id" type="guid"/>
+        <field name="outcome" type="string" length="16"
+               enum-type="LectoresBeta\Moderation\ContentReview\Domain\Enum\ContentReviewOutcome"/>
+        <field name="contentHash" column="content_hash" type="string" length="64"/>
+        <field name="mechanism" type="string" length="48"/>
+        <field name="mechanismVersion" column="mechanism_version" type="string" length="16"/>
+        <field name="notes" type="text" nullable="true"/>
+        <field name="reviewedAt" column="reviewed_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

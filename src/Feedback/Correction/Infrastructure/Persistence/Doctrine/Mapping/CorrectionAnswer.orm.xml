@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Feedback\Correction\Domain\Entity\CorrectionAnswer"
+            table="correction_answer" schema="feedback_ctx">
+
+        <indexes>
+            <index name="idx_correction_answer_correction" columns="correction_id,position"/>
+        </indexes>
+
+        <unique-constraints>
+            <unique-constraint name="uniq_correction_answer_question" columns="correction_id,question_id"/>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="correctionId" column="correction_id" type="guid"/>
+        <field name="questionId" column="question_id" type="guid"/>
+        <field name="position" type="smallint"/>
+        <field name="text" type="text"/>
+        <field name="wordCount" column="word_count" type="integer"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

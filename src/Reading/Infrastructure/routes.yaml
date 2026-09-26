@@ -1,0 +1,180 @@
+# Rutas del bounded context `Reading`. Todavía ninguna.
+#
+# El fichero existe vacío a propósito: quien añada el primer endpoint de
+# `Reading` no tiene que averiguar dónde va, y `config/routes.yaml` —que lo
+# importa— sigue siendo el censo de contextos que exponen API.
+#
+# El nombre de cada ruta es su `operationId` de OpenAPI. No es cosmético: es
+# lo que permite comprobar de forma mecánica que lo implementado y el contrato
+# publicado no se han separado, y hay un test que lo hace
+# (`tests/Unit/Architecture/RoutingConventionTest.php`).
+#
+# Formato:
+#
+#     <operationId>:
+#         path: /api/v1/...
+#         controller: LectoresBeta\Reading\<Concepto>\Infrastructure\Controller\<Algo>Controller::__invoke
+#         methods: [POST]
+#
+# Convención completa: docs/api/conventions/routing.md
+
+# El camino `ON_REQUEST` (FEAT-RDG-002 y FEAT-RDG-003). Son dos fichas y un
+# solo recurso: la solicitud la crea el lector y la resuelve el autor.
+
+requestBetaReaderAccess:
+    path: /api/v1/works/{workId}/access-requests
+    controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\RequestBetaReaderAccessController::__invoke
+    methods: [POST]
+
+listWorkAccessRequests:
+    path: /api/v1/works/{workId}/access-requests
+    controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\ListWorkAccessRequestsController::__invoke
+    methods: [GET]
+
+listMyBetaReaderAccessRequests:
+    path: /api/v1/me/access-requests
+    controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\ListMyAccessRequestsController::__invoke
+    methods: [GET]
+
+cancelBetaReaderAccessRequest:
+    path: /api/v1/access-requests/{requestId}
+    controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\CancelAccessRequestController::__invoke
+    methods: [DELETE]
+
+resolveBetaReaderAccessRequest:
+    path: /api/v1/access-requests/{requestId}/resolution
+    controller: LectoresBeta\Reading\AccessRequest\Infrastructure\Controller\ResolveAccessRequestController::__invoke
+    methods: [PUT]
+
+# El camino `PRIVATE` (FEAT-RDG-004 y FEAT-RDG-005). Se llama
+# `beta-reader-invitations` y no `invitations` porque `User` ya tiene
+# invitaciones —a la plataforma— y dos cosas distintas con el mismo nombre en
+# la misma API se confunden una vez y ya no se dejan de confundir.
+
+inviteBetaReader:
+    path: /api/v1/works/{workId}/beta-reader-invitations
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\InviteBetaReaderController::__invoke
+    methods: [POST]
+
+listWorkBetaReaderInvitations:
+    path: /api/v1/works/{workId}/beta-reader-invitations
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\ListWorkInvitationsController::__invoke
+    methods: [GET]
+
+listMyBetaReaderInvitations:
+    path: /api/v1/me/beta-reader-invitations
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\ListMyInvitationsController::__invoke
+    methods: [GET]
+
+cancelBetaReaderInvitation:
+    path: /api/v1/beta-reader-invitations/{invitationId}
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\CancelInvitationController::__invoke
+    methods: [DELETE]
+
+resolveBetaReaderInvitation:
+    path: /api/v1/beta-reader-invitations/{invitationId}/resolution
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\ResolveInvitationController::__invoke
+    methods: [PUT]
+
+# A quién puede invitar todavía el autor (FEAT-RDG-006). Cuelga de la obra a
+# propósito: liga recorrer personas a un autor con una obra, que es la única
+# razón legítima para hacerlo aquí.
+
+searchInvitableBetaReaders:
+    path: /api/v1/works/{workId}/invitable-readers
+    controller: LectoresBeta\Reading\AccessInvitation\Infrastructure\Controller\SearchInvitableReadersController::__invoke
+    methods: [GET]
+
+# Quién puede leer mi obra, y retirarle el acceso (FEAT-RDG-010). Cierra
+# `R-1`: se entra por tres caminos y hasta ahora no había forma de salir.
+#
+# El `DELETE` va sobre **la persona dentro de la obra** y no sobre un
+# identificador de acceso: es lo que el autor quiere decir, y de paso sale
+# idempotente.
+
+listWorkBetaReaders:
+    path: /api/v1/works/{workId}/beta-readers
+    controller: LectoresBeta\Reading\BetaReaderAccess\Infrastructure\Controller\ListWorkBetaReadersController::__invoke
+    methods: [GET]
+
+revokeBetaReaderAccess:
+    path: /api/v1/works/{workId}/beta-readers/{readerId}
+    controller: LectoresBeta\Reading\BetaReaderAccess\Infrastructure\Controller\RevokeBetaReaderAccessController::__invoke
+    methods: [DELETE]
+
+# Writing buddy (`FEAT-RDG-008`, `FEAT-RDG-009`).
+#
+# **El vínculo no habilita nada** (`R-3`, resuelta): no concede acceso a las
+# obras del otro, no salta la modalidad que cada autor eligió y no salta la
+# clasificación por edad. Quien quiera leer al otro lo invita, que cuesta un
+# clic y pasa por donde tiene que pasar.
+
+proposeWritingBuddy:
+    path: /api/v1/users/{userId}/writing-buddy-proposals
+    controller: LectoresBeta\Reading\WritingBuddy\Infrastructure\Controller\ProposeWritingBuddyController::__invoke
+    methods: [POST]
+
+# Misma forma que resolver una invitación de lector beta: las dos decisiones
+# son la misma operación con distinto desenlace.
+resolveWritingBuddyProposal:
+    path: /api/v1/writing-buddy-proposals/{linkId}/resolution
+    controller: LectoresBeta\Reading\WritingBuddy\Infrastructure\Controller\ResolveWritingBuddyProposalController::__invoke
+    methods: [PUT]
+
+# Bajo `/me/` porque no existe la versión de otra persona.
+listMyWritingBuddies:
+    path: /api/v1/me/writing-buddies
+    controller: LectoresBeta\Reading\WritingBuddy\Infrastructure\Controller\ListMyWritingBuddiesController::__invoke
+    methods: [GET]
+
+# La agenda del autor (FEAT-RDG-007). Un grupo **no concede nada** (`R-4`): es
+# una lista de contactos, y lo que se hace con ella es **invitar en bloque**,
+# una invitación normal por miembro.
+#
+# Cuelga de `/me/` al crearla y al listarla porque no existe la versión de
+# otra persona; el grupo concreto va por su identificador, como cualquier otro
+# recurso, y el ajeno responde `404`.
+
+createBetaReaderGroup:
+    path: /api/v1/me/beta-reader-groups
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\CreateBetaReaderGroupController::__invoke
+    methods: [POST]
+
+listMyBetaReaderGroups:
+    path: /api/v1/me/beta-reader-groups
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\ListMyBetaReaderGroupsController::__invoke
+    methods: [GET]
+
+getBetaReaderGroup:
+    path: /api/v1/beta-reader-groups/{groupId}
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\GetBetaReaderGroupController::__invoke
+    methods: [GET]
+
+renameBetaReaderGroup:
+    path: /api/v1/beta-reader-groups/{groupId}
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\RenameBetaReaderGroupController::__invoke
+    methods: [PATCH]
+
+deleteBetaReaderGroup:
+    path: /api/v1/beta-reader-groups/{groupId}
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\DeleteBetaReaderGroupController::__invoke
+    methods: [DELETE]
+
+# `PUT` y no `POST`: lo que el autor dice es «esta persona está en el grupo»,
+# no «añade una fila». Sale idempotente (`RN-8`).
+addBetaReaderGroupMember:
+    path: /api/v1/beta-reader-groups/{groupId}/members/{readerId}
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\AddBetaReaderGroupMemberController::__invoke
+    methods: [PUT]
+
+removeBetaReaderGroupMember:
+    path: /api/v1/beta-reader-groups/{groupId}/members/{readerId}
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\RemoveBetaReaderGroupMemberController::__invoke
+    methods: [DELETE]
+
+# Se llama `group-invitations` y no `beta-reader-invitations/group` porque el
+# desenlace no es una invitación sino un parte de lo invitado y lo omitido.
+inviteBetaReaderGroup:
+    path: /api/v1/works/{workId}/group-invitations
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\InviteBetaReaderGroupController::__invoke
+    methods: [POST]

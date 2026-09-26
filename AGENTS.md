@@ -340,6 +340,41 @@ When one bounded context needs information or behavior from another, use one of 
 - an application-level integration service;
 - an anti-corruption layer when appropriate.
 
+## Published contracts
+
+When synchronous communication is genuinely required, the interface lives in
+
+```text
+src/<BoundedContext>/<Concept>/Application/Contract/
+```
+
+and **that folder is the only part of a context another context may reference**. Everything
+else stays private, and `deptrac.contexts.yaml` enforces it.
+
+Three rules:
+
+- **a contract asks, it never commands.** It returns information. A contract that let another
+  context change something would be a remote method call with extra steps;
+- **a contract hands over data, never entities.** Whoever receives an aggregate ends up
+  navigating it, and the internal model is shared again;
+- **a contract depends only on `Shared` and its own types.** If it needed something from
+  inside its context it would stop being a door and become a crack;
+- **a contract never calls another context's contract while answering.** `Work` and `Reading`
+  ask each other ([`decision:0015`](docs/decisions/0015-work-and-reading-ask-each-other.md)),
+  and this rule is what keeps that a cycle of references rather than a cycle of calls.
+
+Asynchronous communication remains the default. A contract is for when the answer is needed
+**now**; the fact that already happened still travels as an event. The activation email uses
+both: the fact goes over the queue, the secret is fetched at the moment of sending, because a
+live credential must never sit in a queue that persists, retries and parks messages.
+
+`Credits` publishes no contract, and must not publish one that applies credit effects.
+
+Contracts are wired by hand in `config/services.yaml`: opening a door should be a visible
+change there, not a side effect of creating a class.
+
+See [`decision:0014`](docs/decisions/0014-published-contracts-between-contexts.md).
+
 For the **Credits** bounded context, event-driven asynchronous communication is the default and direct synchronous invocation from other bounded contexts is forbidden.
 
 The consuming bounded context must depend on a contract that it understands, not on the internal model of the provider.
@@ -588,6 +623,8 @@ Symfony is the application framework but must remain an Infrastructure concern w
 - Avoid using the Symfony service container as a service locator.
 - Avoid static access to services.
 - Keep framework attributes and configuration out of Domain classes.
+- **Routes live in YAML, one file per bounded context**, never in controller attributes. See
+  *Routing* below.
 - Symfony-specific events must not replace Domain Events.
 - Convert framework exceptions into appropriate API responses in a centralized and consistent way.
 
@@ -646,6 +683,62 @@ DeleteManuscriptController
 ```
 
 A controller should be small enough that its complete behavior is obvious at a glance.
+
+## Routing
+
+**Routes are declared in YAML, never with attributes or annotations on the controller.**
+
+**Each bounded context owns one file, and it lives inside the context:**
+
+```text
+config/routes.yaml                        an index; it imports and declares nothing
+src/User/Infrastructure/routes.yaml
+src/Work/Infrastructure/routes.yaml
+src/Reading/Infrastructure/routes.yaml
+src/Feedback/Infrastructure/routes.yaml
+src/Community/Infrastructure/routes.yaml
+src/Credits/Infrastructure/routes.yaml
+src/Moderation/Infrastructure/routes.yaml
+src/Notification/Infrastructure/routes.yaml
+src/Shared/Infrastructure/routes.yaml
+```
+
+A context is read without leaving its folder, and if one is ever extracted its routes travel
+with it. Every context has a file even when it exposes nothing yet.
+
+`config/routes.yaml` imports the nine files **one by one, never with a glob**: a glob does not
+complain when a file is renamed or disappears — the routes simply stop existing, with no
+error, and that is found out in production.
+
+`src/<Context>/Infrastructure/` is the one place in the tree where a layer folder sits at the
+business-concept level, and it is there for a configuration file. **Nothing but `routes.yaml`
+goes in it.** Infrastructure code belongs to its concept:
+`src/<Context>/<Concept>/Infrastructure/`.
+
+Format:
+
+```yaml
+registerUser:
+    path: /api/v1/auth/register
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\RegisterUserController::__invoke
+    methods: [POST]
+```
+
+- **The route name is the OpenAPI `operationId`.** It is what makes "the implementation and
+  the specification must not diverge" checkable rather than aspirational.
+- A route that belongs to a context goes in that context's file. Never in
+  `config/routes.yaml`, which only imports, and never in another context's file.
+- `#[AsController]` on the controller class is fine and expected: it is service configuration,
+  not routing.
+
+Why YAML and not attributes: with attributes, the map of the API is scattered across every
+controller, and answering "what does this context expose?" means grepping. With one file per
+context, it is a file. See
+[`decision:0010`](docs/decisions/0010-routes-declared-in-yaml-per-context.md),
+[`decision:0011`](docs/decisions/0011-route-files-live-inside-their-context.md) and
+[`docs/api/conventions/routing.md`](docs/api/conventions/routing.md).
+
+`tests/Unit/Architecture/RoutingConventionTest.php` enforces all of this. Do not weaken it.
 
 ## Request handling
 
@@ -731,18 +824,40 @@ Documentation should be created or updated when a change introduces:
 - a relevant operational requirement;
 - a developer setup requirement.
 
-Suggested structure:
+Structure:
 
 ```text
 docs/
-    architecture/
-    bounded-contexts/
-    api/
-    integrations/
-    decisions/
+    README.md            entry point and index
+    conventions.md       documentation conventions (language, statuses, IDs)
+    glossary.md          ubiquitous language, Spanish product terms to English identifiers
+    product/             vision, actors, journeys, high-level domain model
+    features/            master feature registry and one spec per feature, with status
+    architecture/        contexts, layers, messaging, persistence, security, operations
+    bounded-contexts/    one sheet per bounded context
+    api/                 API conventions and endpoint semantics
+    events/              integration event catalogue
+    integrations/        external services
+    decisions/           ADRs
+    ui/                  screen specifications derived from Figma
+    _templates/          templates for new documents
+    _sources/            original source material
+    _tools/              documentation validation scripts
 ```
 
-Use only the directories that are useful.
+`docs/` is the source of truth for the product (see ADR 0001). A feature is specified there
+before it is implemented, including its API contract and its status.
+
+Rules:
+
+- documentation prose is written in Spanish; every technical identifier (bounded contexts,
+  entities, events, endpoints, JSON fields, enums, tables) is written in English, exactly as
+  it appears in the code;
+- the glossary is normative: do not invent an alternative name for a concept it defines;
+- a feature is never implemented while its `spec_status` is not `APPROVED`;
+- `docs/api/` documents the semantics of each operation, `openapi/` defines its schemas.
+  Do not duplicate information between them;
+- run `python3 docs/_tools/check-docs.py` before considering a documentation change complete.
 
 ## Architecture Decision Records
 
@@ -1247,11 +1362,14 @@ A backend task is not complete until, when applicable:
 Do not solve a task by:
 
 - putting business logic in a controller;
+- declaring a route with an attribute or annotation instead of in its context's YAML file;
 - accessing Doctrine directly from Domain or Application;
 - injecting one bounded context's repository into another;
 - calling Credits directly from another bounded context to add, subtract or modify credits;
 - making another bounded context responsible for calculating credit effects;
 - consuming another bounded context's internal event instead of an explicit integration event;
+- reaching into another bounded context anywhere other than its `Application/Contract/` folder;
+- putting a token, password or any other credential into an integration event;
 - reusing another bounded context's entity as a shared model;
 - querying another bounded context's tables directly;
 - passing Symfony `Request` objects into Application;

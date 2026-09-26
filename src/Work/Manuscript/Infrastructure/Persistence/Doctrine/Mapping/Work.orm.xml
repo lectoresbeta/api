@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Work\Manuscript\Domain\Entity\Work" table="work" schema="work_ctx">
+
+        <indexes>
+            <!-- «Mis relatos» reads by author and status (`FEAT-WRK-016`). -->
+            <index name="idx_work_author" columns="author_id,status"/>
+            <!-- The catalogue and the recommendations must never so much as
+                 consider a draft, so status leads the index. -->
+            <index name="idx_work_status" columns="status,status_changed_at"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="authorId" column="author_id" type="guid"/>
+        <field name="title" type="string" length="180"/>
+        <field name="synopsis" type="text" nullable="true"/>
+        <field name="status" type="string" length="16"
+               enum-type="LectoresBeta\Work\Manuscript\Domain\Enum\WorkStatus"/>
+        <field name="statusChangedAt" column="status_changed_at" type="datetime_immutable"/>
+        <field name="accessMode" column="access_mode" type="string" length="16"
+               enum-type="LectoresBeta\Work\Manuscript\Domain\Enum\BetaReaderAccessMode"/>
+        <field name="adultsOnly" column="adults_only" type="boolean"/>
+        <field name="wordCount" column="word_count" type="integer"/>
+        <field name="chapterCount" column="chapter_count" type="smallint"/>
+        <field name="statusVersion" column="status_version" type="integer"/>
+        <field name="ratingCount" column="rating_count" type="integer"/>
+        <field name="ratingSum" column="rating_sum" type="integer"/>
+        <field name="blockedAt" column="blocked_at" type="datetime_immutable" nullable="true"/>
+        <field name="archivedAt" column="archived_at" type="datetime_immutable" nullable="true"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

@@ -1,0 +1,5 @@
+; Copiar sobre conf.d/ en producción: sin revalidación, el código de la
+; imagen se compila una vez y no se vuelve a mirar el disco.
+opcache.validate_timestamps = 0
+opcache.preload = /app/config/preload.php
+opcache.preload_user = www-data

@@ -1,0 +1,23 @@
+/vendor/
+/var/
+/config/jwt/*.pem
+/public/bundles/
+
+# Lo genera Symfony al calentar la caché; sólo sirve al autocompletado del IDE.
+/config/reference.php
+
+# Secretos y configuración local
+/.env.local
+/.env.*.local
+
+# Herramientas
+/.php-cs-fixer.cache
+/.phpunit.result.cache
+/.phpunit.cache/
+/.deptrac.cache
+/phpstan.neon.local
+
+# Editores
+/.idea/
+/.vscode/
+*.swp

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Insert only. There is no update path in the entity and there must not
+         be one here either (`FEAT-WRK-009` `RN-5`). -->
+    <entity name="LectoresBeta\Work\Authorship\Domain\Entity\AuthorshipRecord"
+            table="authorship_record" schema="work_ctx">
+
+        <indexes>
+            <index name="idx_authorship_work" columns="work_id,recorded_at"/>
+            <index name="idx_authorship_author" columns="author_id"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="workId" column="work_id" type="guid"/>
+        <field name="authorId" column="author_id" type="guid"/>
+        <field name="contentHash" column="content_hash" type="string" length="128"/>
+        <field name="algorithm" type="string" length="16"/>
+        <field name="wordCount" column="word_count" type="integer"/>
+        <field name="chapterCount" column="chapter_count" type="smallint"/>
+        <field name="recordedAt" column="recorded_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

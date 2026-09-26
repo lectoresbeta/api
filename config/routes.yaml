@@ -1,0 +1,41 @@
+# Índice de contextos. Aquí no se declara ninguna ruta.
+#
+# Cada bounded context declara las suyas dentro de sí mismo, en
+# `src/<Contexto>/Infrastructure/routes.yaml`: un contexto se lee entero sin
+# salir de su carpeta, y si algún día hay que extraer uno, sus rutas viajan
+# con él.
+#
+# Los imports están escritos uno a uno y no con un glob. Un glob no se queja
+# cuando un fichero se renombra o desaparece: las rutas simplemente dejan de
+# existir, y eso se descubre en producción. Así, además, esta lista es el
+# censo de contextos que exponen API.
+#
+# Convención completa: docs/api/conventions/routing.md
+# Por qué:              docs/decisions/0011-route-files-live-inside-their-context.md
+
+user:
+    resource: '../src/User/Infrastructure/routes.yaml'
+
+work:
+    resource: '../src/Work/Infrastructure/routes.yaml'
+
+reading:
+    resource: '../src/Reading/Infrastructure/routes.yaml'
+
+feedback:
+    resource: '../src/Feedback/Infrastructure/routes.yaml'
+
+community:
+    resource: '../src/Community/Infrastructure/routes.yaml'
+
+credits:
+    resource: '../src/Credits/Infrastructure/routes.yaml'
+
+moderation:
+    resource: '../src/Moderation/Infrastructure/routes.yaml'
+
+notification:
+    resource: '../src/Notification/Infrastructure/routes.yaml'
+
+shared:
+    resource: '../src/Shared/Infrastructure/routes.yaml'

@@ -1,0 +1,91 @@
+# Reglas de capa: Domain ← Application ← Infrastructure.
+#
+# Las dependencias apuntan siempre hacia dentro. Domain no sabe que existe
+# nadie más; Application conoce Domain; Infrastructure conoce a las dos.
+#
+# Ver docs/architecture/03-layers-and-dependencies.md
+parameters:
+  # deptrac 2.x lee analyser.internal_tag y analyser.types sin aplicar
+  # valores por defecto, y avisa si faltan. Los declaramos explícitamente.
+  analyser:
+    internal_tag: null
+    types:
+      - class
+      - function
+  paths:
+    - ./src
+  layers:
+    - name: Domain
+      collectors:
+        - type: directory
+          value: src/.*/.*/Domain/.*
+        - type: directory
+          value: src/Shared/Domain/.*
+
+    - name: Application
+      collectors:
+        - type: directory
+          value: src/.*/.*/Application/.*
+        - type: directory
+          value: src/Shared/Application/.*
+
+    - name: Infrastructure
+      collectors:
+        - type: directory
+          value: src/.*/.*/Infrastructure/.*
+        - type: directory
+          value: src/Shared/Infrastructure/.*
+
+    # Lo que el dominio no puede tocar jamás.
+    - name: Symfony
+      collectors:
+        - type: classLike
+          value: ^Symfony\\.*
+    - name: Doctrine
+      collectors:
+        - type: classLike
+          value: ^Doctrine\\.*
+    - name: Psr
+      collectors:
+        - type: classLike
+          value: ^Psr\\.*
+
+    # Clases sin namespace: las del propio PHP (\DateTimeImmutable, \Stringable).
+    # Cualquier capa puede usarlas; son el lenguaje, no una dependencia.
+    - name: Php
+      collectors:
+        - type: classLike
+          value: '^[^\\]+$'
+
+    # El resto de librerías de terceros. Solo Infrastructure puede tocarlas:
+    # así «el dominio no depende de nada externo» deja de ser un buen propósito
+    # y pasa a ser algo que falla en CI.
+    - name: Vendor
+      collectors:
+        - type: classLike
+          value: '^(?!LectoresBeta\\|Symfony\\|Doctrine\\|Psr\\)[^\\]+\\.*'
+
+  ruleset:
+    # El dominio no depende de nada más que de sí mismo y del propio PHP.
+    Domain: [Php]
+
+    # La aplicación orquesta el dominio. Nunca toca infraestructura ni el framework.
+    Application:
+      - Domain
+      - Php
+
+    # La infraestructura implementa los contratos de dentro.
+    Infrastructure:
+      - Domain
+      - Application
+      - Symfony
+      - Doctrine
+      - Psr
+      - Vendor
+      - Php
+
+    Symfony: ~
+    Doctrine: ~
+    Psr: ~
+    Vendor: ~
+    Php: ~

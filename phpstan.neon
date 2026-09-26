@@ -1,0 +1,30 @@
+includes:
+    # Sin la extensión de Doctrine, PHPStan no sabe que una propiedad que
+    # hidrata el ORM se lee, y reporta ciento y pico falsos «never read, only
+    # written». Además comprueba el DQL y los nombres de campo de findBy().
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+    - vendor/phpstan/phpstan-doctrine/rules.neon
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-symfony/rules.neon
+    - vendor/phpstan/phpstan-phpunit/extension.neon
+    - vendor/phpstan/phpstan-phpunit/rules.neon
+
+parameters:
+    doctrine:
+        objectManagerLoader: tests/object-manager.php
+
+    level: 7
+    paths:
+        - src
+        - tests
+    tmpDir: var/cache/phpstan
+
+    # AGENTS.md: "avoid broad mixed usage", "type collections where practical".
+    # En PHPStan 2.x la comprobación de iterables sin tipo de valor forma parte
+    # del nivel 6 en adelante, así que el nivel 7 ya la incluye.
+    treatPhpDocTypesAsCertain: false
+
+    # Sin baseline a propósito. AGENTS.md lo dice explícitamente:
+    # "Do not introduce a PHPStan baseline entry for a new problem that can
+    # reasonably be fixed". Empezamos en cero y se queda en cero.
+    ignoreErrors: []

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Community\Post\Domain\Entity\Post" table="post" schema="community_ctx">
+
+        <indexes>
+            <!-- The author's own wall (`FEAT-COM-002`). -->
+            <index name="idx_post_author" columns="author_id,created_at"/>
+            <!-- The general wall, filtered by audience in the query. -->
+            <index name="idx_post_wall" columns="created_at,audience"/>
+            <index name="idx_post_type" columns="type,created_at"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="authorId" column="author_id" type="guid"/>
+        <field name="body" type="text"/>
+        <field name="type" type="string" length="32"
+               enum-type="LectoresBeta\Community\Post\Domain\Enum\PostType"/>
+        <field name="format" type="string" length="16"
+               enum-type="LectoresBeta\Community\Post\Domain\Enum\PostFormat"/>
+        <field name="audience" type="string" length="16"
+               enum-type="LectoresBeta\Community\Post\Domain\Enum\PostAudience"/>
+        <field name="workId" column="work_id" type="guid" nullable="true"/>
+        <field name="linkUrl" column="link_url" type="string" length="2048" nullable="true"/>
+        <field name="commentCount" column="comment_count" type="integer"/>
+        <field name="likeCount" column="like_count" type="integer"/>
+        <field name="repostCount" column="repost_count" type="integer"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+        <field name="editedAt" column="edited_at" type="datetime_immutable" nullable="true"/>
+        <field name="deletedAt" column="deleted_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

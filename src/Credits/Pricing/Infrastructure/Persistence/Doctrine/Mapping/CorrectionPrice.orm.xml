@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- (chapter, reader) is the key, which is what makes a duplicate
+         delivery idempotent (`FEAT-CRD-009` `RN-7`). -->
+    <entity name="LectoresBeta\Credits\Pricing\Domain\Entity\CorrectionPrice"
+            table="correction_price" schema="credits_ctx">
+
+        <indexes>
+            <index name="idx_correction_price_author" columns="author_id"/>
+        </indexes>
+
+        <id name="chapterId" column="chapter_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="readerId" column="reader_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="authorId" column="author_id" type="guid"/>
+        <field name="amount" type="smallint"/>
+        <field name="quotedAt" column="quoted_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

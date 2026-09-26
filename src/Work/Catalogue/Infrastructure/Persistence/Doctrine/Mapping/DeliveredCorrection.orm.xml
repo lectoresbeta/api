@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Una fila por corrección entregada, no un contador: la clave primaria
+         es lo que hace idempotente la reentrega del mismo hecho. -->
+    <entity name="LectoresBeta\Work\Catalogue\Domain\Entity\DeliveredCorrection"
+            table="catalogue_delivered_correction" schema="work_ctx">
+
+        <indexes>
+            <index name="idx_catalogue_delivered_work" columns="work_id"/>
+        </indexes>
+
+        <id name="correctionId" column="correction_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="workId" column="work_id" type="guid"/>
+        <field name="submittedAt" column="submitted_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

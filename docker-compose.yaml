@@ -1,0 +1,139 @@
+# Entorno completo de desarrollo: la aplicación y sus servicios.
+#
+# `make build && make up` levanta esto. PHP ya no hace falta en la máquina.
+name: lectoresbeta
+
+# Lo que comparten los tres contenedores de PHP. Un ancla de YAML y no tres
+# copias: cuando cambia una variable de entorno hay que cambiarla en un sitio.
+x-php: &php
+  build:
+    context: .
+    dockerfile: docker/php/Dockerfile
+    target: dev
+    args:
+      # Los pone el Makefile. Sin ellos, todo lo que escriba el contenedor
+      # —vendor/, var/, lo que corrija php-cs-fixer— acaba siendo de root en
+      # el disco de quien desarrolla.
+      UID: ${HOST_UID:-1000}
+      GID: ${HOST_GID:-1000}
+  environment:
+    APP_ENV: dev
+    APP_DEBUG: '1'
+    DATABASE_URL: 'postgresql://lectoresbeta:lectoresbeta@postgres:5432/lectoresbeta?serverVersion=16&charset=utf8'
+    MESSENGER_TRANSPORT_DSN: 'amqp://lectoresbeta:lectoresbeta@rabbitmq:5672/%2f/messages'
+    MAILER_DSN: 'smtp://mailpit:1025'
+    DEFAULT_URI: 'http://localhost:8000'
+  volumes:
+    - .:/app
+    - jwt:/app/config/jwt
+
+services:
+  # Instala las dependencias, una sola vez y antes que nadie.
+  #
+  # Tiene que ser un servicio aparte. Cuando lo hacía el entrypoint, `app` y
+  # `worker` arrancaban a la vez sobre el mismo vendor/ montado y los dos
+  # lanzaban `composer install`: el resultado es un autoloader que apunta a
+  # paquetes que todavía no estaban.
+  deps:
+    <<: *php
+    command: ['/usr/local/bin/install-deps']
+    restart: 'no'
+
+  # PHP-FPM. El código llega por volumen, así que editar un fichero se ve en la
+  # siguiente petición sin reconstruir nada.
+  app:
+    <<: *php
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  web:
+    image: nginx:1.27-alpine
+    ports:
+      - '8000:80'
+    volumes:
+      - ./public:/app/public:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+    # Sonda de disponibilidad, no de vida: pregunta por `/health`, que
+    # comprueba PostgreSQL y RabbitMQ. Así `make ps` responde a «¿puedo usar
+    # la API?» y no solo a «¿hay un nginx levantado?».
+    #
+    # Nadie depende de la salud de `web`, así que un hipo de PostgreSQL se ve
+    # pero no reinicia nada.
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # Consumidor de los eventos de integración. Va aparte a propósito: sin un
+  # worker corriendo, `AccountActivated` se queda en la cola y los créditos de
+  # bienvenida no se abonan nunca.
+  worker:
+    <<: *php
+    user: www-data
+    command:
+      - php
+      - bin/console
+      - messenger:consume
+      - integration
+      - --time-limit=3600
+      - --memory-limit=256M
+      - -vv
+    restart: unless-stopped
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lectoresbeta
+      POSTGRES_PASSWORD: lectoresbeta
+      POSTGRES_DB: lectoresbeta
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U lectoresbeta']
+      interval: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: lectoresbeta
+      RABBITMQ_DEFAULT_PASS: lectoresbeta
+    ports:
+      - '5672:5672'
+      - '15672:15672'   # consola de administración
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      retries: 10
+
+  # Captura todo el correo saliente en desarrollo. Sin esto, probar la
+  # activación de cuenta implicaría mandar correos de verdad.
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - '1025:1025'
+      - '8025:8025'     # http://localhost:8025
+
+volumes:
+  postgres:
+  # Las claves JWT se generan una vez y las comparten app y worker. En un
+  # volumen y no en el repositorio: nunca se commitean.
+  jwt:

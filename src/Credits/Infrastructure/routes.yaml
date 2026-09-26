@@ -1,0 +1,49 @@
+# Rutas del bounded context `Credits`.
+#
+# Casi todo este contexto funciona por eventos y no por HTTP: los créditos se
+# mueven al recibir hechos de otros contextos, nunca por una llamada. No
+# existe —ni debe existir— un endpoint para sumar o restar créditos
+# (decision:0002).
+
+getCreditBalance:
+    path: /api/v1/credits/balance
+    controller: LectoresBeta\Credits\Account\Infrastructure\Controller\GetCreditBalanceController::__invoke
+    methods: [GET]
+
+# El historial de movimientos (`FEAT-CRD-008`). Es la invariante del contexto
+# —el saldo es la suma de sus movimientos— enseñada, y hace falta desde que
+# una reclamación estimada puede retirar créditos ya cobrados.
+listCreditMovements:
+    path: /api/v1/credits/movements
+    controller: LectoresBeta\Credits\Account\Infrastructure\Controller\ListCreditMovementsController::__invoke
+    methods: [GET]
+
+# La propina (`FEAT-CRD-017`), y la única operación de este contexto que mueve
+# créditos por una llamada HTTP.
+#
+# No contradice `decision:0002`: lo que esa decisión prohíbe es que **otro
+# contexto** pida a `Credits` que sume o reste. Aquí quien atiende es
+# `Credits`, y decide con lo que ya tiene apuntado — sabe quién pagó cada
+# corrección y quién la cobró, así que no necesita preguntarle nada a nadie.
+tipCorrection:
+    path: /api/v1/corrections/{correctionId}/tip
+    controller: LectoresBeta\Credits\Account\Infrastructure\Controller\TipCorrectionController::__invoke
+    methods: [POST]
+
+# La salud de la economía (`FEAT-CRD-012`). **No es `/health`**: aquel es
+# público y lo consultan sondas sin credenciales; este suma sobre todo el
+# histórico y cuenta cómo está repartido el saldo.
+getEconomyHealth:
+    path: /api/v1/admin/credits/health
+    controller: LectoresBeta\Credits\Monitoring\Infrastructure\Controller\GetEconomyHealthController::__invoke
+    methods: [GET]
+
+# Cómo se gana y cómo se gasta, con las cifras vigentes (FEAT-CRD-015). Es el
+# destino del botón izquierdo del modal informativo (FEAT-CRD-014).
+#
+# **Público**: no hay nada de nadie aquí, son las reglas de la casa, y quien se
+# está planteando registrarse tiene derecho a leerlas antes.
+getCreditScoring:
+    path: /api/v1/credits/scoring
+    controller: LectoresBeta\Credits\Pricing\Infrastructure\Controller\GetCreditScoringController::__invoke
+    methods: [GET]

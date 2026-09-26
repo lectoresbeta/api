@@ -1,0 +1,141 @@
+# Invitar a alguien a la plataforma (FEAT-USR-018) y ver qué fue de las
+# invitaciones enviadas.
+#
+# **Invitar no dice quién tiene cuenta.** Es lo que gobierna toda la forma de
+# estas operaciones: la respuesta es la misma se mande el correo o no, porque
+# un formulario que distingue los dos casos es un comprobador de quién está
+# dentro de la plataforma.
+
+SentInvitation:
+  type: object
+  required: [invitationId, email, accepted, sentAt, acceptedAt]
+  description: |
+    Una invitación enviada, vista por quien la envió.
+
+    **No dice si se cobró por ella.** Lo que se pagó y a quién es asunto del
+    saldo (`GET /credits/movements`), y mezclarlo aquí acoplaría esta pantalla
+    al sistema de créditos para un adorno.
+
+    Tampoco lleva el identificador de quien se registró: el invitador tiene
+    derecho a saber que su invitación fue aceptada, no a que le entreguen la
+    cuenta de esa persona.
+  properties:
+    invitationId:
+      type: string
+      format: uuid
+    email:
+      type: [string, 'null']
+      format: email
+    accepted:
+      type: boolean
+      description: Si alguien se registró con ella.
+    sentAt:
+      type: string
+      format: date-time
+    acceptedAt:
+      type: [string, 'null']
+      format: date-time
+
+collection:
+  post:
+    tags: [User]
+    operationId: sendPlatformInvitation
+    summary: Invitar a alguien por correo
+    description: |
+      Manda un correo con un enlace de alta a esa dirección.
+
+      **Responde `202` siempre que la petición sea válida, se mande el correo
+      o no.** No se envía nada si la dirección ya tiene cuenta, o si quien
+      invita ya le había mandado una invitación que sigue en pie: en los tres
+      casos la respuesta es idéntica, y quien invita no aprende nada que no
+      supiera.
+
+      `202` y no `201` porque es exacto: lo que ha pasado al responder es que
+      se ha aceptado el encargo. El correo sale por la cola.
+
+      **Con tope diario** (`RN-4`). Sin él, esto sería un canal de correo
+      gratuito hacia direcciones ajenas con el remitente de la plataforma.
+
+      Invitar **no abona nada**. La recompensa llega cuando la persona
+      invitada entrega su primera corrección (`FEAT-CRD-005`), que es todo el
+      diseño antifraude: falsear esto cuesta una corrección de verdad.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [email]
+            properties:
+              email:
+                type: string
+                format: email
+                maxLength: 254
+    responses:
+      '202':
+        description: Encargo aceptado. Si procede, se ha enviado la invitación.
+      '401':
+        description: Sin sesión.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          Dirección mal formada, o `code: CANNOT_INVITE_YOURSELF`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '429':
+        description: |
+          `code: INVITATION_LIMIT_REACHED`. Se ha alcanzado el tope de
+          invitaciones diarias.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+mine:
+  get:
+    tags: [User]
+    operationId: listMyInvitations
+    summary: Mis invitaciones enviadas
+    description: |
+      De la más reciente a la más antigua.
+
+      **Solo las propias**, y no hay variante para ver las de otro: a quién
+      invita alguien es de las cosas más privadas que guarda la plataforma.
+    parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+      - name: offset
+        in: query
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+    responses:
+      '200':
+        description: Las invitaciones enviadas.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [invitations]
+              properties:
+                invitations:
+                  type: array
+                  items:
+                    $ref: '#/SentInvitation'
+      '401':
+        description: Sin sesión.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

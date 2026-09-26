@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\User\Invitation\Domain\Entity\PlatformInvitation"
+            table="platform_invitation" schema="user_ctx">
+
+        <indexes>
+            <!-- «Si ya invité a esta dirección y sigue en pie» lee por
+                 invitador y por si se consumió (`FEAT-USR-018` `RN-5`). -->
+            <index name="idx_platform_invitation_inviter" columns="inviter_id,consumed_at"/>
+
+            <!-- Y el tope diario, que se cuenta por fecha de envío (`RN-4`). -->
+            <index name="idx_platform_invitation_sent" columns="inviter_id,created_at"/>
+        </indexes>
+
+        <unique-constraints>
+            <unique-constraint name="uniq_platform_invitation_token" columns="token_hash"/>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="inviterId" column="inviter_id" type="guid"/>
+        <field name="email" type="string" length="254" nullable="true"/>
+        <field name="tokenHash" column="token_hash" type="string" length="64"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+        <field name="consumedAt" column="consumed_at" type="datetime_immutable" nullable="true"/>
+        <field name="consumedBy" column="consumed_by" type="guid" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

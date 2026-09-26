@@ -1,0 +1,113 @@
+framework:
+    secret: '%env(APP_SECRET)%'
+    http_method_override: false
+    trusted_hosts: ~
+    session: false          # La sesión es JWT: no hay estado de sesión en el servidor.
+    php_errors:
+        log: true
+    serializer:
+        enable_attributes: true
+    validation:
+        email_validation_mode: html5
+
+    # Fuerza bruta contra el inicio de sesión (FEAT-USR-004 RN-13).
+    #
+    # Dos limitadores porque paran ataques distintos: por dirección detiene a
+    # una máquina probando miles de contraseñas; por cuenta detiene a mil
+    # máquinas probando unas pocas contra una misma persona. El primero solo
+    # no sirve contra lo segundo.
+    #
+    # El de cuenta se puede usar para dejar a alguien fuera fallando aposta,
+    # así que es el más generoso de los dos; el ajuste fino queda para cuando
+    # haya datos reales (`S-8`).
+    rate_limiter:
+        login_by_ip:
+            policy: sliding_window
+            limit: 10
+            interval: '5 minutes'
+
+        login_by_account:
+            policy: sliding_window
+            limit: 20
+            interval: '15 minutes'
+
+        # El reenvío del enlace de activación (FEAT-USR-021). Tres contadores
+        # porque son tres abusos distintos: el botón pulsado cinco veces, quien
+        # espacia las peticiones para saltarse el intervalo, y quien las reparte
+        # entre muchas direcciones.
+        #
+        # Las cifras son las que propone la ficha (RN-2, RN-3) y OB-9 sigue
+        # abierta: están aquí, y no como literales en el código, justo para
+        # poder moverlas sin desplegar.
+        resend_activation_interval:
+            policy: fixed_window
+            limit: 1
+            interval: '60 seconds'
+
+        resend_activation_daily:
+            policy: sliding_window
+            limit: 5
+            interval: '24 hours'
+
+        resend_activation_by_ip:
+            policy: sliding_window
+            limit: 20
+            interval: '1 hour'
+
+        # «He olvidado mi contraseña» (FEAT-USR-007). La misma forma que el
+        # reenvío, y un tope diario más bajo: una avalancha de correos
+        # «restablece tu contraseña» no solo es spam, es como se prepara un
+        # engaño. P-20 sigue abierta sobre las cifras.
+        # Abrir un enlace público (FEAT-WRK-010 RN-16). Por origen y no por
+        # token: limitar un token protegería al enlace de ser abierto mucho,
+        # que es justo lo que su autor quiere; lo que hay que frenar es a
+        # quien prueba tokens distintos, y eso solo se ve desde la dirección.
+        #
+        # Generoso a propósito: un grupo de escritura detrás de una misma
+        # salida a internet comparte dirección, y leer una novela son muchas
+        # peticiones.
+        public_link_by_ip:
+            policy: sliding_window
+            limit: 120
+            interval: '1 hour'
+
+        # La vuelta de un proveedor externo (FEAT-USR-002). Aquí no hay
+        # contraseña que probar, pero cada llamada dispara una petición
+        # saliente a Google con nuestras credenciales, y eso no debería poder
+        # hacerlo nadie sin freno.
+        #
+        # Generoso: un código solo sirve una vez y quien se equivoca repite
+        # el viaje entero, así que unos cuantos intentos por hora son
+        # normales.
+        oauth_callback_by_ip:
+            policy: sliding_window
+            limit: 30
+            interval: '1 hour'
+
+        password_reset_interval:
+            policy: fixed_window
+            limit: 1
+            interval: '60 seconds'
+
+        password_reset_daily:
+            policy: sliding_window
+            limit: 3
+            interval: '24 hours'
+
+        password_reset_by_ip:
+            policy: sliding_window
+            limit: 20
+            interval: '1 hour'
+
+        # Intentos fallidos de cambiar la contraseña desde dentro
+        # (FEAT-USR-041). Sin esto el formulario es un sitio donde probar
+        # contraseñas contra una sesión robada, sin las protecciones del
+        # login y con el premio de quedarse con la cuenta.
+        password_change_attempts:
+            policy: sliding_window
+            limit: 5
+            interval: '15 minutes'
+
+when@test:
+    framework:
+        test: true

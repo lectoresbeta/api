@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!--
+        The table is `account`, not `user`, and the specification says `user`.
+
+        `user` is a reserved word in PostgreSQL. Doctrine quotes it
+        automatically in the mapping but reads it back unquoted from the
+        database, so the two never match: `schema:validate` reports the table
+        as missing for ever and every `migrations:diff` proposes dropping and
+        recreating it — on the one table that must never be dropped.
+
+        Inside a schema already called `user_ctx`, `account` also reads better
+        than `user`, and it is the name of the concept that owns it.
+    -->
+    <entity name="LectoresBeta\User\Account\Domain\Entity\User" table="account" schema="user_ctx">
+
+        <indexes>
+            <index name="idx_user_name" columns="name"/>
+            <index name="idx_user_invited_by" columns="invited_by"/>
+        </indexes>
+
+        <unique-constraints>
+            <unique-constraint name="uniq_user_email" columns="email"/>
+            <unique-constraint name="uniq_user_username" columns="username"/>
+            <unique-constraint name="uniq_user_external_identity" columns="auth_provider,external_id"/>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="email" type="string" length="254"/>
+        <field name="username" type="string" length="30"/>
+        <field name="usernameChangedAt" column="username_changed_at" type="datetime_immutable" nullable="true"/>
+        <field name="usernameReclaimedAt" column="username_reclaimed_at" type="datetime_immutable" nullable="true"/>
+
+        <field name="passwordHash" column="password_hash" type="string" length="255" nullable="true"/>
+        <field name="authProvider" column="auth_provider" type="string" length="16"
+               enum-type="LectoresBeta\User\Account\Domain\Enum\AuthProvider"/>
+        <field name="externalId" column="external_id" type="string" length="255" nullable="true"/>
+
+        <field name="status" type="string" length="24"
+               enum-type="LectoresBeta\User\Account\Domain\Enum\AccountStatus"/>
+        <field name="onboardingStatus" column="onboarding_status" type="string" length="24"
+               enum-type="LectoresBeta\User\Account\Domain\Enum\OnboardingStatus"/>
+
+        <field name="name" type="string" length="80" nullable="true"/>
+        <field name="description" type="text" nullable="true"/>
+        <field name="birthDate" column="birth_date" type="date_immutable" nullable="true"/>
+        <!-- La suspensión parcial (`FEAT-MOD-006`). Fecha y no estado: caduca
+             sola, y un estado que hay que acordarse de apagar es un estado
+             que alguien olvidará. -->
+        <field name="restrictedUntil" column="restricted_until" type="datetime_immutable" nullable="true"/>
+
+        <field name="avatarUrl" column="avatar_url" type="string" length="512" nullable="true"/>
+        <field name="avatarOriginalUrl" column="avatar_original_url" type="string" length="512" nullable="true"/>
+        <field name="avatarCrop" column="avatar_crop" type="json" nullable="true">
+            <options>
+                <option name="jsonb">true</option>
+            </options>
+        </field>
+        <field name="coverUrl" column="cover_url" type="string" length="512" nullable="true"/>
+
+        <!-- No foreign key: the inviter is a user of this same context, but
+             the column is read as an opaque identifier so that anonymising
+             one account never cascades into another. -->
+        <field name="invitedBy" column="invited_by" type="guid" nullable="true"/>
+
+        <!-- La cuenta con la que habla la plataforma (`FEAT-COM-038`). Una
+             cuenta normal con una marca, no un tipo de publicación aparte. -->
+        <field name="institutional" column="institutional" type="boolean"/>
+
+        <field name="registeredAt" column="registered_at" type="datetime_immutable"/>
+        <field name="activatedAt" column="activated_at" type="datetime_immutable" nullable="true"/>
+        <field name="lastSignedInAt" column="last_signed_in_at" type="datetime_immutable" nullable="true"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

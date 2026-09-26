@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- The target is (type, id) and carries no foreign key: a claim must not
+         stop another context from deleting what is its own. -->
+    <entity name="LectoresBeta\Moderation\Claim\Domain\Entity\Claim"
+            table="claim" schema="moderation_ctx">
+
+        <indexes>
+            <!-- The moderators' queue. -->
+            <index name="idx_claim_status" columns="status,submitted_at"/>
+            <index name="idx_claim_target" columns="target_type,target_id"/>
+            <!-- Counting the three-a-month quota (`MOD-2`). -->
+            <index name="idx_claim_reporter" columns="reporter_id,submitted_at"/>
+            <index name="idx_claim_subject" columns="subject_id"/>
+        </indexes>
+
+        <unique-constraints>
+            <!-- Nobody complains twice about the same thing (`RN-2`). -->
+            <unique-constraint name="uniq_claim_reporter_target"
+                               columns="reporter_id,target_type,target_id"/>
+        </unique-constraints>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="type" type="string" length="32"
+               enum-type="LectoresBeta\Moderation\Claim\Domain\Enum\ClaimType"/>
+        <field name="targetType" column="target_type" type="string" length="24"
+               enum-type="LectoresBeta\Moderation\Claim\Domain\Enum\ClaimTargetType"/>
+        <field name="targetId" column="target_id" type="guid"/>
+        <field name="reporterId" column="reporter_id" type="guid"/>
+        <field name="subjectId" column="subject_id" type="guid" nullable="true"/>
+        <field name="reason" type="string" length="32"
+               enum-type="LectoresBeta\Moderation\Claim\Domain\Enum\ClaimReason"/>
+        <field name="description" type="text" nullable="true"/>
+        <field name="status" type="string" length="16"
+               enum-type="LectoresBeta\Moderation\Claim\Domain\Enum\ClaimStatus"/>
+        <field name="filedOnBehalf" column="filed_on_behalf" type="boolean"/>
+        <field name="registeredById" column="registered_by_id" type="guid" nullable="true"/>
+        <field name="submittedAt" column="submitted_at" type="datetime_immutable"/>
+        <field name="resolvedAt" column="resolved_at" type="datetime_immutable" nullable="true"/>
+
+    </entity>
+
+</doctrine-mapping>

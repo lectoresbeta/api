@@ -1,0 +1,272 @@
+# Onboarding (FEAT-USR-022, FEAT-USR-023) y catálogo de géneros.
+#
+# Los dos pasos funcionan **sin la cuenta activada**: es la excepción que da
+# sentido a dejar entrar antes de seguir el enlace del correo
+# (FEAT-USR-025 RN-5).
+
+state:
+  get:
+    tags: [Account]
+    operationId: getOnboardingState
+    summary: En qué paso se retoma el onboarding
+    description: |
+      El onboarding se puede abandonar y retomar (`FEAT-USR-022` `RN-5`), así
+      que el cliente necesita saber dónde quedó en vez de adivinarlo.
+
+      Devuelve además el **nombre de usuario**, porque la primera pantalla
+      saluda por él y pedirlo aparte serían dos llamadas para una pantalla.
+    responses:
+      '200':
+        description: Estado del onboarding.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status, username, completed]
+              properties:
+                status:
+                  type: string
+                  enum: [PROFILE_PENDING, GENRES_PENDING, SUGGESTIONS_PENDING, COMPLETED]
+                username:
+                  type: string
+                completed:
+                  type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+profile:
+  put:
+    tags: [Account]
+    operationId: submitOnboardingProfile
+    summary: Paso 1 — nombre y fecha de nacimiento
+    description: |
+      Dos datos con visibilidad **opuesta**:
+
+      - `name` es **público**. Al no haber nombre visible aparte, es el
+        referente con el que se identifica a una persona en perfiles,
+        catálogo, muro, comentarios y rankings;
+      - `birthDate` es **privado**. No se devuelve en ninguna respuesta
+        dirigida a terceros. Se recoge porque de la edad depende el filtrado
+        de contenido `ADULTS_ONLY`, no para decorar el perfil.
+
+      `PUT` y no `POST`: el paso es idempotente.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name, birthDate]
+            properties:
+              name:
+                type: string
+                maxLength: 80
+              birthDate:
+                type: string
+                format: date
+                description: |
+                  `YYYY-MM-DD`. Debe ser una fecha **real y pasada**: se
+                  rechaza `2000-02-30`, que de otro modo se convertiría
+                  silenciosamente en el 1 de marzo.
+    responses:
+      '204':
+        description: Paso guardado. El onboarding avanza a `GENRES_PENDING`.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '409':
+        description: 'El onboarding ya está terminado. `code: ONBOARDING_ALREADY_COMPLETED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/ValidationError'
+
+genres:
+  put:
+    tags: [Account]
+    operationId: submitOnboardingGenres
+    summary: Paso 2 — elegir al menos tres géneros
+    description: |
+      La selección **sustituye** a la anterior: elegir géneros es elegir un
+      conjunto, y quien quita uno espera que desaparezca.
+
+      Se guarda en el mismo sitio que las preferencias literarias editables
+      después (`FEAT-USR-009`), no en dos.
+
+      Un género que no esté en el catálogo **se rechaza y se nombra**, nunca
+      se ignora en silencio: si no, alguien terminaría el paso creyendo que
+      eligió cinco cosas cuando se guardaron tres.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [genres]
+            properties:
+              genres:
+                type: array
+                minItems: 3
+                items:
+                  type: string
+                  examples: ['ADVENTURE']
+    responses:
+      '204':
+        description: Paso guardado. El onboarding avanza a `SUGGESTIONS_PENDING`.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '409':
+        description: |
+          El paso anterior está sin completar, o el onboarding ya terminó.
+          `code: ONBOARDING_STEP_OUT_OF_ORDER` o `ONBOARDING_ALREADY_COMPLETED`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          Menos de tres géneros (`code: NOT_ENOUGH_GENRES`) o alguno que no
+          existe (`code: UNKNOWN_GENRE`).
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+catalogue:
+  get:
+    tags: [Account]
+    operationId: listGenres
+    summary: Catálogo de géneros
+    description: |
+      **Público**, y se consulta en vez de codificarse en el cliente
+      (`FEAT-USR-023` `RN-5`): el mismo catálogo alimenta el onboarding, la
+      búsqueda de obras, la de autores y los filtros de los rankings, así que
+      un género añadido o retirado tiene que llegar a todos sin desplegar
+      nada.
+
+      Solo devuelve los activos. Retirar un género no lo borra: hay obras y
+      personas apuntando a su código, y esas referencias tienen que seguir
+      resolviendo.
+    security: []
+    responses:
+      '200':
+        description: Géneros activos, en el orden en que deben mostrarse.
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/GenreList'
+
+complete:
+  post:
+    tags: [Onboarding]
+    operationId: completeOnboarding
+    summary: Terminar el onboarding
+    description: |
+      Cierra el paso 3 y deja la cuenta dentro. Lo llaman **«Siguiente»,
+      «Saltar» y el cliente cuando el paso ni siquiera se muestra** porque no
+      hay autores que sugerir: para el servidor son lo mismo, y la diferencia
+      entre haber seguido a alguien o no ya está en las suscripciones creadas
+      por el camino.
+
+      El paso 3 es el único opcional, así que esto **no comprueba
+      suscripciones**. Lo que sí comprueba es el orden: sin nombre y sin
+      géneros no se está en el paso 3, se están saltando los anteriores.
+
+      **Es idempotente**: volver a llamarla sobre algo ya terminado deja el
+      mundo igual y no publica un segundo hecho.
+
+      No exige cuenta activada, como el resto del onboarding: es justo lo que
+      se hace antes de seguir el enlace del correo.
+    responses:
+      '204':
+        description: Terminado, o ya lo estaba.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '409':
+        description: '`code: ONBOARDING_STEP_OUT_OF_ORDER`. Faltan los pasos anteriores.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+authorSuggestions:
+  get:
+    tags: [Onboarding]
+    operationId: listAuthorSuggestions
+    summary: Autores que se proponen seguir
+    description: |
+      Paso 3 del onboarting. Los autores se calculan a partir de los géneros
+      elegidos en el paso 2.
+
+      **Responde `200` siempre**, incluso con la lista vacía: que no haya
+      autores que sugerir es un estado normal de una plataforma recién
+      lanzada, no un fallo. Y es el caso normal de los primeros meses, que es
+      justo cuando todo el mundo pasa por aquí.
+
+      **Quien decide si el paso se enseña es el servidor**, y lo dice en
+      `shouldDisplay`. Si lo decidiera el cliente —«si vienen menos de tres,
+      no lo enseño»— habría dos sitios donde cambiar el umbral y uno se
+      quedaría atrás.
+
+      Cuando no hay bastantes por género, la lista se completa con los
+      **más seguidos de la plataforma**, marcados con `matchedGenres` vacío:
+      es preferible proponer autores populares aunque no encajen que enseñar
+      una pantalla casi vacía. Si aun así no llegan, el paso se omite.
+
+      Ni uno mismo ni quien ya se sigue aparecen entre las sugerencias.
+
+      Para seguir a alguien desde aquí se usa la operación de siempre,
+      `PUT /users/{userId}/subscription`: **no hay una suscripción «de
+      onboarding» distinta**.
+    responses:
+      '200':
+        description: Las sugerencias, o la instrucción de omitir el paso.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [shouldDisplay, reason, suggestions]
+              properties:
+                shouldDisplay:
+                  type: boolean
+                reason:
+                  type: [string, 'null']
+                  enum: [NOT_ENOUGH_AUTHORS, ALREADY_FOLLOWING_ALL, null]
+                  description: |
+                    Por qué se omite el paso. Son dos silencios distintos: no
+                    hay gente suficiente en toda la plataforma, o ya se sigue
+                    a todos los candidatos posibles. La interfaz no dice lo
+                    mismo en cada caso.
+                suggestions:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, followerCount, publicationCount, matchedGenres, following]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      displayName:
+                        type: [string, 'null']
+                      avatarUrl:
+                        type: [string, 'null']
+                      followerCount:
+                        type: integer
+                      publicationCount:
+                        type: integer
+                        description: |
+                          **Obras publicadas**, no mensajes del muro. Quien
+                          elige a quién seguir por los textos que escribe no
+                          está midiendo cuánto habla.
+                      matchedGenres:
+                        type: array
+                        description: |
+                          Por qué se le sugiere. **Vacío** cuando la
+                          sugerencia sale del relleno por popularidad, para
+                          que la interfaz no prometa una afinidad que no hay.
+                        items:
+                          type: string
+                      following:
+                        type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'

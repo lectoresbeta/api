@@ -1,0 +1,133 @@
+<?php
+
+declare(strict_types=1);
+
+namespace LectoresBeta\User\Account\Domain\Repository;
+
+use LectoresBeta\User\Account\Domain\Entity\User;
+use LectoresBeta\User\Account\Domain\Enum\AuthProvider;
+use LectoresBeta\User\Account\Domain\ValueObject\Email;
+use LectoresBeta\User\Account\Domain\ValueObject\UserId;
+use LectoresBeta\User\Account\Domain\ValueObject\Username;
+
+/**
+ * Access to the `User` aggregate.
+ *
+ * The contract lives in Domain and its Doctrine implementation in
+ * Infrastructure. Application code depends on this interface and never on the
+ * implementation (`AGENTS.md`).
+ */
+interface UserRepository
+{
+    public function save(User $user): void;
+
+    public function ofId(UserId $id): ?User;
+
+    public function ofEmail(Email $email): ?User;
+
+    /**
+     * La cuenta con la que habla la plataforma (`FEAT-COM-038`), si hay
+     * alguna designada.
+     *
+     * La ausencia es un estado normal: una instalación recién puesta en
+     * marcha no tiene ninguna hasta que alguien la designa por consola.
+     */
+    public function institutional(): ?User;
+
+    public function ofUsername(Username $username): ?User;
+
+    /**
+     * La cuenta enlazada a una identidad de un proveedor externo
+     * (`FEAT-USR-002`).
+     *
+     * Se busca por **proveedor e identificador**, nunca por el correo: el
+     * correo de una cuenta de Google puede cambiar, y el `sub` que Google
+     * entrega no. Buscar por correo sería perder la cuenta de alguien el día
+     * que se cambia de dirección.
+     */
+    public function ofExternalIdentity(AuthProvider $provider, string $externalId): ?User;
+
+    /**
+     * Varios de golpe, para pintar una página entera de una lista
+     * (`FEAT-COM-027`).
+     *
+     * Quien no exista sencillamente no viene, y el orden no se promete: quien
+     * pregunta ya tiene el suyo — el de la lista que está pintando.
+     *
+     * @param list<string> $userIds
+     *
+     * @return list<User>
+     */
+    public function ofIds(array $userIds): array;
+
+    /**
+     * People whose **name or username** match, for the directory
+     * (`FEAT-RDG-006`).
+     *
+     * Never matches on email, and never returns an account that is not
+     * `ACTIVE`: a deleted one is anonymised and has nothing left to match.
+     * The two rules live in the query rather than in whoever calls it,
+     * because a caller that has to remember them is a caller that one day
+     * will not.
+     *
+     * @param int<1, 100> $limit
+     *
+     * @return list<User>
+     */
+    public function matching(string $query, int $limit): array;
+
+    /**
+     * El buscador de personas de `FEAT-USR-017`.
+     *
+     * Hermano de `matching()` y no el mismo: aquel sirve al selector de
+     * lectores y busca solo por texto; este **filtra además por los géneros
+     * que cada persona declaró**, y son dos preguntas con dos respuestas.
+     *
+     * Como aquel, **nunca busca por correo** (`RN-2`): responder si una
+     * dirección tiene cuenta es justo lo que el alta y la recuperación de
+     * contraseña se cuidan de no decir.
+     *
+     * Lo que no hace es aplicar la privacidad: eso depende de quién pregunta
+     * y se resuelve arriba, sobre la página ya traída.
+     *
+     * @param list<string> $genreCodes
+     * @param int<1, 100>  $limit
+     *
+     * @return list<User>
+     */
+    public function discoverable(?string $term, array $genreCodes, int $limit): array;
+
+    /**
+     * La búsqueda del backoffice (`FEAT-MOD-005`).
+     *
+     * Es la hermana ancha de `matching()`, y las dos diferencias son las que
+     * hay que mirar: **busca también por correo** y **devuelve cuentas en
+     * cualquier estado**, incluidas las eliminadas. Son justo las dos cosas
+     * que aquella se cuida de no hacer, y aquí hacen falta: quien atiende a
+     * una persona conoce su dirección, y las cuentas que hay que explicar son
+     * casi siempre las que ya no están.
+     *
+     * Por eso vive detrás de un contrato aparte, que se abre solo al
+     * backoffice y deja traza de cada consulta.
+     *
+     * @param int<1, 100> $limit
+     *
+     * @return list<User>
+     */
+    public function forAdministration(?string $term, int $limit, int $offset): array;
+
+    /**
+     * Whether the address is taken. The caller must not leak the answer: the
+     * registration response may not reveal whether a given email has an
+     * account (`FEAT-USR-001` `RN-14`).
+     */
+    public function emailIsTaken(Email $email): bool;
+
+    /**
+     * Only checks the `user` table. A username can also be held by a live
+     * alias, and **no database constraint covers both** (`FEAT-USR-033`):
+     * the cross-check is the application's job, which is worth knowing before
+     * assuming a guarantee that does not exist.
+     */
+    public function usernameIsTaken(Username $username): bool;
+}

@@ -1,0 +1,358 @@
+doctrine:
+    dbal:
+        url: '%env(resolve:DATABASE_URL)%'
+        use_savepoints: true
+        profiling_collect_backtrace: '%kernel.debug%'
+
+        # Aquí había un `schema_filter` que ocultaba
+        # `doctrine_migration_versions`, para que `migrations:diff` no
+        # propusiera borrarla. Se ha quitado porque **rompía las migraciones**:
+        # el filtro es de la conexión, así que también se lo ocultaba al
+        # almacén de metadatos de Doctrine Migrations, que dejaba de verla e
+        # intentaba crearla otra vez. Toda migración posterior a la primera
+        # moría con «relation already exists».
+        #
+        # No hace falta: DoctrineBundle ya excluye esa tabla del diff por su
+        # cuenta cuando está instalado MigrationsBundle. Comprobado con un
+        # `migrations:diff` sobre la base al día, que sale vacío.
+
+
+    orm:
+        auto_generate_proxy_classes: true
+        # PHP 8.4 trae objetos perezosos nativos; Doctrine 3 los exige en esa
+        # versión en lugar de los lazy ghosts de symfony/var-exporter.
+        enable_native_lazy_objects: true
+        report_fields_where_declared: true
+        validate_xml_mapping: true
+        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+        auto_mapping: false
+
+        # Buscar texto en el muro (FEAT-COM-009). DQL no sabe de búsqueda de
+        # texto, y la alternativa era reescribir en SQL nativo la consulta del
+        # muro, cuyas reglas de audiencia, bloqueo y cursor son lo más
+        # delicado de este backend. Con esto siguen donde están.
+        dql:
+            string_functions:
+                FULLTEXT_MATCH: LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\Dql\FullTextMatch
+
+        # Un mapeo por concepto de negocio, con el XML dentro de su
+        # Infrastructure.
+        #
+        # XML y no atributos: AGENTS.md exige que el dominio no dependa de
+        # Doctrine, y un atributo `#[ORM\Entity]` sobre un agregado es
+        # exactamente esa dependencia.
+        #
+        # Una entrada por concepto y no una por contexto: el driver
+        # «simplificado» de Doctrine deriva el nombre del fichero del espacio
+        # de nombres que le sobra al prefijo, así que un prefijo por contexto
+        # obligaría a llamar al fichero `Account.Domain.Entity.User.orm.xml` y
+        # a dejarlo en la raíz del contexto, fuera de Infrastructure. Con un
+        # prefijo por concepto el fichero se llama `User.orm.xml` y vive donde
+        # debe. La lista es larga; ese es el precio de tenerlo todo explícito.
+        mappings:
+            CommunityEventProcessing:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/EventProcessing/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\EventProcessing\Domain\Entity'
+                alias: CommunityEventProcessing
+            CommunityInteraction:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Interaction/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Interaction\Domain\Entity'
+                alias: CommunityInteraction
+            CommunityMention:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Mention/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Mention\Domain\Entity'
+                alias: CommunityMention
+            CommunityMessaging:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Messaging/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Messaging\Domain\Entity'
+                alias: CommunityMessaging
+            CommunityPost:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Post/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Post\Domain\Entity'
+                alias: CommunityPost
+            CommunityCuration:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Curation/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Curation\Domain\Entity'
+                alias: CommunityCuration
+            CommunityRanking:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Ranking/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Ranking\Domain\Entity'
+                alias: CommunityRanking
+            CommunityRecommendation:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Recommendation/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Recommendation\Domain\Entity'
+                alias: CommunityRecommendation
+            CommunityRelationship:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Relationship/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Relationship\Domain\Entity'
+                alias: CommunityRelationship
+            CommunitySubscription:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Subscription/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Subscription\Domain\Entity'
+                alias: CommunitySubscription
+            CreditsAccount:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Credits/Account/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Credits\Account\Domain\Entity'
+                alias: CreditsAccount
+            CreditsEventProcessing:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Credits/EventProcessing/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Credits\EventProcessing\Domain\Entity'
+                alias: CreditsEventProcessing
+            CreditsOverdraft:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Credits/Overdraft/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Credits\Overdraft\Domain\Entity'
+                alias: CreditsOverdraft
+            CreditsPricing:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Credits/Pricing/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Credits\Pricing\Domain\Entity'
+                alias: CreditsPricing
+            CreditsReferral:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Credits/Referral/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Credits\Referral\Domain\Entity'
+                alias: CreditsReferral
+            FeedbackCorrection:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Feedback/Correction/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Feedback\Correction\Domain\Entity'
+                alias: FeedbackCorrection
+            FeedbackRating:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Feedback/Rating/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Feedback\Rating\Domain\Entity'
+                alias: FeedbackRating
+            ModerationAuditLog:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Moderation/AuditLog/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Moderation\AuditLog\Domain\Entity'
+                alias: ModerationAuditLog
+            ModerationClaim:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Moderation/Claim/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Moderation\Claim\Domain\Entity'
+                alias: ModerationClaim
+            ModerationContentReview:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Moderation/ContentReview/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Moderation\ContentReview\Domain\Entity'
+                alias: ModerationContentReview
+            ModerationModeratorRole:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Moderation/ModeratorRole/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Moderation\ModeratorRole\Domain\Entity'
+                alias: ModerationModeratorRole
+            ModerationReview:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Moderation/Review/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Moderation\Review\Domain\Entity'
+                alias: ModerationReview
+            ModerationSanction:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Moderation/Sanction/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Moderation\Sanction\Domain\Entity'
+                alias: ModerationSanction
+            NotificationDelivery:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Notification/Delivery/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Notification\Delivery\Domain\Entity'
+                alias: NotificationDelivery
+            NotificationPreference:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Notification/Preference/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Notification\Preference\Domain\Entity'
+                alias: NotificationPreference
+            ReadingAccessInvitation:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Reading/AccessInvitation/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Reading\AccessInvitation\Domain\Entity'
+                alias: ReadingAccessInvitation
+            ReadingAccessRequest:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Reading/AccessRequest/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Reading\AccessRequest\Domain\Entity'
+                alias: ReadingAccessRequest
+            ReadingBetaReaderAccess:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Reading/BetaReaderAccess/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Reading\BetaReaderAccess\Domain\Entity'
+                alias: ReadingBetaReaderAccess
+            ReadingBetaReaderGroup:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Reading/BetaReaderGroup/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Reading\BetaReaderGroup\Domain\Entity'
+                alias: ReadingBetaReaderGroup
+            ReadingWritingBuddy:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Reading/WritingBuddy/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Reading\WritingBuddy\Domain\Entity'
+                alias: ReadingWritingBuddy
+            UserAccount:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User/Account/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\User\Account\Domain\Entity'
+                alias: UserAccount
+            UserAuthentication:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User/Authentication/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\User\Authentication\Domain\Entity'
+                alias: UserAuthentication
+            UserAuthorPage:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User/AuthorPage/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\User\AuthorPage\Domain\Entity'
+                alias: UserAuthorPage
+            UserInvitation:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User/Invitation/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\User\Invitation\Domain\Entity'
+                alias: UserInvitation
+            UserLegal:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User/Legal/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\User\Legal\Domain\Entity'
+                alias: UserLegal
+            UserOnboarding:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User/Onboarding/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\User\Onboarding\Domain\Entity'
+                alias: UserOnboarding
+            UserPreferences:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User/Preferences/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\User\Preferences\Domain\Entity'
+                alias: UserPreferences
+            UserPrivacy:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User/Privacy/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\User\Privacy\Domain\Entity'
+                alias: UserPrivacy
+            UserProfile:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/User/Profile/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\User\Profile\Domain\Entity'
+                alias: UserProfile
+            WorkAuthorship:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work/Authorship/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Work\Authorship\Domain\Entity'
+                alias: WorkAuthorship
+            WorkCatalog:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work/Catalog/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Work\Catalog\Domain\Entity'
+                alias: WorkCatalog
+            WorkCatalogue:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work/Catalogue/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Work\Catalogue\Domain\Entity'
+                alias: WorkCatalogue
+            WorkChapter:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work/Chapter/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Work\Chapter\Domain\Entity'
+                alias: WorkChapter
+            WorkManuscript:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work/Manuscript/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Work\Manuscript\Domain\Entity'
+                alias: WorkManuscript
+            WorkPublicLink:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work/PublicLink/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Work\PublicLink\Domain\Entity'
+                alias: WorkPublicLink
+            WorkQuestionnaire:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work/Questionnaire/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Work\Questionnaire\Domain\Entity'
+                alias: WorkQuestionnaire
+            WorkIngest:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Work/Ingest/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Work\Ingest\Domain\Entity'
+                alias: WorkIngest
+
+when@test:
+    doctrine:
+        dbal:
+            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+
+when@prod:
+    doctrine:
+        orm:
+            auto_generate_proxy_classes: false
+            proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
+            query_cache_driver:
+                type: pool
+                pool: doctrine.system_cache_pool
+            result_cache_driver:
+                type: pool
+                pool: doctrine.result_cache_pool
+    framework:
+        cache:
+            pools:
+                doctrine.result_cache_pool:
+                    adapter: cache.app
+                doctrine.system_cache_pool:
+                    adapter: cache.system

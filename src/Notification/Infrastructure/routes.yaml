@@ -1,0 +1,38 @@
+# Rutas del bounded context `Notification`.
+#
+# El nombre de cada ruta es su `operationId` de OpenAPI. No es cosmético: es
+# lo que permite comprobar de forma mecánica que lo implementado y el contrato
+# publicado no se han separado, y hay un test que lo hace
+# (`tests/Unit/Architecture/RoutingConventionTest.php`).
+#
+# Convención completa: docs/api/conventions/routing.md
+
+# El centro de notificaciones (`FEAT-NOT-009`). Las cuatro son sobre uno
+# mismo: no hay ninguna operación que nombre a otro destinatario, y ese es el
+# motivo de que todas cuelguen de `/me`.
+listMyNotifications:
+    path: /api/v1/me/notifications
+    controller: LectoresBeta\Notification\Delivery\Infrastructure\Controller\ListMyNotificationsController::__invoke
+    methods: [GET]
+
+# Aparte de la bandeja porque la campana se pinta en todas las pantallas
+# (`RN-3`): cargar veinte filas para enseñar un `2` sería pagar la lista
+# entera en cada navegación.
+getUnreadNotificationCount:
+    path: /api/v1/me/notifications/unread-count
+    controller: LectoresBeta\Notification\Delivery\Infrastructure\Controller\GetUnreadNotificationCountController::__invoke
+    methods: [GET]
+
+# Sin identificador, que es lo que la distingue de la de abajo: son rutas de
+# longitud distinta y no compiten.
+markAllNotificationsRead:
+    path: /api/v1/me/notifications/read
+    controller: LectoresBeta\Notification\Delivery\Infrastructure\Controller\MarkAllNotificationsReadController::__invoke
+    methods: [PUT]
+
+# `PUT` y no `POST`: marcar como leído fija un estado, y repetirlo deja el
+# mundo igual.
+markNotificationRead:
+    path: /api/v1/me/notifications/{notificationId}/read
+    controller: LectoresBeta\Notification\Delivery\Infrastructure\Controller\MarkNotificationReadController::__invoke
+    methods: [PUT]

@@ -1,0 +1,143 @@
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+        # El agregado del dominio no implementa `UserInterface` —no debe
+        # conocer a Symfony— pero su contraseña se cifra con la misma política
+        # configurada aquí, a través de `SymfonyPasswordHasher`. Nombrarlo en
+        # configuración no acopla nada: la alternativa sería un
+        # `password_hash()` suelto con una política paralela.
+        LectoresBeta\User\Account\Domain\Entity\User: 'auto'
+
+    providers:
+        # Resuelve el `sub` del token contra la base de datos en cada
+        # petición autenticada. Es lo que cierra parte de la ventana de
+        # quince minutos de decision:0007: una cuenta bloqueada o eliminada
+        # deja de autenticar en el acto, aunque su token siga firmado.
+        app_users:
+            id: LectoresBeta\User\Authentication\Infrastructure\Security\AuthenticatedUserProvider
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        # Salud: tiene que responder antes de que nadie pueda autenticarse, y
+        # lo consultan sondas que no tienen credenciales. Va fuera de
+        # `/api/v1` a propósito (ver HealthController).
+        health:
+            pattern: ^/health(/|$)
+            security: false
+
+        # Endpoints públicos: registro, activación, login, textos legales.
+        #
+        # Los patrones llevan `(/|$)` al final, y no es cosmético: sin él,
+        # `^/auth` deja también `/authors` sin autenticar, y nadie se entera
+        # hasta que ese endpoint existe.
+        #
+        # Los **enlaces públicos** no están aquí a propósito: necesitan que la
+        # sesión se lea aunque no se exija, así que van más abajo en
+        # `access_control` (`FEAT-WRK-010`).
+        public:
+            pattern: ^/api/v1/(auth|legal|genres|content-warnings)(/|$)
+            security: false
+
+        api:
+            pattern: ^/
+            stateless: true
+            provider: app_users
+            jwt: ~
+
+    access_control:
+        # Conceder o revocar roles es cosa de un administrador, no de
+        # cualquier moderador (FEAT-MOD-004 RN-1). Va antes de la regla
+        # general porque `access_control` se queda con la primera que encaja.
+        - { path: '^/api/v1/admin/users/[^/]+/moderator-role$', roles: ROLE_ADMIN }
+        # El registro de auditoría también (FEAT-MOD-007 RN-1): un moderador
+        # no audita a sus compañeros, y saberse observado por los iguales
+        # cambia cómo se decide.
+        - { path: '^/api/v1/admin/audit-log$', roles: ROLE_ADMIN }
+        # Hablar con la voz de la plataforma tampoco es moderar
+        # (FEAT-COM-038): llega a todo el mundo y lleva el nombre del
+        # producto detrás.
+        - { path: '^/api/v1/admin/platform-posts$', roles: ROLE_ADMIN }
+        # Y mover créditos a mano (FEAT-MOD-005 RN-6): es la única acción del
+        # backoffice que crea o destruye valor de la nada, y la invariante
+        # contable de FEAT-CRD-012 la cuenta aparte por eso mismo.
+        - { path: '^/api/v1/admin/users/[^/]+/credit-adjustment$', roles: ROLE_ADMIN }
+        - { path: '^/api/v1/admin(/|$)', roles: ROLE_MODERATOR }
+
+        # Las tarjetas de previsualización de lo que se comparte fuera
+        # (FEAT-WRK-011, FEAT-COM-020). Las pide un rastreador sin sesión, y
+        # solo responden por contenido que ya era visible para cualquiera.
+        - { path: '^/api/v1/works/[^/]+/share$', methods: [GET], roles: PUBLIC_ACCESS }
+        - { path: '^/api/v1/posts/[^/]+/share$', methods: [GET], roles: PUBLIC_ACCESS }
+
+        # Las reglas de la economía de créditos, sin sesión (FEAT-CRD-015):
+        # no hay nada de nadie ahí, son las reglas de la casa, y quien se está
+        # planteando registrarse tiene derecho a leerlas antes.
+        - { path: '^/api/v1/credits/scoring$', methods: [GET], roles: PUBLIC_ACCESS }
+
+        # El perfil ajeno se abre sin sesión (FEAT-USR-014, FEAT-USR-035): es
+        # una URL que se comparte. Va en `access_control` y no en un firewall
+        # sin seguridad a propósito — así un visitante con sesión sigue siendo
+        # reconocido, que es lo que permite que su titular se vea a sí mismo
+        # aunque haya restringido su perfil.
+        - { path: '^/api/v1/(users|profiles)/[^/]+$', methods: [GET], roles: PUBLIC_ACCESS }
+
+        # Y su bibliografía (FEAT-USR-029), que es parte de ese perfil: una
+        # obra publicada está en el mundo, a la venta, y acreditarla es
+        # justamente enseñarla. Quien tenga sesión sigue siendo reconocido,
+        # que es lo que permite a su titular verse a sí mismo.
+        - { path: '^/api/v1/users/[^/]+/published-books$', methods: [GET], roles: PUBLIC_ACCESS }
+
+        # Y sus premios (FEAT-USR-030), que son la otra mitad de «Más info» y
+        # se leen igual: un mérito declarado está ahí para que lo vean.
+        - { path: '^/api/v1/users/[^/]+/awards$', methods: [GET], roles: PUBLIC_ACCESS }
+
+        # Y la tarjeta con la que se comparte ese perfil fuera
+        # (FEAT-USR-032). Quien la pide es un rastreador sin sesión, y solo
+        # responde por perfiles que ya eran visibles para cualquiera.
+        - { path: '^/api/v1/users/[^/]+/share$', methods: [GET], roles: PUBLIC_ACCESS }
+
+        # Y sus listas de seguidos y seguidores (FEAT-COM-027), por lo mismo:
+        # son parte de ese perfil. Solo el `GET` de esas dos, no cualquier
+        # subrecurso — `/users/{id}/subscription` es la acción de seguir, y
+        # esa sí exige sesión.
+        - { path: '^/api/v1/users/[^/]+/(subscriptions|subscribers)$', methods: [GET], roles: PUBLIC_ACCESS }
+
+        # Los ficheros públicos (FEAT-USR-037): un avatar aparece en perfiles
+        # que se abren sin sesión, así que exigirla haría imposible pintarlos.
+        # Qué es público lo decide el controlador por la carpeta, no esta
+        # línea: la original vive en otra y no se sirve por aquí.
+        - { path: '^/api/v1/media/', methods: [GET], roles: PUBLIC_ACCESS }
+
+        # Confirmar un cambio de correo (FEAT-USR-040): el enlace se abre
+        # donde esté abierto el buzón nuevo, que muchas veces es otro
+        # dispositivo. Lo que autoriza es el token, de un solo uso.
+        - { path: '^/api/v1/me/email-change/confirm$', methods: [POST], roles: PUBLIC_ACCESS }
+
+        # El enlace público de una obra (FEAT-WRK-010). Sin sesión, y aquí y
+        # no en un cortafuegos sin seguridad por la misma razón que el perfil:
+        # hace falta **reconocer** a quien sí la tiene. A un usuario
+        # registrado no se le da el formulario anónimo —se le manda al flujo
+        # normal, donde su corrección se paga (FEAT-FBK-008 RN-1)—, y para eso
+        # hay que saber que lo es.
+        - { path: '^/api/v1/public/', methods: [GET, POST], roles: PUBLIC_ACCESS }
+
+        # Los textos legales vigentes (FEAT-USR-024): el formulario de alta
+        # los necesita antes de que exista ninguna sesión.
+        - { path: '^/api/v1/legal/documents$', methods: [GET], roles: PUBLIC_ACCESS }
+        - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
+
+when@test:
+    security:
+        password_hashers:
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: plaintext
+
+            # Cifrar de verdad en cada test funcional cuesta cientos de
+            # milisegundos por alta y no comprueba nada que no compruebe ya
+            # Symfony.
+            LectoresBeta\User\Account\Domain\Entity\User:
+                algorithm: plaintext

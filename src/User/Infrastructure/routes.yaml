@@ -1,0 +1,466 @@
+# Rutas del bounded context `User`.
+#
+# El nombre de cada ruta es su `operationId` en `openapi/`
+# (decision:0010). El prefijo /api/v1 se escribe entero (decision:0012).
+
+registerUser:
+    path: /api/v1/auth/register
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\RegisterUserController::__invoke
+    methods: [POST]
+
+activateAccount:
+    path: /api/v1/auth/activate
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\ActivateAccountController::__invoke
+    methods: [POST]
+
+# Sin sesión, y a propósito (`FEAT-USR-021` `R-1`): quien cierra el navegador
+# antes de activar no puede entrar, así que exigirla lo dejaría sin salida.
+resendActivationEmail:
+    path: /api/v1/auth/activation/resend
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\ResendActivationEmailController::__invoke
+    methods: [POST]
+
+# El único camino de vuelta a una cuenta cuya contraseña se ha olvidado
+# (`FEAT-USR-007`). Sin sesión, porque no puede haberla.
+requestPasswordReset:
+    path: /api/v1/auth/password/forgotten
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\RequestPasswordResetController::__invoke
+    methods: [POST]
+
+# `POST` y no `PUT`: consume un token de un solo uso, así que repetirlo no
+# deja el mundo igual.
+resetPassword:
+    path: /api/v1/auth/password/reset
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\ResetPasswordController::__invoke
+    methods: [POST]
+
+# `PUT` porque fija un estado: la cuenta acaba con esa contraseña
+# (`FEAT-USR-041`). El mismo endpoint la cambia y la establece por primera vez.
+changeMyPassword:
+    path: /api/v1/me/password
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\ChangeMyPasswordController::__invoke
+    methods: [PUT]
+
+# Cambiar el correo es un flujo en dos pasos y no una edición: es la identidad
+# de la cuenta (`FEAT-USR-040`).
+requestEmailChange:
+    path: /api/v1/me/email-change
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\RequestEmailChangeController::__invoke
+    methods: [POST]
+
+# Sin sesión aunque cuelgue de `/me`: el enlace se abre donde esté abierto el
+# buzón nuevo, que muchas veces es otro dispositivo. Autoriza el token.
+confirmEmailChange:
+    path: /api/v1/me/email-change/confirm
+    controller: LectoresBeta\User\Account\Infrastructure\Controller\ConfirmEmailChangeController::__invoke
+    methods: [POST]
+
+# Todo lo que el layout necesita en una sola petición, en vez de cuatro por
+# navegación (`FEAT-USR-027`). Solo lectura, y solo del propio contexto.
+getSessionContext:
+    path: /api/v1/me/context
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetSessionContextController::__invoke
+    methods: [GET]
+
+# Sin sesión: el formulario de alta necesita enseñar los enlaces y devolver la
+# versión exacta que se acepta (`FEAT-USR-024`).
+getLegalDocuments:
+    path: /api/v1/legal/documents
+    controller: LectoresBeta\User\Legal\Infrastructure\Controller\ListLegalDocumentsController::__invoke
+    methods: [GET]
+
+# El derecho a ver la prueba: qué acepté, de qué versión y cuándo (`RN-6`).
+getMyLegalAcceptances:
+    path: /api/v1/me/legal-acceptances
+    controller: LectoresBeta\User\Legal\Infrastructure\Controller\ListMyLegalAcceptancesController::__invoke
+    methods: [GET]
+
+login:
+    path: /api/v1/auth/login
+    controller: LectoresBeta\User\Authentication\Infrastructure\Controller\LogInController::__invoke
+    methods: [POST]
+
+refreshSession:
+    path: /api/v1/auth/refresh
+    controller: LectoresBeta\User\Authentication\Infrastructure\Controller\RenewSessionController::__invoke
+    methods: [POST]
+
+logout:
+    path: /api/v1/auth/logout
+    controller: LectoresBeta\User\Authentication\Infrastructure\Controller\LogOutController::__invoke
+    methods: [POST]
+
+# Onboarding (FEAT-USR-022, FEAT-USR-023). Los dos PUT son escrituras y
+# funcionan **sin la cuenta activada**: es la excepción que da sentido a
+# dejar entrar antes de seguir el enlace del correo (FEAT-USR-025 RN-5).
+
+getOnboardingState:
+    path: /api/v1/me/onboarding
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\GetOnboardingStateController::__invoke
+    methods: [GET]
+
+submitOnboardingProfile:
+    path: /api/v1/me/onboarding/profile
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\SubmitOnboardingProfileController::__invoke
+    methods: [PUT]
+
+submitOnboardingGenres:
+    path: /api/v1/me/onboarding/genres
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\SubmitOnboardingGenresController::__invoke
+    methods: [PUT]
+
+# Cerrar el onboarding (`FEAT-COM-016`). Lo llaman «Siguiente», «Saltar» y el
+# cliente cuando el paso 3 no se muestra por no haber autores que sugerir:
+# para el servidor son lo mismo.
+completeOnboarding:
+    path: /api/v1/me/onboarding/complete
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\CompleteOnboardingController::__invoke
+    methods: [POST]
+
+listGenres:
+    path: /api/v1/genres
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\ListGenresController::__invoke
+    methods: [GET]
+
+# Privacidad (FEAT-USR-038). No son preferencias de visualización: son reglas
+# de autorización, y por eso el servidor las aplica en cada operación en lugar
+# de que el cliente esconda botones.
+
+getMyPrivacySettings:
+    path: /api/v1/me/privacy-settings
+    controller: LectoresBeta\User\Privacy\Infrastructure\Controller\GetMyPrivacySettingsController::__invoke
+    methods: [GET]
+
+updateMyPrivacySettings:
+    path: /api/v1/me/privacy-settings
+    controller: LectoresBeta\User\Privacy\Infrastructure\Controller\UpdatePrivacySettingsController::__invoke
+    methods: [PUT]
+
+# El perfil ajeno (FEAT-USR-014 y FEAT-USR-035). Públicos: un perfil que su
+# dueño no ha restringido es una URL que se comparte, y exigir sesión para
+# abrirla haría inútil compartirla.
+
+getUserProfile:
+    path: /api/v1/users/{userId}
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetUserProfileController::__invoke
+    methods: [GET]
+
+getProfileByUsername:
+    path: /api/v1/profiles/{username}
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetProfileByUsernameController::__invoke
+    methods: [GET]
+
+# Mi perfil (FEAT-USR-008). `PATCH` y no `PUT`: el mismo recurso se edita
+# campo a campo desde el perfil y en bloque desde Configuración.
+
+getMyProfile:
+    path: /api/v1/me/profile
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetMyProfileController::__invoke
+    methods: [GET]
+
+updateMyProfile:
+    path: /api/v1/me/profile
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\UpdateMyProfileController::__invoke
+    methods: [PATCH]
+
+# El nombre de usuario (FEAT-USR-034). Endpoint propio aunque comparta
+# pantalla: bloquea 30 días y reserva el nombre anterior, así que un fallo
+# suyo no debe llevarse por delante el resto del formulario.
+
+changeUsername:
+    path: /api/v1/me/username
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\ChangeUsernameController::__invoke
+    methods: [PUT]
+
+# Preferencias literarias (FEAT-USR-009). El mismo dato que elige el paso 2
+# del onboarding: una sola tabla y un solo evento, con dos puertas.
+
+getMyLiteraryPreferences:
+    path: /api/v1/me/literary-preferences
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetMyLiteraryPreferencesController::__invoke
+    methods: [GET]
+
+updateLiteraryPreferences:
+    path: /api/v1/me/literary-preferences
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\UpdateLiteraryPreferencesController::__invoke
+    methods: [PUT]
+
+# La foto de perfil (FEAT-USR-037). Subir y reencuadrar son el mismo endpoint:
+# para el servidor son la misma operación —llega una imagen cuadrada nueva y
+# sustituye a la anterior— y la distinción es de interfaz.
+#
+# La original tiene su propia lectura, y con sesión: no se expone como URL
+# porque puede enseñar mucho más que el encuadre que su dueño eligió mostrar.
+
+updateAvatar:
+    path: /api/v1/me/profile/avatar
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\UpdateAvatarController::__invoke
+    methods: [PUT]
+
+deleteAvatar:
+    path: /api/v1/me/profile/avatar
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\DeleteAvatarController::__invoke
+    methods: [DELETE]
+
+getMyAvatarOriginal:
+    path: /api/v1/me/profile/avatar/original
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetMyAvatarOriginalController::__invoke
+    methods: [GET]
+
+# Preferencias de contenido sensible (`FEAT-USR-043`). El autor declara qué
+# hay y el lector decide qué quiere; el filtrado lo hace el servidor, porque
+# un filtro de cliente significa que el contenido viaja hasta el navegador de
+# quien pidió no verlo.
+getMyContentPreferences:
+    path: /api/v1/me/content-preferences
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\ContentPreferencesController::__invoke
+    methods: [GET]
+
+updateMyContentPreferences:
+    path: /api/v1/me/content-preferences
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\ContentPreferencesController::__invoke
+    methods: [PUT]
+
+# Qué propuestas admite cada persona (FEAT-USR-011). **No es una preferencia
+# de aviso sino de recepción** (S-19): no es lo mismo no querer enterarse que
+# no querer recibirlas — una invitación silenciada seguiría esperando
+# respuesta en algún sitio.
+
+getMyReceptionSettings:
+    path: /api/v1/me/reception-settings
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\ReceptionSettingsController::__invoke
+    methods: [GET]
+
+updateMyReceptionSettings:
+    path: /api/v1/me/reception-settings
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\ReceptionSettingsController::__invoke
+    methods: [PUT]
+
+# Preferencias de notificación (`FEAT-USR-039`). Dos canales y un interruptor
+# general que **suspende** y no sobrescribe: apagarlo devuelve a su dueño la
+# configuración que tenía.
+#
+# La respuesta lleva el catálogo con sus canales y no solo los valores: si el
+# cliente llevara la lista codificada, cada aviso nuevo exigiría desplegar el
+# frontal.
+getMyNotificationPreferences:
+    path: /api/v1/me/notification-preferences
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\NotificationPreferencesController::__invoke
+    methods: [GET]
+
+updateMyNotificationPreferences:
+    path: /api/v1/me/notification-preferences
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\NotificationPreferencesController::__invoke
+    methods: [PUT]
+
+# La bibliografía del autor (`FEAT-USR-029`). Una obra publicada **no es una
+# `Work`**: no tiene contenido aquí, ni lectores beta, ni créditos. Comparten
+# la palabra «obra» y nada más, y por eso son rutas distintas de un concepto
+# distinto.
+#
+# El listado es público, como el perfil del que forma parte: acreditar una
+# trayectoria es enseñarla.
+
+listPublishedBooks:
+    path: /api/v1/users/{userId}/published-books
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\ListPublishedBooksController::__invoke
+    methods: [GET]
+
+addPublishedBook:
+    path: /api/v1/me/published-books
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\AddPublishedBookController::__invoke
+    methods: [POST]
+
+updatePublishedBook:
+    path: /api/v1/me/published-books/{publishedBookId}
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\UpdatePublishedBookController::__invoke
+    methods: [PATCH]
+
+deletePublishedBook:
+    path: /api/v1/me/published-books/{publishedBookId}
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\DeletePublishedBookController::__invoke
+    methods: [DELETE]
+
+# La portada tiene endpoint propio y no es un campo del `PATCH`: PHP solo
+# desmonta un cuerpo `multipart` en las peticiones `POST`, así que una portada
+# dentro del `PATCH` llegaría como un cuerpo vacío. Además, separadas, el año
+# no se queda sin guardar porque falló una subida.
+
+updatePublishedBookCover:
+    path: /api/v1/me/published-books/{publishedBookId}/cover
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\UpdatePublishedBookCoverController::__invoke
+    methods: [PUT]
+
+deletePublishedBookCover:
+    path: /api/v1/me/published-books/{publishedBookId}/cover
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\DeletePublishedBookCoverController::__invoke
+    methods: [DELETE]
+
+# La otra sub-pestaña de «Más info» (FEAT-USR-030). Misma forma que la
+# bibliografía y sin imagen: un premio no tiene portada.
+#
+# No hay endpoint de reordenar, y es deliberado: el orden lo pone el año
+# descendente y el autor no lo toca (`RN-8`). Un historial de premios se lee
+# como un currículo.
+
+listAwards:
+    path: /api/v1/users/{userId}/awards
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\ListAwardsController::__invoke
+    methods: [GET]
+
+addAward:
+    path: /api/v1/me/awards
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\AddAwardController::__invoke
+    methods: [POST]
+
+updateAward:
+    path: /api/v1/me/awards/{awardId}
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\UpdateAwardController::__invoke
+    methods: [PATCH]
+
+deleteAward:
+    path: /api/v1/me/awards/{awardId}
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\DeleteAwardController::__invoke
+    methods: [DELETE]
+
+# La tarjeta con la que se comparte un perfil fuera (FEAT-USR-032). La
+# tercera y última, después de la de una obra y la de una publicación.
+#
+# Pública: quien la pide es un rastreador sin sesión. Solo responde por
+# perfiles visibles para cualquiera, y eso no se comprueba aquí — se pide el
+# perfil sin espectador, que es la misma puerta.
+
+getProfileShareCard:
+    path: /api/v1/users/{userId}/share
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetProfileShareCardController::__invoke
+    methods: [GET]
+
+# El tema (FEAT-USR-042). Se guarda en el servidor y no en el navegador porque
+# tiene que sobrevivir al dispositivo, y viaja además en el contexto de
+# sesión para que la primera pintada ya sea la correcta.
+#
+# `PUT` y no `PATCH`: hay un solo campo, y no existe la diferencia entre «no
+# lo toques» y «cámbialo» cuando solo hay uno.
+
+getMyAppearanceSettings:
+    path: /api/v1/me/appearance-settings
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\AppearanceSettingsController::__invoke
+    methods: [GET]
+
+updateMyAppearanceSettings:
+    path: /api/v1/me/appearance-settings
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\AppearanceSettingsController::__invoke
+    methods: [PUT]
+
+# Personalizar la página de autor (FEAT-USR-016), que **es** el perfil.
+#
+# Tema y color son códigos de un catálogo cerrado: nunca CSS y nunca un
+# hexadecimal. CSS escrito por un usuario y servido a terceros exfiltra datos
+# por selectores de atributo, permite superponer elementos y convierte cada
+# visita en una petición a un tercero (`U-5`).
+
+getMyAuthorPageStyle:
+    path: /api/v1/me/author-page-style
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\AuthorPageStyleController::__invoke
+    methods: [GET]
+
+updateMyAuthorPageStyle:
+    path: /api/v1/me/author-page-style
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\AuthorPageStyleController::__invoke
+    methods: [PUT]
+
+# El fondo es la portada de la cuenta, que existía desde FEAT-USR-014 y nunca
+# tuvo endpoint. Va junto al avatar porque es la otra imagen del perfil.
+
+updateProfileCover:
+    path: /api/v1/me/profile/cover
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\UpdateCoverController::__invoke
+    methods: [PUT]
+
+deleteProfileCover:
+    path: /api/v1/me/profile/cover
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\DeleteCoverController::__invoke
+    methods: [DELETE]
+
+# Entrar con Google (`FEAT-USR-002`). Sin sesión: no puede haberla todavía.
+#
+# El proveedor va en la ruta para que Facebook y LinkedIn encajen sin cambiar
+# el contrato cuando se retomen (`FEAT-USR-003`, `FEAT-USR-019`). Hoy solo
+# responde `google`; cualquier otro nombre es un `404`.
+
+startOAuth:
+    path: /api/v1/auth/oauth/{provider}
+    controller: LectoresBeta\User\Authentication\Infrastructure\Controller\StartOAuthController::__invoke
+    methods: [GET]
+
+# `POST` porque canjea un código de un solo uso y puede crear una cuenta:
+# repetirlo no deja el mundo igual.
+completeOAuth:
+    path: /api/v1/auth/oauth/{provider}/callback
+    controller: LectoresBeta\User\Authentication\Infrastructure\Controller\CompleteOAuthController::__invoke
+    methods: [POST]
+
+# Buscar personas (`FEAT-USR-017`). **Con sesión**, al contrario que abrir un
+# perfil suelto: abrir el que alguien te ha pasado es una cosa y recorrer el
+# padrón de la plataforma es otra.
+#
+# No es `searchUsers`: ese `operationId` lo ocupa el buscador del backoffice
+# desde `FEAT-MOD-005`, que busca por correo y devuelve cuentas en cualquier
+# estado. Son dos cosas distintas y conviene que se llamen distinto.
+searchAuthors:
+    path: /api/v1/authors
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\SearchAuthorsController::__invoke
+    methods: [GET]
+
+# Invitar a alguien a la plataforma (FEAT-USR-018).
+#
+# Responde `202` siempre que la petición sea válida, **se mande el correo o
+# no**: decir «esa dirección ya tiene cuenta» convertiría esto en un
+# comprobador de quién está dentro, que es justo lo que el alta y la
+# recuperación de contraseña se cuidan de no decir.
+sendPlatformInvitation:
+    path: /api/v1/invitations
+    controller: LectoresBeta\User\Invitation\Infrastructure\Controller\InvitePersonController::__invoke
+    methods: [POST]
+
+# Las que ya mandé y en qué han quedado. Solo las propias: a quién invita
+# alguien es de las cosas más privadas que guarda la plataforma.
+listMyInvitations:
+    path: /api/v1/me/invitations
+    controller: LectoresBeta\User\Invitation\Infrastructure\Controller\ListMyInvitationsController::__invoke
+    methods: [GET]
+
+# El tour de bienvenida de la Home (FEAT-USR-026).
+#
+# El backend aporta poco pero imprescindible: **recordar si ya lo vio**. Sin
+# eso, el tour reaparece en cada visita y se convierte en un incordio.
+#
+# Se guarda en el servidor y no en el navegador (`RN-3`): en local reaparecería
+# en cada dispositivo y desaparecería al limpiar el navegador.
+#
+# `tourId` viaja en la petición y no en la ruta, para que añadir un tour no sea
+# añadir dos endpoints.
+getTourState:
+    path: /api/v1/me/tour
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\GetTourStateController::__invoke
+    methods: [GET]
+
+completeTour:
+    path: /api/v1/me/tour/completion
+    controller: LectoresBeta\User\Onboarding\Infrastructure\Controller\CompleteTourController::__invoke
+    methods: [POST]
+
+# Las referencias de la página de autor (FEAT-USR-015): su web, su cuenta en
+# otra red, su blog.
+#
+# **No hay un `GET` hermano**, y esa ausencia es la ficha: la página de autor
+# **es** el perfil (`P-5`), así que las referencias se leen donde se lee todo
+# lo demás de esa persona. Un endpoint aparte habría sido el primer paso hacia
+# dos perfiles que mantener y que se contradicen.
+#
+# `PUT` y la lista entera: lo que el formulario manda es «estas son mis
+# referencias», con su orden, que es del usuario.
+updateAuthorLinks:
+    path: /api/v1/me/author-links
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\UpdateAuthorLinksController::__invoke
+    methods: [PUT]
