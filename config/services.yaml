@@ -599,6 +599,14 @@ services:
             $shareUrlTemplate: '%env(POST_SHARE_URL_TEMPLATE)%'
             $siteName: '%app.site_name%'
 
+    # La del perfil necesita además el origen de los ficheros: una `og:image`
+    # la lee un rastreador que no sabe contra qué API habla, así que ahí una
+    # ruta relativa es una imagen rota (FEAT-USR-032).
+    LectoresBeta\User\Profile\Application\Handler\GetProfileShareCardHandler:
+        arguments:
+            $shareUrlTemplate: '%env(PROFILE_SHARE_URL_TEMPLATE)%'
+            $mediaBaseUrl: '%env(MEDIA_BASE_URL)%'
+
     # Con qué cuenta habla la plataforma (FEAT-COM-038). Devuelve un
     # identificador y nada más: quien quiera pintarla usa las tarjetas de
     # perfil, como con cualquier persona, que es la gracia de que sea una

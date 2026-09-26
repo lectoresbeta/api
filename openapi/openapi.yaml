@@ -194,6 +194,11 @@ paths:
   /me/author-links:
     $ref: './paths/profiles.yaml#/authorLinks'
 
+  # Cómo se ve un perfil compartido fuera (FEAT-USR-032). La tercera tarjeta,
+  # después de la de una obra y la de una publicación.
+  /users/{userId}/share:
+    $ref: './paths/profiles.yaml#/share'
+
   # La bibliografía del autor (FEAT-USR-029). Una obra publicada **no es una
   # `Work`**: está editada y a la venta fuera, no tiene contenido aquí y no
   # cuenta como «Relato» en ningún contador.

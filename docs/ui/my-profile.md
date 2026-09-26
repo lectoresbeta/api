@@ -232,7 +232,7 @@ Lo que sigue sin resolver es si «obra en corrección» es un **estado** del cic
 | FEAT-USR-031 | ~~Nivel del usuario~~ — error del diseño | `DEPRECATED` |
 | FEAT-USR-033 a 036 | **Nuevas** — nombre de usuario, cambio con alias, resolución y purga | `DRAFT` |
 | FEAT-USR-037 | **Nueva** — gestionar la foto de perfil | `DRAFT` |
-| FEAT-USR-032 | **Nueva** — compartir el perfil | `PENDING` |
+| FEAT-USR-032 | **Nueva** — compartir el perfil | `APPROVED`, implementada |
 | FEAT-COM-026 | **Nueva** — muro propio | `APPROVED`, implementada |
 | FEAT-COM-027 | **Nueva** — seguidos y seguidores | `APPROVED`, implementada |
 | FEAT-FBK-010 | **Nueva** — mis correcciones | `PENDING` |

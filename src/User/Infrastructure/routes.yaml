@@ -323,6 +323,18 @@ deleteAward:
     controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\DeleteAwardController::__invoke
     methods: [DELETE]
 
+# La tarjeta con la que se comparte un perfil fuera (FEAT-USR-032). La
+# tercera y última, después de la de una obra y la de una publicación.
+#
+# Pública: quien la pide es un rastreador sin sesión. Solo responde por
+# perfiles visibles para cualquiera, y eso no se comprueba aquí — se pide el
+# perfil sin espectador, que es la misma puerta.
+
+getProfileShareCard:
+    path: /api/v1/users/{userId}/share
+    controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetProfileShareCardController::__invoke
+    methods: [GET]
+
 # Entrar con Google (`FEAT-USR-002`). Sin sesión: no puede haberla todavía.
 #
 # El proveedor va en la ruta para que Facebook y LinkedIn encajen sin cambiar

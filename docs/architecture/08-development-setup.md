@@ -135,6 +135,8 @@ Las que el código exige. `.env` trae un valor de desarrollo para cada una.
 | `INVITATION_URL_TEMPLATE` | Lo mismo para el enlace de invitación a la plataforma (`FEAT-USR-018`, `FEAT-NOT-007`). La página de alta extrae el token y lo manda **en el cuerpo**, para que no quede en los logs ni en el historial |
 | `WORK_SHARE_URL_TEMPLATE` | La página de una obra en el frontend (`FEAT-WRK-011`). **Sin token**: es la dirección canónica, y solo se sirve tarjeta de lo que ya es público |
 | `POST_SHARE_URL_TEMPLATE` | Lo mismo para una publicación (`FEAT-COM-020`) |
+| `PROFILE_SHARE_URL_TEMPLATE` | Lo mismo para un perfil (`FEAT-USR-032`). Solo se sirve tarjeta de un perfil visible para cualquiera |
+| `MEDIA_BASE_URL` | El origen público desde el que se sirven los ficheros subidos. Solo hace falta para componer una `og:image` **absoluta** (`FEAT-USR-032`): en el resto de la API el avatar viaja relativo, y está bien, porque quien lo pinta ya sabe contra qué origen habla |
 | `APP_STORAGE_DIR` | Dónde se guardan los ficheros subidos (`FEAT-USR-037`) |
 | `MODERATION_APPEALS_EMAIL` | Dirección a la que el autor recurre un bloqueo por reclamación (`FEAT-MOD-003` `RN-8b`). Va en el correo de bloqueo, que es la única vía por la que se entera |
 

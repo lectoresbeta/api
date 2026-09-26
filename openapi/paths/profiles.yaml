@@ -361,3 +361,62 @@ AuthorLink:
     url:
       type: string
       format: uri
+
+share:
+  get:
+    tags: [Account]
+    operationId: getProfileShareCard
+    summary: Cómo se ve el perfil compartido fuera
+    description: |
+      Los metadatos con los que WhatsApp, Twitter o LinkedIn pintan la
+      previsualización cuando alguien pega el enlace de un perfil
+      (`FEAT-USR-032`).
+
+      **No genera ningún enlace.** La `url` es la dirección canónica del
+      perfil, la de siempre: sin token, sin caducidad y sin abrir nada que no
+      fuera ya público. Un enlace con credencial dentro circulando por redes
+      sociales es exactamente la puerta trasera que la privacidad cierra.
+
+      **Solo para perfiles visibles para cualquiera.** Un perfil en
+      `FOLLOWERS`, uno en `NOBODY` y una cuenta eliminada responden `404`,
+      igual que uno inexistente — un rastreador no sigue a nadie. La regla no
+      se comprueba aparte: se pide el perfil sin espectador, que es la misma
+      puerta que atiende a un visitante anónimo.
+
+      A diferencia de la tarjeta de una obra o de una publicación, esta sí
+      lleva a una persona dentro, y es coherente: **aquí el perfil es el
+      contenido**, y el nombre, la foto y la biografía son justamente lo que
+      su titular publicó para que se viera.
+
+      La imagen viaja **absoluta**, al revés que en el resto de la API: una
+      `og:image` la lee un rastreador que no sabe contra qué origen habla.
+    security: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: |
+          La tarjeta. Se cachea **en público** cinco minutos: no hay nada en
+          la respuesta que no fuera ya visible para cualquiera.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+              example: 'max-age=300, public'
+        content:
+          application/json:
+            schema:
+              $ref: '../paths/works.yaml#/ShareCard'
+      '404':
+        description: |
+          No hay perfil que enseñar: no existe, está eliminado, o su titular
+          no lo abre a cualquiera. Los cuatro casos responden lo mismo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

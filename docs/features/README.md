@@ -100,7 +100,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-029 | Obras publicadas del autor (bibliografía externa) | Writer | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-029-published-books.md) |
 | FEAT-USR-030 | Premios y reconocimientos del autor | Writer | APPROVED | DONE | P3 | [ficha](user/FEAT-USR-030-author-awards.md) |
 | FEAT-USR-031 | ~~Nivel del usuario~~ | — | PENDING | DEPRECATED | P3 | — |
-| FEAT-USR-032 | Compartir el perfil | User | PENDING | TODO | P3 | — |
+| FEAT-USR-032 | Compartir el perfil | User | APPROVED | DONE | P3 | [ficha](user/FEAT-USR-032-share-the-profile.md) |
 | FEAT-USR-033 | Nombre de usuario — formato, asignación automática y unicidad | Guest, User | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-033-username-assignment.md) |
 | FEAT-USR-034 | Cambiar el nombre de usuario y alias temporal | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-034-change-username.md) |
 | FEAT-USR-035 | Resolver un perfil por nombre de usuario o alias | Guest, User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-035-resolve-profile-by-username.md) |

@@ -69,6 +69,7 @@
 | `POST /api/v1/me/awards` | `addAward` | Declarar un premio | FEAT-USR-030 | **Implementado** |
 | `PATCH /api/v1/me/awards/{awardId}` | `updateAward` | Corregirlo | FEAT-USR-030 | **Implementado** |
 | `DELETE /api/v1/me/awards/{awardId}` | `deleteAward` | Retirarlo | FEAT-USR-030 | **Implementado** |
+| `GET /api/v1/users/{userId}/share` | `getProfileShareCard` | Cómo se ve el perfil compartido fuera | FEAT-USR-032 | **Implementado** |
 | `GET /api/v1/authors` | `searchAuthors` | Buscar personas por nombre o temática | FEAT-USR-017 | **Implementado** |
 | `PUT /api/v1/me/author-links` | `updateAuthorLinks` | Las referencias de la página de autor | FEAT-USR-015 | **Implementado** |
 | `PUT /me/author-page/theme` | `updateAuthorPageTheme` | Personalización visual | FEAT-USR-016 | PENDING |
@@ -1153,3 +1154,53 @@ de compra y las referencias de la página de autor, y el servidor **no la visita
 ### Efectos
 
 Ninguno. No mueve créditos, no cuenta como relato y no publica eventos.
+
+---
+
+## Compartir el perfil
+
+**Funcionalidad:** [`FEAT-USR-032`](../../features/user/FEAT-USR-032-share-the-profile.md)
+
+La tercera tarjeta de previsualización, después de la de una obra
+([`FEAT-WRK-011`](../../features/work/FEAT-WRK-011-share-a-work-outside.md)) y la de una
+publicación ([`FEAT-COM-020`](../../features/community/FEAT-COM-020-share-a-post-outside.md)).
+Misma forma de respuesta que las otras dos, y misma decisión de fondo: **no se genera ningún
+enlace**. La `url` es la dirección canónica del perfil, sin token y sin caducidad.
+
+### Solo de un perfil que cualquiera puede ver
+
+Es lo que protege a quien cerró el suyo. La comprobación **no se repite aquí**: se pide el
+perfil sin espectador, que es la misma puerta que atiende a un visitante anónimo.
+
+| Ajuste | Respuesta |
+|---|---|
+| `EVERYONE` | La tarjeta |
+| `FOLLOWERS` | `404` — un rastreador no sigue a nadie |
+| `NOBODY` | `404` |
+| Cuenta eliminada o inexistente | `404` |
+
+Ni siquiera su titular obtiene la tarjeta de su perfil cerrado, y no es un descuido: la tarjeta
+existe para que la pinte alguien de fuera, y devolvérsela sería decirle que puede compartir algo
+que nadie va a poder abrir.
+
+### Aquí la persona sí va dentro
+
+`ShareCard` lleva escrito que una tarjeta «no lleva a nadie dentro»: la de una obra no nombra a
+su autor, porque hacerlo obligaría a resolver la privacidad de alguien para un rastreador
+anónimo.
+
+Esta es la excepción coherente: **el perfil es el contenido**. El nombre, la foto y la biografía
+son justamente lo que su titular publicó para que se viera, y la tarjeta sigue existiendo solo
+cuando eso es visible para cualquiera.
+
+### La imagen viaja absoluta
+
+En el resto de la API el avatar es `/api/v1/media/…`, y está bien: quien lo pinta ya sabe contra
+qué origen habla. Una etiqueta `og:image` la lee un rastreador que no tiene ese contexto, y una
+ruta relativa ahí es una imagen rota en lo único que este endpoint produce. De ahí
+`MEDIA_BASE_URL`.
+
+### Efectos
+
+Ninguno. No publica eventos y no cuenta cuántas veces se comparte: eso sería otra ficha, con su
+propia decisión de privacidad.
