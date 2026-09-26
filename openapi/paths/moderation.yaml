@@ -720,6 +720,92 @@ SuspensionDuration:
     - ONE_WEEK
     - ONE_MONTH
 
+openSanctions:
+  get:
+    tags: [Moderation]
+    operationId: listOpenSanctions
+    summary: Asuntos vivos — sanciones que no se acaban solas
+    description: |
+      Las sanciones **en vigor y sin fecha de fin**, de la más antigua a la
+      más reciente.
+
+      Una suspensión total es indefinida por diseño, y eso la hace
+      cualitativamente distinta: nadie la levanta si nadie se acuerda. Sin
+      esta pantalla se convierte en una **expulsión silenciosa que ningún
+      moderador decidió** — el castigo más grave del catálogo, aplicado por
+      olvido.
+
+      Las de plazo fijo no aparecen: terminan por su fecha y no hay nada que
+      recordar.
+
+      Cada fila lleva `openForDays`, que es el dato por el que se entra aquí.
+      La fecha cruda obliga a quien revisa a hacer la resta.
+
+      **No lleva quién la impuso.** Un moderador no es un actor social, y
+      nombrarlo convertiría una decisión de la plataforma en un asunto entre
+      dos personas.
+    parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: perPage
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 20
+    responses:
+      '200':
+        description: La cola, posiblemente vacía — que es la respuesta que se espera.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [total, totalPages, page, perPage, sanctions]
+              properties:
+                total:
+                  type: integer
+                totalPages:
+                  type: integer
+                page:
+                  type: integer
+                perPage:
+                  type: integer
+                sanctions:
+                  type: array
+                  items:
+                    type: object
+                    required: [sanctionId, userId, type, reason, imposedAt, openForDays]
+                    properties:
+                      sanctionId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      type:
+                        $ref: '#/SanctionType'
+                      reason:
+                        type: string
+                      imposedAt:
+                        type: string
+                        format: date-time
+                      openForDays:
+                        type: integer
+                        description: Cuántos días lleva en vigor sin que nadie la levante.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: FORBIDDEN`. Solo moderación.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
 sanctions:
   post:
     tags: [Moderation]

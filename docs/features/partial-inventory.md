@@ -107,7 +107,7 @@ Dos cosas que este inventario no había visto y aparecieron al hacerlo:
 | ~~FEAT-WRK-008 `RN-6`~~ | ~~Las palabras de un capítulo oculto siguen contando en el total de la obra~~ — **hecho** (2026-09-26) | Pequeño |
 | ~~FEAT-WRK-012 `RN-8`~~ | ~~El catálogo no esconde las obras de quien te ha bloqueado~~ — **hecho** (2026-09-26), y con él el carrusel de la Home: si uno las escondiera y el otro no, el bloqueo dependería de la pantalla | Medio |
 | FEAT-MOD-005 `MOD-47` | Desestimar un correo que no aporta nada reclamable no deja traza | Pequeño |
-| FEAT-MOD-006 `MOD-25` | No hay cola de asuntos vivos: una suspensión indefinida se vuelve expulsión sin que nadie lo decida | Medio |
+| ~~FEAT-MOD-006 `MOD-25`~~ | ~~No hay cola de asuntos vivos: una suspensión indefinida se vuelve expulsión sin que nadie lo decida~~ — **hecha** (2026-09-26) | Medio |
 | ~~FEAT-MOD-006 `RN-9`~~ | ~~`Credits` no congela la deuda durante una suspensión parcial~~ — **hecho** (2026-09-26) | **Ver abajo** |
 | FEAT-CRD-006 | `CreditDebtCleared` — el evento existe y `Notification` lo escucha, pero **nada lo publica** | Pequeño |
 

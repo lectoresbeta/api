@@ -314,6 +314,106 @@ final class SanctionTest extends EconomyScenario
     }
 
     /**
+     * `MOD-25`: la cola de asuntos vivos.
+     *
+     * Una suspensión total es indefinida por diseño, y eso la hace
+     * cualitativamente distinta: nadie la levanta si nadie se acuerda. Sin
+     * esta pantalla se convierte en una expulsión silenciosa que ningún
+     * moderador decidió.
+     */
+    public function testTheQueueShowsWhatDoesNotExpireOnItsOwn(): void
+    {
+        $moderador = $this->moderator('moderador');
+        $indefinida = $this->activatedPerson('indefinida');
+        $conPlazo = $this->activatedPerson('conplazo');
+        $avisada = $this->activatedPerson('avisada');
+
+        $this->impose($moderador['token'], [
+            'userId' => $indefinida['userId'],
+            'type' => 'FULL_SUSPENSION',
+            'reason' => 'Mientras se investiga',
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $this->impose($moderador['token'], [
+            'userId' => $conPlazo['userId'],
+            'type' => 'PARTIAL_SUSPENSION',
+            'reason' => 'Comentarios ofensivos',
+            'duration' => 'ONE_WEEK',
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $this->impose($moderador['token'], [
+            'userId' => $avisada['userId'],
+            'type' => 'WARNING',
+            'reason' => 'Primer aviso',
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+
+        $abiertos = $this->openQueue($moderador['token']);
+
+        self::assertContains($indefinida['userId'], $abiertos, 'La que no caduca sola.');
+        self::assertNotContains($conPlazo['userId'], $abiertos, 'La de plazo fijo termina por su fecha.');
+        self::assertContains(
+            $avisada['userId'],
+            $abiertos,
+            'Y el aviso también: tampoco caduca, y es lo que hace que la reincidencia pese.',
+        );
+    }
+
+    /**
+     * Levantarla la saca de la cola. Es el punto entero: la cola existe para
+     * que alguien decida, no para acumular.
+     */
+    public function testLiftingASanctionTakesItOutOfTheQueue(): void
+    {
+        $moderador = $this->moderator('moderador');
+        $sancionada = $this->activatedPerson('sancionada');
+
+        $this->impose($moderador['token'], [
+            'userId' => $sancionada['userId'],
+            'type' => 'FULL_SUSPENSION',
+            'reason' => 'Mientras se investiga',
+        ]);
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $sanctionId = (string) $this->payload()['sanctionId'];
+
+        self::assertContains($sancionada['userId'], $this->openQueue($moderador['token']));
+
+        $this->lift($sanctionId, $moderador['token'], 'Se aclaró');
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+
+        self::assertNotContains($sancionada['userId'], $this->openQueue($moderador['token']));
+    }
+
+    public function testTheQueueIsForModeratorsOnly(): void
+    {
+        $cualquiera = $this->activatedPerson('cualquiera');
+
+        $this->client->request('GET', '/api/v1/admin/sanctions/open', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$cualquiera['token'],
+        ]);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+    }
+
+    /**
+     * @return list<string> los usuarios con un asunto vivo
+     */
+    private function openQueue(string $token): array
+    {
+        $this->client->request('GET', '/api/v1/admin/sanctions/open', server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+        self::assertResponseIsSuccessful();
+
+        /** @var list<array{userId: string}> $rows */
+        $rows = $this->payload()['sanctions'];
+
+        return array_map(static fn (array $row): string => $row['userId'], $rows);
+    }
+
+    /**
      * @param array<string, string> $body
      */
     private function impose(string $token, array $body): void

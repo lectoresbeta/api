@@ -91,6 +91,17 @@ liftModerationBlock:
 # `Moderation` registra la sanción y `User` la aplica: aquí no se toca la
 # cuenta de nadie. Si este contexto la marcara directamente habría dos dueños
 # del estado del usuario.
+# La cola de asuntos vivos (`FEAT-MOD-006` `MOD-25`). Va **antes** que la de
+# imponer porque `/open` es una ruta más específica que `/sanctions`, y con
+# métodos distintos el orden no cambia nada — pero leerlo en este orden sí.
+#
+# Una suspensión total no caduca sola: sin esta pantalla se convierte en una
+# expulsión silenciosa que ningún moderador decidió.
+listOpenSanctions:
+    path: /api/v1/admin/sanctions/open
+    controller: LectoresBeta\Moderation\Sanction\Infrastructure\Controller\ListOpenSanctionsController::__invoke
+    methods: [GET]
+
 imposeSanction:
     path: /api/v1/admin/sanctions
     controller: LectoresBeta\Moderation\Sanction\Infrastructure\Controller\ImposeSanctionController::__invoke

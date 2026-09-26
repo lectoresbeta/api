@@ -582,6 +582,9 @@ paths:
   /admin/sanctions:
     $ref: './paths/moderation.yaml#/sanctions'
 
+  /admin/sanctions/open:
+    $ref: './paths/moderation.yaml#/openSanctions'
+
   /admin/sanctions/{sanctionId}/lift:
     $ref: './paths/moderation.yaml#/sanctionLift'
 

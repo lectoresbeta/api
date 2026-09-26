@@ -5,14 +5,14 @@ context: Moderation
 concept: Sanction
 actors: [Moderator]
 spec_status: APPROVED
-impl_status: PARTIAL
+impl_status: DONE
 priority: P2
 sources:
   - conversation:2026-09-23 (catálogo de sanciones)
 endpoints: [POST /admin/sanctions, POST /admin/sanctions/{sanctionId}/lift]
 events: [SanctionImposed, SanctionLifted]
 depends_on: [FEAT-MOD-002]
-updated: 2026-09-25
+updated: 2026-09-26
 ---
 
 # FEAT-MOD-006 — Catálogo de sanciones
@@ -149,11 +149,11 @@ directamente habría dos dueños del estado del usuario.
 
 - [x] Existen las cuatro familias y ninguna más.
 - [x] Las de plazo fijo caducan sin intervención.
-- [ ] La suspensión total no caduca sola —**cierto**— y aparece como asunto vivo en el backoffice. **La segunda mitad falta**: no hay cola de asuntos vivos (`MOD-25`).
+- [x] La suspensión total no caduca sola y **aparece como asunto vivo en el backoffice**.
 - [x] La expulsión deja la cuenta en `BLOCKED` y **no** la anonimiza.
 - [x] Una cuenta en `BLOCKED` no autentica. El correo **no se libera**, que es lo que lo impide.
 - [x] La suspensión parcial permite entrar y leer, e impide publicar, comentar y corregir.
-- [ ] Toda sanción se comunica al usuario con motivo y duración. **El hecho ya los lleva**; quien avisa es `Notification`, que no lo escucha todavía.
+- [x] Toda sanción se comunica al usuario con motivo y duración. `Notification` lo escucha desde 2026-09-26.
 - [x] Las sanciones caducadas siguen en el historial.
 - [x] Ninguna sanción mueve créditos.
 - [x] Una sanción no salda ni condona la deuda del usuario: no toca `Credits` en absoluto.
@@ -163,7 +163,7 @@ directamente habría dos dueños del estado del usuario.
 | # | Pregunta | Impacto |
 |---|---|---|
 | **MOD-44** | ¿Qué se conserva exactamente de una cuenta expulsada, si esa persona pide su supresión? | Conflicto entre el derecho de supresión y no readmitir |
-| MOD-25 | ¿Cómo se evita que una suspensión indefinida se olvide? | Sería una expulsión que nadie decidió |
+| ~~MOD-25~~ | ~~¿Cómo se evita que una suspensión indefinida se olvide?~~ | **Resuelta** (2026-09-26): una cola de asuntos vivos en el backoffice, ordenada por antigüedad y con los días que lleva abierta cada uno |
 | MOD-28 | ¿Hay escalado automático por reincidencia? | Tres avisos deberían pesar más que uno |
 
 Resueltas: `MOD-27` (**solo lectura**), `MOD-26` (la expulsión **bloquea, no anonimiza**) y
@@ -175,7 +175,7 @@ Resueltas: `MOD-27` (**solo lectura**), `MOD-26` (la expulsión **bloquea, no an
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `PARTIAL` (2026-09-25). Las cuatro familias, imponerlas, levantarlas y el
+**Implementación:** `DONE` (2026-09-26). Las cuatro familias, imponerlas, levantarlas y el
 rastro en auditoría. La frontera que la ficha pedía está donde debe: **`Moderation` registra la
 sanción y `User` la aplica**, por hecho de integración. Si este contexto marcara la cuenta
 directamente habría dos dueños del estado del usuario.
@@ -189,7 +189,8 @@ Dos decisiones de modelo que la implementación obligó a tomar:
   Levantar lo ya levantado responde `409`: es un acto administrativo que se registra y se
   comunica, y hacerlo dos veces dejaría en el historial algo que no ocurrió.
 
-**Faltan** tres cosas, y conviene verlas separadas:
+**Las tres cosas que faltaban**, cerradas el 2026-09-26 y separadas porque son de tres
+contextos distintos:
 
 - ~~**el aviso al usuario** (`RN-4`)~~ — **hecho** (2026-09-26).
   `NotifyTheSanctionedPerson` consume `SanctionImposed` y entrega `MODERATION_ALERT` con tipo,
@@ -207,5 +208,18 @@ Dos decisiones de modelo que la implementación obligó a tomar:
   levantarla antes de tiempo la deuda vuelve a retener, pero solo hacia adelante: lo que el
   autor ya pudo leer no se vuelve a cerrar
   ([`FEAT-CRD-018`](../credits/FEAT-CRD-018-negative-balance.md) `RN-11`);
-- **la cola de asuntos vivos** del backoffice (`MOD-25`), que es lo que evita que una
-  suspensión indefinida se convierta en una expulsión que nadie decidió.
+- ~~**la cola de asuntos vivos** del backoffice (`MOD-25`)~~ — **hecha** (2026-09-26):
+  `GET /api/v1/admin/sanctions/open`, de la más antigua a la más reciente y con **cuántos días
+  lleva abierta cada una**, que es el dato por el que se entra ahí — la fecha cruda obliga a
+  quien revisa a hacer la resta.
+
+  Dos decisiones:
+
+  - **el filtro es «sin fecha de fin», no «de tipo X».** Qué familias son indefinidas lo dice
+    el modelo al imponerlas —una suspensión parcial siempre trae plazo—, y repetir esa lista
+    en la consulta sería un segundo sitio del que desdecirse el día que aparezca otra familia.
+    De paso entran los **avisos**, que tampoco caducan y son lo que hace que la reincidencia
+    pese;
+  - **no es una cola con estado propio**, es una consulta sobre las sanciones que ya existen.
+    Marcar una como «revisada» habría sido inventar un estado que la ficha no pide y que
+    envejecería igual de mal que la sanción.

@@ -29,4 +29,21 @@ interface SanctionRepository
      * @return list<Sanction>
      */
     public function inForceFor(PartyId $userId, \DateTimeImmutable $moment): array;
+
+    /**
+     * Las sanciones **que no se acaban solas y nadie ha levantado** (`MOD-25`).
+     *
+     * De la más antigua a la más reciente, que es el orden que importa: lo
+     * que lleva meses sin revisarse es lo que se ha convertido en una
+     * expulsión que nadie decidió. Las de plazo fijo no entran — terminan por
+     * su fecha y no hay nada que recordar.
+     *
+     * @return list<Sanction>
+     */
+    public function openIndefinitely(int $limit, int $offset): array;
+
+    /**
+     * Cuántas hay, para que la cola diga si queda trabajo debajo.
+     */
+    public function countOpenIndefinitely(): int;
 }
