@@ -168,6 +168,63 @@ final class CreditsPersistenceTest extends KernelTestCase
         ]);
     }
 
+    /**
+     * La purga de `RN-7`: lo viejo se va, lo reciente se queda.
+     *
+     * Sin ella la tabla crece con **cada evento que recibe `Credits`**, para
+     * siempre. Es la clase de crecimiento que no molesta durante dos años y
+     * luego obliga a una migración con la aplicación parada.
+     */
+    public function testThePurgeTakesTheOldRowsAndLeavesTheRecentOnes(): void
+    {
+        $viejo = CreditTransactionId::generate()->value();
+        $reciente = CreditTransactionId::generate()->value();
+
+        $this->processedEvents->markProcessed(
+            new ProcessedEvent($viejo, 'welcome-grant', 'AccountActivated', $this->now()->modify('-200 days')),
+        );
+        $this->processedEvents->markProcessed(
+            new ProcessedEvent($reciente, 'welcome-grant', 'AccountActivated', $this->now()->modify('-10 days')),
+        );
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        $deleted = $this->processedEvents->purgeOlderThan($this->now()->modify('-180 days'), 1000);
+
+        self::assertGreaterThanOrEqual(1, $deleted);
+        self::assertFalse($this->processedEvents->wasProcessed($viejo, 'welcome-grant'));
+        self::assertTrue($this->processedEvents->wasProcessed($reciente, 'welcome-grant'));
+    }
+
+    /**
+     * Y **se acota**, que es la razón de que exista el parámetro: esta tabla
+     * la lee cada consumidor antes de mover un crédito, y un `DELETE` sin
+     * tope la bloquearía entera.
+     */
+    public function testThePurgeNeverDeletesMoreThanItsBatch(): void
+    {
+        $ids = [];
+
+        foreach (range(1, 3) as $n) {
+            $ids[] = $id = CreditTransactionId::generate()->value();
+            $this->processedEvents->markProcessed(
+                new ProcessedEvent($id, 'batch-test', 'AccountActivated', $this->now()->modify('-200 days')),
+            );
+        }
+
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+
+        self::assertSame(2, $this->processedEvents->purgeOlderThan($this->now()->modify('-180 days'), 2));
+
+        $left = array_filter(
+            $ids,
+            fn (string $id): bool => $this->processedEvents->wasProcessed($id, 'batch-test'),
+        );
+
+        self::assertCount(1, $left, 'Queda una para la siguiente ronda.');
+    }
+
     private function now(): \DateTimeImmutable
     {
         return new \DateTimeImmutable('2026-09-24 10:00:00');

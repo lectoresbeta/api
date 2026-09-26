@@ -141,15 +141,30 @@ movimientos que dependan de ella.
 **Especificación:** `APPROVED` (2026-09-23). `RN-4` —la clave es `(eventId, consumer)`, lo que
 **obliga a cambiar una tabla ya creada**— y el plazo de retención de `RN-7` quedan validados.
 
-**Implementación:** `PARTIAL`.
+**Implementación:** `PARTIAL` (2026-09-26).
 
 Hecho: la clave es `(event_id, consumer)` —migración `Version20260923190000`—, la restricción
 de unicidad la impone PostgreSQL (`RN-3`) y el primer consumidor la usa
 ([`FEAT-CRD-002`](FEAT-CRD-002-welcome-credit-grant.md)).
 
-**Falta:**
+~~El **comando de purga** (`RN-7`)~~ — **hecho** (2026-09-26):
+`lectoresbeta:credits:purge-processed-events`. `purgeOlderThan` llevaba desde el principio en
+el repositorio sin que nada lo llamara, así que la tabla crecía sin límite.
 
-- el **comando de purga** y su programación (`RN-7`). `purgeOlderThan` existe en el
-  repositorio; no hay nada que lo llame, así que hoy la tabla crece sin límite;
-- comprobar el comportamiento ante un duplicado **en el transporte real** (`RN-5`): que se
-  confirme el mensaje y no acabe en la cola de fallos.
+Dos cosas que la ficha no decía y la implementación obligó a decidir:
+
+- **el borrado va acotado.** `purgeOlderThan` recibe ahora un tope por pasada y el servicio
+  repite hasta agotar. Un único `DELETE` sin límite bloquearía la tabla que **cada consumidor
+  lee antes de mover un crédito**, y un fallo a la mitad desharía el trabajo ya hecho;
+- **en SQL nativo**, porque DQL no sabe acotar un `DELETE`. Se selecciona por `ctid`, la
+  dirección física de la fila en PostgreSQL, porque la clave es compuesta y compararla en un
+  `IN` de dos columnas contra una subconsulta acotada es más caro y menos legible.
+
+Los 180 días viven en una constante del servicio y no en la configuración: es una regla de
+esta ficha, no una palanca de operación — cambiarla cambia qué significa reprocesar un evento
+viejo. **Con qué se programa** sí es decisión de operación (`O-1`), y por eso el comando no
+programa nada; la propuesta está en
+[operaciones](../../architecture/07-observability-and-operations.md).
+
+**Falta** comprobar el comportamiento ante un duplicado **en el transporte real** (`RN-5`):
+que se confirme el mensaje y no acabe en la cola de fallos.

@@ -46,6 +46,7 @@ sostenible— el propio documento de partida exige monitorización constante:
 | Mensajes en la cola de fallos | Salud de la mensajería |
 | Eventos deduplicados | Frecuencia real de entregas duplicadas |
 | Alias de nombre de usuario caducados sin purgar | Indica que la tarea diaria dejó de ejecutarse |
+| Filas de deduplicación con más de 180 días | Lo mismo, para la purga de `credits_ctx.processed_event` |
 
 ## Tareas programadas
 
@@ -53,12 +54,24 @@ Procesos que se ejecutan por calendario, no por petición ni por evento.
 
 | Tarea | Comando | Frecuencia | Qué pasa si falla |
 |---|---|---|---|
-| Purga de alias de nombre de usuario caducados | `app:user:purge-expired-username-aliases` | **Diaria** | Nada funcional: los alias caducados ya no resuelven ni ocupan nombre. Solo se acumulan filas. Ver [`FEAT-USR-036`](../features/user/FEAT-USR-036-purge-expired-aliases.md) |
+| Purga de alias de nombre de usuario caducados | `lectoresbeta:user:purge-expired-username-aliases` | **Diaria** | Nada funcional: los alias caducados ya no resuelven ni ocupan nombre. Solo se acumulan filas. Ver [`FEAT-USR-036`](../features/user/FEAT-USR-036-purge-expired-aliases.md) |
+| Purga de manuscritos subidos sin confirmar | `lectoresbeta:work:purge-expired-manuscript-uploads` | **Diaria** | Nada funcional: una subida caducada ya no se puede confirmar. Se acumulan filas y ficheros |
+| Purga del registro de deduplicación | `lectoresbeta:credits:purge-processed-events` | **Diaria** | Nada funcional: una fila caducada no hace daño mientras esté. Pero la tabla crece con **cada evento que recibe `Credits`**, y es la clase de crecimiento que no molesta durante dos años y luego obliga a una migración con la aplicación parada. Ver [`FEAT-CRD-011`](../features/credits/FEAT-CRD-011-deduplicate-integration-events.md) `RN-7` |
+| Reparto del cupo de descubiertos | `lectoresbeta:credits:grant-overdrafts` | **Por periodo** | Ver [`FEAT-CRD-019`](../features/credits/FEAT-CRD-019-overdraft-correction.md) |
 
 ```cron
 # Purga de alias de nombre de usuario caducados — a diario a las 04:15 UTC
-15 4 * * *  php /app/bin/console app:user:purge-expired-username-aliases --no-interaction
+15 4 * * *  php /app/bin/console lectoresbeta:user:purge-expired-username-aliases --no-interaction
+
+# Purga de manuscritos subidos sin confirmar — a diario a las 04:25 UTC
+25 4 * * *  php /app/bin/console lectoresbeta:work:purge-expired-manuscript-uploads --no-interaction
+
+# Purga del registro de deduplicación — a diario a las 04:35 UTC
+35 4 * * *  php /app/bin/console lectoresbeta:credits:purge-processed-events --no-interaction
 ```
+
+Las tres a horas distintas y no a la misma: son borrados por lotes sobre tablas que la
+aplicación sigue leyendo, y solaparlos no aporta nada.
 
 Reglas para cualquier tarea programada del proyecto:
 

@@ -22,7 +22,7 @@ final class InMemoryProcessedEvents implements ProcessedEventRepository
         $this->seen[$event->eventId().'|'.$event->consumer()] = true;
     }
 
-    public function purgeOlderThan(\DateTimeImmutable $moment): int
+    public function purgeOlderThan(\DateTimeImmutable $moment, int $batch): int
     {
         return 0;
     }

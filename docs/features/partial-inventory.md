@@ -62,14 +62,16 @@ registrarlo a mano en `IncomingEventRegistry`, y una plantilla por aviso.
 Falta además el **aviso al destinatario de un mensaje del moderador** (FEAT-MOD-009 `RN-7`),
 que es el mismo patrón sobre un hecho que todavía no se publica.
 
-### 1b. La tabla de deduplicación crece sin límite — **operativo, no de producto**
+### 1b. ~~La tabla de deduplicación crece sin límite~~ — **hecho** (2026-09-26)
 
-FEAT-CRD-011 `RN-7`. `purgeOlderThan` existe en el repositorio y **nadie lo llama**: no hay
-comando ni programación. Cada evento que `Credits` procesa deja una fila para siempre.
+FEAT-CRD-011 `RN-7`. `purgeOlderThan` existía en el repositorio y **nadie lo llamaba**: no
+había comando ni programación. Cada evento que `Credits` procesaba dejaba una fila para
+siempre.
 
-No se nota hoy y se notará: es la tabla con más inserciones del sistema. Es media tarde de
-trabajo —un comando de consola y su entrada en el planificador, como la purga de alias de
-FEAT-USR-036, que ya existe y sirve de molde—.
+Ya hay comando, `lectoresbeta:credits:purge-processed-events`, con la purga de alias de
+FEAT-USR-036 de molde. Un matiz que este inventario no vio: `purgeOlderThan` borraba **sin
+tope**, y esa es la tabla que cada consumidor lee antes de mover un crédito. Ahora va acotada
+y el servicio repite hasta agotar.
 
 ### 1c. Lo que las decisiones de ayer acaban de desbloquear
 
@@ -212,7 +214,9 @@ desactualizarse solo.
    equivoqué.
 3. ~~**Los dos órdenes por defecto que responden `422`** (§1c). Lo único de esta lista que un
    usuario ve hoy.~~ — **hecho** (2026-09-26).
-4. **La purga de la tabla de deduplicación** (§1b). Media tarde, y deja de crecer.
+4. ~~**La purga de la tabla de deduplicación** (§1b). Media tarde, y deja de crecer.~~ —
+   **hecho** (2026-09-26). Con un matiz que no estaba en el guion: `purgeOlderThan` borraba
+   sin tope, y esa es la tabla que cada consumidor lee antes de mover un crédito. Va acotada.
 5. **Tachar las 17 notas caducadas y arreglar las cuatro fichas del §4**, con la comprobación
    nueva en `check-docs.py` para que no se repita.
 
