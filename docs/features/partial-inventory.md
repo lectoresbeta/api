@@ -105,7 +105,7 @@ Dos cosas que este inventario no había visto y aparecieron al hacerlo:
 | ~~FEAT-COM-016 `RN-7`~~ | ~~Las sugerencias de autor no filtran cuentas sin activar~~ — **hecho** (2026-09-26). El agujero ancho no era ese: era **la cuenta expulsada**, que había publicado antes de serlo | Pequeño |
 | ~~FEAT-WRK-016~~ | ~~`Credits` no consume la apertura a corrección para recalcular corregibilidad~~ — **hecho** (2026-09-26). No faltaba un recálculo: faltaba **una condición**. Los capítulos de un borrador salían corregibles | Medio |
 | ~~FEAT-WRK-008 `RN-6`~~ | ~~Las palabras de un capítulo oculto siguen contando en el total de la obra~~ — **hecho** (2026-09-26) | Pequeño |
-| FEAT-WRK-012 `RN-8` | El catálogo no esconde las obras de quien te ha bloqueado | Medio |
+| ~~FEAT-WRK-012 `RN-8`~~ | ~~El catálogo no esconde las obras de quien te ha bloqueado~~ — **hecho** (2026-09-26), y con él el carrusel de la Home: si uno las escondiera y el otro no, el bloqueo dependería de la pantalla | Medio |
 | FEAT-MOD-005 `MOD-47` | Desestimar un correo que no aporta nada reclamable no deja traza | Pequeño |
 | FEAT-MOD-006 `MOD-25` | No hay cola de asuntos vivos: una suspensión indefinida se vuelve expulsión sin que nadie lo decida | Medio |
 | ~~FEAT-MOD-006 `RN-9`~~ | ~~`Credits` no congela la deuda durante una suspensión parcial~~ — **hecho** (2026-09-26) | **Ver abajo** |

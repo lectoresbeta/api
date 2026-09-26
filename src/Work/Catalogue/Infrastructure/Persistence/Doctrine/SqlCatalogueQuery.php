@@ -54,6 +54,10 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
             $types['excludedWarnings'] = ArrayParameterType::STRING;
         }
 
+        if ([] !== $criteria->blockedAuthorIds) {
+            $types['blockedAuthors'] = ArrayParameterType::STRING;
+        }
+
         /** @var int<0, max> $total */
         $total = (int) $this->connection->fetchOne(
             \sprintf('SELECT COUNT(*) FROM work_ctx.work w WHERE %s', $where),
@@ -184,6 +188,14 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
             $conditions[] = 'w.adults_only = FALSE';
         }
 
+        if ([] !== $criteria->blockedAuthorIds) {
+            // `RN-8`. Se compara contra la columna de la obra y no contra una
+            // tabla de `user_ctx`: la lista llega como parámetro, igual que
+            // las etiquetas excluidas, y el catálogo sigue resolviéndose sin
+            // un solo `JOIN` entre contextos.
+            $conditions[] = 'w.author_id NOT IN (:blockedAuthors)';
+        }
+
         if ([] !== $criteria->excludedWarnings) {
             // `NOT EXISTS` y no un `NOT IN` con subconsulta: basta con que la
             // obra lleve **una** de las etiquetas rechazadas para que
@@ -222,6 +234,10 @@ final readonly class SqlCatalogueQuery implements CatalogueQuery
 
         if ([] !== $criteria->excludedWarnings) {
             $parameters['excludedWarnings'] = $criteria->excludedWarnings;
+        }
+
+        if ([] !== $criteria->blockedAuthorIds) {
+            $parameters['blockedAuthors'] = $criteria->blockedAuthorIds;
         }
 
         return $parameters;

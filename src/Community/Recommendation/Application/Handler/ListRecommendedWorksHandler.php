@@ -10,6 +10,7 @@ use LectoresBeta\Community\Recommendation\Application\Query\ListRecommendedWorks
 use LectoresBeta\Community\Recommendation\Domain\Repository\AuthorSuggestionRepository;
 use LectoresBeta\User\Account\Application\Contract\ReaderMaturity;
 use LectoresBeta\User\Preferences\Application\Contract\ReaderContentPreferences;
+use LectoresBeta\User\Privacy\Application\Contract\BlockedPeople;
 use LectoresBeta\Work\Catalogue\Application\Contract\RecommendedWorks as Catalogue;
 
 /**
@@ -39,6 +40,7 @@ final readonly class ListRecommendedWorksHandler
         private Catalogue $catalogue,
         private ReaderMaturity $maturity,
         private ReaderContentPreferences $preferences,
+        private BlockedPeople $blocked,
         private int $minimum,
         private int $maximum,
     ) {
@@ -51,18 +53,22 @@ final readonly class ListRecommendedWorksHandler
 
         $ofAge = $this->maturity->isOfAge($query->memberId);
         $excluded = $this->preferences->excludedBy($query->memberId);
+        // Un bloqueo esconde en los dos sentidos, también en el carrusel: si
+        // el catálogo esconde esas obras y la Home no, el bloqueo depende de
+        // por qué pantalla se entre (`FEAT-WRK-012` `RN-8`).
+        $blocked = $this->blocked->blockedWith($query->memberId);
         $chosen = $this->genres->genresOf($member);
 
         $found = [] === $chosen
             ? []
-            : $this->catalogue->forReader($query->memberId, $chosen, $ofAge, $excluded, $howMany);
+            : $this->catalogue->forReader($query->memberId, $chosen, $ofAge, $excluded, $blocked, $howMany);
 
         // Segundo tramo de la cadena de relleno: cualquier género. Es
         // preferible enseñar algo que no encaje del todo a dejar la Home
         // empezando por el muro, que es donde no hay nada que hacer si
         // todavía no sigues a nadie.
         if (\count($found) < $this->minimum) {
-            $found = $this->catalogue->forReader($query->memberId, [], $ofAge, $excluded, $howMany);
+            $found = $this->catalogue->forReader($query->memberId, [], $ofAge, $excluded, $blocked, $howMany);
         }
 
         // Un solo motivo, y no dos. Estuvo la tentación de distinguir «no

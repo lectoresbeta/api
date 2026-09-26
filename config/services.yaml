@@ -550,6 +550,12 @@ services:
     LectoresBeta\User\Account\Application\Contract\ActiveAccounts:
         alias: LectoresBeta\User\Account\Application\Service\ListActiveAccounts
 
+    # Con quién hay bloqueo, sin decir quién bloqueó a quién: esconde en los
+    # dos sentidos (FEAT-COM-034), así que el sentido no cambia nada para
+    # quien pregunta. Lo usan el catálogo y el carrusel (FEAT-WRK-012 RN-8).
+    LectoresBeta\User\Privacy\Application\Contract\BlockedPeople:
+        alias: LectoresBeta\User\Privacy\Application\Service\ListBlockedPeople
+
     LectoresBeta\User\Account\Application\Contract\ReaderMaturity:
         alias: LectoresBeta\User\Account\Application\Service\CheckReaderMaturity
 

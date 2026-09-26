@@ -48,6 +48,26 @@ final class DoctrineBlockedPairRepository extends DoctrineRepository implements 
         return array_values(array_unique($hidden));
     }
 
+    public function everyoneBlockedWith(UserId $one): array
+    {
+        /** @var list<array{oneId: string, otherId: string}> $pairs */
+        $pairs = $this->entityManager->createQueryBuilder()
+            ->select('b.oneId AS oneId', 'b.otherId AS otherId')
+            ->from(BlockedPair::class, 'b')
+            ->where('b.oneId = :me OR b.otherId = :me')
+            ->setParameter('me', $one->value())
+            ->getQuery()
+            ->getResult();
+
+        $blocked = [];
+
+        foreach ($pairs as $pair) {
+            $blocked[] = $pair['oneId'] === $one->value() ? $pair['otherId'] : $pair['oneId'];
+        }
+
+        return array_values(array_unique($blocked));
+    }
+
     public function between(UserId $one, UserId $other): ?BlockedPair
     {
         [$first, $second] = BlockedPair::ordered($one->value(), $other->value());

@@ -52,6 +52,7 @@ final readonly class ResolveRecommendedWorks implements RecommendedWorks
         array $genres,
         bool $readerIsOfAge,
         array $excludedWarnings,
+        array $blockedAuthorIds,
         int $limit,
     ): array {
         $howMany = min(max($limit, 1), self::MAX);
@@ -61,6 +62,7 @@ final readonly class ResolveRecommendedWorks implements RecommendedWorks
             $readerIsOfAge,
             array_values(array_unique(array_map(strtoupper(...), $genres))),
             self::warnings($excludedWarnings),
+            $blockedAuthorIds,
             WorkStatus::IN_CORRECTION->value,
             byRelevance: true,
             page: 1,

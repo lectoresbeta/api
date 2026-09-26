@@ -22,12 +22,18 @@ final readonly class CatalogueCriteria
      *                                       **quitan** obras: el lector dice
      *                                       lo que no quiere ver
      *                                       (`FEAT-WRK-017` `RN-10`)
+     * @param list<string> $blockedAuthorIds con quién hay bloqueo, **en los
+     *                                       dos sentidos** (`RN-8`). Lo trae
+     *                                       quien pregunta: el bloqueo es de
+     *                                       `User` y este contexto no sabe
+     *                                       quién ha bloqueado a quién
      */
     public function __construct(
         public string $readerId,
         public bool $readerIsOfAge,
         public array $genres,
         public array $excludedWarnings,
+        public array $blockedAuthorIds,
         public ?string $status,
         public bool $byRelevance,
         public int $page,

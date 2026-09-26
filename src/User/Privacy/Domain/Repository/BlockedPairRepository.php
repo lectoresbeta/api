@@ -31,6 +31,17 @@ interface BlockedPairRepository
      */
     public function blockedAmong(UserId $one, array $otherIds): array;
 
+    /**
+     * Todos, sin candidatos que filtrar: quien la pide la usa para excluir
+     * dentro de una consulta y todavía no sabe a quién va a encontrar
+     * (`FEAT-WRK-012` `RN-8`).
+     *
+     * Es una lista corta por naturaleza — bloquear es excepcional.
+     *
+     * @return list<string>
+     */
+    public function everyoneBlockedWith(UserId $one): array;
+
     public function between(UserId $one, UserId $other): ?BlockedPair;
 
     public function save(BlockedPair $pair): void;

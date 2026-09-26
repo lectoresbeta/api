@@ -128,6 +128,7 @@ preferencias y presencia pública como autor.
 | `VisibleProfiles` | De estas personas, **las que quien pregunta puede ver**, como tarjeta de perfil | `Community` |
 | `ProfileCards` | Lo mismo **sin filtrar**, y con un solo uso legítimo: la lista de a quién has bloqueado | `Community` |
 | `ActiveAccounts` | De estas personas, **las que tienen la cuenta en uso**: `ACTIVE` y nada más. Nunca el estado en crudo | `Community` |
+| `BlockedPeople` | Con quién tiene esta persona un bloqueo, **sin decir en qué sentido**: esconde a los dos lados | `Work`, `Community` |
 
 Todos son de lectura y devuelven lo justo
 ([`decision:0014`](../decisions/0014-published-contracts-between-contexts.md)). `ReaderMaturity`

@@ -236,6 +236,64 @@ final class CatalogueTest extends EconomyScenario
     }
 
     /**
+     * `RN-8`: un bloqueo esconde **en los dos sentidos**, y también aquí.
+     *
+     * Quien bloquea no quiere ver a quien bloqueó, y quien fue bloqueado
+     * tampoco debe seguir encontrándose sus obras: un bloqueo que solo
+     * funciona en una dirección le dice a la otra parte que la bloquearon.
+     */
+    public function testTheWorksOfSomebodyBlockedAreNotInTheCatalogue(): void
+    {
+        $autora = $this->activatedPerson('autora');
+        $lectora = $this->activatedPerson('lectora');
+        $workId = $this->aWork($autora, 'La que desaparece');
+
+        self::assertContains($workId, $this->orderOfTitles($lectora['token']));
+
+        $this->block($lectora['token'], $autora['userId']);
+
+        self::assertNotContains($workId, $this->orderOfTitles($lectora['token']), 'Quien bloqueó no la ve.');
+        self::assertSame(0, $this->payload()['total'], 'Y tampoco cuenta en el total.');
+
+        // Y por el otro lado: la autora bloqueada no encuentra las obras de
+        // quien la bloqueó.
+        $suya = $this->aWork($lectora, 'La de quien bloqueó');
+        self::assertNotContains($suya, $this->orderOfTitles($autora['token']));
+    }
+
+    /**
+     * Y deshacer el bloqueo las devuelve: esconder no es borrar.
+     */
+    public function testUnblockingBringsTheWorksBack(): void
+    {
+        $autora = $this->activatedPerson('autora');
+        $lectora = $this->activatedPerson('lectora');
+        $workId = $this->aWork($autora, 'La que vuelve');
+
+        $this->block($lectora['token'], $autora['userId']);
+        self::assertNotContains($workId, $this->orderOfTitles($lectora['token']));
+
+        $this->client->request('DELETE', \sprintf('/api/v1/users/%s/block', $autora['userId']), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$lectora['token'],
+        ]);
+        self::assertResponseIsSuccessful();
+        $this->capture();
+        $this->consumeEverything();
+
+        self::assertContains($workId, $this->orderOfTitles($lectora['token']));
+    }
+
+    private function block(string $token, string $userId): void
+    {
+        $this->client->request('PUT', \sprintf('/api/v1/users/%s/block', $userId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+        self::assertResponseIsSuccessful();
+        $this->capture();
+        $this->consumeEverything();
+    }
+
+    /**
      * @param array{token: string, userId: string} $author
      */
     private function aWork(array $author, string $title, bool $open = true): string

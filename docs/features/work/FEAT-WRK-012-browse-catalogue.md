@@ -317,8 +317,20 @@ fuese completa. No compensa: el catálogo ya tiene el estado delante, en la mism
 - **El filtro de tiempo de lectura** (`L-1`): sigue sin estar definido qué rangos son.
 - ~~**Las preferencias de contenido sensible** (`RN-9`)~~ — **hechas**: `ListCatalogueHandler`
   las aplica, y sin que la petición lo pida (revisado el 2026-09-26).
-- **Las obras de usuarios bloqueados** (`RN-8`): `User` ya sabe quién ha bloqueado a quién, así
-  que esto ya no depende de nada que no exista. Falta hacerlo.
+- ~~**Las obras de usuarios bloqueados** (`RN-8`)~~ — **hecho** (2026-09-26), por contrato
+  publicado `BlockedPeople` y **sin un solo `JOIN` entre contextos**: la lista llega como
+  parámetro de la consulta, exactamente igual que las etiquetas excluidas.
+
+  El contrato responde **sin dirección**, y eso es la regla y no una simplificación: un bloqueo
+  esconde a los dos lados. Uno que solo funcionara en un sentido le diría a la otra parte que
+  la bloquearon.
+
+  El carrusel de la Home entra en el mismo cambio
+  ([`FEAT-COM-017`](../community/FEAT-COM-017-home-work-recommendations.md)). Si el catálogo
+  escondiera esas obras y la Home no, el bloqueo dependería de por qué pantalla se entre. Ahí
+  la lista la trae quien pregunta, como la edad: un contrato no llama al contrato de otro
+  contexto mientras responde
+  ([`decision:0015`](../../decisions/0015-work-and-reading-ask-each-other.md)).
 - **La portada**: una obra no tiene imagen todavía.
 - `L-2` —qué otras ordenaciones hay— se implementa como `recent`, que era la única alternativa
   evidente. `L-6`, `L-7` y `L-8` siguen abiertas tal cual.

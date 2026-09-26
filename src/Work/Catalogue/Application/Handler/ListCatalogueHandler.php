@@ -7,6 +7,7 @@ namespace LectoresBeta\Work\Catalogue\Application\Handler;
 use LectoresBeta\Shared\Domain\Clock\Clock;
 use LectoresBeta\User\Account\Application\Contract\ReaderMaturity;
 use LectoresBeta\User\Preferences\Application\Contract\ReaderContentPreferences;
+use LectoresBeta\User\Privacy\Application\Contract\BlockedPeople;
 use LectoresBeta\Work\Catalogue\Application\DTO\CatalogueCriteria;
 use LectoresBeta\Work\Catalogue\Application\DTO\CataloguePage;
 use LectoresBeta\Work\Catalogue\Application\Port\CatalogueQuery;
@@ -54,6 +55,7 @@ final readonly class ListCatalogueHandler
         private CatalogueQuery $catalogue,
         private ReaderMaturity $maturity,
         private ReaderContentPreferences $preferences,
+        private BlockedPeople $blocked,
         private Clock $clock,
     ) {
     }
@@ -80,6 +82,9 @@ final readonly class ListCatalogueHandler
                 ...$query->excludedWarnings,
                 ...$this->preferences->excludedBy($query->readerId),
             ]),
+            // `RN-8`: un bloqueo esconde en los dos sentidos, y `Work` no
+            // sabe quién bloqueó a quién — ni le hace falta.
+            $this->blocked->blockedWith($query->readerId),
             self::status($query->status),
             'relevance' === $query->sort,
             $query->page,

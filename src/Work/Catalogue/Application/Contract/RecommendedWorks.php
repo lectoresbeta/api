@@ -42,6 +42,12 @@ interface RecommendedWorks
      *
      * @param list<string> $genres           en `O`: cualquiera de ellos, no todos
      * @param list<string> $excludedWarnings lo que esta persona ha pedido no ver
+     * @param list<string> $blockedAuthorIds con quién tiene un bloqueo, en los
+     *                                       dos sentidos
+     *                                       ([`FEAT-WRK-012`](../../../../../docs/features/work/FEAT-WRK-012-browse-catalogue.md)
+     *                                       `RN-8`). Lo trae quien pregunta
+     *                                       por lo mismo que la edad: `Work`
+     *                                       no sabe quién ha bloqueado a quién
      *
      * @return list<RecommendedWork>
      */
@@ -50,6 +56,7 @@ interface RecommendedWorks
         array $genres,
         bool $readerIsOfAge,
         array $excludedWarnings,
+        array $blockedAuthorIds,
         int $limit,
     ): array;
 }
