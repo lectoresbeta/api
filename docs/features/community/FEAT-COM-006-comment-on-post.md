@@ -5,7 +5,7 @@ context: Community
 concept: Interaction
 actors: [User]
 spec_status: APPROVED
-impl_status: PARTIAL
+impl_status: DONE
 priority: P2
 sources:
   - _sources/use-cases.pdf#p3
@@ -14,7 +14,7 @@ sources:
 endpoints: [GET /posts/{postId}/comments, POST /posts/{postId}/comments, PATCH /comments/{commentId}, DELETE /comments/{commentId}]
 events: [PostCommented]
 depends_on: [FEAT-COM-002]
-updated: 2026-09-25
+updated: 2026-09-26
 ---
 
 # FEAT-COM-006 — Comentar una publicación
@@ -57,11 +57,8 @@ vía por la que alguien podría tocar contenido que no debería ver.
 
 El desplegable muestra **«Más relevantes»** como valor por defecto.
 
-Eso implica una fórmula de relevancia que **nadie ha definido**. Es el mismo vacío que
-bloquea los rankings (`CM-4`) y la ordenación del muro (`FEAT-COM-024`), y conviene
-resolverlo una sola vez para los tres.
-
-Hasta entonces, lo implementable es la ordenación por fecha. Ver `I-1`.
+La fórmula está más abajo y **se sirve** (2026-09-26): es propia de los comentarios y no
+depende de la de los rankings (`CM-4`), que resuelve un problema distinto.
 
 ## Contrato de API
 
@@ -144,25 +141,27 @@ distinto: ordenar cincuenta comentarios, no repartir trabajo entre miles de obra
 **Especificación:** `APPROVED` (2026-09-24). `I-1` resuelta. Las preguntas que quedan
 son detalles de interfaz.
 
-**Implementación:** `PARTIAL` (2026-09-25). Comentar, listar, editar y retirar, con el filtro
+**Implementación:** `DONE` (2026-09-26). Comentar, listar, editar y retirar, con el filtro
 de audiencia resuelto por `VisiblePost`, que es **la misma regla que usa el muro preguntada
 por el otro lado**. Se escribe una vez y la usan cuatro operaciones: leer los comentarios,
 escribir uno, responder y repostear.
 
-**Falta «más relevantes»**, que es justo el orden que el desplegable enseña por defecto. Su
-fórmula está decidida —`apoyos + 2 × respuestas`— y los apoyos son
-[`FEAT-COM-030`](../README.md), que no existe: servir media fórmula y llamarla «relevancia»
-sería ordenar por algo que no es lo que dice el nombre. Hoy responde `422` con los órdenes que
-sí valen, igual que «más valorados» en «Mis relatos».
+~~**Falta «más relevantes»**~~ — **hecho** (2026-09-26). Los apoyos llegaron con
+[`FEAT-COM-030`](FEAT-COM-030-like-a-comment.md), así que la fórmula ya se puede calcular
+entera. `sort=RELEVANT`.
 
-Hay además una razón técnica que conviene anotar para cuando llegue: un orden que cambia
-mientras alguien lo lee —porque otro responde— no tiene una posición estable que codificar en
-un cursor. Paginarlo bien exige meter el contador en el cursor, no solo sumar el término que
-falta.
+La razón técnica que esta ficha anotaba para cuando llegara resultó ser exactamente el
+trabajo: un orden que cambia mientras alguien lo lee —porque otro responde— no tiene posición
+estable que codificar. **El cursor lleva la puntuación dentro** (`Cursor::ranked`), y sin eso
+un apoyo entre dos peticiones movería el corte y repetiría o se saltaría comentarios. Es el
+primer listado de la API que ordena por algo calculado, y por eso el tercer campo del cursor
+es nuevo.
 
-**El aviso ya existe** (2026-09-26): `NotifyAboutAPostComment` consume `PostCommented` y entrega
-`POST_REPLY` a quien publicó y, si es una respuesta, también a quien escribió el comentario
-padre. Lo que sigue abajo describe el hueco tal y como estaba:
+Un detalle que la ficha sí tenía escrito y es fácil de perder al implementarlo: **el desempate
+va al revés que el criterio**. La puntuación baja y la fecha sube, porque a igual puntuación
+habla primero quien abrió la conversación. En los órdenes por fecha el desempate acompaña al
+criterio; aquí no.
 
-~~`PostCommented` se publica con a quién avisar, y `Notification` no~~
-lo escucha todavía (`FEAT-NOT-001`).
+**El aviso también existe** (2026-09-26): `NotifyAboutAPostComment` consume `PostCommented` y
+entrega `POST_REPLY` a quien publicó y, si es una respuesta, también a quien escribió el
+comentario padre.

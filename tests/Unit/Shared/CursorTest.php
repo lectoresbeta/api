@@ -45,6 +45,53 @@ final class CursorTest extends TestCase
     }
 
     /**
+     * El tercer campo, para los flujos que ordenan por algo calculado.
+     *
+     * Allí el instante ya es solo el desempate, así que la posición tiene que
+     * llevar la puntuación o la página siguiente empieza donde la aritmética
+     * caiga esta vez.
+     */
+    public function testARankedCursorCarriesItsScore(): void
+    {
+        $at = new \DateTimeImmutable('2026-09-24 11:30:00');
+
+        $decoded = Cursor::decode(Cursor::ranked(7, $at, 'abc')->encode());
+
+        self::assertNotNull($decoded);
+        self::assertSame(7, $decoded->rank);
+        self::assertSame($at->format(\DATE_ATOM), $decoded->at->format(\DATE_ATOM));
+        self::assertSame('abc', $decoded->id);
+    }
+
+    /**
+     * Y uno sin puntuación se sigue leyendo como lo que es: los dos formatos
+     * conviven, porque la mayoría de los listados ordenan por fecha.
+     */
+    public function testAPlainCursorHasNoRank(): void
+    {
+        $decoded = Cursor::decode(Cursor::of(new \DateTimeImmutable('2026-09-24 11:30:00'), 'abc')->encode());
+
+        self::assertNotNull($decoded);
+        self::assertNull($decoded->rank);
+    }
+
+    /**
+     * Se distinguen por la forma y no por una marca, así que conviene fijar
+     * el caso que podría confundirlos: un identificador que empieza por un
+     * número no convierte un cursor plano en uno puntuado.
+     */
+    public function testAnIdentifierThatLooksLikeANumberDoesNotBecomeARank(): void
+    {
+        $at = new \DateTimeImmutable('2026-09-24 11:30:00');
+
+        $decoded = Cursor::decode(Cursor::of($at, '42')->encode());
+
+        self::assertNotNull($decoded);
+        self::assertNull($decoded->rank, 'La fecha va primero: no hay dónde confundirse.');
+        self::assertSame('42', $decoded->id);
+    }
+
+    /**
      * @return iterable<string, array{string}>
      */
     public static function rubbish(): iterable

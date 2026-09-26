@@ -54,7 +54,7 @@ final readonly class PageOfComments
     }
 
     /**
-     * @return 'RECENT'|'OLDEST'
+     * @return 'RECENT'|'OLDEST'|'RELEVANT'
      */
     public function sort(?string $requested): string
     {
@@ -63,15 +63,30 @@ final readonly class PageOfComments
         return match ($sort) {
             'RECENT' => 'RECENT',
             'OLDEST' => 'OLDEST',
-            default => throw UnsupportedCommentSort::of($sort, ['RECENT', 'OLDEST']),
+            'RELEVANT' => 'RELEVANT',
+            default => throw UnsupportedCommentSort::of($sort, ['RECENT', 'OLDEST', 'RELEVANT']),
         };
     }
 
     /**
-     * @param list<PostComment> $found una fila de más que la página, que es
-     *                                 cómo se sabe si hay siguiente
+     * `apoyos + 2 × respuestas` (`FEAT-COM-006`).
+     *
+     * Vive aquí y no en la consulta porque el cursor la necesita: la posición
+     * de la página siguiente **es** esta cifra, y calcularla en dos sitios
+     * sería tener dos relevancias que se pueden separar.
      */
-    public function of(array $found, int $limit, string $readerId): CommentPage
+    public static function relevanceOf(PostComment $comment): int
+    {
+        return $comment->likeCount() + 2 * $comment->replyCount();
+    }
+
+    /**
+     * @param list<PostComment>                 $found una fila de más que la página, que es
+     *                                                 cómo se sabe si hay siguiente
+     * @param 'RECENT'|'OLDEST'|'RELEVANT'|null $sort  el criterio con el que se pidió, que
+     *                                                 decide qué forma tiene el cursor
+     */
+    public function of(array $found, int $limit, string $readerId, ?string $sort = null): CommentPage
     {
         $rows = \array_slice($found, 0, $limit);
         $last = end($rows);
@@ -125,8 +140,24 @@ final readonly class PageOfComments
         return new CommentPage(
             $cards,
             \count($found) > $limit && false !== $last
-                ? Cursor::of($last->createdAt(), $last->id()->value())->encode()
+                ? self::positionOf($last, $sort)->encode()
                 : null,
         );
+    }
+
+    /**
+     * Dónde se quedó la página.
+     *
+     * Con «más relevantes» el instante ya es solo el desempate, así que la
+     * posición tiene que llevar la puntuación: sin ella, un apoyo entre dos
+     * peticiones movería el corte y repetiría o se saltaría comentarios.
+     */
+    private static function positionOf(PostComment $last, ?string $sort): Cursor
+    {
+        if ('RELEVANT' !== $sort) {
+            return Cursor::of($last->createdAt(), $last->id()->value());
+        }
+
+        return Cursor::ranked(self::relevanceOf($last), $last->createdAt(), $last->id()->value());
     }
 }

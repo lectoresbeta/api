@@ -1445,17 +1445,20 @@ postComments:
       tampoco: es la misma regla que impide comentarla, preguntada por el otro
       lado.
 
-      `sort` admite `RECENT` (por defecto) y `OLDEST`. **«Más relevantes» no
-      se sirve todavía**: su fórmula es `apoyos + 2 × respuestas` y los apoyos
-      son otra funcionalidad, así que servir media fórmula y llamarla
-      «relevancia» sería ordenar por algo que no es lo que dice el nombre.
+      `sort` admite `RECENT` (por defecto), `OLDEST` y `RELEVANT`.
+
+      `RELEVANT` es el que la pantalla enseña por defecto y ordena por
+      `apoyos + 2 × respuestas`: una respuesta pesa el doble que un apoyo
+      porque cuesta más, y sin ese peso sería «más gustados» con otro nombre.
+      Su cursor **no es intercambiable** con el de los otros dos — lleva la
+      puntuación dentro, porque el instante allí ya es solo el desempate.
     parameters:
       - $ref: '#/PostIdParam'
       - name: sort
         in: query
         schema:
           type: string
-          enum: [RECENT, OLDEST]
+          enum: [RECENT, OLDEST, RELEVANT]
       - $ref: '../openapi.yaml#/components/parameters/Limit'
       - $ref: '../openapi.yaml#/components/parameters/Cursor'
     responses:

@@ -263,22 +263,115 @@ final class PostCommentTest extends EconomyScenario
         self::assertSame([$uno, $dos, $tres], $this->ids());
     }
 
-    /**
-     * «Más relevantes» es lo que enseña el desplegable por defecto y es lo
-     * que **no se puede servir todavía**: su fórmula cuenta apoyos, y los
-     * apoyos no existen. Responder `422` es preferible a ordenar por media
-     * fórmula y dejar que alguien se fíe.
-     */
     public function testAnUnsupportedSortIsRefusedByNameWithTheOnesThatWork(): void
     {
         $autora = $this->person('autora');
         $postId = $this->publish($autora['token'], 'Algo');
 
+        // Ojo: `RELEVANCE` **no** es `RELEVANT`. Un orden casi correcto es el
+        // caso que más importa rechazar por nombre.
         $this->comments($postId, $autora['token'], '&sort=RELEVANCE');
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
         self::assertSame('UNSUPPORTED_SORT', $this->payload()['code']);
-        self::assertSame('RECENT,OLDEST', $this->payload()['supportedSorts'], 'Y dice cuáles valen.');
+        self::assertSame('RECENT,OLDEST,RELEVANT', $this->payload()['supportedSorts'], 'Y dice cuáles valen.');
+    }
+
+    /**
+     * «Más relevantes»: `apoyos + 2 × respuestas`, y **una respuesta pesa el
+     * doble que un apoyo**.
+     *
+     * La prueba lo separa a propósito: el comentario con dos apoyos tiene
+     * puntuación 2 y el que tiene una respuesta también, así que sin el peso
+     * doble los dos empatarían y el orden no distinguiría nada.
+     */
+    public function testRelevanceCountsAReplyTwiceAsMuchAsALike(): void
+    {
+        $autora = $this->person('autora');
+        $lectora = $this->person('lectora');
+        $postId = $this->publish($autora['token'], 'Algo');
+
+        $gustado = $this->comment($postId, $autora['token'], 'Dos apoyos');
+        $respondido = $this->comment($postId, $autora['token'], 'Dos respuestas');
+        $solo = $this->comment($postId, $autora['token'], 'Nada');
+
+        $this->like($gustado, $autora['token']);
+        $this->like($gustado, $lectora['token']);
+        $this->reply($respondido, $autora['token'], 'Una');
+        $this->reply($respondido, $lectora['token'], 'Y otra');
+
+        $this->comments($postId, $autora['token'], '&sort=RELEVANT');
+
+        // 4 > 2 > 0. Las respuestas no salen: son de segundo nivel.
+        self::assertSame([$respondido, $gustado, $solo], $this->ids());
+    }
+
+    /**
+     * A igual puntuación, **el más antiguo primero**: es quien abrió la
+     * conversación. El desempate va al revés que el criterio, y es el detalle
+     * que rompe la paginación si se escribe en la misma dirección.
+     */
+    public function testTiesGoToWhoeverSpokeFirst(): void
+    {
+        $autora = $this->person('autora');
+        $postId = $this->publish($autora['token'], 'Algo');
+
+        $uno = $this->comment($postId, $autora['token'], 'Uno');
+        $dos = $this->comment($postId, $autora['token'], 'Dos');
+        $tres = $this->comment($postId, $autora['token'], 'Tres');
+
+        $this->comments($postId, $autora['token'], '&sort=RELEVANT');
+
+        self::assertSame([$uno, $dos, $tres], $this->ids());
+    }
+
+    /**
+     * Y se pagina sin repetir ni saltarse nada, que es lo que el cursor con
+     * puntuación dentro existe para conseguir: sin ella, la página siguiente
+     * empezaría donde la cuenta hubiera caído esta vez.
+     */
+    public function testRelevanceIsPagedWithoutRepeatingAnybody(): void
+    {
+        $autora = $this->person('autora');
+        $lectora = $this->person('lectora');
+        $postId = $this->publish($autora['token'], 'Algo');
+
+        $primero = $this->comment($postId, $autora['token'], 'Muy apoyado');
+        $segundo = $this->comment($postId, $autora['token'], 'Apoyado');
+        $tercero = $this->comment($postId, $autora['token'], 'Sin nada');
+        $cuarto = $this->comment($postId, $autora['token'], 'Tampoco');
+
+        $this->like($primero, $autora['token']);
+        $this->like($primero, $lectora['token']);
+        $this->like($segundo, $autora['token']);
+
+        $this->comments($postId, $autora['token'], '&sort=RELEVANT&limit=2');
+        self::assertSame([$primero, $segundo], $this->ids());
+        self::assertTrue($this->payload()['pageInfo']['hasNextPage']);
+
+        $cursor = (string) $this->payload()['pageInfo']['nextCursor'];
+        $this->comments($postId, $autora['token'], '&sort=RELEVANT&limit=2&cursor='.$cursor);
+
+        self::assertSame([$tercero, $cuarto], $this->ids());
+        self::assertFalse($this->payload()['pageInfo']['hasNextPage']);
+    }
+
+    private function like(string $commentId, string $token): void
+    {
+        $this->client->request('PUT', \sprintf('/api/v1/comments/%s/like', $commentId), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+
+        self::assertResponseIsSuccessful();
+        $this->capture();
+    }
+
+    private function reply(string $commentId, string $token, string $body): void
+    {
+        $this->post(\sprintf('/api/v1/comments/%s/replies', $commentId), $token, ['body' => $body]);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $this->capture();
     }
 
     private function comment(string $postId, string $token, string $body): string

@@ -26,7 +26,7 @@ interface PostCommentRepository
      * aparte (`FEAT-COM-031`). Mezclarlas obligaría al cliente a reconstruir
      * el árbol a partir de una lista plana.
      *
-     * @param 'RECENT'|'OLDEST' $sort
+     * @param 'RECENT'|'OLDEST'|'RELEVANT' $sort
      *
      * @return list<PostComment> con una fila de más para saber si hay página
      *                           siguiente

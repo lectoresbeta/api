@@ -36,8 +36,10 @@ maneja en cliente y no añade nada al backend más allá de conservarlos (`RN-4`
 > Esta frase es la que **derogó `FEAT-COM-007`** («Reaccionar con emoji a una publicación»):
 > no había reacciones que construir. Ver el registro de funcionalidades.
 
-«Más relevantes» implica una fórmula de relevancia que nadie ha definido. Es el mismo vacío
-que bloquea los rankings (`CM-4`) y la ordenación del muro (`FEAT-COM-024`).
+«Más relevantes» se sirve (2026-09-26): `apoyos + 2 × respuestas`, y a igual puntuación habla
+primero quien abrió la conversación. Es una fórmula **propia de los comentarios**, no la de los
+rankings (`CM-4`): ordenar cincuenta comentarios y repartir trabajo entre miles de obras son
+problemas distintos.
 
 ## Un comentario
 
@@ -133,7 +135,7 @@ vigente**. Ver `I-6`.
 | # | Requisito | Funcionalidad |
 |---|---|---|
 | 1 | Comentar una publicación | `FEAT-COM-006` |
-| 2 | Ordenar los comentarios por relevancia o fecha | `FEAT-COM-006`, `I-1` |
+| 2 | Ordenar los comentarios por relevancia o fecha | `FEAT-COM-006` |
 | 3 | Contador de comentarios por publicación | `FEAT-COM-006` |
 | 4 | «Me gusta» sobre un comentario, con su contador | `FEAT-COM-030` — **implementado** |
 | 5 | Responder a un comentario, con contador de respuestas | `FEAT-COM-031` |
@@ -144,7 +146,7 @@ vigente**. Ver `I-6`.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| **I-1** | ¿Cómo se calcula «Más relevantes»? ¿Qué otras opciones tiene el desplegable? | Mismo vacío que `CM-4`. Sin fórmula no hay consulta |
+| **I-1** | ¿Cómo se calcula «Más relevantes»? ¿Qué otras opciones tiene el desplegable? | **Resuelta:** `apoyos + 2 × respuestas`, sin decaimiento, desempatando por el más antiguo. El desplegable ofrece además `RECENT` y `OLDEST`. Ver [`FEAT-COM-006`](../features/community/FEAT-COM-006-comment-on-post.md) |
 | **I-2** | ¿Responder a una respuesta aplana el hilo o lo anida más? | El diseño muestra un solo nivel; la mención automática encaja con aplanar |
 | I-3 | ¿Se pueden editar o eliminar los comentarios propios? El menú «···» existe pero no tiene diseño | Ciclo de vida del comentario |
 | I-4 | ¿Se paginan los comentarios? La captura solo muestra uno | Con volumen hace falta |

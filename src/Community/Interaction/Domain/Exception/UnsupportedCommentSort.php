@@ -16,10 +16,8 @@ use LectoresBeta\Shared\Domain\Exception\FailureKind;
  * y el error solo se descubre cuando alguien se fía de un orden que nunca se
  * aplicó.
  *
- * Hoy cae aquí «más relevantes», que es el que enseña el desplegable por
- * defecto. La fórmula está decidida —`apoyos + 2 × respuestas`— y los apoyos
- * no existen (`FEAT-COM-030`): servir media fórmula y llamarla «relevancia»
- * sería ordenar por algo que no es lo que dice el nombre.
+ * Los tres que se sirven son `RECENT`, `OLDEST` y `RELEVANT`, y viajan en
+ * `supportedSorts` para que quien se equivoque no tenga que adivinarlos.
  */
 final class UnsupportedCommentSort extends \DomainException implements BusinessFailure, FailureDetails
 {

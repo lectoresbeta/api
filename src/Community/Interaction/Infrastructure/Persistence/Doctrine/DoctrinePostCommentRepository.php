@@ -37,6 +37,10 @@ final class DoctrinePostCommentRepository extends DoctrineRepository implements 
             ->andWhere('c.deletedAt IS NULL')
             ->setParameter('post', $postId->value());
 
+        if ('RELEVANT' === $sort) {
+            return $this->byRelevance($query, $after, $limit);
+        }
+
         return $this->byDate($query, 'RECENT' === $sort ? 'DESC' : 'ASC', $after, $limit);
     }
 
@@ -66,6 +70,53 @@ final class DoctrinePostCommentRepository extends DoctrineRepository implements 
     protected function entityClass(): string
     {
         return PostComment::class;
+    }
+
+    /**
+     * `apoyos + 2 × respuestas`, de mayor a menor (`FEAT-COM-006`).
+     *
+     * **Una respuesta pesa el doble que un apoyo** porque cuesta más: dar un
+     * «me gusta» es un gesto y escribir una respuesta es participar. Sin ese
+     * peso, «más relevantes» sería «más gustados» con otro nombre.
+     *
+     * **A igual puntuación, el más antiguo primero**: es quien abrió la
+     * conversación. Nótese que el desempate va al revés que el criterio, al
+     * contrario que en los órdenes por fecha, y por eso la comparación del
+     * cursor también.
+     *
+     * La aritmética va en un `HIDDEN` porque DQL no ordena por una expresión
+     * que no esté seleccionada, y el cursor la lleva dentro: sin ella, la
+     * página siguiente empezaría donde la cuenta hubiera caído esta vez, y un
+     * apoyo entre dos peticiones repetiría o se saltaría comentarios.
+     *
+     * @return list<PostComment>
+     */
+    private function byRelevance(QueryBuilder $query, ?Cursor $after, int $limit): array
+    {
+        $query->addSelect('(c.likeCount + 2 * c.replyCount) AS HIDDEN relevance');
+
+        if (null !== $after && null !== $after->rank) {
+            $query
+                ->andWhere(
+                    '(c.likeCount + 2 * c.replyCount) < :rank'
+                    .' OR ((c.likeCount + 2 * c.replyCount) = :rank'
+                    .' AND (c.createdAt > :at OR (c.createdAt = :at AND c.id > :id)))',
+                )
+                ->setParameter('rank', $after->rank)
+                ->setParameter('at', $after->at)
+                ->setParameter('id', $after->id);
+        }
+
+        /** @var list<PostComment> $found */
+        $found = $query
+            ->orderBy('relevance', 'DESC')
+            ->addOrderBy('c.createdAt', 'ASC')
+            ->addOrderBy('c.id', 'ASC')
+            ->setMaxResults($limit + 1)
+            ->getQuery()
+            ->getResult();
+
+        return $found;
     }
 
     /**
