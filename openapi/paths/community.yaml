@@ -2686,3 +2686,46 @@ chapterComment:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+postShare:
+  get:
+    tags: [Community]
+    operationId: getPostShareCard
+    summary: La tarjeta con la que se comparte una publicación
+    description: |
+      La hermana de `getWorkShareCard` para una publicación del muro
+      (`FEAT-COM-020`).
+
+      **Solo las de audiencia `EVERYONE`.** Una tarjeta es pública por
+      definición —la pide un rastreador sin sesión y acaba en la caché de una
+      red social—, así que darle una a una publicación para seguidores sería
+      convertir compartir en la puerta de atrás de la audiencia que su autor
+      eligió.
+
+      Una `FOLLOWERS`, una eliminada y una que no existe responden lo mismo.
+
+      **Si la publicación cita una obra, manda la obra**: quien comparte
+      «mirad esto» con un relato dentro quiere que se vea el relato. Y si esa
+      obra deja de ser visible, la tarjeta vuelve a hablar de la publicación
+      en vez de romperse.
+    security: []
+    parameters:
+      - $ref: '#/PostIdParam'
+    responses:
+      '200':
+        description: La tarjeta.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+            description: '`public, max-age=300`.'
+        content:
+          application/json:
+            schema:
+              $ref: '../paths/works.yaml#/ShareCard'
+      '404':
+        description: No existe, está eliminada, o su audiencia no es `EVERYONE`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

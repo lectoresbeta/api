@@ -181,3 +181,15 @@ confirmManuscript:
     path: /api/v1/manuscript-uploads/{uploadId}/work
     controller: LectoresBeta\Work\Ingest\Infrastructure\Controller\ConfirmManuscriptController::__invoke
     methods: [POST]
+
+# Los metadatos con los que se pinta la previsualización al pegar el enlace de
+# una obra en una red social (FEAT-WRK-011).
+#
+# **No genera ningún enlace**: el enlace es la dirección canónica de siempre.
+# Esto solo dice qué poner en la tarjeta, y solo de obras visibles para
+# cualquiera — compartir no puede ser una puerta trasera a lo que la
+# visibilidad cierra.
+getWorkShareCard:
+    path: /api/v1/works/{workId}/share
+    controller: LectoresBeta\Work\Manuscript\Infrastructure\Controller\GetWorkShareCardController::__invoke
+    methods: [GET]

@@ -177,7 +177,7 @@ Ficha del contexto: [`../bounded-contexts/work.md`](../bounded-contexts/work.md)
 | FEAT-WRK-008 | Configurar la visibilidad de obra y capítulos | Writer | APPROVED | PARTIAL | P1 | [ficha](work/FEAT-WRK-008-work-and-chapter-visibility.md) |
 | FEAT-WRK-009 | Generar el registro de autoría | Writer | PENDING | BLOCKED | P1 | — |
 | FEAT-WRK-010 | Crear un enlace público para leer y corregir sin sesión | Writer | APPROVED | DONE | P2 | [ficha](work/FEAT-WRK-010-public-correction-link.md) |
-| FEAT-WRK-011 | Generar enlace para compartir en redes sociales y captar LB | Writer | PENDING | TODO | P2 | — |
+| FEAT-WRK-011 | Generar enlace para compartir en redes sociales y captar LB | Writer | APPROVED | DONE | P2 | [ficha](work/FEAT-WRK-011-share-a-work-outside.md) |
 | FEAT-WRK-012 | Sección «Leer» — catálogo con filtros y ordenación | User | APPROVED | PARTIAL | P1 | [ficha](work/FEAT-WRK-012-browse-catalogue.md) |
 | FEAT-WRK-013 | Recuento de palabras y tiempo de lectura | — (sistema) | APPROVED | DONE | P0 | [ficha](work/FEAT-WRK-013-word-count-and-reading-time.md) |
 | FEAT-WRK-014 | Definir el cuestionario que acompaña a la obra | Writer | APPROVED | PARTIAL | P0 | [ficha](work/FEAT-WRK-014-configure-questionnaire.md) |
@@ -327,7 +327,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-017 | Home — carrusel de obras recomendadas | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-017-home-work-recommendations.md) |
 | FEAT-COM-018 | Home — sugerencias de autores en el muro | User | APPROVED | PARTIAL | P1 | [ficha](community/FEAT-COM-018-home-author-suggestions.md) |
 | FEAT-COM-019 | Repostear una publicación | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-019-repost.md) |
-| FEAT-COM-020 | Compartir una publicación fuera de la plataforma | User | PENDING | TODO | P2 | — |
+| FEAT-COM-020 | Compartir una publicación fuera de la plataforma | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-020-share-a-post-outside.md) |
 | FEAT-COM-021 | Guardar una publicación | User | PENDING | TODO | P3 | — |
 | FEAT-COM-022 | Ocultar una publicación del muro | User | PENDING | TODO | P3 | — |
 | FEAT-COM-023 | Denunciar una publicación | User | PENDING | DEFERRED | P3 | — |

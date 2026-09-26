@@ -67,6 +67,12 @@ security:
         - { path: '^/api/v1/admin/users/[^/]+/credit-adjustment$', roles: ROLE_ADMIN }
         - { path: '^/api/v1/admin(/|$)', roles: ROLE_MODERATOR }
 
+        # Las tarjetas de previsualización de lo que se comparte fuera
+        # (FEAT-WRK-011, FEAT-COM-020). Las pide un rastreador sin sesión, y
+        # solo responden por contenido que ya era visible para cualquiera.
+        - { path: '^/api/v1/works/[^/]+/share$', methods: [GET], roles: PUBLIC_ACCESS }
+        - { path: '^/api/v1/posts/[^/]+/share$', methods: [GET], roles: PUBLIC_ACCESS }
+
         # Las reglas de la economía de créditos, sin sesión (FEAT-CRD-015):
         # no hay nada de nadie ahí, son las reglas de la casa, y quien se está
         # planteando registrarse tiene derecho a leerlas antes.

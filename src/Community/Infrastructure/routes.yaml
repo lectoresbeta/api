@@ -319,3 +319,12 @@ deleteChapterComment:
     path: /api/v1/chapter-comments/{commentId}
     controller: LectoresBeta\Community\Interaction\Infrastructure\Controller\DeleteChapterCommentController::__invoke
     methods: [DELETE]
+
+# Lo mismo para una publicación (FEAT-COM-020), con la regla que lo sostiene:
+# **solo las de audiencia `EVERYONE`**. Una tarjeta la pide un rastreador sin
+# sesión y acaba en la caché de una red social, así que una publicación para
+# seguidores no tiene ninguna.
+getPostShareCard:
+    path: /api/v1/posts/{postId}/share
+    controller: LectoresBeta\Community\Post\Infrastructure\Controller\GetPostShareCardController::__invoke
+    methods: [GET]

@@ -5,6 +5,11 @@ parameters:
     # con lo que se empieza; el día que haya más de una instancia sirviendo la
     # API hay que cambiar el adaptador, no este valor.
     app.storage_dir: '%env(resolve:APP_STORAGE_DIR)%'
+    # Cómo se llama esto cuando lo pinta otro. Sale en la previsualización de
+    # lo que se comparte fuera (FEAT-COM-020), que es el único sitio donde el
+    # backend tiene que nombrar el producto.
+    app.site_name: 'Lectores Beta'
+
     app.welcome_credits: 10   # decision:0006
 
     # La recompensa por invitación (decision:0006 regla 6). El importe se
@@ -139,6 +144,9 @@ services:
             # Funciones de DQL: las instancia el parser de Doctrine con el
             # nombre de la función dentro, no el contenedor.
             - '../src/Shared/Infrastructure/Persistence/Doctrine/Dql/'
+            # La tarjeta de previsualización es un dato que devuelve un caso
+            # de uso, no un servicio (FEAT-WRK-011, FEAT-COM-020).
+            - '../src/Shared/Application/Sharing/ShareCard.php'
             - '../src/User/Authentication/Infrastructure/Security/AuthenticatedUser.php'
             - '../src/Shared/Infrastructure/Symfony/Kernel.php'
             - '../src/Shared/Infrastructure/Symfony/PublicServicesForTestsPass.php'
@@ -575,6 +583,21 @@ services:
     # fórmula de reparto de decision:0008.
     LectoresBeta\Work\Catalogue\Application\Contract\RecommendedWorks:
         alias: LectoresBeta\Work\Catalogue\Application\Service\ResolveRecommendedWorks
+
+    # Las tarjetas con las que se comparte fuera (FEAT-WRK-011, FEAT-COM-020).
+    #
+    # Las plantillas apuntan al **frontend** y no a la API: lo que se comparte
+    # es una página que alguien abre, no un JSON. Y son direcciones canónicas,
+    # no enlaces generados — sin token, sin caducidad, y sin abrir nada que no
+    # fuera ya público.
+    LectoresBeta\Work\Manuscript\Application\Handler\GetWorkShareCardHandler:
+        arguments:
+            $shareUrlTemplate: '%env(WORK_SHARE_URL_TEMPLATE)%'
+
+    LectoresBeta\Community\Post\Application\Handler\GetPostShareCardHandler:
+        arguments:
+            $shareUrlTemplate: '%env(POST_SHARE_URL_TEMPLATE)%'
+            $siteName: '%app.site_name%'
 
     # Con qué cuenta habla la plataforma (FEAT-COM-038). Devuelve un
     # identificador y nada más: quien quiera pintarla usa las tarjetas de

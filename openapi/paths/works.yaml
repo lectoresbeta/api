@@ -1885,3 +1885,78 @@ manuscriptUploadWork:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+ShareCard:
+  type: object
+  required: [url, title, description, imageUrl]
+  description: |
+    Los metadatos con los que se pinta la previsualización cuando alguien pega
+    un enlace de la plataforma en una red social (`FEAT-WRK-011`,
+    `FEAT-COM-020`).
+
+    **El enlace no se genera: es la dirección canónica de siempre.** No lleva
+    token, no caduca y no abre nada que no fuera ya público — compartir no
+    puede ser una puerta trasera a lo que la visibilidad cierra, y un enlace
+    con credencial dentro circulando por redes sociales es exactamente eso.
+
+    **No lleva a nadie dentro**, y no es un olvido: la pide un rastreador
+    anónimo, y poner ahí el nombre de quien escribe obligaría a resolver su
+    privacidad de perfil para alguien sin sesión. La tarjeta habla del
+    contenido, no de la persona.
+  properties:
+    url:
+      type: string
+      format: uri
+      description: La dirección canónica, en el frontend.
+    title:
+      type: string
+    description:
+      type: [string, 'null']
+    imageUrl:
+      type: [string, 'null']
+
+share:
+  get:
+    tags: [Work]
+    operationId: getWorkShareCard
+    summary: La tarjeta con la que se comparte una obra
+    description: |
+      Lo que hace falta para que pegar el enlace de una obra en WhatsApp o
+      Twitter pinte una tarjeta en vez de una URL desnuda (`FEAT-WRK-011`).
+
+      **Pública y sin sesión**, y tiene que serlo: quien la pide es un
+      rastreador. Se cachea en público cinco minutos.
+
+      **Solo de obras visibles para cualquiera.** Un borrador, una archivada o
+      una bloqueada por moderación responden `404`, el mismo que una obra que
+      no existe: decir cuál de las dos es contaría que hay una obra inédita
+      ahí.
+
+      No confundir con `FEAT-WRK-010`, que sí genera un enlace con token para
+      que alguien de fuera **corrija** una obra inédita. Esto solo previsualiza
+      lo que ya es público.
+    security: []
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '200':
+        description: La tarjeta.
+        headers:
+          Cache-Control:
+            schema:
+              type: string
+            description: '`public, max-age=300`.'
+        content:
+          application/json:
+            schema:
+              $ref: '#/ShareCard'
+      '404':
+        description: No existe, o no es visible para cualquiera.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

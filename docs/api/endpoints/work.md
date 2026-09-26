@@ -9,6 +9,7 @@
 | `POST /api/v1/works` | `createWork` | Crear obra. Nace vacía y en `DRAFT` | FEAT-WRK-001 | **Implementado** |
 | `POST /works/uploads` | `uploadManuscript` | Crear obra desde fichero | FEAT-WRK-002 | PENDING |
 | `GET /api/v1/works/{workId}` | `getWork` | Obra e **índice** de capítulos, sin texto | FEAT-WRK-004 | **Implementado** |
+| `GET /api/v1/works/{workId}/share` | `getWorkShareCard` | Tarjeta de previsualización, **pública** | FEAT-WRK-011 | **Implementado** |
 | `GET /works/{workId}/content` | `getWorkContent` | Contenido completo | FEAT-WRK-004 | PENDING |
 | `PATCH /works/{workId}` | `updateWork` | Editar metadatos | FEAT-WRK-005 | PENDING |
 | `DELETE /works/{workId}` | `deleteWork` | Eliminar obra | FEAT-WRK-006 | PENDING |
@@ -615,3 +616,35 @@ Lo que hay que frenar es a quien prueba tokens distintos.
 Ninguno sobre créditos, en ninguna de las cinco operaciones. Crear y revocar no publican
 eventos: el enlace es un asunto interno de `Work` hasta que alguien corrige por él, y entonces
 el hecho lo publica `Feedback`.
+
+---
+
+## `GET /api/v1/works/{workId}/share`
+
+**`operationId`:** `getWorkShareCard` · **Funcionalidad:** [`FEAT-WRK-011`](../../features/work/FEAT-WRK-011-share-a-work-outside.md)
+
+### Propósito
+
+Que pegar el enlace de una obra en WhatsApp o Twitter pinte una tarjeta en vez de una URL
+desnuda.
+
+### Autorización
+
+**Pública.** Quien la pide es un rastreador, sin sesión. Se cachea en público cinco minutos.
+
+### Semántica
+
+**No genera ningún enlace**, aunque el título de la ficha diga «generar». El enlace es la
+dirección canónica de la obra; lo que esto añade son los metadatos de la previsualización.
+
+Se consideró que llevara un token y se descartó: una obra inédita es el activo del producto, y
+un enlace que la abre circulando por redes sociales es el peor sitio posible para una
+credencial. Para enseñar una obra inédita a quien tú quieras ya está
+[`FEAT-WRK-010`](../../features/work/FEAT-WRK-010-public-correction-link.md), con su token y
+su límite de usos.
+
+**Solo obras visibles para cualquiera.** Un borrador responde `404`, el mismo que una obra
+inexistente: decir cuál de las dos es contaría que hay una obra inédita ahí.
+
+La tarjeta **no nombra a nadie**: poner el autor obligaría a resolver su privacidad de perfil
+para un visitante sin sesión.

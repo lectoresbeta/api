@@ -210,6 +210,15 @@ paths:
   /me/published-books/{publishedBookId}/cover:
     $ref: './paths/published-books.yaml#/cover'
 
+  # Las tarjetas de previsualización de lo que se comparte fuera
+  # (FEAT-WRK-011, FEAT-COM-020). No generan enlace: la dirección es la
+  # canónica de siempre, y solo responden por lo que ya era público.
+  /works/{workId}/share:
+    $ref: './paths/works.yaml#/share'
+
+  /posts/{postId}/share:
+    $ref: './paths/community.yaml#/postShare'
+
   # La cuenta con la que habla la plataforma (FEAT-COM-038).
   /admin/platform-posts:
     $ref: './paths/community.yaml#/platformPosts'

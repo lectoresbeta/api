@@ -26,6 +26,7 @@ sitio donde leer lo escrito.
 | `PATCH /api/v1/posts/{postId}` | `editPost` | Cambiar el texto de lo propio | FEAT-COM-002 | **Implementado** |
 | `DELETE /api/v1/posts/{postId}` | `deletePost` | Retirar lo propio | FEAT-COM-002 | **Implementado** |
 | `GET /api/v1/posts/{postId}/image` | `getPostImage` | La imagen de una publicación | FEAT-COM-002 | **Implementado** |
+| `GET /api/v1/posts/{postId}/share` | `getPostShareCard` | Tarjeta de previsualización, **pública** | FEAT-COM-020 | **Implementado** |
 | `GET /api/v1/posts/{postId}/comments` | `listPostComments` | Los comentarios | FEAT-COM-006 | **Implementado** |
 | `POST /api/v1/posts/{postId}/comments` | `createPostComment` | Comentar | FEAT-COM-006 | **Implementado** |
 | `PATCH /api/v1/comments/{commentId}` | `editPostComment` | Editar el propio | FEAT-COM-006 | **Implementado** |
@@ -618,3 +619,32 @@ un comprobador de quién tiene cuenta.
 **Los reposts cuentan como propios.** Lo que alguien saca a su muro es suyo aunque el texto sea
 de otro, que es justo lo que dice la cabecera del repost; el filtro de esa consulta va por
 quien repostea, no por quien escribió.
+
+---
+
+## `GET /api/v1/posts/{postId}/share`
+
+**`operationId`:** `getPostShareCard` · **Funcionalidad:** [`FEAT-COM-020`](../../features/community/FEAT-COM-020-share-a-post-outside.md)
+
+### Propósito
+
+La hermana de `getWorkShareCard` para una publicación del muro.
+
+### Autorización
+
+Pública, y ahí está la regla que la gobierna.
+
+### Semántica
+
+**Solo las de audiencia `EVERYONE`.** Una tarjeta es pública por definición —la pide un
+rastreador sin sesión y acaba en la caché de una red social—, así que darle una a una
+publicación para seguidores convertiría compartir en la puerta de atrás de la audiencia que su
+autor eligió.
+
+Una `FOLLOWERS`, una eliminada y una que no existe responden lo mismo: distinguirlas contaría
+que hay una publicación ahí y que no es para ti.
+
+**Si la publicación cita una obra, manda la obra.** Quien comparte «mirad esto» con un relato
+dentro quiere que se vea el relato, no las dos primeras líneas de su comentario. Y si esa obra
+deja de ser visible, la tarjeta vuelve a hablar de la publicación en vez de romperse — el
+mismo comportamiento que la tarjeta viva de `FEAT-COM-028`.
