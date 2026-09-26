@@ -78,6 +78,7 @@ final readonly class RepriceWorkOnQuestionnaireUpdate
         );
 
         $chapters = $this->prices->ofWork($workId);
+        $before = AnnounceChapterPrices::snapshot($chapters);
 
         $repriced = $this->workPricing->reprice($chapters, $demand, $now);
 
@@ -91,7 +92,7 @@ final readonly class RepriceWorkOnQuestionnaireUpdate
             $this->markProcessed($event, $now);
         });
 
-        $this->announcePrices->of($repriced, $now);
+        $this->announcePrices->of($repriced, $before, $now);
         $this->correctability->forWork($workId);
     }
 

@@ -50,6 +50,7 @@ enum NotificationKind: string
     case CORRECTION_REPLIED = 'CORRECTION_REPLIED';
     case CORRECTION_RATED = 'CORRECTION_RATED';
     case CHAPTER_COMMENT = 'CHAPTER_COMMENT';
+    case CHAPTER_PRICE_INCREASED = 'CHAPTER_PRICE_INCREASED';
     case ACCESS_REQUESTED = 'ACCESS_REQUESTED';
     case ACCESS_REQUEST_RESOLVED = 'ACCESS_REQUEST_RESOLVED';
     case BETA_READER_INVITATION = 'BETA_READER_INVITATION';
@@ -119,6 +120,7 @@ enum NotificationKind: string
 
             // De ritmo social, o demasiado frecuentes para un buzón.
             self::CORRECTION_RATED,
+            self::CHAPTER_PRICE_INCREASED,
             self::POST_REPLY,
             self::DIRECT_MESSAGE_RECEIVED,
             self::CREDITS_ADDED,
@@ -154,6 +156,7 @@ enum NotificationKind: string
             self::CORRECTION_REPLIED,
             self::CORRECTION_RATED,
             self::CHAPTER_COMMENT,
+            self::CHAPTER_PRICE_INCREASED,
             self::ACCESS_REQUESTED,
             self::ACCESS_REQUEST_RESOLVED,
             self::BETA_READER_INVITATION,

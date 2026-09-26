@@ -69,6 +69,11 @@ final readonly class PriceChapterOnContentUpdate
         $now = $this->clock->now();
 
         $chapters = $this->prices->ofWork($workId);
+
+        // Antes de tocar nada: `ChapterPrice` se modifica en el sitio, así
+        // que después ya no se sabe de dónde venía.
+        $before = AnnounceChapterPrices::snapshot($chapters);
+
         $chapter = null;
 
         foreach ($chapters as $known) {
@@ -101,6 +106,17 @@ final readonly class PriceChapterOnContentUpdate
             $announced[$chapterId->value()] = $chapter;
         } else {
             $chapter->updateContent($event->position, $event->wordCount, $this->pricing, $now);
+
+            // **Y aquí se anuncia, no en `reprice`.** `updateContent` ya ha
+            // repreciado la fila, así que cuando `WorkPricing::reprice`
+            // guarda su «antes» está guardando el precio nuevo y nunca ve un
+            // cambio: hasta ahora, ampliar un capítulo no publicaba nada y la
+            // insignia del catálogo se quedaba con la cifra vieja. La foto
+            // tomada al principio es lo único que conserva el precio de
+            // verdad anterior.
+            if ($chapter->price() !== ($before[$chapterId->value()] ?? null)) {
+                $announced[$chapterId->value()] = $chapter;
+            }
         }
 
         foreach ($this->workPricing->reprice($chapters, $this->demands->ofWork($workId), $now) as $repriced) {
@@ -117,7 +133,7 @@ final readonly class PriceChapterOnContentUpdate
             );
         });
 
-        $this->announcePrices->of(array_values($announced), $now);
+        $this->announcePrices->of(array_values($announced), $before, $now);
 
         // A different price may put a chapter within reach of the author's
         // balance, or out of it (`FEAT-CRD-009`).

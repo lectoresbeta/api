@@ -160,5 +160,9 @@ mientras alguien lo lee —porque otro responde— no tiene una posición establ
 un cursor. Paginarlo bien exige meter el contador en el cursor, no solo sumar el término que
 falta.
 
-**Falta también el aviso**: `PostCommented` se publica con a quién avisar, y `Notification` no
+**El aviso ya existe** (2026-09-26): `NotifyAboutAPostComment` consume `PostCommented` y entrega
+`POST_REPLY` a quien publicó y, si es una respuesta, también a quien escribió el comentario
+padre. Lo que sigue abajo describe el hueco tal y como estaba:
+
+~~`PostCommented` se publica con a quién avisar, y `Notification` no~~
 lo escucha todavía (`FEAT-NOT-001`).

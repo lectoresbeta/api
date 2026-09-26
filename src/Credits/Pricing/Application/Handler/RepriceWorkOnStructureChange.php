@@ -84,6 +84,8 @@ final readonly class RepriceWorkOnStructureChange
             $known[$price->chapterId()->value()] = $price;
         }
 
+        $before = AnnounceChapterPrices::snapshot($known);
+
         $inPlay = [];
 
         foreach ($order as $chapterId) {
@@ -115,7 +117,7 @@ final readonly class RepriceWorkOnStructureChange
             );
         });
 
-        $this->announcePrices->of(array_values($announced), $now);
+        $this->announcePrices->of(array_values($announced), $before, $now);
 
         // Un precio distinto puede poner un capítulo al alcance del saldo del
         // autor, o fuera de él (`FEAT-CRD-009`).

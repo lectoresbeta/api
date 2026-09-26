@@ -151,6 +151,10 @@ Dos cosas que la ficha no preveía y que la implementación obligó a decidir:
   (`RN-4`) en quien avisa; hacerla aquí es más fuerte, porque el contexto que conoce la
   audiencia es este y el hecho que no debe existir no llega a la cola.
 
+**El aviso ya existe** (2026-09-26): `NotifyTheMentionedPerson` consume `UserMentioned` y entrega
+`MENTION`. Que el mencionado pueda ver dónde se le menciona lo sigue decidiendo `Community`
+antes de publicar el hecho, y `Notification` no lo repite.
+
 **Falta** el buscador de usuarios del compositor, que es pantalla y no backend, y la prueba de
 `RN-6` —la mención a una cuenta eliminada—, que no se puede escribir hasta que se pueda
 eliminar una cuenta.

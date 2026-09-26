@@ -355,6 +355,28 @@ services:
                 # paga es el cuestionario respondido.
                 - LectoresBeta\Notification\Delivery\Application\Event\ChapterCommented
 
+                # «Han comentado tu publicación», y «te han respondido»
+                # (FEAT-COM-006 RN-8, FEAT-COM-031). `POST_REPLY` llevaba en
+                # el catálogo desde FEAT-NOT-001 con su frase escrita y sin
+                # nadie que lo disparara.
+                - LectoresBeta\Notification\Delivery\Application\Event\PostCommented
+
+                # «Te han mencionado» (FEAT-COM-032). Que el mencionado pueda
+                # ver dónde se le menciona ya lo comprobó `Community` antes de
+                # publicar el hecho: aquí no se repite.
+                - LectoresBeta\Notification\Delivery\Application\Event\UserMentioned
+
+                # «Se ha impuesto una restricción sobre tu cuenta»
+                # (FEAT-MOD-006 RN-4). Operativo: no pasa por preferencias.
+                # Hasta ahora se sancionaba a alguien y lo descubría
+                # chocándose.
+                - LectoresBeta\Notification\Delivery\Application\Event\SanctionImposed
+
+                # «Ampliar este capítulo lo ha encarecido» (FEAT-CRD-016
+                # RN-9). Solo cuando **sube**, y eso lo decide el precio
+                # anterior que el hecho ahora lleva.
+                - LectoresBeta\Notification\Delivery\Application\Event\ChapterPriceChanged
+
                 # «Te proponen ser writing buddy» (FEAT-RDG-008). El aviso que
                 # le faltaba a FEAT-NOT-005 para estar completa.
                 - LectoresBeta\Notification\Delivery\Application\Event\WritingBuddyProposed
@@ -966,6 +988,26 @@ services:
             - { name: messenger.message_handler }
 
     LectoresBeta\Notification\Delivery\Application\Handler\NotifyAboutAChapterComment:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Los cuatro avisos que el catálogo prometía y nadie disparaba.
+
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyAboutAPostComment:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheMentionedPerson:
+        tags:
+            - { name: messenger.message_handler }
+
+    # Operativo: no pasa por preferencias. Alguien sancionado tiene que
+    # enterarse de qué, por qué y hasta cuándo.
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheSanctionedPerson:
+        tags:
+            - { name: messenger.message_handler }
+
+    LectoresBeta\Notification\Delivery\Application\Handler\NotifyTheAuthorThatACorrectionCostsMore:
         tags:
             - { name: messenger.message_handler }
 

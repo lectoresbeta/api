@@ -111,6 +111,13 @@ abstract class EconomyScenario extends WebTestCase
         'CreditsAdded',
         'CreditsSpent',
 
+        // Y los dos avisos sociales que el catálogo prometía y nadie
+        // disparaba (inventario de 2026-09-26). Los otros dos de esa tanda
+        // —`SanctionImposed` y `ChapterPriceChanged`— ya estaban en la lista,
+        // que es justo la gracia: el mismo hecho lo escuchan dos contextos.
+        'PostCommented',
+        'UserMentioned',
+
         // Y lo que mover o quitar un capítulo significa para el precio
         // (`FEAT-WRK-003`).
         'ChaptersReordered',

@@ -235,8 +235,16 @@ Lleva `chapterId`, `workId`, `authorId`, `position` y `wordCount`.
   [`FEAT-CRD-006`](FEAT-CRD-006-charge-author-for-received-feedback.md), y congelar el precio al empezar,
   [`FEAT-CRD-009`](FEAT-CRD-009-balance-check-on-correction-start.md). `CorrectionPrice` ya
   existe como tabla y nadie la escribe.
-- **El aviso al autor** cuando ampliar un capítulo lo encarece (`RN-9`, `C-15`): es de
-  `Notification`, y hoy `Credits` no publica nada.
+- ~~**El aviso al autor** cuando ampliar un capítulo lo encarece (`RN-9`, `C-15`)~~ — **hecho**
+  (2026-09-26), y por el camino apareció un defecto que nadie había visto: **`Credits` no
+  publicaba `ChapterPriceChanged` al editar un capítulo**. `ChapterPrice::updateContent()` ya
+  repreciaba la fila, así que `WorkPricing::reprice()` comparaba el precio nuevo consigo mismo
+  y nunca detectaba un cambio. La insignia del catálogo (`FEAT-CRD-013`) se quedaba con la
+  cifra vieja hasta que otra cosa repreciase la obra.
+
+  Arreglado tomando una foto de los precios **antes** de tocar nada, que es además lo que
+  permite que el hecho lleve `previousCredits` y que el aviso salga **solo cuando sube**: un
+  capítulo que se abarata no interrumpe a nadie.
 - **La estimación mientras se configura** (`RN-6`): el autor no ve el precio hasta que guarda.
   Necesita el contrato de consulta de solo lectura que
   [`FEAT-WRK-014`](../work/FEAT-WRK-014-configure-questionnaire.md) `W-12` describe, y que

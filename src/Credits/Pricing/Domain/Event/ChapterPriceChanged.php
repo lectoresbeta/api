@@ -28,6 +28,15 @@ use LectoresBeta\Shared\Domain\Event\IntegrationEvent;
  *
  * No lleva saldos. Que el autor pueda pagarlo se dice aparte, en
  * `ChapterCorrectabilityChanged`, y es otra pregunta.
+ *
+ * **Lleva también el precio anterior**, y hace falta para algo concreto: el
+ * aviso de `FEAT-CRD-016` `RN-9` solo se manda cuando el capítulo se
+ * **encarece**, no cada vez que la cifra se mueve. Sin el anterior, quien
+ * avisa tendría que recordar el último precio que vio, y eso es guardar
+ * estado de precios en un contexto que no los calcula.
+ *
+ * Viene nulo cuando el capítulo **estrena precio**: no había antes con el que
+ * comparar, y eso no es un encarecimiento.
  */
 final readonly class ChapterPriceChanged implements IntegrationEvent
 {
@@ -36,6 +45,7 @@ final readonly class ChapterPriceChanged implements IntegrationEvent
         private ChapterId $chapterId,
         private WorkId $workId,
         private int $credits,
+        private ?int $previousCredits,
         private \DateTimeImmutable $changedAt,
     ) {
     }
@@ -61,6 +71,7 @@ final readonly class ChapterPriceChanged implements IntegrationEvent
             'chapterId' => $this->chapterId->value(),
             'workId' => $this->workId->value(),
             'credits' => $this->credits,
+            'previousCredits' => $this->previousCredits,
             'changedAt' => $this->changedAt->format(\DATE_ATOM),
         ];
     }

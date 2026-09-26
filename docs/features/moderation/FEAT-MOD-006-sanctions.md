@@ -191,9 +191,13 @@ Dos decisiones de modelo que la implementación obligó a tomar:
 
 **Faltan** tres cosas, y conviene verlas separadas:
 
-- **el aviso al usuario** (`RN-4`). El hecho ya lleva tipo, motivo y hasta cuándo; quien se lo
-  cuenta es `Notification`, que todavía no lo escucha. Es la pieza que hace que una sanción
-  corrija en vez de solo castigar;
+- ~~**el aviso al usuario** (`RN-4`)~~ — **hecho** (2026-09-26).
+  `NotifyTheSanctionedPerson` consume `SanctionImposed` y entrega `MODERATION_ALERT` con tipo,
+  motivo y hasta cuándo. Es **operativo**: no pasa por preferencias ni por el interruptor
+  general, por la misma razón que el aviso de contraseña cambiada — quien pudiera apagarlo se
+  quedaría sin enterarse de lo que le está pasando a su cuenta. No lleva quién la impuso: un
+  moderador no es un actor social, y nombrarlo convertiría una decisión de la plataforma en un
+  asunto entre dos personas;
 - **la congelación de la deuda** durante la suspensión parcial (`RN-9`, `MOD-43`). Es una
   decisión de `Credits`, no de aquí, y necesita que ese contexto escuche `SanctionImposed`.
   Sin ella, quien tenga saldo negativo y una suspensión parcial queda atrapado: corregir es la

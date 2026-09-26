@@ -29,6 +29,15 @@ enum NotificationTopic: string
     case CORRECTION_RECEIVED = 'CORRECTION_RECEIVED';
     case CORRECTION_CLOSED = 'CORRECTION_CLOSED';
     case CHAPTER_COMMENT = 'CHAPTER_COMMENT';
+
+    /**
+     * Ampliar un capítulo lo ha encarecido (`FEAT-CRD-016` `RN-9`).
+     *
+     * Solo campana: es una consecuencia de algo que el autor acaba de hacer,
+     * y se entera mientras sigue en la pantalla donde lo hizo. Un correo por
+     * cada guardado sería el que enseña a ignorar el remitente.
+     */
+    case CHAPTER_PRICE_INCREASED = 'CHAPTER_PRICE_INCREASED';
     case POST_REPLY = 'POST_REPLY';
     case MENTION = 'MENTION';
 
@@ -93,6 +102,7 @@ enum NotificationTopic: string
             self::POST_REPLY,
             self::DIRECT_MESSAGE_RECEIVED,
             self::CORRECTION_RATED,
+            self::CHAPTER_PRICE_INCREASED,
             self::CREDITS_ADDED,
             self::CREDITS_SPENT => [NotificationChannel::PLATFORM],
 

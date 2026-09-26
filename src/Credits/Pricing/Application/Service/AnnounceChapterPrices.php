@@ -20,6 +20,12 @@ use LectoresBeta\Shared\Domain\Event\EventId;
  * síncrona— porque la insignia se pinta en pantallas que listan decenas de
  * obras y una llamada por tarjeta las haría lentas para enseñar un número que
  * cambia poco.
+ *
+ * **El precio anterior lo trae quien llama**, y tiene que ser una foto tomada
+ * *antes* de repreciar: `ChapterPrice` se modifica en el sitio, así que para
+ * cuando esto se ejecuta la entidad ya no recuerda de dónde venía. Sin esa
+ * foto no se puede distinguir un encarecimiento de un abaratamiento, y el
+ * aviso de `FEAT-CRD-016` `RN-9` saldría en los dos casos.
  */
 final readonly class AnnounceChapterPrices
 {
@@ -28,9 +34,35 @@ final readonly class AnnounceChapterPrices
     }
 
     /**
-     * @param list<ChapterPrice> $chapters
+     * La foto del antes, tomada **antes de tocar nada**.
+     *
+     * Es un método de esta clase y no una línea suelta en cada consumidor
+     * porque los tres repreciadores necesitan exactamente lo mismo, y el que
+     * se olvidara de tomarla publicaría encarecimientos que no lo son.
+     *
+     * @param iterable<ChapterPrice> $chapters
+     *
+     * @return array<string, int>
      */
-    public function of(array $chapters, \DateTimeImmutable $now): void
+    public static function snapshot(iterable $chapters): array
+    {
+        $before = [];
+
+        foreach ($chapters as $chapter) {
+            $before[$chapter->chapterId()->value()] = $chapter->price();
+        }
+
+        return $before;
+    }
+
+    /**
+     * @param list<ChapterPrice> $chapters
+     * @param array<string, int> $previousPrices lo que valía cada capítulo
+     *                                           **antes** de repreciar,
+     *                                           indexado por identificador.
+     *                                           El que no esté estrena precio
+     */
+    public function of(array $chapters, array $previousPrices, \DateTimeImmutable $now): void
     {
         if ([] === $chapters) {
             return;
@@ -42,6 +74,7 @@ final readonly class AnnounceChapterPrices
                 $chapter->chapterId(),
                 $chapter->workId(),
                 $chapter->price(),
+                $previousPrices[$chapter->chapterId()->value()] ?? null,
                 $now,
             ),
             $chapters,

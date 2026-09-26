@@ -27,6 +27,18 @@ pasada de saneamiento aparte del trabajo de producto.
 
 ## 1. Huecos reales
 
+### 1a. ~~`Notification` no escucha cuatro hechos~~ — **hecho** (2026-09-26)
+
+> Los cuatro avisos están entregados, en una sola tanda como decía el inventario. Y al
+> escribirlos apareció **un defecto que este inventario no vio**: `Credits` no publicaba
+> `ChapterPriceChanged` al editar un capítulo —`updateContent()` repreciaba la fila antes de
+> que `reprice()` mirase, así que comparaba el precio nuevo consigo mismo—, de modo que la
+> insignia del catálogo se quedaba con la cifra vieja. Arreglado, y el hecho lleva ahora el
+> precio anterior, que es lo que permite avisar solo cuando **sube**.
+>
+> Queda lo que dice el último párrafo de esta sección: el aviso del mensaje del moderador,
+> cuyo hecho todavía no se publica.
+
 ### 1a. `Notification` no escucha cuatro hechos — **una sola tarea, no cuatro**
 
 Es el hallazgo con más peso del inventario. Cuatro fichas distintas dicen «falta el aviso» y
