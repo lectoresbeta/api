@@ -203,6 +203,8 @@ es de la obra entera.
 | `CreditBalanceChanged` | Cambia el saldo | `User` ✅ (copia el número para el menú lateral), `Notification` | `userId`, `balance`, `changedAt` |
 | `CreditBalanceWentNegative` | El saldo **cruza** a negativo | `Notification` ✅, `Feedback` ✅ | `userId`, `balance`, `crossedAt`, `subjectId`. Lo último dice de qué era el movimiento: es lo que permite bloquear esa corrección y no las ya leídas |
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback` ✅, `Notification` ✅ | `userId`, `balance`, `clearedAt`. Desbloquea **todas** las correcciones retenidas a la vez |
+| `CreditDebtFrozen` | La deuda **deja de retener** mientras dura una suspensión parcial | `Feedback` ✅ | `userId`, `frozenUntil`, `frozenAt`. **Sin saldo**: lo que cruza la frontera es el plazo, no el importe |
+| `CreditDebtThawed` | Se levanta esa congelación **antes** de su plazo | `Feedback` ✅ | `userId`, `thawedAt` |
 | `OverdraftCorrectionGranted` | Alguien **ha corregido** un capítulo que su autor no podía pagar (`FEAT-CRD-019`) | `Notification` ✅ | `authorId`, `readerId`, `correctionId`, `chapterId`, `workId`, `amount`, `creditsNeeded`, `grantedAt` |
 | `CorrectionTipped` | El autor propina una corrección recibida | **`Feedback`** ✅ (la corrección muestra que fue propinada), `Community` ✅ (reputación del corrector), `Notification` | `correctionId`, `authorId`, `readerId`, `amount`, `tippedAt` |
 
@@ -212,6 +214,18 @@ por algo que puede no llegar a ocurrir nunca. `Feedback` **no lo consume**, aunq
 propusiera: el bloqueo de esa corrección ya lo dispara `CreditBalanceWentNegative`, y dos
 hechos que bloquean lo mismo son dos verdades sobre lo mismo. Por lo mismo no existe
 `CorrectionUnlocked`: `CreditDebtCleared` ya desbloquea.
+
+`CreditDebtFrozen` **no es `CreditDebtCleared`**, y reutilizar aquel habría mentido dos veces:
+su carga lleva el saldo, que aquí sigue en rojo, y su nombre dice que la deuda se saldó, que es
+lo contrario de lo que ha pasado. Lo que ha pasado es que quien la tiene cumple una suspensión
+parcial y no puede corregir, que es la única forma de saldarla ([`FEAT-CRD-018`](../features/credits/FEAT-CRD-018-negative-balance.md)
+`RN-8b`, [`FEAT-MOD-006`](../features/moderation/FEAT-MOD-006-sanctions.md) `RN-9`).
+
+Lleva **la fecha de fin y no un «está congelada»**, y de ahí sale una ausencia que conviene
+explicar: **no existe un hecho de vencimiento natural.** Quien lo recibe guarda la fecha y
+responde «¿ahora mismo?» por su cuenta, así que la congelación se apaga sola sin un proceso
+programado que pueda dejar de ejecutarse. `CreditDebtThawed` se publica **solo** cuando un
+moderador levanta la sanción antes de tiempo, igual que `SanctionLifted`, del que deriva.
 
 **Ningún evento de `Credits` bloquea a otro contexto.** Como no se retiene nada, `Feedback`
 abre el panel de corrección contra su propia proyección de `ChapterCorrectabilityChanged`, sin
@@ -342,14 +356,25 @@ autor convertiría una acción discreta en un desaire con acuse de recibo.
 | `ClaimMessageSent` | El moderador o una parte escribe | `Notification` | `claimId`, `thread`, `authorType`. **Sin el cuerpo del mensaje** |
 | `ContentReviewPassed` | El revisor automático aprueba | **Nadie, hoy**: el texto ya está donde tiene que estar. Se publica como hecho auditable | `chapterId`, `workId`, `reviewerVersion`, `reviewedAt` |
 | `ContentReviewFlagged` | El revisor lo marca | **`Work`** ✅ (lo retira por el bloqueo de moderación), `Notification` | `chapterId`, `workId`, `authorId`, `reason`, `reviewerVersion`, `reviewedAt`. **Sin una palabra del texto** |
-| `SanctionImposed` | Se sanciona a un usuario | **`User`**, `Notification` | `sanctionId`, `userId`, `type`, `scope`, `expiresAt?` |
-| `SanctionLifted` | Caduca o se levanta | `User`, `Notification` | `sanctionId`, `userId` |
+| `SanctionImposed` | Se sanciona a un usuario | **`User`** ✅, `Notification` ✅, `Credits` ✅ | `sanctionId`, `userId`, `type`, `reason`, `expiresAt?`, `imposedAt` |
+| `SanctionLifted` | Se levanta antes de tiempo | `User` ✅, `Credits` ✅ | `sanctionId`, `userId`, `reason`, `liftedAt` |
 | `CreditAdjustmentOrdered` | Ajuste manual desde el backoffice | **`Credits`** ✅, `Notification` | `userId`, `amount`, `reason`, `orderedBy`, `claimId?`, `orderedAt`. **Lleva importe, y es la excepción que confirma la regla**: el importe viaja cuando es genuinamente parte del hecho de origen, y aquí decidirlo *era* el acto |
 
 **`ClaimUpheld` es el evento que más contextos moviliza**, y justo por eso no lleva
 instrucciones: dice **qué se ha estimado y sobre qué**, nunca «devuelve 6 créditos» ni
 «bloquea la obra». `Credits` revierte el movimiento, `Work` bloquea la obra y `User` aplica la
 sanción, cada uno según su modelo.
+
+`SanctionImposed` lo escuchan tres contextos y ninguno hace lo mismo: `User` cierra lo que
+haya que cerrar, `Notification` se lo cuenta a la persona y `Credits` decide, **a solas**, que
+durante una suspensión parcial la deuda deja de retener ([`FEAT-MOD-006`](../features/moderation/FEAT-MOD-006-sanctions.md)
+`RN-9`). Nadie le ordena congelar nada: se le cuenta que alguien ha sido sancionado, que es la
+regla dura de [`decision:0002`](../decisions/0002-credits-as-isolated-bounded-context.md).
+
+`SanctionLifted` **no se publica cuando una sanción caduca sola**, y eso condiciona a quien la
+escucha: las de plazo fijo terminan por la fecha que el hecho de imponerla ya llevaba. Por eso
+`Credits` guarda un plazo y no un interruptor, y por eso no hace falta ningún proceso que
+recorra la tabla buscando vencimientos.
 
 Tampoco viajan **el texto del reclamante, la motivación del moderador ni el cuerpo de los
 mensajes**. Son material que acusa a alguien y que va al expediente, no a una cola con

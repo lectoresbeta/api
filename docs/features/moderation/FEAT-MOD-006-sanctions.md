@@ -198,9 +198,14 @@ Dos decisiones de modelo que la implementación obligó a tomar:
   quedaría sin enterarse de lo que le está pasando a su cuenta. No lleva quién la impuso: un
   moderador no es un actor social, y nombrarlo convertiría una decisión de la plataforma en un
   asunto entre dos personas;
-- **la congelación de la deuda** durante la suspensión parcial (`RN-9`, `MOD-43`). Es una
-  decisión de `Credits`, no de aquí, y necesita que ese contexto escuche `SanctionImposed`.
-  Sin ella, quien tenga saldo negativo y una suspensión parcial queda atrapado: corregir es la
-  única forma de saldar la deuda y la sanción se lo impide;
+- ~~**la congelación de la deuda** durante la suspensión parcial (`RN-9`, `MOD-43`)~~ —
+  **hecho** (2026-09-26). `Credits` escucha `SanctionImposed` y decide a solas qué significa:
+  desde aquí no se ordena nada. Lo que se congela es **la retención de lo ya entregado**, no la
+  corregibilidad —si los capítulos volvieran a admitir correcciones, cada una cobrada haría
+  crecer la deuda, y la regla dice «ni crece»—, y se congela **hasta la fecha de fin de la
+  sanción**, que es lo que permite que el vencimiento natural no necesite anunciarse. Al
+  levantarla antes de tiempo la deuda vuelve a retener, pero solo hacia adelante: lo que el
+  autor ya pudo leer no se vuelve a cerrar
+  ([`FEAT-CRD-018`](../credits/FEAT-CRD-018-negative-balance.md) `RN-11`);
 - **la cola de asuntos vivos** del backoffice (`MOD-25`), que es lo que evita que una
   suspensión indefinida se convierta en una expulsión que nadie decidió.

@@ -117,8 +117,9 @@ personas, y una cola que persiste, reintenta y aparca mensajes no es sitio para 
 |---|---|---|
 | `ChapterCorrectabilityChanged` | **`Credits`** | Actualiza la proyección de qué capítulos admiten corrección |
 | `CreditBalanceWentNegative` | `Credits` | La corrección recién llegada se marca **bloqueada** para el autor |
-| `OverdraftCorrectionGranted` | `Credits` | Igual, para el descubierto deliberado |
-| `CorrectionUnlocked` | `Credits` | El autor repuso saldo: se desbloquea el contenido |
+| `CreditDebtCleared` | `Credits` | El autor repuso saldo: se desbloquea **todo** lo retenido a la vez |
+| `CreditDebtFrozen` | `Credits` | Cumple una suspensión parcial: se libera lo retenido y se apunta hasta cuándo, para que lo que llegue durante el plazo tampoco se retenga |
+| `CreditDebtThawed` | `Credits` | Se levantó la sanción antes de tiempo: la deuda vuelve a retener, pero **solo hacia adelante** (`RN-11`) |
 | `CorrectionTipped` | `Credits` | Apunta en la corrección que fue propinada. **El importe no se publica corrección a corrección** |
 | `WorkClosedForCorrection` | `Work` | Los borradores en curso dejan de poder enviarse (`Q-5`) |
 

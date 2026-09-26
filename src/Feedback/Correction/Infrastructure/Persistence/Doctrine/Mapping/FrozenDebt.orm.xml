@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Proyeccion de una decision de `Credits`. Una fila por autor con la
+         deuda congelada, y ninguna para todos los demas. Sin clave ajena a
+         nada: el identificador llego en un hecho. -->
+    <entity name="LectoresBeta\Feedback\Correction\Domain\Entity\FrozenDebt"
+            table="frozen_debt" schema="feedback_ctx">
+
+        <id name="authorId" column="author_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="frozenUntil" column="frozen_until" type="datetime_immutable"/>
+        <field name="liftedAt" column="lifted_at" type="datetime_immutable" nullable="true"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

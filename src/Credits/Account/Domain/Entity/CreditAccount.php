@@ -39,6 +39,36 @@ class CreditAccount
 
     private ?\DateTimeImmutable $anonymisedAt = null;
 
+    /**
+     * Hasta cuándo la deuda **no retiene nada** (`FEAT-CRD-018` `RN-8b`,
+     * `FEAT-MOD-006` `RN-9`).
+     *
+     * Es una fecha y no un interruptor porque la suspensión parcial que la
+     * provoca tiene duración, y **al expirar no se publica ningún hecho**:
+     * nadie avisa de que un plazo se ha cumplido. Con una fecha, la
+     * congelación se apaga sola, sin proceso programado que pueda dejar de
+     * ejecutarse y sin que un fallo suyo deje a nadie congelado para siempre.
+     *
+     * **Lo que se congela es la retención, no la corregibilidad.** La deuda
+     * hace dos cosas: retiene el contenido de lo ya entregado y cierra la
+     * puerta a recibir más. Congelar la segunda haría que durante la sanción
+     * entraran correcciones nuevas y la deuda **creciera**, que es justo lo
+     * que `RN-8b` prohíbe en la misma frase. Así que la corregibilidad sigue
+     * mirando el saldo de verdad, y esta fecha solo gobierna la retención.
+     */
+    private ?\DateTimeImmutable $debtFrozenUntil = null;
+
+    /**
+     * Y cuándo se levantó la sanción **antes** de ese plazo.
+     *
+     * Dos fechas en vez de borrar la primera, porque la cola reentrega: si
+     * levantar dejara `debtFrozenUntil` a nulo, la siguiente reentrega del
+     * `SanctionImposed` original volvería a congelar, y la de `SanctionLifted`
+     * a descongelar, para siempre. Guardando las dos, reaplicar un hecho ya
+     * aplicado no cambia nada, que es la definición de idempotente.
+     */
+    private ?\DateTimeImmutable $debtFreezeLiftedAt = null;
+
     public function __construct(UserId $userId, \DateTimeImmutable $now)
     {
         $this->userId = $userId->value();
@@ -56,9 +86,77 @@ class CreditAccount
         return $this->balance;
     }
 
+    /**
+     * Si hay deuda **de verdad**, congelada o no. Es la contabilidad, y la
+     * contabilidad no se congela: lo que se congela son sus efectos.
+     */
     public function isInDebt(): bool
     {
         return $this->balance < 0;
+    }
+
+    public function isDebtFrozenAt(\DateTimeImmutable $moment): bool
+    {
+        if (null === $this->debtFrozenUntil || $moment >= $this->debtFrozenUntil) {
+            return false;
+        }
+
+        return null === $this->debtFreezeLiftedAt || $moment < $this->debtFreezeLiftedAt;
+    }
+
+    /**
+     * Congelar **nunca acorta**: dos sanciones solapadas dejan la fecha más
+     * lejana, que es la que de verdad describe hasta cuándo esa persona no
+     * puede corregir.
+     *
+     * Responde si la ventana ha cambiado de verdad, que es lo que decide si
+     * hay algo que anunciar. Reaplicar el mismo hecho responde `false`: no
+     * alarga el plazo, y no revive una sanción que se levantó después.
+     */
+    public function freezeDebtUntil(\DateTimeImmutable $until, \DateTimeImmutable $decidedAt, \DateTimeImmutable $now): bool
+    {
+        $before = [$this->debtFrozenUntil, $this->debtFreezeLiftedAt];
+
+        if (null === $this->debtFrozenUntil || $until > $this->debtFrozenUntil) {
+            $this->debtFrozenUntil = $until;
+        }
+
+        if (null !== $this->debtFreezeLiftedAt && $decidedAt > $this->debtFreezeLiftedAt) {
+            // Una sanción posterior al levantamiento: es otra, y vuelve a
+            // congelar. La reentrega de la que se levantó, no.
+            $this->debtFreezeLiftedAt = null;
+        }
+
+        if ($before === [$this->debtFrozenUntil, $this->debtFreezeLiftedAt]) {
+            return false;
+        }
+
+        $this->updatedAt = $now;
+
+        return true;
+    }
+
+    /**
+     * Levantar la sanción antes de tiempo devuelve la deuda a la vida.
+     *
+     * Responde si **estaba** congelada, que es lo que decide si hay algo que
+     * anunciar: descongelar lo que ya se había descongelado solo no es un
+     * hecho.
+     */
+    public function thawDebt(\DateTimeImmutable $decidedAt, \DateTimeImmutable $now): bool
+    {
+        if (!$this->isDebtFrozenAt($now)) {
+            return false;
+        }
+
+        if (null !== $this->debtFreezeLiftedAt && $this->debtFreezeLiftedAt <= $decidedAt) {
+            return false;
+        }
+
+        $this->debtFreezeLiftedAt = $decidedAt;
+        $this->updatedAt = $now;
+
+        return true;
     }
 
     public function invitationRewards(): int

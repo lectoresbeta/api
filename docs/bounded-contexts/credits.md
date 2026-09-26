@@ -213,6 +213,8 @@ público está fuera de la economía.
 | `CreditBalanceChanged` | Cambia el saldo | Read models, `Notification` |
 | `CreditBalanceWentNegative` | El saldo cruza a negativo | `Notification` (avisa y **explica la salida**) |
 | `CreditDebtCleared` | Vuelve a cero o más | `Feedback`, `Notification` |
+| `CreditDebtFrozen` | La deuda **deja de retener** mientras dura una suspensión parcial | `Feedback` |
+| `CreditDebtThawed` | Se levanta esa congelación antes de su plazo | `Feedback` |
 | `OverdraftCorrectionGranted` | Alguien **ha corregido** un capítulo que su autor no podía pagar | `Notification` (el correo gancho) |
 | `CorrectionTipped` | El autor propina una corrección recibida | `Feedback` (la marca como propinada), `Community` (reputación del corrector), `Notification` |
 
@@ -237,6 +239,16 @@ sobre lo mismo.
 `Credits` **consume** además un hecho de `User`, `ReactivationOfferChoiceChanged`, y es el
 único que consume de ese contexto. Es la forma de que la renuncia al gancho de reactivación
 llegue aquí sin que este contexto pregunte nada (`FEAT-CRD-019` `RN-2d`, `RN-8`).
+
+Y **dos hechos de `Moderation`**, `SanctionImposed` y `SanctionLifted`, de los que este
+contexto saca su propia conclusión: durante una suspensión parcial la deuda deja de retener lo
+ya entregado (`FEAT-CRD-018` `RN-8b`). Nadie le ordena congelar nada —eso sería justo lo que
+`decision:0002` prohíbe—; se le cuenta que alguien ha sido sancionado y aquí se decide qué
+significa. Lo que **no** se congela es la corregibilidad: si los capítulos volvieran a admitir
+correcciones durante la sanción, cada una cobrada haría crecer la deuda.
+
+La congelación se guarda como **una fecha**, porque una suspensión parcial caduca sola y
+`Moderation` no publica nada al vencer el plazo. Así se apaga sin ningún proceso programado.
 
 ## Idempotencia
 

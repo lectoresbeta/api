@@ -27,6 +27,15 @@
         <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
         <field name="anonymisedAt" column="anonymised_at" type="datetime_immutable" nullable="true"/>
 
+        <!--
+            Nulo es lo normal: casi nadie tiene la deuda congelada. Sin
+            indice, porque nada barre esta columna buscando vencimientos
+            — la congelacion caduca por comparacion de fechas cuando se
+            lee la cuenta, no por un proceso que recorra la tabla.
+        -->
+        <field name="debtFrozenUntil" column="debt_frozen_until" type="datetime_immutable" nullable="true"/>
+        <field name="debtFreezeLiftedAt" column="debt_freeze_lifted_at" type="datetime_immutable" nullable="true"/>
+
     </entity>
 
 </doctrine-mapping>

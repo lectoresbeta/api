@@ -94,12 +94,30 @@ defecto que el servidor responde `422`. Es la única categoría de hueco que el 
 | FEAT-WRK-012 `RN-8` | El catálogo no esconde las obras de quien te ha bloqueado | Medio |
 | FEAT-MOD-005 `MOD-47` | Desestimar un correo que no aporta nada reclamable no deja traza | Pequeño |
 | FEAT-MOD-006 `MOD-25` | No hay cola de asuntos vivos: una suspensión indefinida se vuelve expulsión sin que nadie lo decida | Medio |
-| FEAT-MOD-006 `RN-9` | `Credits` no congela la deuda durante una suspensión parcial | **Ver abajo** |
+| ~~FEAT-MOD-006 `RN-9`~~ | ~~`Credits` no congela la deuda durante una suspensión parcial~~ — **hecho** (2026-09-26) | **Ver abajo** |
 | FEAT-CRD-006 | `CreditDebtCleared` — el evento existe y `Notification` lo escucha, pero **nada lo publica** | Pequeño |
 
 **`MOD-006 RN-9` merece un párrafo**, porque no es un hueco cosmético sino una trampa: quien
 tiene saldo negativo y recibe una suspensión parcial queda atrapado. Corregir es la única forma
-de saldar la deuda, y la sanción se lo impide. Hoy esa combinación es posible y no hay salida.
+de saldar la deuda, y la sanción se lo impide.
+
+**Hecho** (2026-09-26), y aquí este inventario se equivocó al medirlo: lo llamé «pequeño» y no
+lo es. Al abrirlo aparecieron tres cosas que no se ven desde fuera:
+
+- **congelar no es un booleano.** La suspensión parcial tiene duración y al expirar **no se
+  publica ningún hecho**, así que la congelación tiene que ser una fecha. Eso, a cambio, es lo
+  que evita el proceso programado que yo temía: si es una fecha, se apaga sola;
+- **se congela la retención, no la corregibilidad.** Si durante la sanción los capítulos
+  volvieran a admitir correcciones, cada una cobrada haría **crecer** la deuda — y la regla
+  dice «ni crece» en la misma frase en que dice «ni bloquea nada». Con eso claro, no hay
+  ningún recálculo que programar;
+- **hay que decírselo a `Feedback`**, y con dos hechos nuevos: `CreditDebtCleared` no valía,
+  porque su carga lleva el saldo —que sigue en rojo— y su nombre mentiría. Son
+  `CreditDebtFrozen` y `CreditDebtThawed`.
+
+Y la implementación destapó un vaivén que no estaba en el guion: la cola reentrega, y una
+reentrega de `SanctionImposed` volvía a congelar lo que `SanctionLifted` acababa de
+descongelar, sin parar. Se arregla guardando **dos fechas** en lugar de borrar una.
 
 ---
 
@@ -159,8 +177,9 @@ qué queda realmente abierto después de cerrar las ocho de ayer.
 dice `PARTIAL`. Peor: el cuerpo de las tres fichas dice `**Implementación:** TODO`, que
 contradice su propio *front matter* (`impl_status: PARTIAL`) y contradice la realidad.
 
-**FEAT-CRD-018** tiene el mismo defecto al revés: `impl_status: DONE` en la cabecera y
-`**Implementación:** TODO` tres párrafos más abajo.
+~~**FEAT-CRD-018** tiene el mismo defecto al revés: `impl_status: DONE` en la cabecera y
+`**Implementación:** TODO` tres párrafos más abajo.~~ — **arreglada** (2026-09-26) al cerrar
+`RN-8b`. Quedan las tres de `Moderation`.
 
 `check-docs.py` no lo detecta porque **solo lee el *front matter***, no la línea en prosa. Son
 dos fuentes de verdad para el mismo dato, y la que la gente lee al abrir la ficha es la que
@@ -176,8 +195,9 @@ desactualizarse solo.
 
 1. **Los cuatro avisos que faltan** (§1a). Una tanda, y uno de ellos —la sanción— es una
    persona enterándose de que la han castigado por chocarse con un muro.
-2. **La congelación de deuda en suspensión parcial** (§1d). Es una trampa sin salida, y es
-   pequeña.
+2. ~~**La congelación de deuda en suspensión parcial** (§1d). Es una trampa sin salida, y es
+   pequeña.~~ — **hecho** (2026-09-26). Pequeña no era; el párrafo del §1d cuenta en qué me
+   equivoqué.
 3. **Los dos órdenes por defecto que responden `422`** (§1c). Lo único de esta lista que un
    usuario ve hoy.
 4. **La purga de la tabla de deduplicación** (§1b). Media tarde, y deja de crecer.

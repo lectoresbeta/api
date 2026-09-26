@@ -207,4 +207,28 @@ es, contablemente, emisión. Se registra como tal y no se finge que se cobra.
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
+**Implementación:** `DONE` (2026-09-26). El recorrido entero —caer en rojo, quedarse sin poder
+recibir, corregir para salir y que todo se desbloquee solo— está en `Credits` y `Feedback`, y
+se comprueba de punta a punta en `tests/Functional/Credits/NegativeBalanceTest.php` pasando por
+la API y por el serializador real de eventos.
+
+Sobre `RN-8b`, la congelación durante una suspensión parcial, tres decisiones que la ficha no
+podía anticipar y que son la funcionalidad:
+
+- **se congela la retención, no la corregibilidad.** La deuda hace dos cosas: retiene el
+  contenido de lo ya entregado (`RN-9`) y cierra la puerta a recibir más (`RN-2`). Si durante
+  la sanción los capítulos volvieran a admitir correcciones, cada una cobrada **ahondaría** la
+  deuda — y la regla dice «ni crece» en la misma frase en que dice «ni bloquea nada». Así que
+  la corregibilidad sigue mirando el saldo de verdad;
+- **es una fecha, no un interruptor.** Una suspensión parcial caduca sola y **nadie publica un
+  hecho al vencer el plazo** ([`FEAT-MOD-006`](../moderation/FEAT-MOD-006-sanctions.md) `RN-3`).
+  Guardando hasta cuándo, la congelación se apaga sin proceso programado que pueda dejar de
+  ejecutarse, y `Feedback` guarda esa misma fecha para poder responder «¿ahora mismo?» a cada
+  corrección que entregue, no solo a las del día en que llegó el hecho;
+- **al levantarse, la deuda vuelve a retener hacia adelante y nada se vuelve a cerrar.** Lo
+  que el autor ya pudo leer, leído está: `RN-11` no admite excepciones por el motivo por el
+  que se abrió.
+
+Son **dos hechos nuevos**, `CreditDebtFrozen` y `CreditDebtThawed`. `CreditDebtCleared` no
+servía: su carga lleva el saldo, que aquí sigue en rojo, y su nombre diría que la deuda se
+saldó, que es lo contrario de lo que ha pasado.

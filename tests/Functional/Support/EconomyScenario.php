@@ -91,6 +91,12 @@ abstract class EconomyScenario extends WebTestCase
         'CreditBalanceWentNegative',
         'CreditDebtCleared',
 
+        // Y los dos de la congelación (`RN-8b`), que no son los mismos: el
+        // saldo sigue en rojo, lo que se levanta es la retención mientras la
+        // persona cumple una suspensión parcial y no puede corregir.
+        'CreditDebtFrozen',
+        'CreditDebtThawed',
+
         // Y lo que una reclamación estimada desencadena (`FEAT-MOD-002`,
         // `FEAT-MOD-003`): `Work` bloquea lo reclamado y `Credits` revierte
         // lo que se cobró; el bloqueo, a su vez, avisa al autor.

@@ -215,6 +215,14 @@ services:
                 - LectoresBeta\Feedback\Correction\Application\Event\CreditBalanceWentNegative
                 - LectoresBeta\Feedback\Correction\Application\Event\CreditDebtCleared
 
+                # La deuda deja de retener mientras dura una suspensión
+                # parcial (FEAT-CRD-018 RN-8b). No es `CreditDebtCleared`:
+                # el saldo sigue en rojo, y reutilizar aquel habría hecho
+                # que el nombre mintiera y que la carga llevara un saldo
+                # que contradice el hecho.
+                - LectoresBeta\Feedback\Correction\Application\Event\CreditDebtFrozen
+                - LectoresBeta\Feedback\Correction\Application\Event\CreditDebtThawed
+
                 # El eco de lo que se pagó por cada corrección (FEAT-FBK-010).
                 # Proyección y no contrato: `Credits` no publica ninguno.
                 - LectoresBeta\Feedback\Correction\Application\Event\CreditsAdded
@@ -286,6 +294,13 @@ services:
                 # Lo que `Moderation` decide y `User` aplica (FEAT-MOD-006).
                 - LectoresBeta\User\Account\Application\Event\SanctionImposed
                 - LectoresBeta\User\Account\Application\Event\SanctionLifted
+
+                # Y lo que la misma decisión significa para el saldo, que lo
+                # decide `Credits` a solas (FEAT-MOD-006 RN-9): nadie le
+                # ordena congelar nada, se le cuenta que alguien ha sido
+                # sancionado.
+                - LectoresBeta\Credits\Account\Application\Event\SanctionImposed
+                - LectoresBeta\Credits\Account\Application\Event\SanctionLifted
 
                 - LectoresBeta\Notification\Delivery\Application\Event\UserRegistered
                 - LectoresBeta\Notification\Delivery\Application\Event\ActivationEmailRequested
@@ -815,6 +830,8 @@ services:
         tags:
             - { name: messenger.message_handler, method: wentNegative }
             - { name: messenger.message_handler, method: debtCleared }
+            - { name: messenger.message_handler, method: debtFrozen }
+            - { name: messenger.message_handler, method: debtThawed }
 
     # Empezar y reanudar conceden igual aquí, y son dos hechos porque en
     # `Credits` no lo son: reanudar no toma hueco ni fija precio.
@@ -878,6 +895,15 @@ services:
     # `Moderation` la registra y este contexto la aplica: dos dueños del
     # estado de una cuenta serían uno de más.
     LectoresBeta\User\Account\Application\Handler\ApplySanction:
+        tags:
+            - { name: messenger.message_handler, method: imposed }
+            - { name: messenger.message_handler, method: lifted }
+
+    # Y lo que significa para su deuda (FEAT-CRD-018 RN-8b). Quien cumple una
+    # suspensión parcial no puede corregir, y corregir es lo único que salda
+    # la deuda: retenerle mientras tanto lo ya entregado sería exigirle justo
+    # lo que le hemos prohibido.
+    LectoresBeta\Credits\Account\Application\Handler\FreezeDebtWhileSuspended:
         tags:
             - { name: messenger.message_handler, method: imposed }
             - { name: messenger.message_handler, method: lifted }

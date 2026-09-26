@@ -6,7 +6,11 @@ namespace LectoresBeta\Feedback\Correction\Application\Handler;
 
 use LectoresBeta\Feedback\Correction\Application\Event\CreditBalanceWentNegative;
 use LectoresBeta\Feedback\Correction\Application\Event\CreditDebtCleared;
+use LectoresBeta\Feedback\Correction\Application\Event\CreditDebtFrozen;
+use LectoresBeta\Feedback\Correction\Application\Event\CreditDebtThawed;
+use LectoresBeta\Feedback\Correction\Domain\Entity\FrozenDebt;
 use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectionRepository;
+use LectoresBeta\Feedback\Correction\Domain\Repository\FrozenDebtRepository;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\AuthorId;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\CorrectionId;
 use LectoresBeta\Shared\Domain\Clock\Clock;
@@ -33,11 +37,19 @@ use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
  *   leído, leído está, y quitárselo después sería reescribir el pasado;
  * - **se desbloquean todas de golpe** (`RN-10`), sin liberación parcial: es
  *   más simple y el resultado agregado es el mismo.
+ *
+ * Y una tercera, que llega de fuera: **durante una suspensión parcial la
+ * retención se levanta** (`RN-8b`, [`FEAT-MOD-006`](../../../../../docs/features/moderation/FEAT-MOD-006-sanctions.md)
+ * `RN-9`). Quien está suspendido no puede corregir, y corregir es lo único
+ * que salda la deuda; retenerle mientras tanto sería exigirle justo lo que le
+ * hemos prohibido. Al levantarse la sanción la deuda vuelve a retener, pero
+ * **solo hacia adelante**: lo que ya pudo leer no se vuelve a cerrar (`RN-11`).
  */
 final readonly class TrackCorrectionLocking
 {
     public function __construct(
         private CorrectionRepository $corrections,
+        private FrozenDebtRepository $frozenDebts,
         private TransactionalSession $session,
         private Clock $clock,
     ) {
@@ -62,6 +74,15 @@ final readonly class TrackCorrectionLocking
             return;
         }
 
+        $frozen = $this->frozenDebts->ofAuthor($correction->ownerId());
+
+        if (null !== $frozen && $frozen->isInForceAt($this->clock->now())) {
+            // La deuda está congelada: entra sin retener (`RN-8b`). Se
+            // pregunta por la fecha y no por «llegó el evento de congelar»
+            // porque esto puede ocurrir semanas después de aquel.
+            return;
+        }
+
         $this->session->execute(function () use ($correction): void {
             $correction->lock($this->clock->now());
             $this->corrections->save($correction);
@@ -70,12 +91,80 @@ final readonly class TrackCorrectionLocking
 
     public function debtCleared(CreditDebtCleared $event): void
     {
-        try {
-            $authorId = AuthorId::fromString($event->userId);
-        } catch (InvalidValue) {
+        $authorId = $this->parse($event->userId);
+
+        if (null === $authorId) {
             return;
         }
 
+        $this->releaseEverythingHeldFrom($authorId);
+    }
+
+    /**
+     * El autor está cumpliendo una suspensión parcial (`RN-8b`).
+     *
+     * Dos cosas, y las dos hacen falta: se libera lo que ya estaba retenido y
+     * se **apunta la fecha**, porque lo que se entregue durante el plazo
+     * tampoco debe retenerse y para entonces este evento será historia.
+     */
+    public function debtFrozen(CreditDebtFrozen $event): void
+    {
+        $authorId = $this->parse($event->userId);
+
+        if (null === $authorId) {
+            return;
+        }
+
+        $now = $this->clock->now();
+        $frozen = $this->frozenDebts->ofAuthor($authorId);
+        // La fecha del hecho, no la de ahora: reaplicarlo no debe alargar el
+        // plazo ni revivir una sanción que después se levantó.
+        $changed = null === $frozen || $frozen->freezeUntil($event->frozenUntil, $event->occurredAt(), $now);
+        $frozen ??= new FrozenDebt($authorId, $event->frozenUntil, $now);
+
+        $this->session->execute(function () use ($frozen): void {
+            $this->frozenDebts->save($frozen);
+        });
+
+        if ($changed) {
+            $this->releaseEverythingHeldFrom($authorId);
+        }
+    }
+
+    /**
+     * Se ha levantado la sanción antes de su plazo.
+     *
+     * Solo se retira la fecha. **Nada se vuelve a bloquear**: lo que el autor
+     * ha podido leer, leído está (`RN-11`). Lo que la deuda recupera es su
+     * efecto sobre lo que venga después.
+     */
+    public function debtThawed(CreditDebtThawed $event): void
+    {
+        $authorId = $this->parse($event->userId);
+
+        if (null === $authorId) {
+            return;
+        }
+
+        $frozen = $this->frozenDebts->ofAuthor($authorId);
+
+        if (null === $frozen) {
+            return;
+        }
+
+        $now = $this->clock->now();
+
+        if (!$frozen->liftAt($event->occurredAt(), $now)) {
+            return;
+        }
+
+        $this->session->execute(function () use ($frozen): void {
+            $this->frozenDebts->save($frozen);
+        });
+    }
+
+    private function releaseEverythingHeldFrom(AuthorId $authorId): void
+    {
         $locked = $this->corrections->lockedFor($authorId);
 
         if ([] === $locked) {
@@ -90,5 +179,14 @@ final readonly class TrackCorrectionLocking
                 $this->corrections->save($correction);
             }
         });
+    }
+
+    private function parse(string $userId): ?AuthorId
+    {
+        try {
+            return AuthorId::fromString($userId);
+        } catch (InvalidValue) {
+            return null;
+        }
     }
 }

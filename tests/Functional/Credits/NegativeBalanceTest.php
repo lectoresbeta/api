@@ -24,6 +24,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class NegativeBalanceTest extends EconomyScenario
 {
+    /** @var array{token: string, userId: string}|null */
+    private ?array $moderadora = null;
+
     /**
      * El recorrido entero: caer en rojo, quedarse sin poder recibir, corregir
      * para salir, y que todo se desbloquee solo.
@@ -135,6 +138,193 @@ final class NegativeBalanceTest extends EconomyScenario
         $this->clearTheDebtByCorrecting($autora);
 
         self::assertContains('CORRECTION_UNLOCKED', $this->inboxKindsOf($autora['token']));
+    }
+
+    /**
+     * `RN-8b` y [`FEAT-MOD-006`](../../../docs/features/moderation/FEAT-MOD-006-sanctions.md)
+     * `RN-9`: durante una suspensión parcial la deuda deja de retener.
+     *
+     * La trampa que esto evita: quien está suspendido no puede corregir, y
+     * corregir es la única forma de saldar la deuda. Retenerle mientras tanto
+     * lo que ya le entregaron sería exigirle justo lo que le hemos prohibido.
+     */
+    public function testAPartialSuspensionReleasesWhatTheDebtWasHolding(): void
+    {
+        [$autora, $primera, $segunda, $chapterId] = $this->aWorkWithTwoReadersInside();
+
+        $this->submit($chapterId, $primera['token']);
+        $correctionId = $this->submit($chapterId, $segunda['token']);
+        $this->consumeEverything();
+
+        self::assertLessThan(0, (int) $this->balanceOf($autora['userId']));
+        self::assertSame(CorrectionVisibility::LOCKED, $this->visibilityOf($correctionId));
+
+        $this->suspendPartially($autora['userId']);
+
+        // El saldo **no** se toca: la contabilidad no se congela, lo que se
+        // congela son sus efectos.
+        self::assertLessThan(0, (int) $this->balanceOf($autora['userId']), 'Sigue debiendo lo mismo.');
+        self::assertSame(CorrectionVisibility::VISIBLE, $this->visibilityOf($correctionId), 'Pero ya puede leerla.');
+    }
+
+    /**
+     * La otra mitad de `RN-8b`: se congela **la retención, no la
+     * corregibilidad**.
+     *
+     * Si durante la sanción sus capítulos volvieran a admitir correcciones,
+     * cada una cobrada ahondaría la deuda — y la regla dice «ni crece» en la
+     * misma frase en que dice «ni bloquea nada».
+     */
+    public function testTheFrozenDebtStillKeepsNewCorrectionsOut(): void
+    {
+        [$autora, $primera, $segunda, $chapterId] = $this->aWorkWithTwoReadersInside();
+
+        $this->submit($chapterId, $primera['token']);
+        $this->submit($chapterId, $segunda['token']);
+        $this->consumeEverything();
+
+        $this->suspendPartially($autora['userId']);
+
+        $tercera = $this->activatedPerson('tercera');
+        $this->start($chapterId, $tercera['token']);
+
+        self::assertResponseStatusCodeSame(Response::HTTP_CONFLICT, 'Congelar no es perdonar.');
+        self::assertSame('CHAPTER_NOT_TAKING_CORRECTIONS', $this->payload()['code']);
+    }
+
+    /**
+     * Y lo que llega **durante** el plazo tampoco se retiene.
+     *
+     * Aquí se ve por qué `Feedback` guarda la fecha y no solo el aviso: esta
+     * corrección se entrega después de que el evento de congelar haya pasado
+     * y se haya olvidado. Sin la fila, llegaría bloqueada.
+     */
+    public function testACorrectionDeliveredDuringTheFreezeArrivesUnlocked(): void
+    {
+        [$autora, $primera, $segunda, $chapterId] = $this->aWorkWithTwoReadersInside();
+
+        // La primera entrega con el saldo todavía a flote.
+        $this->submit($chapterId, $primera['token']);
+        $this->consumeEverything();
+        self::assertGreaterThanOrEqual(0, (int) $this->balanceOf($autora['userId']));
+
+        // Se la sanciona **antes** de caer en rojo.
+        $this->suspendPartially($autora['userId']);
+
+        // Y ahora la segunda, que ya estaba dentro, entrega y la deja en rojo.
+        $correctionId = $this->submit($chapterId, $segunda['token']);
+        $this->consumeEverything();
+
+        self::assertLessThan(0, (int) $this->balanceOf($autora['userId']));
+        self::assertSame(CorrectionVisibility::VISIBLE, $this->visibilityOf($correctionId));
+    }
+
+    /**
+     * Levantar la sanción devuelve la deuda a la vida, pero **solo hacia
+     * adelante** (`RN-11`).
+     *
+     * Lo que la autora ya pudo leer, leído está. Volver a cerrarlo sería
+     * reescribir el pasado, y la regla no admite excepciones por el motivo
+     * por el que se abrió.
+     */
+    public function testLiftingTheSanctionDoesNotCloseAgainWhatWasAlreadyRead(): void
+    {
+        [$autora, $primera, $segunda, $chapterId] = $this->aWorkWithTwoReadersInside();
+
+        $this->submit($chapterId, $primera['token']);
+        $correctionId = $this->submit($chapterId, $segunda['token']);
+        $this->consumeEverything();
+
+        $sanctionId = $this->suspendPartially($autora['userId']);
+        self::assertSame(CorrectionVisibility::VISIBLE, $this->visibilityOf($correctionId));
+
+        $this->liftSanction($sanctionId);
+
+        self::assertLessThan(0, (int) $this->balanceOf($autora['userId']), 'La deuda nunca se fue.');
+        self::assertSame(CorrectionVisibility::VISIBLE, $this->visibilityOf($correctionId));
+    }
+
+    /**
+     * Y una suspensión **total** no congela nada.
+     *
+     * No hay nadie dentro a quien retenerle la lectura, y perdonarle la
+     * consecuencia a quien hizo algo peor sería premiar la gravedad.
+     */
+    public function testAFullSuspensionDoesNotFreezeTheDebt(): void
+    {
+        [$autora, $primera, $segunda, $chapterId] = $this->aWorkWithTwoReadersInside();
+
+        $this->submit($chapterId, $primera['token']);
+        $correctionId = $this->submit($chapterId, $segunda['token']);
+        $this->consumeEverything();
+
+        $this->impose([
+            'userId' => $autora['userId'],
+            'type' => 'FULL_SUSPENSION',
+            'reason' => 'Reincidencia grave',
+        ]);
+
+        self::assertSame(CorrectionVisibility::LOCKED, $this->visibilityOf($correctionId));
+    }
+
+    /**
+     * Impone una suspensión parcial y deja que todos los contextos la
+     * procesen.
+     *
+     * @return string el identificador de la sanción, para poder levantarla
+     */
+    private function suspendPartially(string $userId): string
+    {
+        return $this->impose([
+            'userId' => $userId,
+            'type' => 'PARTIAL_SUSPENSION',
+            'reason' => 'Comentarios ofensivos',
+            'duration' => 'ONE_WEEK',
+        ]);
+    }
+
+    /**
+     * @param array<string, string> $body
+     *
+     * @return string el identificador de la sanción impuesta
+     */
+    private function impose(array $body): string
+    {
+        $this->client->request('POST', '/api/v1/admin/sanctions', server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$this->moderadora()['token'],
+        ], content: json_encode($body, \JSON_THROW_ON_ERROR));
+
+        self::assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $sanctionId = (string) $this->payload()['sanctionId'];
+
+        $this->capture();
+        $this->consumeEverything();
+
+        return $sanctionId;
+    }
+
+    private function liftSanction(string $sanctionId): void
+    {
+        $this->client->request('POST', \sprintf('/api/v1/admin/sanctions/%s/lift', $sanctionId), server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$this->moderadora()['token'],
+        ], content: json_encode(['reason' => 'Se aclaró el malentendido'], \JSON_THROW_ON_ERROR));
+
+        self::assertResponseIsSuccessful();
+        $this->capture();
+        $this->consumeEverything();
+    }
+
+    /**
+     * La misma moderadora en todas las llamadas de un test: registrarla dos
+     * veces chocaría con su propio correo.
+     *
+     * @return array{token: string, userId: string}
+     */
+    private function moderadora(): array
+    {
+        return $this->moderadora ??= $this->moderator('moderadora');
     }
 
     /**
