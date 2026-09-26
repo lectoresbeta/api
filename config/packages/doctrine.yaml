@@ -80,6 +80,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Community/Post/Infrastructure/Persistence/Doctrine/Mapping'
                 prefix: 'LectoresBeta\Community\Post\Domain\Entity'
                 alias: CommunityPost
+            CommunityCuration:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Community/Curation/Infrastructure/Persistence/Doctrine/Mapping'
+                prefix: 'LectoresBeta\Community\Curation\Domain\Entity'
+                alias: CommunityCuration
             CommunityRanking:
                 type: xml
                 is_bundle: false

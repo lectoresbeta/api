@@ -19,6 +19,14 @@ sitio donde leer lo escrito.
 | `PUT /api/v1/users/{userId}/block` | `blockUser` | Bloquear | FEAT-COM-034 | **Implementado** |
 | `DELETE /api/v1/users/{userId}/block` | `unblockUser` | Levantar el bloqueo | FEAT-COM-034 | **Implementado** |
 | `GET /api/v1/me/blocked-users` | `listBlockedUsers` | A quién tengo bloqueado | FEAT-COM-034 | **Implementado** |
+| `PUT /api/v1/posts/{postId}/saved` | `savePost` | Guardar una publicación | FEAT-COM-021 | **Implementado** |
+| `DELETE /api/v1/posts/{postId}/saved` | `unsavePost` | Quitar de guardados | FEAT-COM-021 | **Implementado** |
+| `GET /api/v1/me/saved-posts` | `listSavedPosts` | Mis guardados | FEAT-COM-021 | **Implementado** |
+| `PUT /api/v1/posts/{postId}/hidden` | `hidePost` | Ocultar del muro | FEAT-COM-022 | **Implementado** |
+| `DELETE /api/v1/posts/{postId}/hidden` | `unhidePost` | Volver a mostrarla | FEAT-COM-022 | **Implementado** |
+| `PUT /api/v1/users/{userId}/muted` | `muteUser` | Silenciar a alguien | FEAT-COM-033 | **Implementado** |
+| `DELETE /api/v1/users/{userId}/muted` | `unmuteUser` | Dejar de silenciar | FEAT-COM-033 | **Implementado** |
+| `GET /api/v1/me/muted-users` | `listMutedUsers` | A quién tengo silenciado | FEAT-COM-033 | **Implementado** |
 | `GET /api/v1/posts` | `listPosts` | El muro principal | FEAT-COM-001 | **Implementado** |
 | `GET /api/v1/me/posts` | `listMyPosts` | Mi muro | FEAT-COM-026 | **Implementado** |
 | `GET /api/v1/users/{userId}/posts` | `listUserPosts` | El muro de una persona | FEAT-COM-026 | **Implementado** |
@@ -648,3 +656,74 @@ que hay una publicación ahí y que no es para ti.
 dentro quiere que se vea el relato, no las dos primeras líneas de su comentario. Y si esa obra
 deja de ser visible, la tarjeta vuelve a hablar de la publicación en vez de romperse — el
 mismo comportamiento que la tarjeta viva de `FEAT-COM-028`.
+
+---
+
+## Lo que cada quien decide sobre su propio muro
+
+**Funcionalidades:** [`FEAT-COM-021`](../../features/community/FEAT-COM-021-save-a-post.md),
+[`FEAT-COM-022`](../../features/community/FEAT-COM-022-hide-a-post.md),
+[`FEAT-COM-033`](../../features/community/FEAT-COM-033-mute-a-user.md)
+
+Tres operaciones distintas y una sola idea: **una fila por espectador que la consulta del muro
+respeta**. Guardar aparta, ocultar quita una tarjeta y silenciar quita a una persona.
+
+Las tres son **privadas**: no se cuentan, no se anuncian, no publican eventos y no aparecen en
+la tarjeta de la publicación. Las tres de activar son `PUT` porque lo que dicen es «esto está
+así», no «añade una fila».
+
+### Dónde para cada una
+
+Es lo que hay que leer antes que nada, porque las tres se parecen a algo que no son.
+
+| | No es | Porque |
+|---|---|---|
+| Guardar | «Me gusta» | Un «me gusta» le habla al autor y se cuenta. Esto es una nota para uno mismo |
+| Ocultar | Borrar ni denunciar | La publicación sigue existiendo para todos, y nadie se entera |
+| Silenciar | Bloquear | No deshace el seguimiento, no corta los mensajes y no toca el acceso de lector beta |
+
+### Silenciar contra bloquear, al detalle
+
+| | Silenciar (`FEAT-COM-033`) | Bloquear (`FEAT-COM-034`) |
+|---|---|---|
+| Sus publicaciones y reposts en mi muro | Desaparecen | Desaparecen |
+| Sigo siguiéndole | **Sí** | No, se deshace en ambos sentidos |
+| Puede comentarme, escribirme, mencionarme | **Sí** | No |
+| Sus comentarios en hilos ajenos | **Los veo** | No |
+| Su perfil y sus obras | **Los veo** | Ninguno ve al otro |
+| Acceso de lector beta y créditos | **Nada** | Se revoca el acceso vivo |
+| Contextos implicados | Solo `Community` | `Community`, `Reading`, `Credits`, `Notification` |
+| ¿Publica evento? | **No** | Sí, `UserBlocked` |
+
+Silenciar **no se aplica en el perfil de la persona silenciada**: entrar ahí es pedir verla. Una
+publicación ocultada una a una sí sigue oculta, porque aquella acción es sobre esa tarjeta.
+
+### Los guardados son el muro con un filtro
+
+`GET /me/saved-posts` devuelve **la misma forma que el muro**, campo por campo, y por la misma
+razón que el muro de un perfil (`FEAT-COM-026`): una consulta aparte habría duplicado cada regla
+de audiencia.
+
+De ahí sale gratis que **guardar no conserva acceso** —lo que deja de alcanzarte desaparece de
+tus guardados—, y de ahí sale también la limitación: **el orden es por fecha de publicación**,
+no por cuándo se guardó. Los reposts no salen.
+
+### No hay lista de ocultas
+
+Una pantalla de «lo que escondiste» convierte un gesto de un segundo en una bandeja que
+gestionar. Deshacerlo solo necesita el identificador, que quien acaba de ocultar todavía tiene:
+el «deshacer» del aviso que sale justo después, y el `DELETE` funciona aunque la tarjeta ya no
+esté en el muro.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `POST_NOT_FOUND` | 404 | Guardar u ocultar algo que no existe o no te alcanza |
+| `CANNOT_MUTE_YOURSELF` | 422 | |
+| `USER_NOT_FOUND` | 422 | Silenciar a quien no existe |
+| `INVALID_CURSOR` | 422 | Al listar guardados o silenciados |
+
+Las cuatro operaciones de quitar —`unsavePost`, `unhidePost`, `unmuteUser`— responden `204`
+aunque no hubiera nada que quitar, y **no comprueban visibilidad**: lo que se puso tiene que
+poder salir aunque la publicación o la persona hayan dejado de alcanzarte.

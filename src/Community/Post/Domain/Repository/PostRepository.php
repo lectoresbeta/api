@@ -9,6 +9,7 @@ use LectoresBeta\Community\Post\Domain\Entity\PostAttachment;
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostFilters;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostId;
+use LectoresBeta\Community\Post\Domain\ValueObject\WallCuration;
 use LectoresBeta\Shared\Domain\Pagination\Cursor;
 
 interface PostRepository
@@ -32,22 +33,27 @@ interface PostRepository
      * página de veinte devolvería doce— y deja el dato viajando por dentro
      * del servidor, a un `dump` de distancia de salir.
      *
-     * @param list<string> $followedAuthorIds a quién sigue quien mira, que es
-     *                                        lo que abre las publicaciones
-     *                                        `FOLLOWERS`
-     * @param list<string> $hiddenAuthorIds   con quién hay un bloqueo, en
-     *                                        cualquiera de las dos
-     *                                        direcciones
-     * @param ?MemberId    $onlyAuthorId      el muro **de una persona**
-     *                                        (`FEAT-COM-026`), o `null` para el muro
-     *                                        general. Es un filtro y no una consulta
-     *                                        aparte: las reglas de audiencia y de
-     *                                        bloqueo son exactamente las mismas, y
-     *                                        escribirlas dos veces sería dejar que
-     *                                        una de las dos se quedase atrás
-     * @param ?PostFilters $filters           lo que el usuario ha acotado
-     *                                        (`FEAT-COM-009`), o `null` para el muro
-     *                                        sin filtrar
+     * @param list<string>  $followedAuthorIds a quién sigue quien mira, que es
+     *                                         lo que abre las publicaciones
+     *                                         `FOLLOWERS`
+     * @param list<string>  $hiddenAuthorIds   con quién hay un bloqueo, en
+     *                                         cualquiera de las dos
+     *                                         direcciones
+     * @param ?MemberId     $onlyAuthorId      el muro **de una persona**
+     *                                         (`FEAT-COM-026`), o `null` para el muro
+     *                                         general. Es un filtro y no una consulta
+     *                                         aparte: las reglas de audiencia y de
+     *                                         bloqueo son exactamente las mismas, y
+     *                                         escribirlas dos veces sería dejar que
+     *                                         una de las dos se quedase atrás
+     * @param ?PostFilters  $filters           lo que el usuario ha acotado
+     *                                         (`FEAT-COM-009`), o `null` para el muro
+     *                                         sin filtrar
+     * @param ?WallCuration $curation          lo que quien mira decidió sobre su
+     *                                         propio muro: lo que escondió
+     *                                         (`FEAT-COM-022`) y, en la lista de
+     *                                         guardados, a qué se restringe
+     *                                         (`FEAT-COM-021`)
      *
      * @return list<Post> con una fila de más para saber si hay página
      *                    siguiente
@@ -60,6 +66,7 @@ interface PostRepository
         int $limit,
         ?MemberId $onlyAuthorId = null,
         ?PostFilters $filters = null,
+        ?WallCuration $curation = null,
     ): array;
 
     /**

@@ -8,6 +8,7 @@ use LectoresBeta\Community\Interaction\Domain\Entity\PostRepost;
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostFilters;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostId;
+use LectoresBeta\Community\Post\Domain\ValueObject\WallCuration;
 use LectoresBeta\Shared\Domain\Pagination\Cursor;
 
 interface PostRepostRepository
@@ -26,16 +27,21 @@ interface PostRepostRepository
      * olvidaría: basta con servir los reposts sin volver a mirar el original
      * para publicar contenido restringido.
      *
-     * @param list<string> $followedAuthorIds
-     * @param list<string> $hiddenAuthorIds   con quién hay bloqueo, que aquí
-     *                                        vale para **los dos**: quien
-     *                                        repostea y el autor original
-     * @param ?MemberId    $onlyMemberId      el muro **de una persona**
-     *                                        (`FEAT-COM-026`): aquí filtra por quien
-     *                                        repostea, no por quien escribió. Lo que
-     *                                        alguien saca a su muro es suyo aunque el
-     *                                        texto sea de otro, que es lo que la
-     *                                        cabecera del repost dice
+     * @param list<string>  $followedAuthorIds
+     * @param list<string>  $hiddenAuthorIds   con quién hay bloqueo, que aquí
+     *                                         vale para **los dos**: quien
+     *                                         repostea y el autor original
+     * @param ?MemberId     $onlyMemberId      el muro **de una persona**
+     *                                         (`FEAT-COM-026`): aquí filtra por quien
+     *                                         repostea, no por quien escribió. Lo que
+     *                                         alguien saca a su muro es suyo aunque el
+     *                                         texto sea de otro, que es lo que la
+     *                                         cabecera del repost dice
+     * @param ?WallCuration $curation          lo que quien mira escondió
+     *                                         (`FEAT-COM-022`). Una publicación
+     *                                         escondida tampoco vuelve porque alguien
+     *                                         la repostee, o «no me interesa» habría
+     *                                         sido un gesto sin efecto
      *
      * @return list<PostRepost> con una fila de más para saber si hay página
      *                          siguiente
@@ -48,5 +54,6 @@ interface PostRepostRepository
         int $limit,
         ?MemberId $onlyMemberId = null,
         ?PostFilters $filters = null,
+        ?WallCuration $curation = null,
     ): array;
 }

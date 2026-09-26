@@ -267,6 +267,25 @@ paths:
   /me/blocked-users:
     $ref: './paths/community.yaml#/blockedUsers'
 
+  # Lo que cada quien decide sobre su propio muro (FEAT-COM-021, FEAT-COM-022,
+  # FEAT-COM-033). Tres preferencias privadas: ni se cuentan, ni se anuncian,
+  # ni las ve nadie más.
+
+  /posts/{postId}/saved:
+    $ref: './paths/community.yaml#/savedPost'
+
+  /me/saved-posts:
+    $ref: './paths/community.yaml#/savedPosts'
+
+  /posts/{postId}/hidden:
+    $ref: './paths/community.yaml#/hiddenPost'
+
+  /users/{userId}/muted:
+    $ref: './paths/community.yaml#/mutedUser'
+
+  /me/muted-users:
+    $ref: './paths/community.yaml#/mutedUsers'
+
   /home/author-suggestions:
     $ref: './paths/community.yaml#/homeAuthorSuggestions'
 

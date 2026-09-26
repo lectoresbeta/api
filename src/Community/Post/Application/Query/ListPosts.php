@@ -30,6 +30,14 @@ final readonly class ListPosts
          * Por qué se filtra (`FEAT-COM-009`), o `null` para el muro entero.
          */
         public ?PostFilters $filters = null,
+        /**
+         * La lista de guardados (`FEAT-COM-021`), que es este mismo muro
+         * restringido a lo que uno guardó. Una bandera y no una consulta
+         * aparte, por lo mismo que el muro de un perfil: las reglas de
+         * audiencia son las mismas, y escribirlas dos veces es dejar que una
+         * de las dos se quede atrás.
+         */
+        public bool $savedOnly = false,
     ) {
     }
 }

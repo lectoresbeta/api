@@ -328,8 +328,8 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-018 | Home — sugerencias de autores en el muro | User | APPROVED | PARTIAL | P1 | [ficha](community/FEAT-COM-018-home-author-suggestions.md) |
 | FEAT-COM-019 | Repostear una publicación | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-019-repost.md) |
 | FEAT-COM-020 | Compartir una publicación fuera de la plataforma | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-020-share-a-post-outside.md) |
-| FEAT-COM-021 | Guardar una publicación | User | PENDING | TODO | P3 | — |
-| FEAT-COM-022 | Ocultar una publicación del muro | User | PENDING | TODO | P3 | — |
+| FEAT-COM-021 | Guardar una publicación | User | APPROVED | DONE | P3 | [ficha](community/FEAT-COM-021-save-a-post.md) |
+| FEAT-COM-022 | Ocultar una publicación del muro | User | APPROVED | DONE | P3 | [ficha](community/FEAT-COM-022-hide-a-post.md) |
 | FEAT-COM-023 | Denunciar una publicación | User | PENDING | DEFERRED | P3 | — |
 | FEAT-COM-024 | Ordenar el muro por relevancia o por fecha | User | PENDING | BLOCKED | P2 | — |
 | FEAT-COM-025 | Búsqueda global desde la cabecera | User | PENDING | DEFERRED | P3 | — |
@@ -340,7 +340,7 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 | FEAT-COM-030 | «Me gusta» en un comentario o respuesta | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-030-like-a-comment.md) |
 | FEAT-COM-031 | Responder a un comentario | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-031-reply-to-comment.md) |
 | FEAT-COM-032 | Menciones a usuarios | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-032-mentions.md) |
-| FEAT-COM-033 | Silenciar a un usuario | User | PENDING | TODO | P3 | — |
+| FEAT-COM-033 | Silenciar a un usuario | User | APPROVED | DONE | P3 | [ficha](community/FEAT-COM-033-mute-a-user.md) |
 | FEAT-COM-034 | Bloquear a un usuario | User | APPROVED | PARTIAL | P2 | [ficha](community/FEAT-COM-034-block-user.md) |
 | FEAT-COM-035 | Denunciar a un usuario → `FEAT-MOD-001` | User | APPROVED | DONE | P2 | [ficha](community/FEAT-COM-035-report-a-user.md) |
 | FEAT-COM-036 | Interacciones sociales sobre un capítulo (like y comentario) | User | APPROVED | DONE | P1 | [ficha](community/FEAT-COM-036-chapter-interactions.md) |
@@ -358,7 +358,9 @@ Ficha del contexto: [`../bounded-contexts/community.md`](../bounded-contexts/com
 >
 > `FEAT-COM-033` a `FEAT-COM-035` salen del menú «···» del perfil ajeno. **Silenciar y
 > bloquear no son lo mismo**: silenciar es una preferencia de visualización y bloquear es una
-> regla de acceso que atraviesa varios contextos. `FEAT-COM-035` queda `DEFERRED` como las
+> regla de acceso que atraviesa varios contextos. Resuelto en
+> [`FEAT-COM-033`](community/FEAT-COM-033-mute-a-user.md): **el alcance es el muro y solo el
+> muro**, y ni siquiera en el perfil de la persona silenciada. `FEAT-COM-035` queda `DEFERRED` como las
 > otras dos denuncias: no hay moderación que las atienda (`V-1`).
 >
 > **`FEAT-COM-007` queda derogada** (2026-09-25). `docs/ui/post-interactions.md` dice que el

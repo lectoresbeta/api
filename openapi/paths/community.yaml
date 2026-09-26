@@ -2729,3 +2729,292 @@ postShare:
           application/problem+json:
             schema:
               $ref: '../openapi.yaml#/components/schemas/Problem'
+
+# ---------------------------------------------------------------------------
+# Lo que cada quien decide sobre su propio muro (FEAT-COM-021, FEAT-COM-022,
+# FEAT-COM-033).
+#
+# Las tres son preferencias **privadas** de quien mira: no se cuentan, no se
+# anuncian y nadie más las ve. Ninguna publica evento y ninguna aparece en la
+# tarjeta de la publicación.
+#
+# Las tres de activar son `PUT` y no `POST`: lo que se dice es «esto está
+# guardado / escondido / silenciado», no «añade una fila».
+# ---------------------------------------------------------------------------
+
+savedPost:
+  put:
+    tags: [Community]
+    operationId: savePost
+    summary: Guardar una publicación
+    description: |
+      Apartarla para volver a ella.
+
+      **No es un «me gusta».** Un «me gusta» le habla al autor y se cuenta;
+      esto es una nota para uno mismo, no se cuenta y su autor no se entera. De
+      ahí que no exista `savedCount` ni una lista de quién guardó qué: un
+      contador convertiría la nota privada en una señal pública, y entonces la
+      gente dejaría de usarla para lo que sirve.
+
+      **Solo se guarda lo que se puede ver**: una publicación que no te alcanza
+      responde como si no existiera.
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Guardada. Repetirlo no cambia nada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: POST_NOT_FOUND`. No existe, se borró, o no te alcanza.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Community]
+    operationId: unsavePost
+    summary: Quitar de guardados
+    description: |
+      **No pregunta si la publicación se puede ver**, al revés que guardar. Una
+      que dejó de alcanzarte tiene que poder salir de tu lista, o quedarían
+      filas que nadie puede borrar.
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: No está en guardados. Quitar lo que no estaba responde igual.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+savedPosts:
+  get:
+    tags: [Community]
+    operationId: listSavedPosts
+    summary: Mis guardados
+    description: |
+      **Es el muro con un filtro**, no una consulta aparte, y la respuesta es
+      idéntica campo por campo a la del muro. Eso es lo que permite reutilizar
+      el mismo componente.
+
+      Y de ahí sale gratis lo que importa: **guardar no conserva acceso**. Una
+      publicación que se hizo privada, cuyo autor te bloqueó o que se borró
+      deja de aparecer aquí.
+
+      La consecuencia de esa decisión: **el orden es el del muro**, por fecha
+      de publicación descendente, no por cuándo se guardó.
+
+      **Los reposts no salen**: lo que se guarda es una publicación, y
+      enseñarla con la cabecera de quien la reposteó diría algo sobre por qué
+      está ahí que no es verdad.
+    parameters:
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: Una página de guardados, con la forma del muro.
+        content:
+          application/json:
+            schema:
+              $ref: '#/WallPage'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+hiddenPost:
+  put:
+    tags: [Community]
+    operationId: hidePost
+    summary: Ocultar una publicación del muro
+    description: |
+      «Esto no me interesa.» La tarjeta desaparece del muro de quien la oculta
+      y de nadie más.
+
+      **No es borrar** —la publicación sigue existiendo para todo el mundo—,
+      **no es denunciar** y **no es silenciar a su autor**: oculta esa
+      publicación, no las demás. No se avisa a nadie y no se cuenta.
+
+      No vuelve **por ningún camino** del muro: ni reposteada, ni en el muro
+      del perfil de su autor, ni en los guardados. Si reaparecer bastara con
+      visitar un perfil, el botón sería un gesto sin efecto.
+
+      **No es una regla de acceso**: comentarla, repostearla o pedir su tarjeta
+      de compartir siguen funcionando.
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Oculta. Repetirlo no cambia nada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: POST_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Community]
+    operationId: unhidePost
+    summary: Volver a mostrarla
+    description: |
+      **No hay lista de ocultas**, a propósito: una pantalla de «lo que
+      escondiste» convierte un gesto de un segundo en una bandeja que
+      gestionar.
+
+      Deshacerlo solo necesita el identificador, y quien acaba de ocultar lo
+      tiene: el «deshacer» del aviso que sale justo después. Funciona aunque la
+      tarjeta ya no esté en el muro, que es precisamente el caso.
+    parameters:
+      - name: postId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Vuelve al muro. Mostrar lo que no estaba oculto responde igual.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+mutedUser:
+  put:
+    tags: [Community]
+    operationId: muteUser
+    summary: Silenciar a un usuario
+    description: |
+      Dejar de verle en el muro **sin cortar nada**.
+
+      **Silenciar no es bloquear** (`FEAT-COM-034`), y la diferencia es el
+      alcance entero de esta operación:
+
+      | | Silenciar | Bloquear |
+      |---|---|---|
+      | Sus publicaciones y reposts en mi muro | Desaparecen | Desaparecen |
+      | Sigo siguiéndole | **Sí** | No |
+      | Puede comentarme, escribirme, mencionarme | **Sí** | No |
+      | Sus comentarios en hilos ajenos | **Los veo** | No |
+      | Su perfil y sus obras | **Los veo** | No |
+      | Acceso de lector beta y créditos | **Nada** | Se revoca |
+
+      **No se aplica en su propio perfil**: si visito el perfil de alguien a
+      quien silencié, veo sus publicaciones. Silenciar dice «no me lo pongas
+      delante sin pedirlo», y entrar en su perfil es pedirlo.
+
+      No se le avisa, y no se publica ningún hecho: esto no significa nada
+      fuera de `Community`.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Silenciado. Repetirlo no cambia nada.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: CANNOT_MUTE_YOURSELF` o `USER_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Community]
+    operationId: unmuteUser
+    summary: Dejar de silenciar
+    description: |
+      No comprueba que esa persona siga existiendo: quien se dio de baja
+      también merece salir de la lista, o la fila se quedaría ahí sin forma de
+      quitarla.
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          $ref: '../openapi.yaml#/components/schemas/Uuid'
+    responses:
+      '204':
+        description: Ya no está silenciado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+mutedUsers:
+  get:
+    tags: [Community]
+    operationId: listMutedUsers
+    summary: A quién tengo silenciado
+    description: |
+      **Hace falta**, y aquí más que en la de bloqueados: quien silenció a
+      alguien hace tres meses no recuerda su `@usuario` y, además, ya no le ve
+      pasar por el muro — que es justamente el efecto. Sin esta lista,
+      silenciar sería irreversible en la práctica.
+
+      Igual que la de bloqueados, **no se filtra por privacidad**: quien cerró
+      su perfil después de ser silenciado sigue apareciendo. Quien pregunta ya
+      sabe quiénes son.
+
+      Solo la propia.
+    parameters:
+      - $ref: '../openapi.yaml#/components/parameters/Limit'
+      - $ref: '../openapi.yaml#/components/parameters/Cursor'
+    responses:
+      '200':
+        description: A quién tiene silenciado, de lo más reciente a lo más antiguo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [data, pageInfo]
+              properties:
+                data:
+                  type: array
+                  items:
+                    type: object
+                    required: [userId, username, mutedAt]
+                    properties:
+                      userId:
+                        $ref: '../openapi.yaml#/components/schemas/Uuid'
+                      username:
+                        type: string
+                      name:
+                        type: [string, 'null']
+                      avatarUrl:
+                        type: [string, 'null']
+                      mutedAt:
+                        type: string
+                        format: date-time
+                pageInfo:
+                  type: object
+                  required: [nextCursor, hasNextPage]
+                  properties:
+                    nextCursor:
+                      type: [string, 'null']
+                    hasNextPage:
+                      type: boolean
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: '`code: INVALID_CURSOR`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

@@ -33,7 +33,8 @@ seguimiento de autores, los mensajes directos y los rankings.
 | `Interaction` | Comentarios y respuestas, apoyos y reposts — **sobre una publicación y sobre un capítulo** (`FEAT-COM-036`), que son entidades distintas porque heredan audiencias distintas |
 | `Mention` | A quién se nombra, en una publicación o en un comentario. Concepto propio desde que se puede mencionar en los dos sitios: dentro de uno, el otro dependería de él |
 | `Subscription` | Seguimiento de autores, sus sugerencias y los listados de seguidos y seguidores |
-| `Relationship` | Silenciados y bloqueados |
+| `Relationship` | Bloqueos. Una **regla de acceso** que atraviesa cuatro contextos, y por eso publica hechos |
+| `Curation` | Lo que cada quien decide sobre su propio muro: guardados, ocultas y silenciados. Preferencias **privadas** de un espectador; no se cuentan, no se anuncian y no publican nada |
 | `Recommendation` | Read models que alimentan la Home y el onboarding: obras recomendadas y autores sugeridos |
 | `EventProcessing` | El registro de hechos ya aplicados. Hace falta porque las proyecciones **acumulan**, y RabbitMQ no garantiza entrega única |
 | `Messaging` | Mensajes directos y conversaciones |
@@ -49,6 +50,7 @@ seguimiento de autores, los mensajes directos y los rankings.
 | `ChapterEngagement` | `ChapterId` | Los contadores sociales de un capítulo. No es una copia del capítulo: es lo de `Community` sobre él. |
 | `Conversation` | `ConversationId` | Entre dos usuarios, **una por par**: el par se guarda ordenado, así que (A,B) y (B,A) son la misma fila. Abrirla requiere que el destinatario acepte mensajes directos; continuarla, no. |
 | `AuthorSubscription` | `AuthorSubscriptionId` | Una por par (suscriptor, autor). Un usuario no se suscribe a sí mismo. |
+| `SavedPost`, `HiddenPost`, `MutedMember` | El par (espectador, objeto) | Sin identificador propio: guardar dos veces es guardar. `MutedMember` guarda **una sola dirección**, al revés que `UserBlock` — silenciar es unilateral también en el efecto (`FEAT-COM-033`). |
 
 ### Enums
 

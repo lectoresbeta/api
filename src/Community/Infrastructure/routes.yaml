@@ -328,3 +328,60 @@ getPostShareCard:
     path: /api/v1/posts/{postId}/share
     controller: LectoresBeta\Community\Post\Infrastructure\Controller\GetPostShareCardController::__invoke
     methods: [GET]
+
+# Lo que cada quien decide sobre su propio muro (FEAT-COM-021, FEAT-COM-022,
+# FEAT-COM-033). Las tres son preferencias **privadas** de quien mira: no se
+# cuentan, no se anuncian y nadie más las ve.
+#
+# Las tres de activar son `PUT` y no `POST`: lo que se dice es «esto está
+# guardado / escondido / silenciado», no «añade una fila». Repetirlo no cambia
+# nada.
+
+savePost:
+    path: /api/v1/posts/{postId}/saved
+    controller: LectoresBeta\Community\Curation\Infrastructure\Controller\SavePostController::__invoke
+    methods: [PUT]
+
+unsavePost:
+    path: /api/v1/posts/{postId}/saved
+    controller: LectoresBeta\Community\Curation\Infrastructure\Controller\UnsavePostController::__invoke
+    methods: [DELETE]
+
+# Es el muro con un filtro, no una consulta aparte: así guardar no conserva
+# acceso.
+listSavedPosts:
+    path: /api/v1/me/saved-posts
+    controller: LectoresBeta\Community\Curation\Infrastructure\Controller\ListSavedPostsController::__invoke
+    methods: [GET]
+
+hidePost:
+    path: /api/v1/posts/{postId}/hidden
+    controller: LectoresBeta\Community\Curation\Infrastructure\Controller\HidePostController::__invoke
+    methods: [PUT]
+
+# No hay lista de ocultas a propósito: sería una bandeja que gestionar. A esto
+# se llega con el identificador que quien acaba de ocultar todavía tiene — el
+# «deshacer» del aviso que sale justo después.
+unhidePost:
+    path: /api/v1/posts/{postId}/hidden
+    controller: LectoresBeta\Community\Curation\Infrastructure\Controller\UnhidePostController::__invoke
+    methods: [DELETE]
+
+# Silenciar **no es bloquear** (FEAT-COM-034): no deshace el seguimiento, no
+# corta los mensajes y no toca el acceso de lector beta. Es el muro y solo el
+# muro.
+
+muteUser:
+    path: /api/v1/users/{userId}/muted
+    controller: LectoresBeta\Community\Curation\Infrastructure\Controller\MuteUserController::__invoke
+    methods: [PUT]
+
+unmuteUser:
+    path: /api/v1/users/{userId}/muted
+    controller: LectoresBeta\Community\Curation\Infrastructure\Controller\UnmuteUserController::__invoke
+    methods: [DELETE]
+
+listMutedUsers:
+    path: /api/v1/me/muted-users
+    controller: LectoresBeta\Community\Curation\Infrastructure\Controller\ListMutedUsersController::__invoke
+    methods: [GET]

@@ -11,6 +11,7 @@ use LectoresBeta\Community\Post\Domain\Repository\PostRepository;
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostFilters;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostId;
+use LectoresBeta\Community\Post\Domain\ValueObject\WallCuration;
 use LectoresBeta\Shared\Domain\Pagination\Cursor;
 use LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\DoctrineRepository;
 
@@ -44,7 +45,17 @@ final class DoctrinePostRepository extends DoctrineRepository implements PostRep
         int $limit,
         ?MemberId $onlyAuthorId = null,
         ?PostFilters $filters = null,
+        ?WallCuration $curation = null,
     ): array {
+        $curation ??= WallCuration::none();
+
+        // Nada que enseñar, y no hay consulta que hacer: un `IN ()` vacío no
+        // se puede escribir. Pasa con los guardados de quien no ha guardado
+        // nada.
+        if ($curation->excludesEverything()) {
+            return [];
+        }
+
         $query = $this->repository()->createQueryBuilder('p')
             ->where('p.deletedAt IS NULL');
 
@@ -78,6 +89,24 @@ final class DoctrinePostRepository extends DoctrineRepository implements PostRep
             $query
                 ->andWhere('p.authorId NOT IN (:hidden)')
                 ->setParameter('hidden', $hiddenAuthorIds);
+        }
+
+        // Lo que este espectador escondió una a una (`FEAT-COM-022`). Va en
+        // la consulta por lo mismo que la audiencia: quitarlo después dejaría
+        // páginas cortas.
+        if ([] !== $curation->hiddenPostIds) {
+            $query
+                ->andWhere('p.id NOT IN (:hiddenPosts)')
+                ->setParameter('hiddenPosts', $curation->hiddenPostIds);
+        }
+
+        // La lista de guardados es este mismo muro restringido a lo que uno
+        // guardó (`FEAT-COM-021`), y de ahí sale gratis que guardar no
+        // conserve acceso.
+        if (null !== $curation->onlyPostIds) {
+            $query
+                ->andWhere('p.id IN (:onlyPosts)')
+                ->setParameter('onlyPosts', $curation->onlyPostIds);
         }
 
         // Lo que el usuario ha acotado (`FEAT-COM-009`). Va en la consulta y

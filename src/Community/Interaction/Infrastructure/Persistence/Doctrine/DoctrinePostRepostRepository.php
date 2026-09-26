@@ -11,6 +11,7 @@ use LectoresBeta\Community\Post\Domain\Enum\PostAudience;
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostFilters;
 use LectoresBeta\Community\Post\Domain\ValueObject\PostId;
+use LectoresBeta\Community\Post\Domain\ValueObject\WallCuration;
 use LectoresBeta\Community\Post\Infrastructure\Persistence\Doctrine\PostFilterClauses;
 use LectoresBeta\Shared\Domain\Pagination\Cursor;
 use LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\DoctrineRepository;
@@ -46,6 +47,7 @@ final class DoctrinePostRepostRepository extends DoctrineRepository implements P
         int $limit,
         ?MemberId $onlyMemberId = null,
         ?PostFilters $filters = null,
+        ?WallCuration $curation = null,
     ): array {
         // El original se une aquí y no se pide después, por dos razones: la
         // audiencia hay que comprobarla sobre él —un repost no la amplía— y
@@ -89,6 +91,18 @@ final class DoctrinePostRepostRepository extends DoctrineRepository implements P
                 ->andWhere('r.memberId NOT IN (:hidden)')
                 ->andWhere('p.authorId NOT IN (:hidden)')
                 ->setParameter('hidden', $hiddenAuthorIds);
+        }
+
+        // Una publicación escondida no vuelve porque alguien la repostee
+        // (`FEAT-COM-022` `RN-4`). Sin esto, «no me interesa» duraría hasta
+        // el primer repost y el usuario aprendería a la segunda que el botón
+        // no sirve.
+        $hiddenPostIds = ($curation ?? WallCuration::none())->hiddenPostIds;
+
+        if ([] !== $hiddenPostIds) {
+            $query
+                ->andWhere('r.postId NOT IN (:hiddenPosts)')
+                ->setParameter('hiddenPosts', $hiddenPostIds);
         }
 
         // Los mismos filtros que la otra consulta (`FEAT-COM-009`), sobre el

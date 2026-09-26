@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Community\Post\Application\Handler;
 
+use LectoresBeta\Community\Curation\Domain\Repository\HiddenPostRepository;
+use LectoresBeta\Community\Curation\Domain\Repository\MutedMemberRepository;
+use LectoresBeta\Community\Curation\Domain\Repository\SavedPostRepository;
 use LectoresBeta\Community\Interaction\Domain\Entity\PostRepost;
 use LectoresBeta\Community\Interaction\Domain\Repository\PostLikeRepository;
 use LectoresBeta\Community\Interaction\Domain\Repository\PostRepostRepository;
@@ -15,6 +18,7 @@ use LectoresBeta\Community\Post\Application\Query\ListPosts;
 use LectoresBeta\Community\Post\Domain\Entity\Post;
 use LectoresBeta\Community\Post\Domain\Repository\PostRepository;
 use LectoresBeta\Community\Post\Domain\ValueObject\MemberId;
+use LectoresBeta\Community\Post\Domain\ValueObject\WallCuration;
 use LectoresBeta\Community\Relationship\Domain\Repository\UserBlockRepository;
 use LectoresBeta\Community\Subscription\Domain\Repository\AuthorSubscriptionRepository;
 use LectoresBeta\Shared\Domain\Exception\InvalidCursor;
@@ -64,6 +68,9 @@ final readonly class ListPostsHandler
         private ResolveMentions $mentions,
         private PostLikeRepository $likes,
         private WorkCards $works,
+        private HiddenPostRepository $hidden,
+        private MutedMemberRepository $muted,
+        private SavedPostRepository $saved,
     ) {
     }
 
@@ -83,13 +90,37 @@ final readonly class ListPostsHandler
         // de quién se mira, no quién mira ni qué le alcanza.
         $only = null === $query->authorId ? null : MemberId::fromString($query->authorId);
 
+        // Los silenciados viajan **con los bloqueados** (`FEAT-COM-033`): el
+        // efecto sobre la consulta es el mismo, quitar a una persona del
+        // muro, y distinguirlos habría duplicado una cláusula para no
+        // distinguir nada.
+        //
+        // Pero **solo en el muro general** (`RN-7`). Si visito el perfil de
+        // alguien a quien silencié, veo sus publicaciones: silenciar dice «no
+        // me lo pongas delante sin pedirlo», y entrar en su perfil es
+        // pedirlo. Un perfil vacío sin explicación haría creer que esa
+        // persona dejó de publicar.
+        if (null === $only) {
+            $hidden = array_values(array_unique([...$hidden, ...$this->muted->mutedBy($reader)]));
+        }
+
+        $curation = new WallCuration(
+            $this->hidden->hiddenBy($reader),
+            $query->savedOnly ? $this->saved->savedBy($reader) : null,
+        );
+
         $entries = [];
 
-        foreach ($this->posts->wallFor($reader, $followed, $hidden, $after, $limit, $only, $query->filters) as $post) {
+        foreach ($this->posts->wallFor($reader, $followed, $hidden, $after, $limit, $only, $query->filters, $curation) as $post) {
             $entries[] = ['post' => $post, 'repost' => null, 'at' => $post->createdAt(), 'id' => $post->id()->value()];
         }
 
-        $reposts = $this->reposts->wallFor($reader, $followed, $hidden, $after, $limit, $only, $query->filters);
+        // Los guardados no traen reposts (`FEAT-COM-021`): lo que se guarda
+        // es una publicación, y enseñarla con la cabecera de quien la
+        // reposteó diría algo sobre por qué está ahí que no es verdad.
+        $reposts = $query->savedOnly
+            ? []
+            : $this->reposts->wallFor($reader, $followed, $hidden, $after, $limit, $only, $query->filters, $curation);
         $reposted = $this->posts->ofIds(array_map(
             static fn (PostRepost $repost): string => $repost->postId()->value(),
             $reposts,

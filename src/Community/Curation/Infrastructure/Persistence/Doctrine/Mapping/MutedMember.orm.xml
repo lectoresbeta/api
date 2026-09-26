@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\Community\Curation\Domain\Entity\MutedMember"
+            table="muted_member" schema="community_ctx">
+
+        <indexes>
+            <!-- Solo una dirección, al revés que el bloqueo: silenciar es
+                 unilateral también en el efecto (`FEAT-COM-033`). -->
+            <index name="idx_muted_member_owner" columns="member_id,muted_at"/>
+        </indexes>
+
+        <id name="memberId" column="member_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="mutedId" column="muted_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="mutedAt" column="muted_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>
