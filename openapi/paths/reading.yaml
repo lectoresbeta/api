@@ -1227,3 +1227,446 @@ myWritingBuddies:
                     $ref: '#/WritingBuddyCard'
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+# ---------------------------------------------------------------------------
+# La agenda del autor (FEAT-RDG-007).
+#
+# Un grupo **no concede nada** (R-4). Es una lista de contactos privada, y lo
+# que se hace con ella es invitar en bloque: una invitación normal por miembro,
+# con sus mismas reglas y su mismo evento.
+# ---------------------------------------------------------------------------
+
+BetaReaderGroupSummary:
+  type: object
+  required: [groupId, name, memberCount, createdAt]
+  properties:
+    groupId:
+      type: string
+      format: uuid
+    name:
+      type: string
+      maxLength: 80
+    memberCount:
+      type: integer
+      minimum: 0
+      maximum: 200
+    createdAt:
+      type: string
+      format: date-time
+
+BetaReaderGroupMember:
+  type: object
+  required: [userId, addedAt]
+  properties:
+    userId:
+      type: string
+      format: uuid
+    username:
+      type: [string, 'null']
+      description: |
+        Nulo solo si la cuenta ha dejado de existir. La fila se queda con el
+        identificador para que el autor pueda quitarla: una lista de la que no
+        se puede borrar a nadie sería peor que una fila incompleta.
+    name:
+      type: [string, 'null']
+    avatarUrl:
+      type: [string, 'null']
+    addedAt:
+      type: string
+      format: date-time
+
+BetaReaderGroupDetail:
+  allOf:
+    - $ref: '#/BetaReaderGroupSummary'
+    - type: object
+      required: [members]
+      properties:
+        members:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/BetaReaderGroupMember'
+
+GroupInvitationResult:
+  type: object
+  required: [groupId, invited, skipped]
+  description: |
+    **Un resultado parcial, a propósito.** Unos miembros se invitan y otros no,
+    y aquí se dice cuáles y por qué. Devolver `422` porque uno de doce no se
+    puede invitar dejaría al autor sin los once que sí.
+  properties:
+    groupId:
+      type: string
+      format: uuid
+    invited:
+      type: array
+      description: A quién se ha cursado invitación.
+      items:
+        type: string
+        format: uuid
+    skipped:
+      type: array
+      description: |
+        A quién no, con el **mismo código** que habría devuelto la invitación
+        individual. Un vocabulario distinto para el caso en bloque obligaría al
+        cliente a conocer dos.
+      items:
+        type: object
+        required: [userId, reason]
+        properties:
+          userId:
+            type: string
+            format: uuid
+          reason:
+            type: string
+            enum:
+              - USER_NOT_FOUND
+              - ALREADY_A_BETA_READER
+              - INVITATION_ALREADY_PENDING
+              - REQUEST_ALREADY_PENDING
+              - INVITATIONS_NOT_ACCEPTED
+              - READER_CANNOT_SEE_THIS_WORK
+              - AUTHOR_CANNOT_BE_BETA_READER
+
+betaReaderGroups:
+  get:
+    tags: [Reading]
+    operationId: listMyBetaReaderGroups
+    summary: Mis grupos de lectores beta
+    description: |
+      Las listas que el autor mantiene, con cuánta gente hay en cada una.
+
+      **Sin paginación**, como excepción justificada a la convención: el tope
+      son cincuenta grupos y caben en una pantalla. Lo que sí admite es buscar
+      por nombre.
+
+      Son privadas: no existe la versión de otra persona, y el miembro no sabe
+      que está en un grupo.
+    parameters:
+      - name: query
+        in: query
+        required: false
+        description: Filtra por nombre, sin distinguir mayúsculas.
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Los grupos del autor, por nombre.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groups]
+              properties:
+                groups:
+                  type: array
+                  maxItems: 50
+                  items:
+                    $ref: '#/BetaReaderGroupSummary'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+  post:
+    tags: [Reading]
+    operationId: createBetaReaderGroup
+    summary: Crear un grupo de lectores beta
+    description: |
+      Una lista vacía con un nombre. Los miembros entran después, uno a uno.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+                maxLength: 80
+    responses:
+      '201':
+        description: El grupo recién creado, todavía vacío.
+        content:
+          application/json:
+            schema:
+              $ref: '#/BetaReaderGroupSummary'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '409':
+        description: |
+          `code: GROUP_NAME_ALREADY_USED` — dos listas con el mismo nombre no
+          se pueden elegir en un desplegable. `code: TOO_MANY_GROUPS` — el tope
+          son cincuenta.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: GROUP_NAME_REQUIRED` o `GROUP_NAME_TOO_LONG`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+betaReaderGroup:
+  get:
+    tags: [Reading]
+    operationId: getBetaReaderGroup
+    summary: Ver un grupo y sus miembros
+    description: |
+      El grupo con quién hay dentro, sin paginar: el tope son doscientos
+      miembros.
+
+      Los miembros se leen **sin filtrar por privacidad**, a diferencia de un
+      muro o un buscador. Quien pregunta ya sabe quiénes son porque los metió
+      él, y si filtrara, un miembro que cierre su perfil desaparecería de la
+      lista y el autor no podría ni quitarlo.
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: El grupo y sus miembros.
+        content:
+          application/json:
+            schema:
+              $ref: '#/BetaReaderGroupDetail'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: GROUP_NOT_FOUND`. El grupo de otra persona responde igual que
+          uno inexistente: confirmar que existe ya diría quién tiene apuntado a
+          quién.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  patch:
+    tags: [Reading]
+    operationId: renameBetaReaderGroup
+    summary: Renombrar un grupo
+    description: |
+      Lo único que se puede cambiar de un grupo es su nombre. Los miembros
+      entran y salen por su propio recurso.
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+                maxLength: 80
+    responses:
+      '200':
+        description: El nombre nuevo.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [groupId, name]
+              properties:
+                groupId: { type: string, format: uuid }
+                name: { type: string }
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: GROUP_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: GROUP_NAME_ALREADY_USED`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: '`code: GROUP_NAME_REQUIRED` o `GROUP_NAME_TOO_LONG`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Reading]
+    operationId: deleteBetaReaderGroup
+    summary: Borrar un grupo
+    description: |
+      Se lleva a sus miembros y **no toca ninguna invitación ya cursada**: lo
+      que se invitó, invitado está. El grupo era el atajo, no la puerta.
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Borrado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: GROUP_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+betaReaderGroupMember:
+  put:
+    tags: [Reading]
+    operationId: addBetaReaderGroupMember
+    summary: Añadir a alguien al grupo
+    description: |
+      **No le concede acceso a ninguna obra** y esa persona no se entera: un
+      grupo es una anotación privada del autor, no una relación entre dos
+      personas.
+
+      Es `PUT` y no `POST` porque lo que el autor quiere decir es «esta persona
+      está en el grupo», no «añade una fila». Repetirlo no cambia nada.
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: readerId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Está en el grupo.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: GROUP_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '409':
+        description: '`code: TOO_MANY_GROUP_MEMBERS` — el tope son doscientos.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: USER_NOT_FOUND` — una agenda llena de identificadores
+          inventados falla el día que se usa, en bloque.
+          `code: AUTHOR_CANNOT_BE_A_MEMBER`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Reading]
+    operationId: removeBetaReaderGroupMember
+    summary: Quitar a alguien del grupo
+    description: |
+      **No le quita ningún acceso.** Quien ya sea lector beta de una obra lo
+      sigue siendo: retirar el acceso es otra operación (`FEAT-RDG-010`).
+
+      Quitar a quien no está también responde `204`: el desenlace es el mismo.
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: readerId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: No está en el grupo.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: '`code: GROUP_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+groupInvitations:
+  post:
+    tags: [Reading]
+    operationId: inviteBetaReaderGroup
+    summary: Invitar a un grupo entero a una obra
+    description: |
+      Recorre los miembros del grupo y cursa **una invitación normal por cada
+      uno**, exactamente la de `FEAT-RDG-004`: mismas comprobaciones, mismo
+      aviso, misma resolución. Lo que ahorra el grupo es el clic, no las
+      reglas.
+
+      **El resultado es parcial y descrito.** Responde `200` y no `201` porque
+      no se ha creado un recurso: se han cursado unas cuantas invitaciones y se
+      ha omitido a unos cuantos, y eso es lo que cuenta el cuerpo.
+
+      Un grupo vacío responde `200` con las dos listas vacías. La obra se
+      comprueba igual, así que invitar un grupo vacío a la obra de otro sigue
+      siendo `404`.
+    parameters:
+      - name: workId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [groupId]
+            properties:
+              groupId:
+                type: string
+                format: uuid
+              message:
+                type: [string, 'null']
+                description: |
+                  El mismo mensaje para todos. Es lo que convierte una
+                  invitación en una invitación y no en un aviso.
+    responses:
+      '200':
+        description: Lo invitado y lo omitido.
+        content:
+          application/json:
+            schema:
+              $ref: '#/GroupInvitationResult'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '404':
+        description: |
+          `code: WORK_NOT_FOUND` — la obra de otra persona responde igual que
+          una inexistente. `code: GROUP_NOT_FOUND`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

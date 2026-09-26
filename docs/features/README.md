@@ -216,7 +216,7 @@ Ficha del contexto: [`../bounded-contexts/reading.md`](../bounded-contexts/readi
 | FEAT-RDG-004 | Invitar a un usuario a ser LB de una obra | Writer | APPROVED | DONE | P1 | [ficha](reading/FEAT-RDG-004-invite-beta-reader.md) |
 | FEAT-RDG-005 | Aceptar o rechazar una invitación de LB | Reader | APPROVED | DONE | P1 | [ficha](reading/FEAT-RDG-005-resolve-invitation.md) |
 | FEAT-RDG-006 | Buscar lectores beta a quienes invitar | Writer | APPROVED | DONE | P2 | [ficha](reading/FEAT-RDG-006-find-beta-readers.md) |
-| FEAT-RDG-007 | Gestionar grupos de lectores beta (CRUD y miembros) | Writer | PENDING | TODO | P2 | — |
+| FEAT-RDG-007 | Gestionar grupos de lectores beta (CRUD y miembros) | Writer | APPROVED | DONE | P2 | [ficha](reading/FEAT-RDG-007-beta-reader-groups.md) |
 | FEAT-RDG-008 | Proponer a un usuario ser writing buddy | User | APPROVED | DONE | P2 | [ficha](reading/FEAT-RDG-008-propose-writing-buddy.md) |
 | FEAT-RDG-009 | Aceptar o rechazar una propuesta de writing buddy | User | APPROVED | DONE | P2 | [ficha](reading/FEAT-RDG-009-resolve-writing-buddy-proposal.md) |
 | FEAT-RDG-010 | Revocar el acceso de un lector beta | Writer | APPROVED | DONE | P3 | [ficha](reading/FEAT-RDG-010-revoke-beta-reader-access.md) |

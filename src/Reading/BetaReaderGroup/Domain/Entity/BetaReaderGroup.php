@@ -6,13 +6,20 @@ namespace LectoresBeta\Reading\BetaReaderGroup\Domain\Entity;
 
 use LectoresBeta\Reading\BetaReaderAccess\Domain\ValueObject\AuthorId;
 use LectoresBeta\Reading\BetaReaderGroup\Domain\ValueObject\BetaReaderGroupId;
+use LectoresBeta\Reading\BetaReaderGroup\Domain\ValueObject\BetaReaderGroupName;
 
 /**
- * A list of beta readers an author keeps for themselves.
+ * Una lista de lectores beta que el autor mantiene para sí (`FEAT-RDG-007`).
  *
- * Belonging to a group grants nothing on its own: whether a group can be
- * given access to a work in one go is still open (`R-4`). Today it is an
- * address book.
+ * **Pertenecer a un grupo no concede nada** (`RN-11`, cierra `R-4`). El acceso
+ * a una obra sigue naciendo por los tres caminos de siempre y siempre a
+ * nombre de una persona. Esto es una agenda: sirve para no volver a buscar a
+ * las mismas diez personas obra tras obra, y para **invitarlas de una vez**
+ * (`RN-12`), que es otra cosa — una invitación por miembro, cada una con sus
+ * comprobaciones y su respuesta.
+ *
+ * Es privada. El miembro no sabe que está en un grupo, ni cómo se llama:
+ * es una anotación del autor sobre otras personas, no una relación entre ellas.
  */
 class BetaReaderGroup
 {
@@ -27,12 +34,12 @@ class BetaReaderGroup
     public function __construct(
         BetaReaderGroupId $id,
         AuthorId $authorId,
-        string $name,
+        BetaReaderGroupName $name,
         \DateTimeImmutable $now,
     ) {
         $this->id = $id->value();
         $this->authorId = $authorId->value();
-        $this->name = trim($name);
+        $this->name = $name->value();
         $this->createdAt = $now;
     }
 
@@ -46,13 +53,23 @@ class BetaReaderGroup
         return AuthorId::fromString($this->authorId);
     }
 
-    public function name(): string
+    public function name(): BetaReaderGroupName
     {
-        return $this->name;
+        return BetaReaderGroupName::fromString($this->name);
     }
 
-    public function rename(string $name): void
+    public function createdAt(): \DateTimeImmutable
     {
-        $this->name = trim($name);
+        return $this->createdAt;
+    }
+
+    public function belongsTo(AuthorId $authorId): bool
+    {
+        return $this->authorId === $authorId->value();
+    }
+
+    public function rename(BetaReaderGroupName $name): void
+    {
+        $this->name = $name->value();
     }
 }

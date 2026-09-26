@@ -126,3 +126,55 @@ listMyWritingBuddies:
     path: /api/v1/me/writing-buddies
     controller: LectoresBeta\Reading\WritingBuddy\Infrastructure\Controller\ListMyWritingBuddiesController::__invoke
     methods: [GET]
+
+# La agenda del autor (FEAT-RDG-007). Un grupo **no concede nada** (`R-4`): es
+# una lista de contactos, y lo que se hace con ella es **invitar en bloque**,
+# una invitación normal por miembro.
+#
+# Cuelga de `/me/` al crearla y al listarla porque no existe la versión de
+# otra persona; el grupo concreto va por su identificador, como cualquier otro
+# recurso, y el ajeno responde `404`.
+
+createBetaReaderGroup:
+    path: /api/v1/me/beta-reader-groups
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\CreateBetaReaderGroupController::__invoke
+    methods: [POST]
+
+listMyBetaReaderGroups:
+    path: /api/v1/me/beta-reader-groups
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\ListMyBetaReaderGroupsController::__invoke
+    methods: [GET]
+
+getBetaReaderGroup:
+    path: /api/v1/beta-reader-groups/{groupId}
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\GetBetaReaderGroupController::__invoke
+    methods: [GET]
+
+renameBetaReaderGroup:
+    path: /api/v1/beta-reader-groups/{groupId}
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\RenameBetaReaderGroupController::__invoke
+    methods: [PATCH]
+
+deleteBetaReaderGroup:
+    path: /api/v1/beta-reader-groups/{groupId}
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\DeleteBetaReaderGroupController::__invoke
+    methods: [DELETE]
+
+# `PUT` y no `POST`: lo que el autor dice es «esta persona está en el grupo»,
+# no «añade una fila». Sale idempotente (`RN-8`).
+addBetaReaderGroupMember:
+    path: /api/v1/beta-reader-groups/{groupId}/members/{readerId}
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\AddBetaReaderGroupMemberController::__invoke
+    methods: [PUT]
+
+removeBetaReaderGroupMember:
+    path: /api/v1/beta-reader-groups/{groupId}/members/{readerId}
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\RemoveBetaReaderGroupMemberController::__invoke
+    methods: [DELETE]
+
+# Se llama `group-invitations` y no `beta-reader-invitations/group` porque el
+# desenlace no es una invitación sino un parte de lo invitado y lo omitido.
+inviteBetaReaderGroup:
+    path: /api/v1/works/{workId}/group-invitations
+    controller: LectoresBeta\Reading\BetaReaderGroup\Infrastructure\Controller\InviteBetaReaderGroupController::__invoke
+    methods: [POST]

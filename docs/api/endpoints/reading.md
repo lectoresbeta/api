@@ -23,6 +23,14 @@ una solicitud que nadie puede contestar es peor que no poder pedirla.
 | `GET /api/v1/works/{workId}/invitable-readers` | `searchInvitableBetaReaders` | Buscar a quién invitar | FEAT-RDG-006 | **Implementado** |
 | `GET /api/v1/works/{workId}/beta-readers` | `listWorkBetaReaders` | Quién puede leer mi obra | FEAT-RDG-010 | **Implementado** |
 | `DELETE /api/v1/works/{workId}/beta-readers/{readerId}` | `revokeBetaReaderAccess` | Retirarle el acceso | FEAT-RDG-010 | **Implementado** |
+| `POST /api/v1/me/beta-reader-groups` | `createBetaReaderGroup` | Crear un grupo | FEAT-RDG-007 | **Implementado** |
+| `GET /api/v1/me/beta-reader-groups` | `listMyBetaReaderGroups` | Mis grupos | FEAT-RDG-007 | **Implementado** |
+| `GET /api/v1/beta-reader-groups/{groupId}` | `getBetaReaderGroup` | Ver un grupo y sus miembros | FEAT-RDG-007 | **Implementado** |
+| `PATCH /api/v1/beta-reader-groups/{groupId}` | `renameBetaReaderGroup` | Renombrar | FEAT-RDG-007 | **Implementado** |
+| `DELETE /api/v1/beta-reader-groups/{groupId}` | `deleteBetaReaderGroup` | Borrar | FEAT-RDG-007 | **Implementado** |
+| `PUT /api/v1/beta-reader-groups/{groupId}/members/{readerId}` | `addBetaReaderGroupMember` | Añadir a alguien | FEAT-RDG-007 | **Implementado** |
+| `DELETE /api/v1/beta-reader-groups/{groupId}/members/{readerId}` | `removeBetaReaderGroupMember` | Quitar a alguien | FEAT-RDG-007 | **Implementado** |
+| `POST /api/v1/works/{workId}/group-invitations` | `inviteBetaReaderGroup` | Invitar al grupo entero | FEAT-RDG-007 | **Implementado** |
 
 Convertirse en lector beta de una obra `PUBLIC` **no tiene endpoint**: es el efecto de empezar
 una corrección ([`FEAT-RDG-001`](../../features/reading/FEAT-RDG-001-become-beta-reader-by-correcting.md)).
@@ -164,3 +172,57 @@ persona, y en todas partes—.
 
 Publica `BetaReaderAccessRevoked`, **el mismo hecho** que publican descartar un borrador y un
 bloqueo. Quien lo consume no tiene por qué saber cuál de los tres caminos lo provocó.
+
+## La agenda del autor y por qué no abre puertas
+
+[`FEAT-RDG-007`](../../features/reading/FEAT-RDG-007-beta-reader-groups.md) añade un cuarto
+recurso, `beta-reader-group`, y la regla que hay que leer antes que cualquier otra cosa es
+que **no es un camino de acceso**.
+
+Un grupo es una lista de contactos privada. Pertenecer a uno no abre ninguna obra, y salir de
+uno no cierra ninguna. El acceso sigue naciendo por los tres caminos de siempre y siempre a
+nombre de una persona.
+
+Se descartó lo contrario —que meter a alguien en el grupo le abriera las obras asociadas—
+porque sería un cuarto camino de entrada, y el más silencioso: quien mira quién puede leer su
+obra vería una lista de personas, y el motivo por el que una de ellas está ahí estaría en otra
+pantalla. Revocar el acceso tampoco significaría nada mientras el grupo siguiera concediéndolo.
+
+### Invitar en bloque devuelve un parte, no un recurso
+
+`POST /works/{workId}/group-invitations` recorre los miembros y cursa **una invitación normal
+por cada uno**, con sus mismas comprobaciones y su mismo evento `BetaReaderInvited`.
+
+Responde `200` y no `201`: no se ha creado un recurso. El cuerpo dice a quién se invitó y a
+quién no, y el motivo de cada omisión es **el mismo `code`** que habría devuelto la invitación
+individual.
+
+| Situación del miembro | `reason` |
+|---|---|
+| Ya es lector beta | `ALREADY_A_BETA_READER` |
+| Ya tenía invitación abierta | `INVITATION_ALREADY_PENDING` |
+| Ya había solicitado acceso | `REQUEST_ALREADY_PENDING` |
+| Tiene el buzón cerrado | `INVITATIONS_NOT_ACCEPTED` |
+| No tiene edad para la obra | `READER_CANNOT_SEE_THIS_WORK` |
+| Su cuenta ya no existe | `USER_NOT_FOUND` |
+
+Devolver `422` porque uno de doce no se puede invitar dejaría al autor sin los once que sí.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `GROUP_NOT_FOUND` | 404 | El grupo no existe **o no es suyo** |
+| `GROUP_NAME_REQUIRED` | 422 | Nombre vacío o solo espacios |
+| `GROUP_NAME_TOO_LONG` | 422 | Más de 80 caracteres |
+| `GROUP_NAME_ALREADY_USED` | 409 | Otro grupo suyo ya se llama así, sin distinguir mayúsculas |
+| `TOO_MANY_GROUPS` | 409 | El tope son 50 |
+| `TOO_MANY_GROUP_MEMBERS` | 409 | El tope son 200 |
+| `USER_NOT_FOUND` | 422 | Quien se añade no existe |
+| `AUTHOR_CANNOT_BE_A_MEMBER` | 422 | El autor no se apunta a su propia agenda |
+
+### Dos listas sin paginar, a propósito
+
+Ni los grupos ni los miembros paginan. Los topes son 50 y 200, caben en una pantalla, y un
+cursor sobre cincuenta filas es maquinaria que nadie usa. Lo que sí hay es `?query=` sobre los
+grupos, que es lo que hace falta cuando uno tiene treinta.

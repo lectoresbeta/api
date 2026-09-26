@@ -410,6 +410,21 @@ paths:
   /me/writing-buddies:
     $ref: './paths/reading.yaml#/myWritingBuddies'
 
+  # La agenda del autor (FEAT-RDG-007). Un grupo no concede nada: es una lista
+  # de contactos, y lo que se hace con ella es invitar en bloque.
+
+  /me/beta-reader-groups:
+    $ref: './paths/reading.yaml#/betaReaderGroups'
+
+  /beta-reader-groups/{groupId}:
+    $ref: './paths/reading.yaml#/betaReaderGroup'
+
+  /beta-reader-groups/{groupId}/members/{readerId}:
+    $ref: './paths/reading.yaml#/betaReaderGroupMember'
+
+  /works/{workId}/group-invitations:
+    $ref: './paths/reading.yaml#/groupInvitations'
+
   /works/{workId}/questionnaire:
     $ref: './paths/works.yaml#/questionnaire'
 

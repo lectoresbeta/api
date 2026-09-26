@@ -199,7 +199,7 @@ model en `Reading`.
 | # | Pregunta | Impacto |
 |---|---|---|
 | R-19 | ¿Debería el autor ver algo que le ayude a elegir —temáticas que lee, correcciones hechas— y no solo el nombre? | Es lo que convertiría una lista de nombres en una recomendación. Depende de `Community` y de `FEAT-USR-017` |
-| R-20 | ¿Se puede buscar entre los propios grupos de lectores beta? | [`FEAT-RDG-007`](../README.md), que tampoco existe |
+| R-20 | ¿Se puede buscar entre los propios grupos de lectores beta? | **Resuelta: sí**, por nombre, con `?query=` en `GET /me/beta-reader-groups` ([`FEAT-RDG-007`](FEAT-RDG-007-beta-reader-groups.md)). Entre los miembros no: un grupo cabe entero en la pantalla |
 | R-21 | ¿Un usuario bloqueado debe desaparecer de esta lista? | Sí, casi seguro, pero [`FEAT-COM-034`](../community/FEAT-COM-034-block-user.md) no existe |
 
 ## Estado

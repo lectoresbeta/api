@@ -189,7 +189,7 @@ Ninguna tabla nueva.
 |---|---|---|
 | R-13 | ¿Cómo se le explica al invitado de un borrador que aceptó y todavía no puede leer? | Solo de pantalla, pero es una espera sin explicación evidente (`RN-12`) |
 | R-14 | ¿Hace falta avisar al invitado de que la invitación se ha retirado? | Un evento más y un consumidor sin especificar |
-| R-15 | ¿Se puede invitar a un grupo de lectores beta entero? | Es `R-4` del contexto y [`FEAT-RDG-007`](../README.md): una operación por lotes sobre esta misma |
+| R-15 | ¿Se puede invitar a un grupo de lectores beta entero? | **Resuelta: sí**, con `POST /works/{workId}/group-invitations` ([`FEAT-RDG-007`](FEAT-RDG-007-beta-reader-groups.md)). Es una operación por lotes sobre esta misma: una invitación normal por miembro, y un resultado parcial descrito |
 | R-16 | ¿Hay tope de invitaciones pendientes por obra? | Sin tope, invitar es un canal de mensajería con otro nombre |
 
 ## Estado

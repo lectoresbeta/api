@@ -34,7 +34,7 @@ lector beta y los vínculos entre usuarios que lo habilitan.
 | `Access` | Concesión y revocación del acceso de lector beta |
 | `AccessRequest` | Solicitudes del lector y su resolución |
 | `AccessInvitation` | Invitaciones del autor |
-| `BetaReaderGroup` | Agrupación de lectores beta |
+| `BetaReaderGroup` | Agenda privada del autor. **No concede acceso** (`R-4`) |
 | `WritingBuddy` | Vínculo recíproco entre dos usuarios |
 
 ## Agregados
@@ -44,7 +44,7 @@ lector beta y los vínculos entre usuarios que lo habilitan.
 | `BetaReaderAccess` | `BetaReaderAccessId` | Un único acceso vigente por par (usuario, obra). El autor no es lector beta de su propia obra. |
 | `AccessRequest` | `AccessRequestId` | Una solicitud pendiente por par (usuario, obra). Estados: `PENDING → ACCEPTED \| REJECTED \| CANCELLED`. |
 | `AccessInvitation` | `AccessInvitationId` | Solo el autor de la obra puede emitirla. |
-| `BetaReaderGroup` | `BetaReaderGroupId` | Pertenece a un autor. |
+| `BetaReaderGroup` | `BetaReaderGroupId` | Pertenece a un autor, que es el único que lo ve. Nombre único entre los suyos, sin distinguir mayúsculas. **Pertenecer no concede nada** (`R-4`): lo que se hace en bloque es invitar, y cada invitación es individual. |
 | `WritingBuddyLink` | `WritingBuddyLinkId` | Recíproco. Un único vínculo vigente por par —propuesto o aceptado—, garantizado por un índice único parcial. **No habilita ningún acceso** (`R-3`). |
 
 ## Cómo se concede el acceso
@@ -179,7 +179,7 @@ que sea el más barato de los tres.
 | R-1 | ¿El autor puede revocar un acceso ya concedido? (`A-4`) | Funcionalidad nueva y sus consecuencias sobre el feedback existente |
 | ~~R-2~~ | ¿Las solicitudes e invitaciones expiran? | **Resuelta: no.** Se cancelan, se retiran y se rechazan; caducar exige un reloj, un estado y un proceso para un problema que esas tres ya resuelven (`FEAT-RDG-002` `RN-10`). Se revisará si aparece volumen |
 | ~~R-3~~ | ~~¿Qué habilita el vínculo de writing buddy?~~ | **Resuelta** (`FEAT-RDG-008`): **nada automático**. No concede acceso a las obras del otro ni salta la modalidad o la edad. Quien quiera leer al otro lo invita |
-| R-4 | ¿Los grupos de LB conceden acceso en bloque a una obra? | Caso de uso de asignación masiva. Sería una operación por lotes sobre `FEAT-RDG-004`, no un camino de acceso nuevo |
+| R-4 | ¿Los grupos de LB conceden acceso en bloque a una obra? | **Resuelta: no.** Un grupo es una agenda y no concede nada; lo que se hace en bloque es **invitar**, una operación por lotes sobre `FEAT-RDG-004` y no un camino de acceso nuevo. Ver [`FEAT-RDG-007`](../features/reading/FEAT-RDG-007-beta-reader-groups.md) |
 | R-9 | ¿Hace falta un enfriamiento entre un rechazo y la siguiente solicitud? | Hoy se puede volver a pedir sin límite (`FEAT-RDG-002` `RN-9`) |
 | R-16 | ¿Hay tope de invitaciones pendientes por obra? | Sin tope, invitar es un canal de mensajería con otro nombre |
 | R-5 | ¿El acceso es a la obra completa o fragmento a fragmento? | Con novelas por fragmentos cambia el modelo (`D-1`) |
