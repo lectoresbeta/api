@@ -132,3 +132,12 @@ Ninguno. No hay tabla nueva ni migración: la tarjeta se compone de lo que ya es
 |---|---|
 | `PROFILE_SHARE_URL_TEMPLATE` | Dónde vive un perfil en el frontend. `{id}` se sustituye |
 | `MEDIA_BASE_URL` | El origen público de los ficheros, para componer una `og:image` absoluta |
+
+## Estado
+
+**Especificación:** `APPROVED` (2026-09-26). Redactada junto con la implementación, sobre la
+maqueta y las decisiones ya tomadas.
+
+**Implementación:** `DONE` (2026-09-26). La tarjeta para compartir, que **se genera contra el perfil público** —el que vería un
+desconocido— y no contra el de quien la pide. Compartir un perfil no puede enseñar de él más
+de lo que enseña su enlace.

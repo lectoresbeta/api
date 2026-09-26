@@ -212,9 +212,12 @@ el que bloquea la corrección recién llegada
 
 ### Falta
 
-- **La corrección bloqueada** de [`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md): `Credits`
-  publica el hecho económico, pero decidir qué se ve es de `Feedback`.
-- **`CreditDebtCleared`**, cuando el autor vuelve a cero o más: nada lo publica todavía.
-- **Los avisos** de `Notification`: los eventos salen, pero nadie los escucha.
+- ~~**La corrección bloqueada** de [`FEAT-CRD-018`](FEAT-CRD-018-negative-balance.md)~~ —
+  **hecha** (revisado el 2026-09-26): `Credits` publica el hecho económico y `Feedback` decide
+  qué se ve, que es como tenía que ser.
+- ~~**`CreditDebtCleared`**, cuando el autor vuelve a cero o más: nada lo publica todavía.~~ —
+  **se publica**, y desbloquea todo lo retenido de golpe.
+- ~~**Los avisos** de `Notification`: los eventos salen, pero nadie los escucha.~~ — **los
+  escucha**: `CreditBalanceWentNegative` y `CreditDebtCleared` llegan a la bandeja del autor.
 - `C-4` y `C-9` —corregir dos veces el mismo capítulo, y devolver créditos al ocultar una
   corrección abusiva— siguen abiertas y no las toca esta implementación.

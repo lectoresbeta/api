@@ -105,3 +105,13 @@ Ninguno.
 
 Tabla nueva `community_ctx.hidden_post`: clave `(member_id, post_id)`, más `hidden_at`.
 Migración `Version20260928020000`.
+
+## Estado
+
+**Especificación:** `APPROVED` (2026-09-26). Redactada junto con la implementación, sobre la
+maqueta y las decisiones ya tomadas.
+
+**Implementación:** `DONE` (2026-09-26). Ocultar y deshacer. **Deshacer no necesita ninguna pantalla nueva**: el aviso lleva el
+identificador que quien acaba de ocultar todavía tiene en la mano, y con él basta. No hay
+`GET /posts/{postId}` en esta API, así que una publicación oculta desaparece del muro y nada
+más — que es exactamente lo que se pidió.

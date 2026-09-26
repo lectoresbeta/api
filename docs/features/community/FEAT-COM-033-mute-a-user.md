@@ -122,3 +122,14 @@ trabajo, solo el muro.
 
 Tabla nueva `community_ctx.muted_member`: clave `(member_id, muted_id)`, más `muted_at`.
 Migración `Version20260928020000`.
+
+## Estado
+
+**Especificación:** `APPROVED` (2026-09-26). Redactada junto con la implementación, sobre la
+maqueta y las decisiones ya tomadas.
+
+**Implementación:** `DONE` (2026-09-26). Silenciar, dejar de silenciar y la lista de silenciados.
+
+**Silenciar no es bloquear**, y la diferencia está en el código: el silenciado no se entera,
+puede seguir interactuando, y lo único que cambia es qué ve quien silenció. En «solo
+guardados» el silencio **no se aplica**: quien guardó una publicación pidió verla.

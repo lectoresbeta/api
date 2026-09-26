@@ -137,14 +137,18 @@ exenciones está protegida contra erratas en `RoutingConventionTest`: un nombre 
 dejaría a quien no ha activado sin poder pedir el correo que necesita para activar, que es el
 peor fallo posible de esta regla.
 
+~~**Falta un test de extremo a extremo.** Hoy no existe ningún endpoint de escritura no
+exento contra el que ejercerla.~~ — **caducado** (revisado el 2026-09-26). Hay decenas, y
+dieciséis pruebas funcionales ejercen la regla contra endpoints reales: crear obra, publicar,
+comentar, corregir, editar el perfil, cambiar el nombre de usuario. La regla se aplica, y está
+comprobado.
+
 **Falta:**
 
-- **Un test de extremo a extremo.** Hoy no existe ningún endpoint de escritura no exento
-  contra el que ejercerla: todas las escrituras que hay son, por definición, de las
-  permitidas. El primer endpoint de escritura que se implemente **debe** traer ese test, y
-  entonces se podrá afirmar que la regla se aplica y no solo que está escrita.
-- `RN-4`: que las obras de un autor sin activar **no admitan correcciones**. Es de `Feedback`,
-  por evento y proyección local, y no hay todavía ni obras ni correcciones.
+- `RN-4`: que las obras de un autor sin activar **no admitan correcciones**. Hoy es difícil de
+  alcanzar —crear una obra ya es una escritura, así que quien no ha activado no llega a tener
+  ninguna— pero la regla sigue sin estar afirmada en `Feedback`, y una cuenta que se creara por
+  otra vía la necesitaría.
 - Las excepciones del onboarding (`RN-5`) y de la gestión de la cuenta (`RN-6`) están
   declaradas para lo que existe. Cada funcionalidad nueva de esas dos familias tiene que
   añadirse a la lista, y el test solo comprueba que lo añadido existe, no que no falte nada.

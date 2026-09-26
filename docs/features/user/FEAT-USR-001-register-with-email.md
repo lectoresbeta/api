@@ -248,7 +248,8 @@ enlace no empiece a caducar mientras el mensaje espera en una reentrega.
 Cubierto por `tests/Functional/User/RegistrationTest.php`, incluida la indistinguibilidad de la
 respuesta (`RN-14`).
 
-**Falta:**
-
-- el **token de invitación** (`RN-11`, `RN-12`, `RN-13`). El campo se acepta y se ignora;
-- el paso siguiente del usuario, que exige inicio de sesión (`FEAT-USR-004`, `PENDING`).
+~~**Falta:** el **token de invitación** (`RN-11`, `RN-12`, `RN-13`), y el paso siguiente del
+usuario, que exige inicio de sesión.~~ — **las dos cerradas** (revisadas el 2026-09-26).
+`RegisterUserHandler` inyecta `ConsumeInvitation` y consume el token
+([`FEAT-USR-018`](FEAT-USR-018-invite-people-to-the-platform.md)); el inicio de sesión existe
+([`FEAT-USR-004`](FEAT-USR-004-login-with-email.md)).

@@ -351,7 +351,9 @@ permite una consulta síncrona.
 - **El registro de acceso en `PUBLIC`.** Corregir funciona, pero empezar no deja constancia en
   `Reading` de que quien corrigió es ya lector beta de la obra. Es `FEAT-RDG-001`, cuya
   especificación está **`PENDING`**: no se implementa una ficha sin aprobar.
-- **Guardar el borrador a medias** ([`FEAT-FBK-011`](FEAT-FBK-011-save-correction-draft.md)).
+- ~~**Guardar el borrador a medias**~~ — **hecho**:
+  [`FEAT-FBK-011`](FEAT-FBK-011-save-correction-draft.md) está implementada (revisado el
+  2026-09-26).
   Hoy una corrección se empieza y se entrega; lo escrito solo se guarda al enviar.
 - **`Idempotency-Key`** (`RN-6`). Ninguna operación del proyecto lo implementa todavía, así que
   un segundo envío responde `409` en lugar de devolver la corrección existente. Se prefiere el

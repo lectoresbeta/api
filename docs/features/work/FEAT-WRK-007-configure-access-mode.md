@@ -105,10 +105,12 @@ autor. Era el eslabón que faltaba para que publicar sirviera de algo.
 
 **Falta:**
 
-- `RN-3` y `RN-5` no se pueden comprobar todavía: no hay ajuste global de privacidad
-  ([`FEAT-USR-038`](../user/FEAT-USR-038-privacy-settings.md)) con el que contrastar el techo,
-  y los accesos que `RN-3` protege los conceden a mano
+- ~~`RN-3` y `RN-5` no se pueden comprobar todavía: no hay ajuste global de privacidad con el
+  que contrastar el techo, y los accesos que `RN-3` protege los conceden fichas en `REVIEW`.~~
+  — **caducado** (revisado el 2026-09-26).
+  [`FEAT-USR-038`](../user/FEAT-USR-038-privacy-settings.md) existe, y
   [`FEAT-RDG-003`](../reading/FEAT-RDG-003-resolve-access-request.md) y
-  [`FEAT-RDG-005`](../reading/FEAT-RDG-005-resolve-invitation.md), que están en `REVIEW`.
+  [`FEAT-RDG-005`](../reading/FEAT-RDG-005-resolve-invitation.md) ya no están en `REVIEW`.
+  Lo que queda es **escribir la comprobación**, no esperar a nada.
   Las dos fichas recogen `RN-3` como propia: resolver **no comprueba la modalidad**, porque la
   modalidad gobierna quién puede entrar a partir de ahora, no quién ya estaba pidiendo entrar.

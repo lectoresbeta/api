@@ -224,12 +224,8 @@ vía **consume cupo** igualmente).
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
-
-## Estado de la implementación
-
-`PARTIAL` (2026-09-25). Funciona el camino de quien tiene sesión; faltan las dos vías de
-excepción.
+**Implementación:** `PARTIAL` (2026-09-26). Funciona el camino de quien tiene sesión; falta
+una de las dos vías de excepción.
 
 Hecho: el registro sin efectos (`RN-1`), una por persona y objeto con reintento idempotente
 (`RN-2`), el motivo del catálogo con texto libre (`RN-3`), las dos reglas de la corrección
@@ -241,10 +237,10 @@ el bloqueo acumulativo (`RN-6b`).
 dirección de contacto, presumiblemente— y qué pasa con el cupo, que hoy es por cuenta. No es
 una línea de código y no entra aquí.
 
-**Falta `RN-6d`**, la vía por correo para quien está bloqueado o sin cupo. El modelo ya la
-anticipa con `filedOnBehalf`, y lo que falta es el endpoint por el que un moderador registra
-una reclamación en nombre de otro — que encaja mejor junto al backoffice de
-[`FEAT-MOD-002`](FEAT-MOD-002-review-claim.md).
+~~**Falta `RN-6d`**, la vía por correo para quien está bloqueado o sin cupo.~~ — **hecha**
+(revisado el 2026-09-26): `POST /api/v1/admin/claims/on-behalf`, junto al backoffice de
+[`FEAT-MOD-002`](FEAT-MOD-002-review-claim.md) como esta ficha proponía. Queda marcada con
+quién la registró, y esa marca impide que sea él quien la resuelva.
 
 **Falta `RN-9`**, agrupar varias reclamaciones sobre el mismo objeto en un expediente. Hoy
 cada una es una fila; agruparlas es trabajo del lado que las revisa, no del que las recibe.

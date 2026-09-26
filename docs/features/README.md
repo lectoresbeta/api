@@ -81,14 +81,14 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-010 | Configurar recepción de mensajes directos | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-010-who-can-message-me.md) |
 | FEAT-USR-011 | Configurar recepción de propuestas de LB y writing buddy | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-011-proposal-reception.md) |
 | FEAT-USR-012 | ~~Configurar notificaciones por email~~ → `FEAT-USR-039` | User | PENDING | DEPRECATED | P3 | — |
-| FEAT-USR-013 | Eliminar la cuenta — anonimización | User | APPROVED | BLOCKED | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
+| FEAT-USR-013 | Eliminar la cuenta — anonimización | User | APPROVED | TODO | P2 | [ficha](user/FEAT-USR-013-delete-account.md) |
 | FEAT-USR-014 | Ver perfil público de un usuario | User, Guest | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-014-view-public-profile.md) |
 | FEAT-USR-015 | Configurar información de la página de autor (bio, foto, referencias) | Writer | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-015-author-page-information.md) |
 | FEAT-USR-016 | Personalizar la página de autor (tema, color y fondo) | Writer | APPROVED | DONE | P3 | [ficha](user/FEAT-USR-016-customise-the-author-page.md) |
 | FEAT-USR-017 | Buscar autores por nombre o temática | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-017-search-authors.md) |
 | FEAT-USR-018 | Invitar a personas a la plataforma por email | User | APPROVED | DONE | P2 | [ficha](user/FEAT-USR-018-invite-people-to-the-platform.md) |
 | FEAT-USR-019 | Registro y login con LinkedIn | Guest | APPROVED | DEFERRED | P3 | [ficha](user/FEAT-USR-019-linkedin-oauth.md) |
-| FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
+| FEAT-USR-020 | Activar la cuenta desde el enlace enviado por email | Guest, User | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-020-activate-account.md) |
 | FEAT-USR-021 | Reenviar el email de activación | Guest, User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-021-resend-activation-email.md) |
 | FEAT-USR-022 | Onboarding paso 1 — nombre y fecha de nacimiento | User | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-022-onboarding-profile-data.md) |
 | FEAT-USR-023 | Onboarding paso 2 — elegir al menos tres géneros | User | APPROVED | DONE | P0 | [ficha](user/FEAT-USR-023-onboarding-select-genres.md) |
@@ -569,7 +569,7 @@ Resumen de lo que no se puede especificar hasta tomar una decisión de producto.
 | **FEAT-MOD-001, FEAT-MOD-002** | **`MOD-2`** | Límite de reclamaciones y consecuencia de reclamar en falso. Sin ello, reclamar es una forma gratuita de no pagar una corrección |
 | FEAT-MOD-005, FEAT-MOD-006 | `MOD-1` | Catálogo de sanciones: qué existe y con qué gravedad |
 | FEAT-MOD-004 | `MOD-6` | Cómo se crea el primer `Admin`. Sin él no hay forma de arrancar el backoffice |
-| FEAT-USR-013 | `U-3`, `V-4` | Qué pasa con las **obras propias** y con los mensajes directos al anonimizar la cuenta |
+| ~~FEAT-USR-013~~ | ~~`U-3`, `V-4`~~ | **Resuelto** (2026-09-26): las obras se retiran de circulación conservando las correcciones, y los mensajes directos se conservan sin autor identificable |
 | FEAT-USR-038 | `S-36` | Si endurecer el ajuste global permite terminar a quien ya estaba corrigiendo |
 | FEAT-USR-038 | `S-13`, `S-16` | Qué opciones tienen los desplegables y qué es «visibilidad de actividad» |
 | FEAT-USR-039 | `S-11`, `S-12` | Qué tipos de aviso existen, y si corrección y comentario se separan |

@@ -121,6 +121,13 @@ Dos decisiones que la ficha no traía:
   escucha es un contrato que hay que mantener a cambio de nada. Entra el día que algo tenga
   que reaccionar.
 
-**Faltan** las tres pantallas que no existen —muro, recomendaciones y perfil de un autor—, que
-heredarán el filtro cuando se escriban, y el aviso con confirmación del **enlace directo**
-(`RN-5`), que espera a que existan los enlaces públicos.
+~~**Faltan** las tres pantallas que no existen —muro, recomendaciones y perfil de un autor—~~
+— **parcialmente caducado** (revisado el 2026-09-26). Las recomendaciones existen
+([`FEAT-COM-017`](../community/FEAT-COM-017-home-work-recommendations.md)) y aplican el filtro.
+
+Quedan dos, y una de ellas probablemente no aplica: el **perfil de autor**, que sí lista obras
+y debería heredarlo, y el **muro**, donde no está claro que tenga sentido — una publicación no
+lleva etiquetas de contenido, así que no hay nada por lo que filtrarla.
+
+Falta también el aviso con confirmación del **enlace directo** (`RN-5`), que espera a que
+existan los enlaces públicos.

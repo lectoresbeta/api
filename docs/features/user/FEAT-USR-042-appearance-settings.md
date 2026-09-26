@@ -120,3 +120,14 @@ Ninguno.
 
 Tabla nueva `user_ctx.appearance_settings`: `user_id` (clave), `theme`, `updated_at`.
 Migración `Version20260928030000`.
+
+## Estado
+
+**Especificación:** `APPROVED` (2026-09-26). Redactada junto con la implementación, sobre la
+maqueta y las decisiones ya tomadas.
+
+**Implementación:** `DONE` (2026-09-26). El tema de la interfaz, que viaja además en el contexto de sesión para que el layout no
+parpadee mientras lo pregunta.
+
+Funciona **sin activar la cuenta**: es una preferencia de lectura, y obligar a activar para
+poder leer en oscuro sería usar la activación para otra cosa.

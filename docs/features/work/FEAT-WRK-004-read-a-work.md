@@ -169,6 +169,9 @@ que es la primera vía por la que alguien obtiene acceso.
 **Falta, y depende de contextos que no existen:**
 
 - las preferencias de contenido sensible del lector
-  ([`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)), más allá del filtro de edad
-  que sí está;
+  ([`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)) **al abrir la obra**. Ya no
+  es que no existan: existen y se aplican en el catálogo y en las recomendaciones (revisado el
+  2026-09-26). Lo que falta es aquí, en el momento de leer, que es donde hace falta
+  contrastarlas con `RN-5` —un enlace directo a algo que alguien pidió no ver— y no solo
+  esconder la obra de una lista;
 - `L-8`: hoy leer exige sesión. Abrirlo después es compatible; cerrarlo no lo sería.

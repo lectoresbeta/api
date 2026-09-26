@@ -5,7 +5,7 @@ context: User
 concept: Account
 actors: [Guest, User]
 spec_status: APPROVED
-impl_status: PARTIAL
+impl_status: DONE
 priority: P0
 sources:
   - figma:1800-13778 (Mailing 1470:9560, aviso en 1470:9456)
@@ -13,7 +13,7 @@ sources:
 endpoints: [POST /auth/activate]
 events: [AccountActivated]
 depends_on: [FEAT-USR-001, FEAT-NOT-008, FEAT-USR-025]
-updated: 2026-09-24
+updated: 2026-09-26
 ---
 
 # FEAT-USR-020 — Activar la cuenta desde el enlace enviado por email
@@ -178,16 +178,14 @@ Ver [`../../ui/account-creation.md`](../../ui/account-creation.md).
 **Especificación:** `APPROVED` (2026-09-24). `OB-11` resuelta. Lo que queda —duración del
 token, caducidad de cuentas nunca activadas— son constantes y una política posterior.
 
-**Implementación:** `PARTIAL`.
+**Implementación:** `DONE` (revisada el 2026-09-26).
 
 Hecho: `POST /api/v1/auth/activate`, el consumo del token, la idempotencia (`RN-3`), la
 indistinguibilidad entre token inexistente y usado (`RN-5`), la distinción del caducado
 (`RN-4`) y la publicación de `AccountActivated` (`RN-7`).
 
-**Falta:**
-
-- el reenvío ([`FEAT-USR-021`](FEAT-USR-021-resend-activation-email.md)), que es lo que
-  `RN-4` ofrece al caducar.
+~~**Falta:** el reenvío, que es lo que `RN-4` ofrece al caducar.~~ — **hecho**:
+[`FEAT-USR-021`](FEAT-USR-021-resend-activation-email.md) está implementada.
 
 **Cambio de contrato:** la operación devuelve `204` y **no una sesión**. El enlace se abre a
 menudo en un dispositivo distinto de aquel en que se creó la cuenta, y emitir ahí una sesión

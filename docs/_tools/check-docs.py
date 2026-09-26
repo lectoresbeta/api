@@ -8,6 +8,7 @@ Comprobaciones:
   4. Toda ficha aparece en el registro maestro con los mismos estados.
   5. Toda fila del registro que enlaza una ficha apunta a un fichero existente.
   6. Los enlaces relativos entre documentos markdown resuelven.
+  7. La línea en prosa «**Implementación:** `X`» coincide con el impl_status del front matter.
 
 Uso:  python3 docs/_tools/check-docs.py
 Salida: 0 si todo es coherente, 1 si hay errores.
@@ -24,6 +25,11 @@ REQUIRED_FIELDS = ["id", "title", "context", "spec_status", "impl_status", "prio
 SPEC_STATUSES = {"PENDING", "DRAFT", "REVIEW", "APPROVED"}
 IMPL_STATUSES = {"TODO", "IN_PROGRESS", "PARTIAL", "DONE", "BLOCKED", "DEFERRED", "DEPRECATED"}
 FEATURE_ID = re.compile(r"^FEAT-[A-Z]{3}-\d{3}$")
+
+# La línea en prosa que abre el apartado «Estado» de cada ficha. Es la que lee
+# quien abre el documento, y hasta ahora nadie la comprobaba: cuatro fichas
+# decían «TODO» ahí y otra cosa en su cabecera (inventario de 2026-09-26).
+PROSE_IMPL = re.compile(r"^\*\*Implementaci[oó]n:\*\*\s*`([A-Z_]+)`", re.MULTILINE)
 
 errors: list[str] = []
 warnings: list[str] = []
@@ -83,6 +89,24 @@ def check_features() -> dict[str, dict[str, str]]:
         impl = front.get("impl_status", "")
         if impl not in IMPL_STATUSES:
             errors.append(f"{rel(path)}: impl_status '{impl}' no es válido")
+
+        declared = PROSE_IMPL.findall(text)
+
+        if len(declared) > 1:
+            errors.append(
+                f"{rel(path)}: la ficha declara su implementación {len(declared)} veces "
+                f"({', '.join(declared)}); debe haber una sola línea «**Implementación:** `X`»"
+            )
+        elif declared and declared[0] != impl:
+            errors.append(
+                f"{rel(path)}: la prosa dice «Implementación: {declared[0]}» y el front matter "
+                f"dice impl_status: {impl}. La que la gente lee es la primera"
+            )
+        elif not declared:
+            warnings.append(
+                f"{rel(path)}: sin línea «**Implementación:** `{impl}`» en prosa. "
+                "El front matter no lo lee nadie al abrir la ficha"
+            )
 
         if impl == "PARTIAL" and "falta" not in text.lower():
             warnings.append(f"{rel(path)}: impl_status PARTIAL debe explicar qué falta")

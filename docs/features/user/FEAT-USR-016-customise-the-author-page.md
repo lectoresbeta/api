@@ -179,3 +179,18 @@ Migración `Version20260928040000`.
 |---|---|---|
 | U-5 | ¿La personalización tiene límites: temas cerrados o CSS libre? | **Resuelta: catálogo cerrado.** CSS escrito por un usuario y servido a terceros exfiltra datos por selectores de atributo, permite superponer elementos y convierte cada visita en una petición a un tercero |
 | P-6 | ¿Sigue en alcance la personalización visual? | **Resuelta: sí**, con este alcance |
+
+## Estado
+
+**Especificación:** `APPROVED` (2026-09-26). Redactada junto con la implementación, sobre la
+maqueta y las decisiones ya tomadas.
+
+**Implementación:** `DONE` (2026-09-26). Tema, color de acento y fondo.
+
+**Los dos primeros son códigos de un catálogo cerrado, no valores.** Un hexadecimal o un
+trozo de CSS que viaja desde el cliente y acaba en una página pública es una inyección
+esperando a ocurrir; seis temas y seis acentos cubren lo que la maqueta enseña sin abrir esa
+puerta.
+
+El fondo **no añadió columna**: es `cover_url`, que existía desde `FEAT-USR-014` y solo le
+faltaba un endpoint.

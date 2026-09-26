@@ -179,3 +179,14 @@ Migración `Version20260928010000`.
 | # | Pregunta | Impacto |
 |---|---|---|
 | P-19 | ¿Qué contiene «Premios y reconocimientos»? | **Resuelta:** una ficha declarada por el autor —título, quién lo concede, año, nota y enlace—, sin imagen y sin validar contra nada |
+
+## Estado
+
+**Especificación:** `APPROVED` (2026-09-26). Redactada junto con la implementación, sobre la
+maqueta y las decisiones ya tomadas.
+
+**Implementación:** `DONE` (2026-09-26). Añadir, editar, reordenar y retirar premios, con el tope de cincuenta por autor.
+
+**Un premio sin año va al final, no al principio.** DQL no tiene `NULLS LAST`, así que el
+orden lo resuelve una columna oculta en la consulta; escribirlo al revés habría puesto lo
+que no se sabe cuándo pasó por delante de lo de este año.

@@ -74,11 +74,7 @@ El comando exige una acción deliberada, sobre una cuenta real, en el entorno co
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
-
-## Estado de la implementación
-
-`DONE` (2026-09-25). `bin/console lectoresbeta:admin:grant <email>`, con `--revoke` para la
+**Implementación:** `DONE` (2026-09-25). `bin/console lectoresbeta:admin:grant <email>`, con `--revoke` para la
 salida de `RN-5`.
 
 Dos detalles que la ficha no fijaba:

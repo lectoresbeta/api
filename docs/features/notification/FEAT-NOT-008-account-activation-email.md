@@ -112,9 +112,11 @@ reintenta y la aparca en un transporte de fallos que se consulta. Se pide en el 
 enviar, lo que además hace que **el enlace empiece a caducar cuando sale el correo** y no
 cuando se creó la cuenta.
 
+~~- el **reenvío** (`ActivationEmailRequested`, `RN-1`), que es `FEAT-USR-021`;~~ —
+**hecho**: la funcionalidad existe y el hecho se consume (revisado el 2026-09-26).
+
 **Falta:**
 
-- el **reenvío** (`ActivationEmailRequested`, `RN-1`), que es `FEAT-USR-021`;
 - la **alerta** cuando un envío agota los reintentos (`RN-6`). El mensaje va a la cola de
   fallos, pero nadie avisa;
 - el proveedor de correo (`N-3`): hoy `MAILER_DSN` apunta a donde se le diga;

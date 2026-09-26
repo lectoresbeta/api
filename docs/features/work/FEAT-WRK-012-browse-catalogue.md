@@ -315,10 +315,10 @@ fuese completa. No compensa: el catálogo ya tiene el estado delante, en la mism
 ### Falta
 
 - **El filtro de tiempo de lectura** (`L-1`): sigue sin estar definido qué rangos son.
-- **Las preferencias de contenido sensible** (`RN-9`,
-  [`FEAT-USR-043`](../user/FEAT-USR-043-content-preferences.md)) y **las obras de usuarios
-  bloqueados** (`RN-8`): dependen de funcionalidades que no existen. El filtro de edad, que es
-  otro eje, sí está.
+- ~~**Las preferencias de contenido sensible** (`RN-9`)~~ — **hechas**: `ListCatalogueHandler`
+  las aplica, y sin que la petición lo pida (revisado el 2026-09-26).
+- **Las obras de usuarios bloqueados** (`RN-8`): `User` ya sabe quién ha bloqueado a quién, así
+  que esto ya no depende de nada que no exista. Falta hacerlo.
 - **La portada**: una obra no tiene imagen todavía.
 - `L-2` —qué otras ordenaciones hay— se implementa como `recent`, que era la única alternativa
   evidente. `L-6`, `L-7` y `L-8` siguen abiertas tal cual.

@@ -272,11 +272,10 @@ Tres cosas que la ficha no preveía y que la implementación obligó a decidir:
   contextos a la vez, y el riesgo es el correcto: un aviso nuevo se recibe hasta que alguien
   decida que se puede apagar, y no al revés.
 
-**Falta**, y por eso es `PARTIAL`: **el canal de correo no lo aplica nadie**. Las preferencias
-de `EMAIL` se guardan, se sirven y se validan desde ya —la pantalla las ofrece—, pero quien
-manda correos de aviso es `FEAT-NOT-002`,
-que no existe. El día que exista, lo único que tendrá que hacer es preguntar al mismo contrato
-con `EMAIL` en vez de `PLATFORM`.
+~~**Falta el canal de correo, que no lo aplica nadie.**~~ — **cerrado** (revisado el
+2026-09-26). `FEAT-NOT-002` existe y `Notify` inyecta `NotificationChoices`: el canal de correo
+pregunta al mismo contrato con `EMAIL` en vez de `PLATFORM`, que es exactamente lo que esta
+ficha predijo que tendría que hacer.
 
 También falta el **resumen periódico** (`S-25`) y decidir si los avisos de créditos se pueden
 silenciar (`S-26`): hoy se pueden, que es lo que dice el catálogo.

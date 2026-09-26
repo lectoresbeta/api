@@ -162,6 +162,17 @@ El hueco que la ficha declara **ya está cerrado**. Verificado contra el código
 Ninguna de estas necesita código. Necesitan que alguien tache la línea, y ese alguien no las va
 a mirar mientras el registro diga `PARTIAL` sin decir de qué.
 
+**Tachadas todas** (2026-09-26). Tres de ellas no eran del todo caducas y se han reescrito en
+vez de tacharse, porque el hueco había cambiado de forma en lugar de desaparecer:
+
+- **FEAT-USR-043** decía que faltaban tres pantallas. Las recomendaciones ya filtran; quedan
+  el perfil de autor y el muro, y en el muro probablemente no aplica — una publicación no
+  lleva etiquetas de contenido;
+- **FEAT-WRK-004** decía que las preferencias de contenido sensible «no existen». Existen y se
+  aplican en el catálogo; lo que falta es **al abrir la obra**, que es donde `RN-5` importa;
+- **FEAT-WRK-012** juntaba dos huecos en una línea. Las preferencias están hechas; las obras
+  de usuarios bloqueados no, y ya no dependen de nada que no exista.
+
 ---
 
 ## 3. Bloqueadas por una pregunta abierta propia
@@ -187,6 +198,11 @@ qué queda realmente abierto después de cerrar las ocho de ayer.
 
 ## 4. Tres `PARTIAL` que son `DONE`, y un defecto de las herramientas
 
+**Arreglado el 2026-09-26**, y resultó ser peor de lo que este apartado decía: la comprobación
+nueva encontró **seis** fichas con la contradicción, no cuatro. Las dos que faltaban eran
+`FEAT-MOD-012` y `FEAT-USR-024`, las dos `DONE` en la cabecera y `TODO` en la prosa. Lo que
+sigue es el diagnóstico original.
+
 **FEAT-MOD-001, FEAT-MOD-004 y FEAT-MOD-010** están implementadas y probadas, y su registro
 dice `PARTIAL`. Peor: el cuerpo de las tres fichas dice `**Implementación:** TODO`, que
 contradice su propio *front matter* (`impl_status: PARTIAL`) y contradice la realidad.
@@ -199,9 +215,12 @@ contradice su propio *front matter* (`impl_status: PARTIAL`) y contradice la rea
 dos fuentes de verdad para el mismo dato, y la que la gente lee al abrir la ficha es la que
 está mal.
 
-Propuesta, barata: añadir a `check-docs.py` una comprobación de que la línea
-`**Implementación:**` concuerda con `impl_status`. Sin eso, este inventario vuelve a
-desactualizarse solo.
+~~Propuesta, barata: añadir a `check-docs.py` una comprobación de que la línea
+`**Implementación:**` concuerda con `impl_status`.~~ — **hecha** (2026-09-26). Comprueba tres
+cosas: que la línea concuerde, que **haya una sola** —el patrón que originó el defecto era un
+segundo apartado «Estado de la implementación» que nadie sincronizaba con el primero— y que no
+falte. Esa tercera avisó de nueve fichas sin apartado «Estado», ocho de ellas escritas esta
+misma semana. La regla está escrita en [`conventions.md`](../conventions.md).
 
 ---
 
@@ -217,7 +236,8 @@ desactualizarse solo.
 4. ~~**La purga de la tabla de deduplicación** (§1b). Media tarde, y deja de crecer.~~ —
    **hecho** (2026-09-26). Con un matiz que no estaba en el guion: `purgeOlderThan` borraba
    sin tope, y esa es la tabla que cada consumidor lee antes de mover un crédito. Va acotada.
-5. **Tachar las 17 notas caducadas y arreglar las cuatro fichas del §4**, con la comprobación
-   nueva en `check-docs.py` para que no se repita.
+5. ~~**Tachar las 17 notas caducadas y arreglar las cuatro fichas del §4**, con la comprobación
+   nueva en `check-docs.py` para que no se repita.~~ — **hecho** (2026-09-26). Eran seis
+   fichas y no cuatro; la comprobación las encontró.
 
 Lo de §3 no lo tocaría: son preguntas tuyas, no trabajo mío.

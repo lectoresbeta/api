@@ -150,11 +150,7 @@ Sí necesita, al menos:
 **Especificación:** `APPROVED` (2026-09-24). `T-1` resuelta: los textos viven en el backend, versionados e
 inmutables. `T-2` (reaceptación al cambiar) y `T-6`/`T-7` quedan como flujos posteriores.
 
-**Implementación:** `TODO`.
-
-## Estado de la implementación
-
-`DONE` (2026-09-25).
+**Implementación:** `DONE` (2026-09-25).
 
 Lo que ya existía era la mitad: el alta guardaba la versión de cada documento con su fecha, y
 la rechazaba si faltaba. Lo que no existía era **con qué comparar**. La tabla de documentos

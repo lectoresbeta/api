@@ -116,3 +116,12 @@ Tabla nueva `community_ctx.saved_post`: clave `(member_id, post_id)`, más `save
 
 Migración `Version20260928020000`, compartida con `FEAT-COM-022` y `FEAT-COM-033`: las tres
 tablas nacen del mismo cambio.
+
+## Estado
+
+**Especificación:** `APPROVED` (2026-09-26). Redactada junto con la implementación, sobre la
+maqueta y las decisiones ya tomadas.
+
+**Implementación:** `DONE` (2026-09-26). Guardar, quitar y la lista, con la misma tarjeta y el mismo cursor que el muro.
+Los reposts no salen en los guardados: lo que se guarda es una publicación, y enseñarla con
+la cabecera de quien la reposteó diría algo sobre por qué está ahí que no es verdad.

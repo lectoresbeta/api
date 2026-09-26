@@ -231,10 +231,11 @@ Lleva `chapterId`, `workId`, `authorId`, `position` y `wordCount`.
 
 ### Falta
 
-- **Cobrar.** Esto pone precio; mover créditos es
+- **Cobrar** no es de aquí. Esto pone precio; mover créditos es
   [`FEAT-CRD-006`](FEAT-CRD-006-charge-author-for-received-feedback.md), y congelar el precio al empezar,
-  [`FEAT-CRD-009`](FEAT-CRD-009-balance-check-on-correction-start.md). `CorrectionPrice` ya
-  existe como tabla y nadie la escribe.
+  [`FEAT-CRD-009`](FEAT-CRD-009-balance-check-on-correction-start.md). ~~`CorrectionPrice` ya
+  existe como tabla y nadie la escribe.~~ — **caducado** (revisado el 2026-09-26): hay un
+  repositorio Doctrine que la escribe, y `QuoteCorrectionOnStart` la usa.
 - ~~**El aviso al autor** cuando ampliar un capítulo lo encarece (`RN-9`, `C-15`)~~ — **hecho**
   (2026-09-26), y por el camino apareció un defecto que nadie había visto: **`Credits` no
   publicaba `ChapterPriceChanged` al editar un capítulo**. `ChapterPrice::updateContent()` ya

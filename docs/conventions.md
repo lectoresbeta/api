@@ -100,6 +100,12 @@ medias sobre una especificación provisional.
   estado sin explicación no es información.
 - El estado vive en el *front matter* de la ficha; el registro maestro lo replica para poder
   leerlo de un vistazo. `docs/_tools/check-docs.py` verifica que ambos coincidan.
+- Y hay un **tercer sitio**: la línea en prosa del apartado «Estado», con la forma exacta
+  `**Implementación:** \`X\``. Es la que lee quien abre la ficha, así que es la que más daño
+  hace cuando miente. Se escribe **una sola vez** por ficha y tiene que coincidir con el
+  *front matter*; `check-docs.py` lo comprueba desde 2026-09-26, cuando un inventario encontró
+  seis fichas que decían una cosa arriba y otra tres párrafos más abajo. No se abre un segundo
+  apartado «Estado de la implementación»: son dos fuentes de verdad para el mismo dato.
 
 ---
 

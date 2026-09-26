@@ -217,14 +217,10 @@ promete.
 
 ### Falta
 
-- **`CorrectionDraftDiscarded` no lo publica nadie todavía**: descartar un borrador es de
-  [`FEAT-FBK-011`](../feedback/FEAT-FBK-011-save-correction-draft.md). El consumidor está
-  escrito y probado; hasta entonces una anotación solo se suelta al entregarse la corrección.
-  `CorrectionStarted` **sí** se publica ya
-  ([`FEAT-FBK-003`](../feedback/FEAT-FBK-003-answer-correction-questionnaire.md)), y la
-  proyección de corregibilidad ya se consume allí: el panel se abre contra la base de datos
-  de `Feedback`, sin esperar a este contexto.
+- ~~**`CorrectionDraftDiscarded` no lo publica nadie todavía**~~ — **caducado** (revisado el
+  2026-09-26): `DiscardCorrectionDraftHandler` lo publica, y el consumidor que ya estaba
+  escrito y probado suelta la anotación.
+- ~~**El descubierto deliberado** de [`FEAT-CRD-019`](FEAT-CRD-019-overdraft-correction.md),
+  la excepción a `RN-6`.~~ — **hecho**, con cupo de tres por periodo.
 - **La nota silenciosa** en la tarjeta de «Mis relatos» (`RN-9`): es de `Work`, y necesita
   saber cuántas correcciones hay abiertas, que hoy solo sabe `Credits`.
-- **El descubierto deliberado** de [`FEAT-CRD-019`](FEAT-CRD-019-overdraft-correction.md),
-  la excepción a `RN-6`.

@@ -119,11 +119,7 @@ privilegio está implicada, la salida es organizativa —otro `Admin`— no de p
 afectan al modelo, al contrato ni a ninguna regla de negocio: se resuelven durante la
 implementación.
 
-**Implementación:** `TODO`.
-
-## Estado de la implementación
-
-`DONE` (2026-09-25), **salvo `RN-9`**.
+**Implementación:** `PARTIAL` (2026-09-26). Todo **salvo `RN-9`**, y por eso no es `DONE`.
 
 El **segundo factor para el backoffice no está**: no hay 2FA en ninguna parte de la
 plataforma todavía, así que implementarlo aquí sería construir la mitad de una funcionalidad
@@ -131,9 +127,9 @@ transversal dentro de una ficha de moderación. Queda anotado como lo que es —
 pendiente de una cuenta que lee obra inédita y datos personales de cualquiera— y debería
 resolverse antes de que el backoffice se use de verdad.
 
-`RN-8` —un correo por reclamación— llega cuando exista la reclamación
-([`FEAT-MOD-001`](FEAT-MOD-001-submit-claim.md)). La preferencia que lo enciende y lo apaga ya
-está.
+~~`RN-8` —un correo por reclamación— llega cuando exista la reclamación.~~ — **existe**
+([`FEAT-MOD-001`](FEAT-MOD-001-submit-claim.md)), y la preferencia que lo enciende y lo apaga
+también.
 
 **Cómo se resuelve el rol es la decisión que sostiene `RN-4`.** El token no lleva roles
 ([`decision:0007`](../../decisions/0007-jwt-sessions.md)), así que se consultan contra la base

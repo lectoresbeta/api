@@ -195,3 +195,14 @@ funcional que la comprobación de aplicación ya cubre, con el coste de no poder
 | R-4 | ¿Los grupos conceden acceso en bloque? | **Resuelta: no.** Un grupo es una agenda. Lo que se hace en bloque es **invitar**, y cada invitación es individual y se resuelve por separado |
 | R-15 | ¿Se puede invitar a un grupo entero? | **Resuelta: sí**, con `POST /works/{workId}/group-invitations`. El resultado es parcial y descrito |
 | R-20 | ¿Se puede buscar entre los propios grupos? | **Resuelta: sí**, por nombre, con `?query=` en `GET /me/beta-reader-groups`. Entre los miembros no |
+
+## Estado
+
+**Especificación:** `APPROVED` (2026-09-26). Redactada junto con la implementación, sobre la
+maqueta y las decisiones ya tomadas.
+
+**Implementación:** `DONE` (2026-09-26). Crear, renombrar, listar, borrar, componer el grupo e **invitar en bloque**.
+
+La invitación en bloque reutiliza la de uno en uno, entera: las mismas reglas, los mismos
+rechazos. Lo que hace de más es **no parar en el primer no** — un miembro que ya tiene
+acceso, o que ha cerrado las propuestas, se salta y se informa, en vez de tumbar la tanda.

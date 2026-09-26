@@ -5,7 +5,7 @@ context: User
 concept: Account
 actors: [User]
 spec_status: APPROVED
-impl_status: BLOCKED
+impl_status: TODO
 priority: P2
 sources:
   - conversation:2026-09-22 (pestaña «Cuenta» de Configuración)
@@ -219,18 +219,18 @@ correcciones conservan sus efectos sin referenciarlas. `V-4` —qué ocurre con 
 directos, que forman parte de la conversación de otro— sigue abierta, pero no impide
 implementar la anonimización.
 
-**Implementación:** desbloqueada (2026-09-26). `U-3` y `V-4` resueltas: las obras se retiran de circulación conservando las correcciones, y los mensajes directos se conservan sin autor identificable.
-
-`S-32` está resuelta —se anonimiza— y con ella el fondo del asunto. Lo que falta son dos
-casos concretos:
+**Implementación:** `TODO` (desbloqueada el 2026-09-26). Estuvo `BLOCKED` mientras `U-3` y
+`V-4` no tuvieran respuesta; las dos la tienen ya:
 
 - **`U-3`, las obras propias.** La anonimización dice qué pasa con la persona, no con su
   obra. Si las obras desaparecen, se llevan por delante las correcciones que varios lectores
   escribieron y cobraron; si permanecen, se publica obra inédita de alguien que ha pedido
-  irse. La combinación que suele funcionar: **retirar las obras de circulación y conservar
-  las correcciones para quienes las escribieron**, sin acceso al texto original.
+  irse. **Resuelta:** se retiran de circulación y **se conservan las correcciones** para
+  quienes las escribieron, sin acceso al texto original.
 - **`V-4`, los mensajes directos.** Borrarlos vacía la conversación del otro interlocutor,
   que no ha pedido nada. **Resuelta:** se conservan sin autor identificable.
+
+`S-32` estaba resuelta desde antes —se anonimiza— y con ella el fondo del asunto.
 
 Sigue siendo de las pocas funcionalidades donde implementar antes de decidir es irreversible
 por partida doble: los datos borrados no vuelven, y los conservados después de prometer lo
