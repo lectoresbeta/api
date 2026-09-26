@@ -335,6 +335,23 @@ getProfileShareCard:
     controller: LectoresBeta\User\Profile\Infrastructure\Controller\GetProfileShareCardController::__invoke
     methods: [GET]
 
+# El tema (FEAT-USR-042). Se guarda en el servidor y no en el navegador porque
+# tiene que sobrevivir al dispositivo, y viaja además en el contexto de
+# sesión para que la primera pintada ya sea la correcta.
+#
+# `PUT` y no `PATCH`: hay un solo campo, y no existe la diferencia entre «no
+# lo toques» y «cámbialo» cuando solo hay uno.
+
+getMyAppearanceSettings:
+    path: /api/v1/me/appearance-settings
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\AppearanceSettingsController::__invoke
+    methods: [GET]
+
+updateMyAppearanceSettings:
+    path: /api/v1/me/appearance-settings
+    controller: LectoresBeta\User\Preferences\Infrastructure\Controller\AppearanceSettingsController::__invoke
+    methods: [PUT]
+
 # Entrar con Google (`FEAT-USR-002`). Sin sesión: no puede haberla todavía.
 #
 # El proveedor va en la ruta para que Facebook y LinkedIn encajen sin cambiar

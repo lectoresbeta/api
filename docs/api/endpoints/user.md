@@ -70,6 +70,8 @@
 | `PATCH /api/v1/me/awards/{awardId}` | `updateAward` | Corregirlo | FEAT-USR-030 | **Implementado** |
 | `DELETE /api/v1/me/awards/{awardId}` | `deleteAward` | Retirarlo | FEAT-USR-030 | **Implementado** |
 | `GET /api/v1/users/{userId}/share` | `getProfileShareCard` | Cómo se ve el perfil compartido fuera | FEAT-USR-032 | **Implementado** |
+| `GET /api/v1/me/appearance-settings` | `getMyAppearanceSettings` | Mi tema | FEAT-USR-042 | **Implementado** |
+| `PUT /api/v1/me/appearance-settings` | `updateMyAppearanceSettings` | Cambiarlo | FEAT-USR-042 | **Implementado** |
 | `GET /api/v1/authors` | `searchAuthors` | Buscar personas por nombre o temática | FEAT-USR-017 | **Implementado** |
 | `PUT /api/v1/me/author-links` | `updateAuthorLinks` | Las referencias de la página de autor | FEAT-USR-015 | **Implementado** |
 | `PUT /me/author-page/theme` | `updateAuthorPageTheme` | Personalización visual | FEAT-USR-016 | PENDING |
@@ -1204,3 +1206,38 @@ ruta relativa ahí es una imagen rota en lo único que este endpoint produce. De
 
 Ninguno. No publica eventos y no cuenta cuántas veces se comparte: eso sería otra ficha, con su
 propia decisión de privacidad.
+
+---
+
+## El tema
+
+**Funcionalidad:** [`FEAT-USR-042`](../../features/user/FEAT-USR-042-appearance-settings.md)
+
+`LIGHT`, `DARK` o `SYSTEM`, y `SYSTEM` por defecto.
+
+### Por qué lo guarda el backend
+
+Un tema cabe entero en el navegador, así que la pregunta es justa. Se guarda aquí porque **tiene
+que sobrevivir al dispositivo**: quien eligió oscuro en el portátil y abre el móvil espera
+oscuro, y `localStorage` no viaja.
+
+Y **viaja en `GET /me/context`**, no en una petición propia: el layout ya pide esa respuesta en
+cada carga, y pedir el tema aparte significaría pintar la pantalla en claro y cambiarla medio
+segundo después. El endpoint propio es para la pantalla de Configuración.
+
+### Solo el tema
+
+Nada de tamaño de letra, densidad o animaciones reducidas: no hay diseño que lo respalde, y un
+campo que se añade «porque cabe» hay que mantenerlo para siempre.
+
+**No es `FEAT-USR-016`**, que es la apariencia de la *página de autor*: aquella la elige el autor
+y la ven los demás; esta la elige cada quien y solo la ve él.
+
+### Detalles
+
+- `PUT` y no `PATCH`, y el campo es **obligatorio**: con un solo campo, ausente solo puede ser un
+  error de quien llama.
+- Un valor desconocido responde `422 UNKNOWN_THEME` en vez de caer al por defecto: quien manda
+  `oscuro` cree que ha cambiado algo.
+- **No hace falta la cuenta activada.** Es una preferencia de pantalla.
+- No publica eventos.

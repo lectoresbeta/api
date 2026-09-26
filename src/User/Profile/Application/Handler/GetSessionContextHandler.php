@@ -7,6 +7,7 @@ namespace LectoresBeta\User\Profile\Application\Handler;
 use LectoresBeta\User\Account\Domain\ValueObject\UserId;
 use LectoresBeta\User\Onboarding\Domain\Enum\GuidedTour;
 use LectoresBeta\User\Onboarding\Domain\Repository\UserTourRepository;
+use LectoresBeta\User\Preferences\Application\Service\StoredAppearanceSettings;
 use LectoresBeta\User\Profile\Application\DTO\SessionContext;
 use LectoresBeta\User\Profile\Application\Port\SessionSideloads;
 use LectoresBeta\User\Profile\Application\Query\GetSessionContext;
@@ -34,6 +35,7 @@ final readonly class GetSessionContextHandler
         private KnownCreditBalanceRepository $balances,
         private SessionSideloads $sideloads,
         private UserTourRepository $tours,
+        private StoredAppearanceSettings $appearance,
     ) {
     }
 
@@ -55,6 +57,11 @@ final readonly class GetSessionContextHandler
             // respuesta en cada carga, y una más solo para saber si pintar
             // cuatro globos sería una petición por pantalla.
             $this->pendingTours($user->id()),
+            // El tema (`FEAT-USR-042`), por lo mismo que los tours: el layout
+            // ya está pidiendo esta respuesta, y una petición más solo para
+            // saber de qué color pintar sería una petición por pantalla — y
+            // además tardía, que es lo que produce el parpadeo.
+            $this->appearance->of($user->id())->theme(),
         );
     }
 

@@ -110,7 +110,7 @@ Ficha del contexto: [`../bounded-contexts/user.md`](../bounded-contexts/user.md)
 | FEAT-USR-039 | Preferencias de notificación por canal | User | APPROVED | PARTIAL | P2 | [ficha](user/FEAT-USR-039-notification-preferences.md) |
 | FEAT-USR-040 | Cambiar el correo de la cuenta | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-040-change-email.md) |
 | FEAT-USR-041 | Cambiar o establecer la contraseña | User | APPROVED | DONE | P1 | [ficha](user/FEAT-USR-041-change-password.md) |
-| FEAT-USR-042 | Preferencias de apariencia (tema) | User | PENDING | TODO | P3 | — *(sin captura)* |
+| FEAT-USR-042 | Preferencias de apariencia (tema) | User | APPROVED | DONE | P3 | [ficha](user/FEAT-USR-042-appearance-settings.md) |
 | FEAT-USR-043 | Preferencias de contenido sensible | User | APPROVED | PARTIAL | P1 | [ficha](user/FEAT-USR-043-content-preferences.md) |
 | FEAT-USR-044 | Filtrado automático de contenido por edad | User, Guest | APPROVED | PARTIAL | P0 | [ficha](user/FEAT-USR-044-age-based-content-filtering.md) |
 

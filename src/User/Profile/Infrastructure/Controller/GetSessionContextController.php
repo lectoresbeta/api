@@ -70,6 +70,8 @@ final readonly class GetSessionContextController
             ],
             'unreadNotifications' => $context->unreadNotifications,
             'pendingTours' => $context->pendingTours,
+            // De qué color pintar, desde la primera respuesta (`FEAT-USR-042`).
+            'theme' => $context->theme->value,
         ];
     }
 }

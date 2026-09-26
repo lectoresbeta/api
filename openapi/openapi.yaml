@@ -130,6 +130,11 @@ paths:
   /me/context:
     $ref: './paths/settings.yaml#/sessionContext'
 
+  # El tema (FEAT-USR-042). En el servidor y no en el navegador porque tiene
+  # que sobrevivir al dispositivo.
+  /me/appearance-settings:
+    $ref: './paths/settings.yaml#/appearanceSettings'
+
   /me/profile:
     $ref: './paths/settings.yaml#/myProfile'
 

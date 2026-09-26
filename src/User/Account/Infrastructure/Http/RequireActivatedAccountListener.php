@@ -87,6 +87,11 @@ final readonly class RequireActivatedAccountListener
         // and a rule meant to keep unverified accounts from writing content
         // should not condemn them to the same four bubbles on every visit.
         'completeTour',
+
+        // El tema (`FEAT-USR-042` `RN-6`). Es una preferencia de pantalla, no
+        // una operación sobre contenido, y obligar a activar la cuenta para
+        // poner el modo oscuro sería absurdo.
+        'updateMyAppearanceSettings',
     ];
 
     public function __construct(

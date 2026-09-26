@@ -6,6 +6,7 @@ namespace LectoresBeta\User\Profile\Application\DTO;
 
 use LectoresBeta\User\Account\Domain\Enum\AccountStatus;
 use LectoresBeta\User\Account\Domain\Enum\OnboardingStatus;
+use LectoresBeta\User\Preferences\Domain\Enum\AppearanceTheme;
 
 /**
  * El contexto de sesión: identidad, estados y dos números.
@@ -32,6 +33,13 @@ final readonly class SessionContext
         public ?int $balance,
         public ?int $unreadNotifications,
         public array $pendingTours,
+        /**
+         * De qué color se pinta (`FEAT-USR-042`). Viaja aquí y no en una
+         * petición propia porque el layout ya pide esta respuesta en cada
+         * carga: pedirlo aparte significaría pintar la pantalla en claro y
+         * cambiarla a oscuro medio segundo después.
+         */
+        public AppearanceTheme $theme,
     ) {
     }
 }

@@ -890,7 +890,7 @@ sessionContext:
           application/json:
             schema:
               type: object
-              required: [userId, username, accountStatus, onboardingStatus, credits, pendingTours]
+              required: [userId, username, accountStatus, onboardingStatus, credits, pendingTours, theme]
               properties:
                 userId:
                   $ref: '../openapi.yaml#/components/schemas/Uuid'
@@ -927,8 +927,97 @@ sessionContext:
                     porque el layout ya pide esta respuesta en cada carga.
 
                     La lista vacía significa que no hay ninguno pendiente.
+                theme:
+                  $ref: '#/AppearanceTheme'
       '401':
         $ref: '../openapi.yaml#/components/responses/Unauthorized'
+
+AppearanceTheme:
+  type: string
+  enum: [LIGHT, DARK, SYSTEM]
+  description: |
+    De qué color se pinta la aplicación (`FEAT-USR-042`). `SYSTEM` por
+    defecto, y no decide por nadie: quien tiene el móvil en oscuro ya dijo lo
+    que quería.
+
+appearanceSettings:
+  get:
+    tags: [Account]
+    operationId: getMyAppearanceSettings
+    summary: Mi tema
+    description: |
+      Quien nunca lo ha tocado recibe `SYSTEM`, no un hueco: la pantalla tiene
+      que poder pintar el selector el primer día.
+
+      El mismo valor viaja en `GET /me/context`, que es donde lo lee el
+      layout. Este endpoint es para la pantalla de Configuración.
+    responses:
+      '200':
+        description: El tema de quien pregunta.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AppearanceSettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+  put:
+    tags: [Account]
+    operationId: updateMyAppearanceSettings
+    summary: Cambiar el tema
+    description: |
+      **Se guarda en el servidor y no en el navegador** porque tiene que
+      sobrevivir al dispositivo: quien eligió oscuro en el portátil y abre el
+      móvil espera oscuro, y una preferencia en `localStorage` no viaja.
+
+      `PUT` y no `PATCH`: hay un solo campo, y no existe la diferencia entre
+      «no lo toques» y «cámbialo» cuando solo hay uno. Por eso **el campo es
+      obligatorio**: ausente solo puede ser un error de quien llama, y
+      aceptarlo en silencio dejaría creer que se cambió algo.
+
+      **No hace falta la cuenta activada**: es una preferencia de pantalla, no
+      una operación sobre contenido.
+
+      No es la apariencia de la página de autor, que es `FEAT-USR-016`:
+      aquella la elige el autor y la ven los demás; esta la elige cada quien y
+      solo la ve él.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [theme]
+            properties:
+              theme:
+                $ref: '#/AppearanceTheme'
+    responses:
+      '200':
+        description: El tema como queda.
+        content:
+          application/json:
+            schema:
+              $ref: '#/AppearanceSettings'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '422':
+        description: |
+          `code: UNKNOWN_THEME`. Un valor desconocido se rechaza nombrándolo
+          en lugar de caer al por defecto: quien manda `oscuro` cree que ha
+          cambiado algo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+AppearanceSettings:
+  type: object
+  required: [theme, updatedAt]
+  properties:
+    theme:
+      $ref: '#/AppearanceTheme'
+    updatedAt:
+      type: string
+      format: date-time
 
 tour:
   get:
