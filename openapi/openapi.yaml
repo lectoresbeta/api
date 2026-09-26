@@ -210,6 +210,18 @@ paths:
   /me/published-books/{publishedBookId}/cover:
     $ref: './paths/published-books.yaml#/cover'
 
+  # La otra sub-pestaña de «Más info» (FEAT-USR-030). Sin imagen y sin
+  # reordenar: el orden lo pone el año descendente.
+
+  /users/{userId}/awards:
+    $ref: './paths/awards.yaml#/list'
+
+  /me/awards:
+    $ref: './paths/awards.yaml#/collection'
+
+  /me/awards/{awardId}:
+    $ref: './paths/awards.yaml#/item'
+
   # Las tarjetas de previsualización de lo que se comparte fuera
   # (FEAT-WRK-011, FEAT-COM-020). No generan enlace: la dirección es la
   # canónica de siempre, y solo responden por lo que ya era público.

@@ -15,7 +15,7 @@ Trayectoria del autor **fuera** de Lectores Beta. Parte de [Mi perfil](my-profil
 | Sub-pestaña | Contenido | Estado |
 |---|---|---|
 | **Obras publicadas** | Libros ya editados, con editorial, año y enlace de compra | Documentada aquí |
-| **Premios y reconocimientos** | Méritos del autor | **Sin capturas.** `FEAT-USR-030` sigue `PENDING` |
+| **Premios y reconocimientos** | Méritos del autor | **Sin capturas.** Contenido decidido sin diseño en [`FEAT-USR-030`](../features/user/FEAT-USR-030-author-awards.md) |
 
 ## Obras publicadas
 
@@ -75,7 +75,7 @@ tamaño en servidor y **eliminación de metadatos EXIF**.
 | 3 | Subir la **portada** de una obra publicada | `FEAT-USR-029`, `file-uploads.md` |
 | 4 | Editorial como **texto libre**, sin catálogo | `FEAT-USR-029` |
 | 5 | Orden de la rejilla | `FEAT-USR-029`, `P-15` |
-| 6 | Premios y reconocimientos | `FEAT-USR-030`, sin diseño |
+| 6 | Premios y reconocimientos | `FEAT-USR-030`, especificada sin diseño |
 
 ## Preguntas abiertas
 
@@ -83,7 +83,7 @@ tamaño en servidor y **eliminación de metadatos EXIF**.
 |---|---|---|
 | P-15 | ¿Quién decide el orden de la rejilla? En la captura, la obra añadida va antes del «+» | Propuesta: el autor, con año descendente por defecto |
 | P-18 | ¿Qué proporción y tamaño máximo tiene la portada? | No hay recomendación en pantalla, a diferencia del avatar |
-| P-19 | ¿Qué contiene «Premios y reconocimientos»? | Sin capturas. `FEAT-USR-030` no se puede especificar |
+| P-19 | ¿Qué contiene «Premios y reconocimientos»? | **Resuelta:** una ficha declarada por el autor —título, quién lo concede, año, nota y enlace—, sin imagen y sin validar contra nada. Ver [`FEAT-USR-030`](../features/user/FEAT-USR-030-author-awards.md) |
 | P-16 | ¿Hay límite de obras publicadas por perfil? | Evitar perfiles inflados |
 | P-9 | ¿Se valida de algún modo que el libro exista? | La respuesta natural, viendo «Amazon», es que no |
 | P-10 | ¿Hay afiliación en el enlace «Comprar»? | Implicaciones comerciales |

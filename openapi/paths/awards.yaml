@@ -1,0 +1,237 @@
+# Los premios y reconocimientos que un autor declara (`FEAT-USR-030`).
+#
+# La otra sub-pestaña de «Más info», hermana de la bibliografía. La diferencia
+# de fondo: **no se valida contra nada**. No existe un registro universal de
+# premios literarios, y el concurso del ayuntamiento y el Premio Planeta se
+# declaran igual. Lo que la plataforma ofrece no es una acreditación, es un
+# sitio donde ponerlo; el enlace, opcional, es lo que permite comprobarlo.
+
+Award:
+  type: object
+  required: [awardId, title, urlIsExternal]
+  properties:
+    awardId:
+      type: string
+      format: uuid
+    title:
+      type: string
+      maxLength: 180
+      description: El nombre del premio o del reconocimiento. Lo único obligatorio.
+    awardedBy:
+      type: [string, 'null']
+      maxLength: 180
+      description: |
+        Quién lo concede: el certamen, la institución, la revista. **Texto
+        libre**, por lo mismo que la editorial de una obra publicada.
+    year:
+      type: [integer, 'null']
+      minimum: 1450
+      description: |
+        El año en que se concedió. El rango atrapa el error de teclado —un
+        `19` o un `202`—, no le discute a nadie su trayectoria.
+    note:
+      type: [string, 'null']
+      maxLength: 280
+      description: 'Una línea para lo que no cabe en el título: «finalista», «categoría relato».'
+    url:
+      type: [string, 'null']
+      maxLength: 512
+      description: |
+        Enlace al fallo, a las bases o a la noticia. **Solo `http` y
+        `https`**: cualquier otro esquema convertiría lo que parece un enlace
+        en algo que ejecuta lo que escribió un extraño.
+    urlIsExternal:
+      type: boolean
+      description: |
+        Constante cuando hay enlace, y no sobra: dice que **sale de la
+        plataforma**, que es lo que necesita saber quien lo pinta para abrirlo
+        aparte y sin arrastrar la sesión.
+
+list:
+  get:
+    tags: [Account]
+    operationId: listAwards
+    summary: Los premios de un autor
+    description: |
+      **Público**, como el perfil del que forma parte: acreditar una
+      trayectoria es enseñarla.
+
+      Responde `404` cuando el perfil no se puede ver —cuenta eliminada o
+      privacidad restringida—, por la misma razón que la bibliografía: si esta
+      lista contestara por su cuenta sería un camino lateral para confirmar
+      que una cuenta existe justo cuando su titular ha pedido que no se sepa.
+
+      **El orden lo pone el año descendente y el autor no lo toca**, al revés
+      que la bibliografía. Un historial de premios se lee como un currículo, y
+      una lista que se puede reordenar es una lista donde el orden pasa a ser
+      información. Los que no llevan año van al final.
+
+      No pagina: el tope son cincuenta.
+    security: []
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '200':
+        description: Sus méritos, lo último primero.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [awards]
+              properties:
+                awards:
+                  type: array
+                  maxItems: 50
+                  items:
+                    $ref: '#/Award'
+      '404':
+        description: No hay perfil que enseñar.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+collection:
+  post:
+    tags: [Account]
+    operationId: addAward
+    summary: Declarar un premio
+    description: |
+      **Solo el título es obligatorio.** Quien recuerda una mención de hace
+      veinte años no tiene por qué recordar el año ni tener un enlace, y
+      exigírselos le dejaría fuera un mérito que existió.
+
+      **Sin imagen.** Un premio no tiene portada, y añadir aquí un diploma
+      sería otro tipo de fichero, otro límite y otra pantalla por un adorno.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [title]
+            properties:
+              title: { type: string, maxLength: 180 }
+              awardedBy: { type: [string, 'null'], maxLength: 180 }
+              year: { type: [integer, 'null'] }
+              note: { type: [string, 'null'], maxLength: 280 }
+              url: { type: [string, 'null'], maxLength: 512 }
+    responses:
+      '201':
+        description: El premio declarado.
+        content:
+          application/json:
+            schema:
+              $ref: '#/Award'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '409':
+        description: '`code: TOO_MANY_AWARDS`. Un perfil no es un palmarés interminable.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: |
+          `code: VALIDATION_FAILED` (sin título), `AWARD_TITLE_TOO_LONG`,
+          `AWARD_GRANTOR_TOO_LONG`, `AWARD_NOTE_TOO_LONG`,
+          `IMPLAUSIBLE_AWARD_YEAR` o `INVALID_AWARD_URL`.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+
+item:
+  patch:
+    tags: [Account]
+    operationId: updateAward
+    summary: Corregir un premio
+    description: |
+      Lo que no se envía se queda como estaba; enviar `note: null` lo borra.
+      **La diferencia la hace la presencia de la clave, no su valor.**
+
+      `PATCH` y no `PUT`: mandar la ficha entera para cambiar un año obliga al
+      cliente a reenviar lo que no toca, y un campo que se olvida se borra sin
+      querer.
+    parameters:
+      - name: awardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              title: { type: string, maxLength: 180 }
+              awardedBy: { type: [string, 'null'], maxLength: 180 }
+              year: { type: [integer, 'null'] }
+              note: { type: [string, 'null'], maxLength: 280 }
+              url: { type: [string, 'null'], maxLength: 512 }
+    responses:
+      '200':
+        description: El premio como queda.
+        content:
+          application/json:
+            schema:
+              $ref: '#/Award'
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: |
+          `code: NOT_YOUR_AWARD`. Responde `403` y no `404` al revés que en
+          casi todo lo demás: un premio se enseña en un perfil abierto, y
+          fingir que no está sería mentirle a quien lo acaba de ver.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: AWARD_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '422':
+        description: Los mismos códigos que al declararlo.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+  delete:
+    tags: [Account]
+    operationId: deleteAward
+    summary: Retirar un premio
+    parameters:
+      - name: awardId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    responses:
+      '204':
+        description: Retirado.
+      '401':
+        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+      '403':
+        description: '`code: NOT_YOUR_AWARD`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'
+      '404':
+        description: '`code: AWARD_NOT_FOUND`.'
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/Problem'

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="LectoresBeta\User\AuthorPage\Domain\Entity\Award"
+            table="award" schema="user_ctx">
+
+        <indexes>
+            <index name="idx_award_user" columns="user_id,year,created_at"/>
+        </indexes>
+
+        <id name="id" type="guid" column="id">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="userId" column="user_id" type="guid"/>
+        <field name="title" type="string" length="180"/>
+        <field name="awardedBy" column="awarded_by" type="string" length="180" nullable="true"/>
+        <field name="year" type="smallint" nullable="true"/>
+        <field name="note" type="string" length="280" nullable="true"/>
+        <field name="url" type="string" length="512" nullable="true"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

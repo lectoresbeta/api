@@ -296,6 +296,33 @@ deletePublishedBookCover:
     controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\DeletePublishedBookCoverController::__invoke
     methods: [DELETE]
 
+# La otra sub-pestaña de «Más info» (FEAT-USR-030). Misma forma que la
+# bibliografía y sin imagen: un premio no tiene portada.
+#
+# No hay endpoint de reordenar, y es deliberado: el orden lo pone el año
+# descendente y el autor no lo toca (`RN-8`). Un historial de premios se lee
+# como un currículo.
+
+listAwards:
+    path: /api/v1/users/{userId}/awards
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\ListAwardsController::__invoke
+    methods: [GET]
+
+addAward:
+    path: /api/v1/me/awards
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\AddAwardController::__invoke
+    methods: [POST]
+
+updateAward:
+    path: /api/v1/me/awards/{awardId}
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\UpdateAwardController::__invoke
+    methods: [PATCH]
+
+deleteAward:
+    path: /api/v1/me/awards/{awardId}
+    controller: LectoresBeta\User\AuthorPage\Infrastructure\Controller\DeleteAwardController::__invoke
+    methods: [DELETE]
+
 # Entrar con Google (`FEAT-USR-002`). Sin sesión: no puede haberla todavía.
 #
 # El proveedor va en la ruta para que Facebook y LinkedIn encajen sin cambiar

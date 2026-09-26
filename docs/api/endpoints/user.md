@@ -65,6 +65,10 @@
 | `DELETE /api/v1/me/published-books/{publishedBookId}` | `deletePublishedBook` | Quitarla | FEAT-USR-029 | **Implementado** |
 | `PUT /api/v1/me/published-books/{publishedBookId}/cover` | `updatePublishedBookCover` | Subir su portada | FEAT-USR-029 | **Implementado** |
 | `DELETE /api/v1/me/published-books/{publishedBookId}/cover` | `deletePublishedBookCover` | Quitar su portada | FEAT-USR-029 | **Implementado** |
+| `GET /api/v1/users/{userId}/awards` | `listAwards` | Los premios de un autor | FEAT-USR-030 | **Implementado** |
+| `POST /api/v1/me/awards` | `addAward` | Declarar un premio | FEAT-USR-030 | **Implementado** |
+| `PATCH /api/v1/me/awards/{awardId}` | `updateAward` | Corregirlo | FEAT-USR-030 | **Implementado** |
+| `DELETE /api/v1/me/awards/{awardId}` | `deleteAward` | Retirarlo | FEAT-USR-030 | **Implementado** |
 | `GET /api/v1/authors` | `searchAuthors` | Buscar personas por nombre o temática | FEAT-USR-017 | **Implementado** |
 | `PUT /api/v1/me/author-links` | `updateAuthorLinks` | Las referencias de la página de autor | FEAT-USR-015 | **Implementado** |
 | `PUT /me/author-page/theme` | `updateAuthorPageTheme` | Personalización visual | FEAT-USR-016 | PENDING |
@@ -1078,3 +1082,74 @@ compra de `FEAT-USR-029` y vive en un solo sitio.
 Una referencia **sin etiqueta se rechaza** en vez de rellenarse con su dirección: un enlace
 que no dice a dónde lleva es el que se pulsa por error, y poner la URL como texto visible
 invita a disfrazar el destino.
+
+---
+
+## Los premios y reconocimientos del autor
+
+**Funcionalidad:** [`FEAT-USR-030`](../../features/user/FEAT-USR-030-author-awards.md)
+
+La otra sub-pestaña de «Más info». Cuatro operaciones sobre los méritos que el autor declara:
+un premio, una mención, una beca, un finalista.
+
+### No se valida contra nada
+
+Es lo que hay que leer antes que el resto. **No existe un registro universal de premios
+literarios**, y el concurso del ayuntamiento, la mención del taller y el Premio Planeta se
+declaran igual. Lo que la plataforma ofrece no es una acreditación, es un sitio donde ponerlo;
+el enlace —opcional— es lo que permite al que lee comprobarlo por su cuenta.
+
+Es la misma decisión que la editorial de una obra publicada, y se dice aquí para que nadie lea
+la lista como una verificación.
+
+### El orden lo pone el año, y el autor no lo toca
+
+La única diferencia deliberada con la bibliografía, donde el autor arrastra las tarjetas
+(`P-15`).
+
+Allí el orden es suyo porque la cuadrícula es su escaparate. Un historial de premios se lee de
+otra manera: **lo último primero**, como un currículo. Nadie ordena sus méritos a mano, y una
+lista que se puede reordenar es una lista donde el orden pasa a ser información.
+
+Año descendente, los que no llevan año al final. No hay campo `position` ni endpoint de
+reordenar.
+
+### Quién puede qué
+
+| Operación | Sesión | Quién |
+|---|---|---|
+| `listAwards` | **No** | Cualquiera, si el perfil se puede ver |
+| Las tres de escritura | Sí, y **activada** | Solo su titular |
+
+Mismo `404` del perfil invisible y mismo `403` —y no `404`— al tocar el premio de otro, por
+las mismas razones que en la bibliografía.
+
+### Los datos
+
+Solo el **título** es obligatorio. Quien recuerda una mención de hace veinte años no tiene por
+qué recordar el año ni tener un enlace.
+
+**Sin imagen.** Un premio no tiene portada, y añadir aquí un diploma sería otro tipo de
+fichero, otro límite y otra pantalla por un adorno.
+
+El **enlace** se valida como dirección `http` o `https` con la misma comprobación que el enlace
+de compra y las referencias de la página de autor, y el servidor **no la visita**. Viaja con
+`urlIsExternal` por lo mismo.
+
+### Errores específicos
+
+| `code` | HTTP | Cuándo |
+|---|---|---|
+| `AWARD_NOT_FOUND` | 404 | No existe |
+| `NOT_YOUR_AWARD` | 403 | Es de otra persona |
+| `VALIDATION_FAILED` | 422 | Sin título |
+| `AWARD_TITLE_TOO_LONG` | 422 | Más de 180 |
+| `AWARD_GRANTOR_TOO_LONG` | 422 | Más de 180 |
+| `AWARD_NOTE_TOO_LONG` | 422 | Más de 280 |
+| `IMPLAUSIBLE_AWARD_YEAR` | 422 | Fuera de 1450 – año que viene |
+| `INVALID_AWARD_URL` | 422 | No es `http` ni `https` |
+| `TOO_MANY_AWARDS` | 409 | El tope son 50 |
+
+### Efectos
+
+Ninguno. No mueve créditos, no cuenta como relato y no publica eventos.
