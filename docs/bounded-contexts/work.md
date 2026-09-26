@@ -89,14 +89,21 @@ y bajo qué modalidad se ofrece a los lectores beta.
 | `ChapterCorrectabilityChanged` | **`Credits`** | El filtro duro del catálogo y su primer factor: si el capítulo admite corrección y cuántas puede pagar su autor |
 | `ChapterPriceChanged` | **`Credits`** | La insignia de la tarjeta: lo que gana quien corrija ese capítulo |
 | `FeedbackSubmitted` | **`Feedback`** | Cuenta una corrección recibida, que **baja** la obra en el catálogo |
+| `WorkRated` | **`Feedback`** | Mantiene el agregado de valoraciones por el que «Mis relatos» ordena (`FEAT-WRK-015`) |
 
-Los tres alimentan el read model del catálogo y no tocan ningún agregado. Es lo que permite
+Los tres primeros alimentan el read model del catálogo y no tocan ningún agregado. Es lo que permite
 ordenar por capacidad de pago **sin un solo `JOIN`** con las tablas de otro contexto
 ([`decision:0008`](../decisions/0008-catalogue-ordering.md)).
 
 `ChapterPriceChanged` es el único que lleva una cifra de créditos, y llega **ya traducida**:
 `Work` la copia en la señal y no sabe calcularla (`FEAT-CRD-013` `RN-1`). Los demás no llevan
 dinero — `affordableCorrections` es una conclusión acotada a diez, no un saldo.
+
+`WorkRated` es distinto de los tres: no alimenta el catálogo sino la pantalla de gestión del
+autor, y sí escribe en la obra —dos contadores, la suma de las notas y cuántas son—. **La
+valoración sigue siendo de `Feedback`**, que decide quién puede dejarla y con qué nota; aquí
+solo se acumula, porque ordenar una lista preguntando nota a nota al otro contexto sería un
+N+1 al otro lado de la frontera.
 
 ## Contratos publicados
 

@@ -164,6 +164,106 @@ final class RateAWorkTest extends EconomyScenario
         self::assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }
 
+    /**
+     * La valoración llega a `Work`, que mantiene su propio agregado para
+     * poder ordenar «Mis relatos» por él (`FEAT-WRK-015`).
+     *
+     * **Es una proyección, no un traslado de la propiedad**: `Feedback` sigue
+     * decidiendo quién puede valorar y con qué nota. Lo que cruza es el hecho.
+     */
+    public function testTheRatingReachesTheAuthorsOwnList(): void
+    {
+        [$autora, $lectora, , $workId] = $this->aDeliveredCorrection();
+
+        $this->rate($lectora['token'], $workId, 4);
+        $this->consumeEverything();
+
+        $card = $this->myWork($autora['token'], $workId);
+
+        self::assertSame(1, $card['ratingCount']);
+        // En JSON un 4.0 viaja como `4`: la media se compara como número.
+        self::assertSame(4.0, (float) $card['ratingAverage']);
+    }
+
+    /**
+     * Y **cambiar la nota no la suma dos veces**.
+     *
+     * Es el caso que obliga a `Work` a recordar la última nota de cada
+     * persona: el hecho no lleva la anterior, así que sin esa fila la suma
+     * contaría las dos y la media saldría de siete entre uno.
+     */
+    public function testChangingARatingDoesNotCountItTwice(): void
+    {
+        [$autora, $lectora, , $workId] = $this->aDeliveredCorrection();
+
+        $this->rate($lectora['token'], $workId, 2);
+        $this->consumeEverything();
+        $this->rate($lectora['token'], $workId, 5);
+        $this->consumeEverything();
+
+        $card = $this->myWork($autora['token'], $workId);
+
+        self::assertSame(1, $card['ratingCount'], 'Sigue siendo una persona.');
+        self::assertSame(5.0, (float) $card['ratingAverage']);
+    }
+
+    /**
+     * Sin valorar, `null`, que **no es lo mismo que cero**: una obra que
+     * nadie ha valorado no es una obra mal valorada, y es la razón de que el
+     * orden «más valorados» las mande al final en vez de mezclarlas.
+     */
+    public function testAnUnratedWorkHasNoAverageAndGoesLast(): void
+    {
+        [$autora, $lectora, , $valorada] = $this->aDeliveredCorrection();
+        $sinValorar = $this->createWork($autora['token'], 'Nadie la ha valorado');
+
+        $this->rate($lectora['token'], $valorada, 3);
+        $this->consumeEverything();
+
+        self::assertNull($this->myWork($autora['token'], $sinValorar)['ratingAverage']);
+        self::assertSame(0, $this->myWork($autora['token'], $sinValorar)['ratingCount']);
+
+        $this->myWorks($autora['token'], '&sort=rated');
+
+        self::assertSame([$valorada, $sinValorar], array_map(
+            static fn (array $work): string => (string) $work['workId'],
+            $this->payload()['works'],
+        ));
+    }
+
+    public function testAnUnsupportedSortSaysWhichOnesWork(): void
+    {
+        $autora = $this->activatedPerson('autora');
+
+        $this->myWorks($autora['token'], '&sort=mostRead');
+
+        self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
+        self::assertSame('recent,oldest,rated', $this->payload()['supportedSorts']);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function myWork(string $token, string $workId): array
+    {
+        $this->myWorks($token);
+
+        foreach ($this->payload()['works'] as $work) {
+            if ($work['workId'] === $workId) {
+                return $work;
+            }
+        }
+
+        self::fail('La obra no está en «Mis relatos».');
+    }
+
+    private function myWorks(string $token, string $query = ''): void
+    {
+        $this->client->request('GET', '/api/v1/me/works?'.ltrim($query, '&'), server: [
+            'HTTP_AUTHORIZATION' => 'Bearer '.$token,
+        ]);
+    }
+
     private function rate(string $token, string $workId, int $rating): int
     {
         $this->put($token, $workId, $rating);

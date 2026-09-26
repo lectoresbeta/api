@@ -49,12 +49,14 @@ interface WorkRepository
      * Una página de «Mis relatos» (`FEAT-WRK-015`), con los borradores
      * dentro: es el único listado donde aparecen.
      *
+     * @param 'recent'|'oldest'|'rated' $sort
+     *
      * @return list<Work>
      */
     public function pageOfAuthor(
         AuthorId $authorId,
         ?WorkStatus $status,
-        bool $oldestFirst,
+        string $sort,
         int $limit,
         int $offset,
     ): array;

@@ -51,6 +51,24 @@ class Work
     private int $chapterCount = 0;
 
     /**
+     * Cuántas personas han valorado la obra y cuánto suman sus notas
+     * ([`FEAT-WRK-015`](../../../../../docs/features/work/FEAT-WRK-015-my-works.md)).
+     *
+     * Dos enteros y no una media: una media guardada se redondea, y sumar
+     * sobre ella una nota nueva arrastra el redondeo de todas las anteriores.
+     * Con la suma y el recuento, la media se calcula cuando se pide y siempre
+     * es la de verdad.
+     *
+     * Es una **proyección de una decisión de `Feedback`**, que es quien posee
+     * las valoraciones. Vive aquí porque «Mis relatos» ordena por ella y una
+     * pregunta por fila a otro contexto para ordenar una lista sería un N+1
+     * al otro lado de la frontera.
+     */
+    private int $ratingCount = 0;
+
+    private int $ratingSum = 0;
+
+    /**
      * Blocked by an upheld claim (`FEAT-MOD-003`). The work stays readable
      * for its author, marked as blocked, and disappears for everybody else
      * (`RN-9`). `Moderation` decides; this context applies.
@@ -270,6 +288,44 @@ class Work
     {
         $this->blockedAt = null;
         $this->touch($now);
+    }
+
+    public function ratingCount(): int
+    {
+        return $this->ratingCount;
+    }
+
+    /**
+     * `null` mientras nadie la haya valorado, que **no es lo mismo que cero**:
+     * una obra sin valorar no es una obra mal valorada, y ordenarlas juntas
+     * castigaría a quien acaba de publicar.
+     */
+    public function ratingAverage(): ?float
+    {
+        return 0 === $this->ratingCount ? null : $this->ratingSum / $this->ratingCount;
+    }
+
+    /**
+     * Alguien la ha valorado, o ha cambiado su nota.
+     *
+     * Recibe **la anterior de esa misma persona** porque el hecho que llega
+     * no la lleva: sin ella no se puede restar, y una valoración cambiada
+     * dejaría la suma contando las dos. Quien llama la saca de la proyección
+     * de quién valoró qué, que existe justo para esto.
+     *
+     * No toca `updatedAt`: que alguien valore una obra no es que su autor la
+     * haya tocado, y confundirlo movería «Mis relatos» bajo sus pies.
+     */
+    public function applyRating(int $value, ?int $previous): void
+    {
+        if (null === $previous) {
+            ++$this->ratingCount;
+            $this->ratingSum += $value;
+
+            return;
+        }
+
+        $this->ratingSum += $value - $previous;
     }
 
     private function changeStatus(WorkStatus $status, \DateTimeImmutable $now): void

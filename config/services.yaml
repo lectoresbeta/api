@@ -323,6 +323,12 @@ services:
                 # nada de eso, que es justo lo que RN-4 protege.
                 - LectoresBeta\Work\Manuscript\Application\Event\ClaimUpheld
                 - LectoresBeta\Credits\Account\Application\Event\ClaimUpheld
+
+                # Y lo que valorar una obra significa para `Work`
+                # (FEAT-WRK-015): mantiene su propio agregado para poder
+                # ordenar «Mis relatos» por él. `Feedback` sigue siendo dueño
+                # de las valoraciones; esto es una proyección.
+                - LectoresBeta\Work\Manuscript\Application\Event\WorkRated
                 - LectoresBeta\Notification\Delivery\Application\Event\WorkBlockedByModeration
 
                 # El autor ha abierto la corrección: el aviso sobra
@@ -941,6 +947,13 @@ services:
     # (FEAT-MOD-003). Si lo escribiera `Moderation`, dos contextos
     # gobernarían el mismo dato.
     LectoresBeta\Work\Manuscript\Application\Handler\BlockContentOnClaimUpheld:
+        tags:
+            - { name: messenger.message_handler }
+
+    # El agregado de valoraciones que «Mis relatos» ordena (FEAT-WRK-015).
+    # Sin registro de duplicados: la fila por persona hace el consumo
+    # idempotente sola, porque reaplicar la misma nota no mueve nada.
+    LectoresBeta\Work\Manuscript\Application\Handler\TrackWorkRating:
         tags:
             - { name: messenger.message_handler }
 

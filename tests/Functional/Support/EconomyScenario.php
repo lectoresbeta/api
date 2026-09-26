@@ -113,6 +113,10 @@ abstract class EconomyScenario extends WebTestCase
         'FeedbackReplied',
         'FeedbackRatedPositively',
 
+        // Y la valoración de la obra entera (`FEAT-FBK-002`), que `Work`
+        // proyecta para poder ordenar «Mis relatos» por ella.
+        'WorkRated',
+
         // Y el eco de lo que se pagó por cada corrección (`FEAT-FBK-010`).
         'CreditsAdded',
         'CreditsSpent',

@@ -486,12 +486,18 @@ myWorks:
         in: query
         required: false
         description: |
-          `recent` (por defecto) y `oldest`, por fecha de creación. «Más
-          valorados» y «más leídos» todavía no: dependen de agregados que no
-          existen (`W-12`, `H-3`).
+          `recent` (por defecto) y `oldest`, por fecha de creación, y `rated`
+          por la media de las valoraciones.
+
+          Con `rated`, **las obras que nadie ha valorado van al final**, no
+          mezcladas con las de nota baja: una obra sin valorar no es una obra
+          mal valorada. A igual media, primero la que tiene más valoraciones.
+
+          «Más leídos» todavía no: nadie ha definido qué cuenta como lectura
+          (`H-3`).
         schema:
           type: string
-          enum: [recent, oldest]
+          enum: [recent, oldest, rated]
       - name: page
         in: query
         required: false
@@ -528,7 +534,7 @@ myWorks:
                   type: array
                   items:
                     type: object
-                    required: [workId, title, status, accessMode, adultsOnly, wordCount, readingMinutes, chapterCount, genres, blocked, archived, createdAt, updatedAt]
+                    required: [workId, title, status, accessMode, adultsOnly, wordCount, readingMinutes, chapterCount, genres, ratingCount, ratingAverage, blocked, archived, createdAt, updatedAt]
                     properties:
                       workId:
                         $ref: '../openapi.yaml#/components/schemas/Uuid'
@@ -554,6 +560,14 @@ myWorks:
                         type: array
                         items:
                           type: string
+                      ratingCount:
+                        type: integer
+                        description: Cuántas personas la han valorado (`FEAT-FBK-002`).
+                      ratingAverage:
+                        type: [number, 'null']
+                        description: |
+                          La media, con un decimal. `null` mientras nadie la
+                          haya valorado, que **no es lo mismo que cero**.
                       blocked:
                         type: boolean
                       archived:

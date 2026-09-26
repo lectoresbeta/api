@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Proyeccion de una decision de `Feedback`. Clave compuesta y sin
+         identificador propio: una persona tiene como mucho una nota por obra,
+         y un `id` seria un segundo modo de decir lo mismo. Sin clave ajena al
+         lector, que vive en otro contexto. -->
+    <entity name="LectoresBeta\Work\Manuscript\Domain\Entity\WorkReaderRating"
+            table="work_reader_rating" schema="work_ctx">
+
+        <id name="workId" column="work_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+        <id name="readerId" column="reader_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="value" column="value" type="smallint"/>
+        <field name="ratedAt" column="rated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

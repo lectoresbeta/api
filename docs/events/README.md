@@ -167,7 +167,13 @@ tiene acceso.
 | `CorrectionRead` | El autor abre una corrección recibida (`FEAT-FBK-004`) | `Notification` ✅, que retira el aviso pendiente | `correctionId`, `authorId`, `readAt`. **`authorId` se llamó `readerId` hasta `FEAT-NOT-006`** llevando dentro el identificador del autor; el consumidor acepta los dos nombres mientras pueda quedar algo del anterior en la cola |
 | `CorrectionClosed` | Lo que alguien estaba corrigiendo deja de estar disponible: la obra se bloquea, su autor la retira o le oculta el capítulo | `Notification` ✅ | `correctionId`, `chapterId`, `workId`, `readerId`, `reason`, `closedAt`. **El borrador no se borra**: es texto suyo | `correctionId`, `readerId`, `readAt`. **No se le dice a quien corrigió**: sería una confirmación de lectura entre dos personas que no han elegido conversar |
 | `FeedbackHidden` | El autor lo oculta | `Community`, `Credits`* | `feedbackId`, `workId` |
-| `WorkRated` | Un LB valora la obra, **o cambia su nota** (`FEAT-FBK-002`) | `Community` cuando existan los rankings. **Hoy nadie**: `CM-4` no define la fórmula, y el hecho se publica igual para que haya histórico que promediar | `workId`, `authorId`, `readerId`, `rating` (1–5), `firstTime`, `ratedAt`. Lleva cifra por lo mismo que `ChapterPriceChanged`: **el valor es el hecho** |
+| `WorkRated` | Un LB valora la obra, **o cambia su nota** (`FEAT-FBK-002`) | **`Work`** ✅ (mantiene el agregado que ordena «Mis relatos»), `Community` cuando existan los rankings | `workId`, `authorId`, `readerId`, `rating` (1–5), `firstTime`, `ratedAt`. Lleva cifra por lo mismo que `ChapterPriceChanged`: **el valor es el hecho** |
+
+`WorkRated` **no lleva la nota anterior**, y eso condiciona a quien la consuma: al cambiar una
+valoración hay que restar la que había, así que `Work` guarda la última conocida de cada
+persona en vez de fiarse del hecho. Podría viajar, pero un consumidor que se hubiera perdido
+la primera entrega seguiría sin poder restar — la fila lo resuelve en los dos casos, y de paso
+hace el consumo idempotente.
 
 \* Solo si se decide revertir créditos al ocultar (`C-9`).
 

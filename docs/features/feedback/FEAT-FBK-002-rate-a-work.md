@@ -121,9 +121,15 @@ preguntarlo de vuelta si no viajara aquí.
 `firstTime` distingue poner de cambiar. Quien promedie necesita las dos cosas: sin ello,
 sustituir una nota se contaría como una nota más.
 
-**Hoy no lo consume nadie.** Los tres rankings siguen bloqueados por `CM-4` —la fórmula de
-puntuación no está definida— y publicar el hecho igualmente es lo que permite que, el día que
-se defina, haya histórico que promediar.
+**Lo consume `Work`** (2026-09-26), que mantiene con él el agregado por el que «Mis relatos»
+ordena por «más valorados» ([`FEAT-WRK-015`](../work/FEAT-WRK-015-my-works-list.md)). Los tres
+rankings de `Community` siguen pendientes, pero ya no por falta de fórmula: `CM-4` está
+resuelta.
+
+Una cosa que este hecho **no lleva y quien lo consuma necesita**: la nota anterior. Al cambiar
+una valoración hay que restar la que había, así que `Work` guarda la última conocida de cada
+persona. Podría viajar en la carga, pero un consumidor que se hubiera perdido la primera
+entrega seguiría sin poder restar.
 
 **Consume** — ninguno.
 
@@ -151,7 +157,7 @@ migración.
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| `CM-4` | La fórmula de puntuación de los rankings | Sin ella nadie consume `WorkRated` todavía |
+| `CM-4` | La fórmula de puntuación de los rankings | **Resuelta** (2026-09-26). `Work` ya consume `WorkRated` para «Mis relatos» (`FEAT-WRK-015`); faltan los rankings de `Community` |
 | `W-12` | ¿«Más valorados» usa esta nota o los «me gusta»? | La tarjeta del catálogo muestra un corazón, no estrellas |
 
 ## Estado

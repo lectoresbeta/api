@@ -97,7 +97,7 @@ final class MyWorksTest extends EconomyScenario
 
         self::assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
         self::assertSame('UNSUPPORTED_SORT', $this->payload()['code']);
-        self::assertSame('recent,oldest', $this->payload()['supportedSorts'], 'Y dice cuáles valen.');
+        self::assertSame('recent,oldest,rated', $this->payload()['supportedSorts'], 'Y dice cuáles valen.');
     }
 
     public function testItPaginates(): void

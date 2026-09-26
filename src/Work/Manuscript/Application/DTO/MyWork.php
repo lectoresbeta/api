@@ -28,6 +28,9 @@ final readonly class MyWork
         public int $wordCount,
         public int $chapterCount,
         public array $genres,
+        public int $ratingCount,
+        /** La media de verdad, sin redondear: `null` mientras nadie la haya valorado. */
+        public ?float $ratingAverage,
         public bool $blocked,
         public bool $archived,
         public string $createdAt,

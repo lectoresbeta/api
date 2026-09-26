@@ -13,7 +13,7 @@ sources:
 endpoints: [GET /me/works]
 events: []
 depends_on: [FEAT-WRK-016]
-updated: 2026-09-24
+updated: 2026-09-26
 ---
 
 # FEAT-WRK-015 — Mis relatos: listado con filtros y ordenación
@@ -39,7 +39,7 @@ Los tres estados son excluyentes, así que los tres filtros **suman el total**: 
 
 | Opción | Criterio |
 |---|---|
-| **Más valorados** | Valoración de la obra. Qué métrica exactamente: `W-12` |
+| **Más valorados** | La media de las valoraciones (`WorkRating`). `W-12`, resuelta |
 | **Más antiguos** | Fecha de creación, ascendente |
 | **Más recientes** | Fecha de creación, descendente |
 | **Más leídos** | Número de lecturas |
@@ -118,7 +118,7 @@ Parámetros: `status` para el filtro y `sort` para el orden, además de la pagin
 
 | # | Pregunta | Impacto |
 |---|---|---|
-| W-12 | ¿«Más valorados» usa `WorkRating` o los «me gusta»? La tarjeta muestra un corazón | Métrica distinta según la respuesta |
+| W-12 | ¿«Más valorados» usa `WorkRating` o los «me gusta»? La tarjeta muestra un corazón | **Resuelta (2026-09-26) por construcción:** no hay «me gusta» sobre una obra en esta plataforma —los apoyos son de publicaciones y comentarios (`FEAT-COM-008`, `FEAT-COM-030`)—, así que la única métrica que existe es `WorkRating`. El corazón de la maqueta no tiene detrás ninguna funcionalidad |
 | H-3 | ¿Qué cuenta como «lectura»? | Concepto nuevo con coste de escritura en cada apertura |
 | H-2 | ¿Qué es «1 / 22»? El primer número es siempre 1 | Si es progreso, hace falta seguimiento de lectura |
 | W-13 | ¿Se conservan filtro y orden al volver a la pestaña? | Detalle de interfaz |
@@ -129,15 +129,33 @@ Parámetros: `status` para el filtro y `sort` para el orden, además de la pagin
 **Especificación:** `APPROVED` (2026-09-24). Depende de `FEAT-WRK-016`, ya aprobada. Lo que queda
 —qué métrica usa «más valorados», qué cuenta como lectura— no impide listar las obras propias.
 
-**Implementación:** `PARTIAL` (2026-09-25). El listado, los tres filtros de estado, la
+**Implementación:** `PARTIAL` (2026-09-26). El listado, los tres filtros de estado, la
 paginación y los dos órdenes por fecha. Una obra **archivada** aparece marcada, que no estaba
 en la ficha y hacía falta: si no apareciera, «recuperar» sería una operación sin pantalla
 desde la que pedirla.
 
-**Faltan los dos órdenes que dependen de agregados que no existen**: «más valorados» (`W-12`,
-sin decidir si mide `WorkRating` o los «me gusta») y «más leídos» (`H-3`, sin definir qué
-cuenta como lectura). Hoy los dos responden `422` como cualquier otro valor desconocido, que
-es preferible a devolver la lista en un orden cualquiera y dejar que alguien se fíe.
+~~**Faltan los dos órdenes que dependen de agregados que no existen**~~ — **«más valorados»
+hecho** (2026-09-26), `sort=rated`. `W-12` se respondió sola: no hay «me gusta» sobre una obra
+en esta plataforma, así que la única métrica que existe es `WorkRating`.
+
+`Work` mantiene ahora **su propio agregado** —cuántas personas la han valorado y cuánto suman
+sus notas— alimentado por `WorkRated`. Tres decisiones dentro de eso:
+
+- **la suma y el recuento, no la media.** Una media guardada se redondea, y sumarle una nota
+  nueva arrastra el redondeo de todas las anteriores;
+- **una fila por persona**, `work_reader_rating`. Parece un duplicado de la tabla de
+  `Feedback` y no lo es: `WorkRated` **no lleva la nota anterior**, así que sin esa fila una
+  valoración cambiada dejaría la suma contando las dos. De paso hace el consumo idempotente
+  sin registro de duplicados, porque reaplicar la misma nota no mueve nada;
+- **las obras sin valorar van al final**, no mezcladas con las de nota baja. Una obra que
+  nadie ha valorado no es una obra mal valorada, y mezclarlas castigaría a quien acaba de
+  publicar. A igual media, primero la que tiene más valoraciones.
+
+La tarjeta lleva ahora `ratingCount` y `ratingAverage`, que la ficha ya prometía y no existían.
+
+**«Más leídos» sigue sin estar** (`H-3`): nadie ha definido qué cuenta como lectura, y contar
+aperturas de página sería inventarse la métrica en la consulta. Responde `422` con los tres
+que sí valen.
 
 **Falta también la nota «alguien está corrigiendo este texto ahora…»**: vive en `Feedback` y
 `Work` no puede preguntárselo sin un contrato nuevo. Es una nota silenciosa de la tarjeta, no

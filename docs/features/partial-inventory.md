@@ -77,11 +77,23 @@ FEAT-USR-036, que ya existe y sirve de molde—.
 |---|---|---|
 | FEAT-WRK-001 `RN-7` | El registro de autoría al crear la obra | `W-1`, decidida |
 | FEAT-MOD-005 `RN-7` | Eliminar una cuenta desde el backoffice | `V-4`, decidida |
-| FEAT-WRK-015 | Órdenes «más valorados» y «más leídos» | `CM-4` cubre el primero; el segundo sigue esperando a `H-3` |
-| FEAT-COM-006 | Orden «más relevantes», que es **el que la pantalla enseña por defecto** | `CM-4`, decidida |
+| ~~FEAT-WRK-015~~ | ~~Orden «más valorados»~~ — **hecho** (2026-09-26). «Más leídos» sigue esperando a `H-3` | `W-12`, que se respondió sola |
+| ~~FEAT-COM-006~~ | ~~Orden «más relevantes», que es **el que la pantalla enseña por defecto**~~ — **hecho** (2026-09-26) | Los apoyos de `FEAT-COM-030` |
 
-Los dos últimos son el mismo caso y conviene verlo: hoy el desplegable ofrece un orden por
-defecto que el servidor responde `422`. Es la única categoría de hueco que el usuario final ve.
+Los dos últimos eran el mismo caso y conviene verlo: el desplegable ofrecía un orden por
+defecto que el servidor respondía `422`. Era la única categoría de hueco que el usuario final
+veía, y ya no está.
+
+Dos cosas que este inventario no había visto y aparecieron al hacerlo:
+
+- **`W-12` no necesitaba respuesta.** Preguntaba si «más valorados» mide `WorkRating` o los
+  «me gusta», y en esta plataforma **no hay «me gusta» sobre una obra**: los apoyos son de
+  publicaciones y comentarios. El corazón de la maqueta no tiene nada detrás. Es el mismo
+  patrón que `V-1`, resuelta por construcción;
+- **ninguno de los dos era solo una consulta.** «Más relevantes» necesitaba un cursor que
+  llevara la puntuación dentro —es el primer listado de la API que ordena por algo calculado—
+  y «más valorados» necesitaba que `Work` mantuviera un agregado que nadie mantenía, porque
+  `WorkRated` no lo consumía nadie.
 
 ### 1d. Pequeños y sueltos
 
@@ -198,8 +210,8 @@ desactualizarse solo.
 2. ~~**La congelación de deuda en suspensión parcial** (§1d). Es una trampa sin salida, y es
    pequeña.~~ — **hecho** (2026-09-26). Pequeña no era; el párrafo del §1d cuenta en qué me
    equivoqué.
-3. **Los dos órdenes por defecto que responden `422`** (§1c). Lo único de esta lista que un
-   usuario ve hoy.
+3. ~~**Los dos órdenes por defecto que responden `422`** (§1c). Lo único de esta lista que un
+   usuario ve hoy.~~ — **hecho** (2026-09-26).
 4. **La purga de la tabla de deduplicación** (§1b). Media tarde, y deja de crecer.
 5. **Tachar las 17 notas caducadas y arreglar las cuatro fichas del §4**, con la comprobación
    nueva en `check-docs.py` para que no se repita.

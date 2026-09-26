@@ -33,8 +33,14 @@ final readonly class ListMyWorksHandler
 {
     private const MAX_PER_PAGE = 50;
 
-    /** `RN-4` del contrato: un `sort` no admitido no se ignora en silencio. */
-    private const SORTS = ['recent', 'oldest'];
+    /**
+     * `RN-4` del contrato: un `sort` no admitido no se ignora en silencio.
+     *
+     * **«Más leídos» sigue sin estar** y no por descuido: nadie ha definido
+     * qué cuenta como lectura (`H-3`), y contar aperturas de página sería
+     * inventarse la métrica en la consulta.
+     */
+    private const SORTS = ['recent', 'oldest', 'rated'];
 
     public function __construct(
         private WorkRepository $works,
@@ -65,7 +71,7 @@ final readonly class ListMyWorksHandler
         $page = max(1, $query->page);
         $perPage = max(1, min(self::MAX_PER_PAGE, $query->perPage));
 
-        $works = $this->works->pageOfAuthor($authorId, $status, 'oldest' === $sort, $perPage, ($page - 1) * $perPage);
+        $works = $this->works->pageOfAuthor($authorId, $status, $sort, $perPage, ($page - 1) * $perPage);
         $genres = $this->genres->codesOfWorks(array_map(
             static fn (Work $work) => $work->id(),
             $works,
@@ -83,6 +89,8 @@ final readonly class ListMyWorksHandler
                     $work->wordCount(),
                     $work->chapterCount(),
                     $genres[$work->id()->value()] ?? [],
+                    $work->ratingCount(),
+                    $work->ratingAverage(),
                     $work->isBlocked(),
                     $work->isArchived(),
                     $work->createdAt()->format(\DATE_ATOM),

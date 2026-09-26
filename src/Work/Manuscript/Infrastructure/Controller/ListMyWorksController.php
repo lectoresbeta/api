@@ -66,6 +66,11 @@ final readonly class ListMyWorksController
                     'readingMinutes' => ReadingTime::minutesFor($work->wordCount),
                     'chapterCount' => $work->chapterCount,
                     'genres' => $work->genres,
+                    'ratingCount' => $work->ratingCount,
+                    // Redondeada a un decimal **solo al salir**: se guarda la
+                    // suma y el recuento, así que la media nunca arrastra el
+                    // redondeo de las notas anteriores.
+                    'ratingAverage' => null === $work->ratingAverage ? null : round($work->ratingAverage, 1),
                     'blocked' => $work->blocked,
                     'archived' => $work->archived,
                     'createdAt' => $work->createdAt,

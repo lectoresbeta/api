@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LectoresBeta\Work\Manuscript\Infrastructure\Persistence\Doctrine;
 
+use Doctrine\ORM\QueryBuilder;
 use LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\DoctrineRepository;
 use LectoresBeta\Work\Manuscript\Domain\Entity\Work;
 use LectoresBeta\Work\Manuscript\Domain\Enum\WorkStatus;
@@ -58,20 +59,28 @@ final class DoctrineWorkRepository extends DoctrineRepository implements WorkRep
     public function pageOfAuthor(
         AuthorId $authorId,
         ?WorkStatus $status,
-        bool $oldestFirst,
+        string $sort,
         int $limit,
         int $offset,
     ): array {
         $query = $this->authored($authorId, $status)
             ->select('w')
-            ->orderBy('w.createdAt', $oldestFirst ? 'ASC' : 'DESC')
-            // El desempate va en la misma dirección que el criterio. Dos
-            // obras creadas en el mismo segundo son lo normal al escribir, y
-            // un desempate fijo haría que «más antiguos» devolviera la más
-            // nueva primero — un orden que se contradice a sí mismo.
-            ->addOrderBy('w.id', $oldestFirst ? 'ASC' : 'DESC')
             ->setMaxResults($limit)
             ->setFirstResult($offset);
+
+        if ('rated' === $sort) {
+            $this->bestRatedFirst($query);
+        } else {
+            $oldestFirst = 'oldest' === $sort;
+
+            $query
+                ->orderBy('w.createdAt', $oldestFirst ? 'ASC' : 'DESC')
+                // El desempate va en la misma dirección que el criterio. Dos
+                // obras creadas en el mismo segundo son lo normal al escribir, y
+                // un desempate fijo haría que «más antiguos» devolviera la más
+                // nueva primero — un orden que se contradice a sí mismo.
+                ->addOrderBy('w.id', $oldestFirst ? 'ASC' : 'DESC');
+        }
 
         return array_values($query->getQuery()->getResult());
     }
@@ -108,7 +117,33 @@ final class DoctrineWorkRepository extends DoctrineRepository implements WorkRep
         return Work::class;
     }
 
-    private function authored(AuthorId $authorId, ?WorkStatus $status): \Doctrine\ORM\QueryBuilder
+    /**
+     * «Más valorados» (`FEAT-WRK-015`).
+     *
+     * **Las obras sin valorar van al final, no con las de nota cero.** Una
+     * obra que nadie ha valorado no es una obra mal valorada, y mezclarlas
+     * castigaría a quien acaba de publicar.
+     *
+     * La media se calcula en la consulta a partir de la suma y el recuento, y
+     * se escala por cien en vez de dividir en coma flotante: aquí solo hace
+     * falta para ordenar, y dos decimales separan todo lo que hay que separar
+     * en una escala de cinco. A igual media, primero la que tiene más
+     * valoraciones — un cinco de una persona no vale lo que un cinco de
+     * veinte.
+     */
+    private function bestRatedFirst(QueryBuilder $query): void
+    {
+        $query
+            ->addSelect('CASE WHEN w.ratingCount = 0 THEN 1 ELSE 0 END AS HIDDEN unrated')
+            ->addSelect('CASE WHEN w.ratingCount = 0 THEN 0 ELSE (w.ratingSum * 100 / w.ratingCount) END AS HIDDEN score')
+            ->orderBy('unrated', 'ASC')
+            ->addOrderBy('score', 'DESC')
+            ->addOrderBy('w.ratingCount', 'DESC')
+            ->addOrderBy('w.createdAt', 'DESC')
+            ->addOrderBy('w.id', 'DESC');
+    }
+
+    private function authored(AuthorId $authorId, ?WorkStatus $status): QueryBuilder
     {
         $query = $this->repository()->createQueryBuilder('w')
             ->where('w.authorId = :author')

@@ -82,7 +82,7 @@ autor y cómo la valora. Es el productor de los hechos que mueven la economía d
 | `FeedbackRatedPositively` | El autor valora la corrección como útil | `Notification`, `Community`. **Ya no mueve créditos**: la bonificación automática se sustituyó por la propina |
 | `FeedbackReplied` | El autor contesta | `Notification` |
 | `FeedbackHidden` | El autor oculta un comentario | `Community` (rankings), posiblemente `Credits` (`C-9`) |
-| `WorkRated` | Un LB valora la obra | `Community` (rankings de obras y escritores) |
+| `WorkRated` | Un LB valora la obra | **`Work`** (el agregado que ordena «Mis relatos»), `Community` (rankings de obras y escritores) |
 
 `FeedbackSubmitted` es el evento más importante del sistema: es el **único momento en que los
 créditos se mueven**, y provoca a la vez el cargo al autor y el abono al lector.
