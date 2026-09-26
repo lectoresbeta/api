@@ -34,6 +34,12 @@ use LectoresBeta\Work\Manuscript\Domain\ValueObject\AuthorId;
  * Ocultar **no despublica la obra** aunque sea el último visible (`RN-9`): un
  * efecto colateral que cambia el estado de la obra es un efecto que el autor
  * no pidió.
+ *
+ * Lo que sí cambia es **el recuento de palabras de la obra** (`RN-6`): lo que
+ * se enseña es lo que se puede leer, y con ello se mueve también el tiempo de
+ * lectura, que se deriva de esa cifra. El número de capítulos **no** se toca:
+ * un capítulo oculto sigue existiendo para su autor, que es quien lo ve en
+ * «Mis relatos» y quien tiene que poder volver a mostrarlo.
  */
 final readonly class SetChapterVisibilityHandler
 {
@@ -78,7 +84,7 @@ final readonly class SetChapterVisibilityHandler
 
         $now = $this->clock->now();
 
-        $this->session->execute(function () use ($chapter, $visibility, $now): void {
+        $this->session->execute(function () use ($work, $chapter, $visibility, $now): void {
             if (ChapterVisibility::HIDDEN === $visibility) {
                 $chapter->hide($now);
             } else {
@@ -86,6 +92,18 @@ final readonly class SetChapterVisibilityHandler
             }
 
             $this->chapters->save($chapter);
+
+            // `RN-6`: lo que se enseña es lo que se puede leer. El recuento
+            // se ajusta por la diferencia y no se consulta entero, porque
+            // dentro de la transacción la consulta todavía ve la visibilidad
+            // anterior de este capítulo.
+            $visible = $this->chapters->visibleWordCountOfWork($work->id());
+            $words = ChapterVisibility::HIDDEN === $visibility
+                ? $visible - $chapter->wordCount()
+                : $visible + $chapter->wordCount();
+
+            $work->recountContent(max(0, $words), $work->chapterCount(), $now);
+            $this->works->save($work);
         });
 
         $this->events->publish(new ChapterVisibilityChanged(

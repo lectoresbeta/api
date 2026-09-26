@@ -90,7 +90,12 @@ final readonly class RemoveChapterHandler
 
         foreach ($remaining as $other) {
             ++$position;
-            $words += $other->wordCount();
+
+            // Los ocultos conservan su posición y no suman palabras
+            // (`FEAT-WRK-008` `RN-6`).
+            if (!$other->isHidden()) {
+                $words += $other->wordCount();
+            }
 
             if ($other->position() !== $position) {
                 $other->moveTo($position, $now);

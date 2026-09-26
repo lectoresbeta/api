@@ -6,6 +6,7 @@ namespace LectoresBeta\Work\Chapter\Infrastructure\Persistence\Doctrine;
 
 use LectoresBeta\Shared\Infrastructure\Persistence\Doctrine\DoctrineRepository;
 use LectoresBeta\Work\Chapter\Domain\Entity\Chapter;
+use LectoresBeta\Work\Chapter\Domain\Enum\ChapterVisibility;
 use LectoresBeta\Work\Chapter\Domain\Repository\ChapterRepository;
 use LectoresBeta\Work\Chapter\Domain\ValueObject\ChapterId;
 use LectoresBeta\Work\Manuscript\Domain\ValueObject\WorkId;
@@ -33,13 +34,15 @@ final class DoctrineChapterRepository extends DoctrineRepository implements Chap
         ));
     }
 
-    public function wordCountOfWork(WorkId $workId): int
+    public function visibleWordCountOfWork(WorkId $workId): int
     {
         return (int) $this->entityManager->createQueryBuilder()
             ->select('COALESCE(SUM(c.wordCount), 0)')
             ->from(Chapter::class, 'c')
             ->where('c.workId = :workId')
+            ->andWhere('c.visibility = :visible')
             ->setParameter('workId', $workId->value())
+            ->setParameter('visible', ChapterVisibility::VISIBLE->value)
             ->getQuery()
             ->getSingleScalarResult();
     }

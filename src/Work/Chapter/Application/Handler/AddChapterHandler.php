@@ -73,7 +73,7 @@ final readonly class AddChapterHandler
         $now = $this->clock->now();
         $siblings = $this->chapters->ofWork($work->id());
         $storedChapters = \count($siblings);
-        $storedWords = $this->chapters->wordCountOfWork($work->id());
+        $storedWords = $this->chapters->visibleWordCountOfWork($work->id());
 
         // Intercalar, no solo añadir al final (`FEAT-WRK-003` `RN-3`). Las
         // posiciones son consecutivas desde 1 y se recalculan enteras: una

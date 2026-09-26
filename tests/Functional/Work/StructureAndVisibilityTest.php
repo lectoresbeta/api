@@ -182,6 +182,48 @@ final class StructureAndVisibilityTest extends EconomyScenario
         self::assertResponseIsSuccessful('Volver a mostrarlo lo devuelve.');
     }
 
+    /**
+     * `RN-6`: ocultar un capítulo **descuenta sus palabras** del recuento de
+     * la obra, y con ellas su tiempo de lectura.
+     *
+     * Lo que se enseña es lo que se puede leer. El número de capítulos no se
+     * toca a propósito: un capítulo oculto sigue existiendo para su autora,
+     * que es quien lo ve en «Mis relatos» y quien puede volver a mostrarlo.
+     */
+    public function testHidingAChapterTakesItsWordsOffTheWorksCount(): void
+    {
+        $autora = $this->activatedPerson('autora');
+        $workId = $this->createWork($autora['token'], 'La que adelgaza');
+        $this->addChapter($workId, $autora['token'], words: 300, marker: 'El que se queda');
+        $ocultado = $this->addChapter($workId, $autora['token'], words: 500, marker: 'El que se oculta');
+
+        self::assertSame(800, $this->wordCountOf($workId, $autora['token']));
+
+        $this->setVisibility($ocultado, $autora['token'], 'HIDDEN');
+        self::assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
+        $this->capture();
+
+        self::assertSame(300, $this->wordCountOf($workId, $autora['token']));
+        self::assertCount(2, $this->titlesOf($workId, $autora['token']), 'Para su autora siguen siendo dos.');
+
+        // Reescribir un capítulo oculto no lo devuelve al recuento.
+        $this->client->request('PUT', \sprintf('/api/v1/chapters/%s', $ocultado), server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$autora['token'],
+        ], content: json_encode([
+            'contentHtml' => '<p>'.implode(' ', array_fill(0, 900, 'palabra')).'</p>',
+        ], \JSON_THROW_ON_ERROR));
+        self::assertResponseIsSuccessful();
+        $this->capture();
+
+        self::assertSame(300, $this->wordCountOf($workId, $autora['token']), 'Sigue sin contar.');
+
+        $this->setVisibility($ocultado, $autora['token'], 'VISIBLE');
+        $this->capture();
+
+        self::assertSame(1200, $this->wordCountOf($workId, $autora['token']), 'Y al volver, vuelve con lo que ahora tiene.');
+    }
+
     public function testNobodyElseStructuresSomebodyElsesWork(): void
     {
         $autora = $this->activatedPerson('autora');
@@ -197,6 +239,13 @@ final class StructureAndVisibilityTest extends EconomyScenario
 
         $this->setVisibility($chapterId, $extrana['token'], 'HIDDEN');
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    private function wordCountOf(string $workId, string $token): int
+    {
+        $this->work($workId, $token);
+
+        return (int) $this->payload()['wordCount'];
     }
 
     private function titled(string $workId, string $token, string $title, ?int $position = null): string

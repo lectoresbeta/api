@@ -111,8 +111,13 @@ final readonly class UpdateChapterHandler
             // El total de la obra se ajusta por la diferencia y no se vuelve
             // a sumar entero: el capítulo que se acaba de tocar todavía no es
             // visible para una consulta.
+            //
+            // Y solo si el capítulo cuenta: uno oculto no está en el total
+            // (`FEAT-WRK-008` `RN-6`), así que reescribirlo no lo mueve.
+            $stored = $this->chapters->visibleWordCountOfWork($work->id());
+
             $work->recountContent(
-                $this->chapters->wordCountOfWork($work->id()) - $previousWords + $chapter->wordCount(),
+                $chapter->isHidden() ? $stored : $stored - $previousWords + $chapter->wordCount(),
                 $this->chapters->countOfWork($work->id()),
                 $now,
             );

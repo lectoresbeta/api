@@ -133,6 +133,21 @@ El **aviso a quien tuviera un borrador en curso** (`RN-5`) entró con
 [`FEAT-MOD-003`](../moderation/FEAT-MOD-003-block-work.md) `RN-4`, que necesitaba el mismo
 mecanismo: un solo aviso para las tres causas que dejan a alguien con trabajo a medias.
 
-**Falta descontar las palabras del capítulo oculto del recuento visible de la obra** (`RN-6`):
-el total sigue contándolas. No afecta al precio de nadie —los precios son por capítulo— pero
-sí a lo que se enseña en la ficha de la obra.
+~~**Falta descontar las palabras del capítulo oculto del recuento visible de la obra**
+(`RN-6`)~~ — **hecho** (2026-09-26). Lo que se enseña es lo que se puede leer, y con las
+palabras se mueve también el tiempo de lectura, que se deriva de esa cifra
+([`FEAT-WRK-013`](FEAT-WRK-013-word-count-and-reading-time.md)).
+
+Dos cosas que la implementación obligó a decidir:
+
+- **el recuento se ajusta por la diferencia, no se vuelve a consultar entero.** Dentro de la
+  transacción la consulta todavía ve la visibilidad anterior del capítulo que se acaba de
+  tocar, que es el mismo motivo por el que ya lo hacía así al editarlo;
+- **el número de capítulos no se toca.** Un capítulo oculto sigue existiendo para su autora,
+  que es quien lo ve en «Mis relatos» y quien puede volver a mostrarlo. Deja una pequeña
+  inconsistencia en las tarjetas públicas —tres fragmentos y las palabras de uno— que esta
+  ficha no resuelve porque `RN-6` habla solo de palabras. Si la tarjeta pública debe enseñar
+  el número de capítulos **visibles**, es una decisión aparte.
+
+Y un defecto que apareció solo: **reescribir un capítulo oculto lo devolvía al recuento.** El
+total se ajustaba por la diferencia sin mirar si ese capítulo contaba.

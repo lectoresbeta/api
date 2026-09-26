@@ -24,7 +24,14 @@ interface ChapterRepository
      * chapter. A novel runs to tens of thousands of words and this is asked
      * on every edit.
      */
-    public function wordCountOfWork(WorkId $workId): int;
+    /**
+     * Las palabras de los capítulos **visibles** (`FEAT-WRK-008` `RN-6`).
+     *
+     * Ocultar un capítulo lo retira del recuento de la obra: lo que se enseña
+     * es lo que se puede leer. El autor no pierde nada — el capítulo sigue
+     * ahí, y sus correcciones también.
+     */
+    public function visibleWordCountOfWork(WorkId $workId): int;
 
     public function countOfWork(WorkId $workId): int;
 
