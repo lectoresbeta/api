@@ -257,5 +257,29 @@ visibilidad que `W-9` dejó vivo.
   sin cortar a los que ya trabajan. Se modelará cuando exista quien lea obras: hoy no hay
   catálogo ni lectura, así que no hay de quién esconderlas;
 - despublicar (`W-10`), que es una decisión de producto, no código;
-- que `Credits` consuma `WorkOpenedForCorrection` para recalcular qué capítulos son
-  corregibles. El evento se publica y todavía no lo escucha nadie.
+- ~~que `Credits` consuma `WorkOpenedForCorrection` para recalcular qué capítulos son
+  corregibles. El evento se publica y todavía no lo escucha nadie.~~ — **hecho** (2026-09-26),
+  y el hueco era mayor de lo que esta línea decía.
+
+  No faltaba un recálculo: faltaba **una de las condiciones**. `CorrectabilityPolicy`
+  respondía solo con dinero —saldo, precio y correcciones abiertas—, así que los capítulos de
+  un borrador salían como corregibles. `Feedback` proyecta esa respuesta y abre el panel
+  contra ella, de modo que la puerta se cerraba **después**, al preguntarle a `Work`: un
+  rechazo que llega cuando el lector ya ha pulsado.
+
+  Ahora `Credits` proyecta la puerta —una fila por obra, no una columna por capítulo— y es la
+  primera condición de la política. Tres cosas que la implementación obligó a decidir:
+
+  - **`WorkCreated` también se escucha.** Sin él una obra nueva no tendría fila, y la ausencia
+    de fila significa «no lo sé», que deliberadamente **no bloquea**: las obras anteriores a
+    este cambio siguen comportándose como hasta ahora en vez de apagarse sin que nadie lo
+    decida;
+  - **archivar cierra la puerta.** Archivar no cambia el estado, así que una obra retirada
+    mientras estaba en corrección lo seguía estando, y quien escuchaba la creía abierta.
+    `Work` publica ahora también `WorkClosedForCorrection` en ese caso — lo que de paso
+    arregla que sus borradores en curso siguieran pudiendo entregarse;
+  - **la versión decide, no la llegada.** Los dos hechos llevan ahora `version`, contada por
+    `work.status_version`, igual que la del cuestionario
+    ([`FEAT-WRK-014`](FEAT-WRK-014-configure-questionnaire.md)). La fecha no valía de
+    desempate: publicar y abrir a corrección son dos clics seguidos, así que caen en el mismo
+    segundo, y sin versión las reentregas de «abierta» y «cerrada» se turnan para siempre.

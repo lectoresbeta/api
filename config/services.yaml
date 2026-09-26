@@ -329,6 +329,14 @@ services:
                 # ordenar «Mis relatos» por él. `Feedback` sigue siendo dueño
                 # de las valoraciones; esto es una proyección.
                 - LectoresBeta\Work\Manuscript\Application\Event\WorkRated
+
+                # Y si la obra admite correcciones, que es la mitad de la
+                # corregibilidad que `Credits` no miraba (FEAT-WRK-016). Sin
+                # esto, los capítulos de un borrador salían corregibles y el
+                # rechazo llegaba después, al preguntarle a `Work`.
+                - LectoresBeta\Credits\Pricing\Application\Event\WorkCreated
+                - LectoresBeta\Credits\Pricing\Application\Event\WorkOpenedForCorrection
+                - LectoresBeta\Credits\Pricing\Application\Event\WorkClosedForCorrection
                 - LectoresBeta\Notification\Delivery\Application\Event\WorkBlockedByModeration
 
                 # El autor ha abierto la corrección: el aviso sobra
@@ -956,6 +964,14 @@ services:
     LectoresBeta\Work\Manuscript\Application\Handler\TrackWorkRating:
         tags:
             - { name: messenger.message_handler }
+
+    # La puerta de la obra, que es la primera condición de la corregibilidad
+    # (FEAT-WRK-016). Crear cierra, abrir abre, cerrar cierra.
+    LectoresBeta\Credits\Pricing\Application\Handler\TrackCorrectionWindow:
+        tags:
+            - { name: messenger.message_handler, method: created }
+            - { name: messenger.message_handler, method: opened }
+            - { name: messenger.message_handler, method: closed }
 
     LectoresBeta\Work\Manuscript\Application\Handler\UnblockContentOnBlockLifted:
         tags:

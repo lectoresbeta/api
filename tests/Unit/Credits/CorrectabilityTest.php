@@ -46,9 +46,31 @@ final class CorrectabilityTest extends TestCase
     {
         $policy = new CorrectabilityPolicy();
 
-        self::assertTrue($policy->allows(authorBalance: 6, price: 6, openCorrections: 0));
-        self::assertFalse($policy->allows(authorBalance: 5, price: 6, openCorrections: 0));
-        self::assertFalse($policy->allows(authorBalance: -1, price: 2, openCorrections: 0), 'En negativo, nada es corregible.');
+        self::assertTrue($policy->allows(doorOpen: true, authorBalance: 6, price: 6, openCorrections: 0));
+        self::assertFalse($policy->allows(doorOpen: true, authorBalance: 5, price: 6, openCorrections: 0));
+        self::assertFalse(
+            $policy->allows(doorOpen: true, authorBalance: -1, price: 2, openCorrections: 0),
+            'En negativo, nada es corregible.',
+        );
+    }
+
+    /**
+     * `FEAT-WRK-016`: la primera condición no es el dinero, es que la obra
+     * admita correcciones.
+     *
+     * Sin esto, los capítulos de un borrador salían corregibles con solo
+     * tener saldo, `Feedback` proyectaba esa respuesta y el panel se abría
+     * contra ella — para que el rechazo llegara después, desde `Work`.
+     */
+    public function testAClosedWorkAdmitsNothingHoweverRichItsAuthorIs(): void
+    {
+        $policy = new CorrectabilityPolicy();
+
+        self::assertFalse($policy->allows(doorOpen: false, authorBalance: 1000, price: 2, openCorrections: 0));
+        self::assertFalse(
+            $policy->allows(doorOpen: false, authorBalance: 1000, price: 2, openCorrections: 0, overdraftGranted: true),
+            'Ni el descubierto deliberado abre una puerta cerrada: concede saldo, no permiso.',
+        );
     }
 
     /**
@@ -60,8 +82,8 @@ final class CorrectabilityTest extends TestCase
     {
         $policy = new CorrectabilityPolicy();
 
-        self::assertTrue($policy->allows(100, 2, 2));
-        self::assertFalse($policy->allows(100, 2, 3));
+        self::assertTrue($policy->allows(true, 100, 2, 2));
+        self::assertFalse($policy->allows(true, 100, 2, 3));
     }
 
     /**

@@ -8,9 +8,14 @@ namespace LectoresBeta\Credits\Pricing\Domain\Service;
  * Whether a chapter admits a correction right now (`FEAT-CRD-009` `RN-1`,
  * `RN-6`, `RN-8`).
  *
- * Two conditions, and neither sets a credit aside: **the author's balance
- * covers the price**, and **the chapter is not already being corrected by
- * three people**.
+ * Tres condiciones, y ninguna aparta un crédito: **la puerta de la obra está
+ * abierta**, **el saldo del autor cubre el precio** y **el capítulo no lo
+ * están corrigiendo ya tres personas**.
+ *
+ * La primera llegó tarde y es la más básica (`FEAT-WRK-016`): sin ella esto
+ * respondía solo con dinero, y los capítulos de un borrador salían como
+ * corregibles. Va primero en la firma porque es la que decide antes — de una
+ * obra cerrada no hay nada más que preguntar.
  *
  * The second is what bounds the debt a race can cause. Nothing is held, so
  * three readers can start on a balance that covers one and all three will be
@@ -68,8 +73,17 @@ final class CorrectabilityPolicy
      * llegando a la vez sobre un descubierto multiplicarían por tres la deuda
      * que el cupo acotaba.
      */
-    public function allows(int $authorBalance, int $price, int $openCorrections, bool $overdraftGranted = false): bool
-    {
+    public function allows(
+        bool $doorOpen,
+        int $authorBalance,
+        int $price,
+        int $openCorrections,
+        bool $overdraftGranted = false,
+    ): bool {
+        if (!$doorOpen) {
+            return false;
+        }
+
         if ($openCorrections >= self::MAX_OPEN_CORRECTIONS) {
             return false;
         }

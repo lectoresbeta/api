@@ -54,10 +54,12 @@ final class CreditsFixture
         ?InMemoryCreditAccounts $accounts = null,
         ?Clock $clock = null,
         ?InMemoryOverdraftGrants $overdrafts = null,
+        ?InMemoryCorrectionWindows $windows = null,
     ): RefreshCorrectability {
         return new RefreshCorrectability(
             $prices ?? new InMemoryChapterPrices(),
             $quotations ?? new InMemoryCorrectionPrices(),
+            $windows ?? new InMemoryCorrectionWindows(),
             $accounts ?? new InMemoryCreditAccounts(),
             $overdrafts ?? new InMemoryOverdraftGrants(),
             new CorrectabilityPolicy(),

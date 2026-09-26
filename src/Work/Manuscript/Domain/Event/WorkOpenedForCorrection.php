@@ -24,6 +24,7 @@ final readonly class WorkOpenedForCorrection implements IntegrationEvent
         private EventId $eventId,
         private WorkId $workId,
         private AuthorId $authorId,
+        private int $version,
         private \DateTimeImmutable $openedAt,
     ) {
     }
@@ -48,6 +49,11 @@ final readonly class WorkOpenedForCorrection implements IntegrationEvent
         return [
             'workId' => $this->workId->value(),
             'authorId' => $this->authorId->value(),
+            // Cuál de las decisiones sobre la puerta es esta. Quien la
+            // escucha aplica solo las más nuevas que la última aplicada: una
+            // cola reentrega y no promete orden, y con la fecha no basta
+            // porque dos transiciones del mismo segundo son indistinguibles.
+            'version' => $this->version,
             'openedAt' => $this->openedAt->format(\DATE_ATOM),
         ];
     }

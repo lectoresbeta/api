@@ -91,7 +91,7 @@ decisión sobre agrupación (`N-2`).
 |---|---|---|---|
 | `WorkCreated` | Se crea la obra | `Reading`, `Notification` | `workId`, `authorId`, `title`, `accessMode`, `status`, `createdAt` |
 | `WorkPublished` | La obra pasa a `PUBLISHED`, **y solo la primera vez** (`FEAT-WRK-016`): pedir el estado que ya se tiene no anuncia nada | `Reading`, `Community`, `Notification` ✅ (avisa a los seguidores) | `workId`, `authorId`, `title`, `wordCount`, `chapterCount`, `genres`, `publishedAt` |
-| `WorkOpenedForCorrection` | La obra pasa a `IN_CORRECTION` | `Reading`, **`Credits`** | `workId`, `authorId`, `openedAt` |
+| `WorkOpenedForCorrection` | La obra pasa a `IN_CORRECTION` | `Reading`, **`Credits`** ✅ | `workId`, `authorId`, `version`, `openedAt` |
 | `WorkClosedForCorrection` | La obra vuelve a `PUBLISHED` | `Reading`, **`Credits`** | `workId`, `authorId`, `closedAt` |
 | `ChapterContentUpdated` | Cambia el texto de un capítulo | `Feedback`, **`Credits`** ✅ | `chapterId`, `workId`, `authorId`, `position`, `wordCount`, `version`, `updatedAt`. `version` la añade `FEAT-WRK-005` |
 | `WorkAccessModeChanged` | Cambia la modalidad | `Reading` | `workId`, `authorId`, `accessMode`, `changedAt` |

@@ -29,6 +29,7 @@
         <field name="adultsOnly" column="adults_only" type="boolean"/>
         <field name="wordCount" column="word_count" type="integer"/>
         <field name="chapterCount" column="chapter_count" type="smallint"/>
+        <field name="statusVersion" column="status_version" type="integer"/>
         <field name="ratingCount" column="rating_count" type="integer"/>
         <field name="ratingSum" column="rating_sum" type="integer"/>
         <field name="blockedAt" column="blocked_at" type="datetime_immutable" nullable="true"/>

@@ -11,6 +11,7 @@ use LectoresBeta\Credits\Pricing\Domain\Entity\ChapterPrice;
 use LectoresBeta\Credits\Pricing\Domain\Event\ChapterCorrectabilityChanged;
 use LectoresBeta\Credits\Pricing\Domain\Repository\ChapterPriceRepository;
 use LectoresBeta\Credits\Pricing\Domain\Repository\CorrectionPriceRepository;
+use LectoresBeta\Credits\Pricing\Domain\Repository\CorrectionWindowRepository;
 use LectoresBeta\Credits\Pricing\Domain\Service\CorrectabilityPolicy;
 use LectoresBeta\Credits\Pricing\Domain\ValueObject\WorkId;
 use LectoresBeta\Shared\Application\Event\EventPublisher;
@@ -22,11 +23,12 @@ use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
  * Keeping the outside world's answer to «can this chapter be corrected?» up
  * to date (`FEAT-CRD-009`).
  *
- * Correctability is derived from three things that move independently: the
- * author's balance, the chapter's price and how many corrections are already
- * open on it. So this is called from everywhere any of the three changes —
- * a chapter's text, a questionnaire, a movement, a correction started or
- * discarded — rather than being computed when somebody asks.
+ * Correctability is derived from four things that move independently: whether
+ * the work's door is open, the author's balance, the chapter's price and how
+ * many corrections are already open on it. So this is called from everywhere
+ * any of the four changes — the work opening or closing, a chapter's text, a
+ * questionnaire, a movement, a correction started or discarded — rather than
+ * being computed when somebody asks.
  *
  * **Only changes are published.** A price is recomputed far more often than
  * its answer actually moves, and a context that received an event every time
@@ -48,6 +50,7 @@ final readonly class RefreshCorrectability
     public function __construct(
         private ChapterPriceRepository $prices,
         private CorrectionPriceRepository $quotations,
+        private CorrectionWindowRepository $windows,
         private CreditAccountRepository $accounts,
         private OverdraftGrantRepository $overdrafts,
         private CorrectabilityPolicy $policy,
@@ -84,6 +87,13 @@ final readonly class RefreshCorrectability
         }
 
         $now = $this->clock->now();
+        // De una vez para todas las obras implicadas: recalcular por autor
+        // toca todas las suyas, y una consulta por obra sería un N+1 dentro
+        // del propio contexto.
+        $doors = $this->windows->stateOf(array_values(array_unique(array_map(
+            static fn (ChapterPrice $chapter): string => $chapter->workId()->value(),
+            $chapters,
+        ))));
         $balances = [];
         $overdrafts = [];
         $changed = [];
@@ -100,6 +110,11 @@ final readonly class RefreshCorrectability
             $overdrafts[$author] ??= $this->overdrafts->usableOf($chapter->authorId(), $now)?->chapterId()->value() ?? '';
 
             $correctable = $this->policy->allows(
+                // Una obra de la que no se sabe nada **no se bloquea**: son
+                // las que existían antes de que este contexto escuchara la
+                // apertura, y cerrarles la puerta por ignorancia sería
+                // apagarles el catálogo sin que nadie lo hubiera decidido.
+                $doors[$chapter->workId()->value()] ?? true,
                 $balances[$author],
                 $chapter->price(),
                 $this->quotations->openCorrectionsOn($chapter->chapterId()),

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                      https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!-- Proyeccion de una decision de `Work`: si la obra admite correcciones.
+         Una fila por obra y no una columna en `chapter_price`, porque la
+         puerta es de la obra. La version es lo que hace idempotente la
+         reentrega, igual que en `work_questionnaire_demand`. Sin clave ajena:
+         el identificador llego en un hecho. -->
+    <entity name="LectoresBeta\Credits\Pricing\Domain\Entity\CorrectionWindow"
+            table="correction_window" schema="credits_ctx">
+
+        <id name="workId" column="work_id" type="guid">
+            <generator strategy="NONE"/>
+        </id>
+
+        <field name="open" column="is_open" type="boolean"/>
+        <field name="version" column="version" type="integer"/>
+        <field name="updatedAt" column="updated_at" type="datetime_immutable"/>
+
+    </entity>
+
+</doctrine-mapping>

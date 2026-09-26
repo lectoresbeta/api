@@ -38,6 +38,22 @@ class Work
 
     private \DateTimeImmutable $statusChangedAt;
 
+    /**
+     * Cuántas veces ha cambiado lo que esta obra deja hacer
+     * (`FEAT-WRK-016`).
+     *
+     * Viaja con los hechos que abren y cierran la puerta a correcciones, y
+     * existe por lo mismo que la versión del cuestionario (`FEAT-WRK-014`):
+     * **una cola reentrega y no promete orden**, así que un «se cerró» que
+     * llega tarde no puede cerrar una puerta que ya se volvió a abrir. Con la
+     * fecha no basta — dos transiciones del mismo segundo son indistinguibles
+     * y quien las escucha se queda oscilando.
+     *
+     * Cuenta decisiones sobre la puerta, no cambios de estado: archivar
+     * tampoco cambia el estado y sí la cierra.
+     */
+    private int $statusVersion = 0;
+
     private BetaReaderAccessMode $accessMode;
 
     /**
@@ -131,6 +147,11 @@ class Work
         return $this->status;
     }
 
+    public function statusVersion(): int
+    {
+        return $this->statusVersion;
+    }
+
     public function accessMode(): BetaReaderAccessMode
     {
         return $this->accessMode;
@@ -177,7 +198,12 @@ class Work
      */
     public function archive(\DateTimeImmutable $now): void
     {
-        $this->archivedAt ??= $now;
+        if (null !== $this->archivedAt) {
+            return;
+        }
+
+        $this->archivedAt = $now;
+        ++$this->statusVersion;
         $this->touch($now);
     }
 
@@ -191,6 +217,7 @@ class Work
         $this->archivedAt = null;
         $this->status = WorkStatus::DRAFT;
         $this->statusChangedAt = $now;
+        ++$this->statusVersion;
         $this->touch($now);
     }
 
@@ -336,6 +363,7 @@ class Work
 
         $this->status = $status;
         $this->statusChangedAt = $now;
+        ++$this->statusVersion;
         $this->touch($now);
     }
 

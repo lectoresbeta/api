@@ -11,7 +11,9 @@ use LectoresBeta\Shared\Domain\Exception\InvalidValue;
 use LectoresBeta\Shared\Domain\Persistence\TransactionalSession;
 use LectoresBeta\Work\Manuscript\Application\Command\ArchiveWork;
 use LectoresBeta\Work\Manuscript\Domain\Entity\Work;
+use LectoresBeta\Work\Manuscript\Domain\Enum\WorkStatus;
 use LectoresBeta\Work\Manuscript\Domain\Event\WorkArchived;
+use LectoresBeta\Work\Manuscript\Domain\Event\WorkClosedForCorrection;
 use LectoresBeta\Work\Manuscript\Domain\Exception\ConfirmationRequired;
 use LectoresBeta\Work\Manuscript\Domain\Exception\WorkIsBlocked;
 use LectoresBeta\Work\Manuscript\Domain\Exception\WorkNotFound;
@@ -69,12 +71,29 @@ final readonly class ArchiveWorkHandler
             $this->works->save($work);
         });
 
-        $this->events->publish(new WorkArchived(
+        $announcements = [new WorkArchived(
             EventId::generate(),
             $work->id(),
             $work->authorId(),
             $now,
-        ));
+        )];
+
+        // Archivar **no cambia el estado**: una obra retirada mientras estaba
+        // en corrección lo sigue estando. Así que la puerta hay que cerrarla
+        // aparte, con el mismo hecho que la cierra por la vía normal — o
+        // quien la escucha (`Credits` para la corregibilidad, `Feedback` para
+        // los borradores en curso) seguiría creyéndola abierta.
+        if (WorkStatus::IN_CORRECTION === $work->status()) {
+            $announcements[] = new WorkClosedForCorrection(
+                EventId::generate(),
+                $work->id(),
+                $work->authorId(),
+                $work->statusVersion(),
+                $now,
+            );
+        }
+
+        $this->events->publish(...$announcements);
     }
 
     private function owned(string $workId, string $authorId): Work

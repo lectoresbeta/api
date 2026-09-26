@@ -7,8 +7,10 @@ namespace LectoresBeta\Tests\Functional\Credits;
 use LectoresBeta\Feedback\Correction\Domain\Event\CorrectionDraftDiscarded;
 use LectoresBeta\Feedback\Correction\Domain\Event\CorrectionStarted;
 use LectoresBeta\Feedback\Correction\Domain\Event\FeedbackSubmitted;
+use LectoresBeta\Feedback\Correction\Domain\Repository\CorrectableChapterRepository;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\AuthorId;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\ChapterId;
+use LectoresBeta\Feedback\Correction\Domain\ValueObject\ChapterId as FeedbackChapterId;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\CorrectionId;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\ReaderId;
 use LectoresBeta\Feedback\Correction\Domain\ValueObject\WorkId;
@@ -193,6 +195,83 @@ final class CorrectionEconomyTest extends EconomyScenario
     }
 
     /**
+     * `FEAT-WRK-016`: **abrir la obra es lo que vuelve corregibles sus
+     * capítulos**, y cerrarla los apaga.
+     *
+     * `WorkOpenedForCorrection` se publicaba desde el principio y no lo
+     * escuchaba nadie, así que la corregibilidad se respondía solo con
+     * dinero. El efecto visible: un borrador con saldo de sobra salía como
+     * corregible, `Feedback` proyectaba esa respuesta y el rechazo llegaba
+     * cuando el lector ya había pulsado.
+     */
+    public function testTheDoorOfTheWorkIsTheFirstConditionOfCorrectability(): void
+    {
+        $author = $this->activatedPerson('autora');
+
+        $workId = $this->createWork($author['token']);
+        $chapterId = $this->addChapter($workId, $author['token'], words: 1200);
+        $this->saveQuestionnaire($workId, $author['token'], [
+            ['statement' => '¿Cómo funciona el ritmo?', 'minWords' => 100],
+        ]);
+        $this->consumeEverything();
+
+        // Borrador: la autora tiene los diez de bienvenida y el capítulo vale
+        // tres, así que el dinero llega. La puerta, no.
+        self::assertFalse($this->correctableAccordingToFeedback($chapterId), 'Un borrador no admite correcciones.');
+
+        $this->putAs(\sprintf('/api/v1/works/%s/access-mode', $workId), $author['token'], ['accessMode' => 'PUBLIC']);
+        $this->putAs(\sprintf('/api/v1/works/%s/status', $workId), $author['token'], ['status' => 'PUBLISHED']);
+        $this->putAs(\sprintf('/api/v1/works/%s/status', $workId), $author['token'], ['status' => 'IN_CORRECTION']);
+        $this->consumeEverything();
+
+        self::assertTrue($this->correctableAccordingToFeedback($chapterId), 'Abrirla los enciende de golpe.');
+
+        // Y volver a `PUBLISHED` los apaga, sin que ningún precio ni ningún
+        // saldo se haya movido.
+        $this->putAs(\sprintf('/api/v1/works/%s/status', $workId), $author['token'], ['status' => 'PUBLISHED']);
+        $this->consumeEverything();
+
+        self::assertFalse($this->correctableAccordingToFeedback($chapterId));
+    }
+
+    /**
+     * Archivar **no cambia el estado** de la obra: una retirada mientras
+     * estaba en corrección lo seguía estando, y la puerta se quedaba abierta
+     * para quien la escuchara. `Work` publica ahora también el cierre.
+     */
+    public function testArchivingAWorkInCorrectionClosesItsDoor(): void
+    {
+        [$author, , $chapterId, $workId] = $this->aWorkReadyToBeCorrected();
+        $this->consumeEverything();
+
+        self::assertTrue($this->correctableAccordingToFeedback($chapterId));
+
+        $this->client->request('DELETE', \sprintf('/api/v1/works/%s', $workId), server: [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_AUTHORIZATION' => 'Bearer '.$author['token'],
+        ], content: json_encode(['confirm' => true], \JSON_THROW_ON_ERROR));
+        self::assertResponseIsSuccessful();
+        $this->capture();
+        $this->consumeEverything();
+
+        self::assertFalse($this->correctableAccordingToFeedback($chapterId));
+    }
+
+    /**
+     * Lo que `Feedback` cree, que es lo que decide si el panel se abre: su
+     * propia proyección, no una pregunta a `Credits`.
+     */
+    private function correctableAccordingToFeedback(string $chapterId): bool
+    {
+        $chapters = self::getContainer()->get(CorrectableChapterRepository::class);
+        \assert($chapters instanceof CorrectableChapterRepository);
+
+        $projected = $chapters->ofChapter(FeedbackChapterId::fromString($chapterId));
+
+        return null !== $projected && $projected->isCorrectable();
+    }
+
+    /**
      * @return array{0: array{token: string, userId: string}, 1: array{token: string, userId: string}, 2: string, 3: string}
      */
     private function aWorkReadyToBeCorrected(int $words = 1200, int $minWords = 100): array
@@ -205,6 +284,13 @@ final class CorrectionEconomyTest extends EconomyScenario
         $this->saveQuestionnaire($workId, $author['token'], [
             ['statement' => '¿Cómo funciona el ritmo?', 'minWords' => $minWords],
         ]);
+
+        // Y se abre la puerta, que desde `FEAT-WRK-016` es la primera
+        // condición de la corregibilidad: un borrador con saldo de sobra
+        // sigue sin admitir correcciones.
+        $this->putAs(\sprintf('/api/v1/works/%s/access-mode', $workId), $author['token'], ['accessMode' => 'PUBLIC']);
+        $this->putAs(\sprintf('/api/v1/works/%s/status', $workId), $author['token'], ['status' => 'PUBLISHED']);
+        $this->putAs(\sprintf('/api/v1/works/%s/status', $workId), $author['token'], ['status' => 'IN_CORRECTION']);
 
         return [$author, $reader, $chapterId, $workId];
     }

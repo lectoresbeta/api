@@ -137,6 +137,14 @@ abstract class EconomyScenario extends WebTestCase
         // (`FEAT-WRK-006`).
         'WorkArchived',
 
+        // Y si la puerta de la obra está abierta a correcciones, que es la
+        // primera condición de la corregibilidad (`FEAT-WRK-016`). Las tres:
+        // sin `WorkCreated` una obra nueva no tendría fila, y la ausencia de
+        // fila significa «no lo sé», que deliberadamente no bloquea.
+        'WorkCreated',
+        'WorkOpenedForCorrection',
+        'WorkClosedForCorrection',
+
         // Y el aviso a quien tenía trabajo a medias, con el bloqueo que un
         // moderador levanta (`FEAT-MOD-003` `RN-4`, `RN-7`).
         'CorrectionClosed',

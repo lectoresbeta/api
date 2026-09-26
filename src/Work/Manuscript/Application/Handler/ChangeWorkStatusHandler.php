@@ -116,7 +116,13 @@ final readonly class ChangeWorkStatusHandler
         if (WorkStatus::IN_CORRECTION === $from) {
             $work->closeForCorrection($now);
 
-            return new WorkClosedForCorrection(EventId::generate(), $work->id(), $work->authorId(), $now);
+            return new WorkClosedForCorrection(
+                EventId::generate(),
+                $work->id(),
+                $work->authorId(),
+                $work->statusVersion(),
+                $now,
+            );
         }
 
         $work->publish($now);
@@ -140,6 +146,12 @@ final readonly class ChangeWorkStatusHandler
     {
         $work->openForCorrection($now);
 
-        return new WorkOpenedForCorrection(EventId::generate(), $work->id(), $work->authorId(), $now);
+        return new WorkOpenedForCorrection(
+            EventId::generate(),
+            $work->id(),
+            $work->authorId(),
+            $work->statusVersion(),
+            $now,
+        );
     }
 }
